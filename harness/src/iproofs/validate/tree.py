@@ -39,6 +39,7 @@ G2_GLOBS = (
     "results/**/fidelity.json",
     "results/**/fidelity/*/fidelity-run.json",
     "results/**/teacher-forced/*/teacher-forced.json",
+    "results/**/teacher-forced/*/teacher-forced-*.json",
     "results/**/teacher-forced/*/run-*.json",
     "results/**/proof-build/*/proof-build.json",
     "results/**/verify-trace/*.json",

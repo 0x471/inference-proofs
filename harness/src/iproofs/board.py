@@ -429,17 +429,18 @@ def _teacher_forced(root: Path, release: str, rung: str) -> dict[str, object] | 
     """SI-9: the rung's teacher-forced block from `teacher-forced.json` (FI-10 to FI-15), its
     scores recomputed from the stored top tokens; None when not stored. It gates nothing and no
     check, petal or position reads it."""
-    from iproofs.teacher_forced import board_block  # noqa: PLC0415
+    from iproofs.teacher_forced import board_block, scoring_file  # noqa: PLC0415
 
     base = fidelity_path(root, release, rung).parent
     folder = root / "results" / release / "teacher-forced" / rung
-    path = folder / "teacher-forced.json"
+    path = scoring_file(folder, "teacher-forced")  # the scoring in force (APP-1)
     if not path.is_file():
         return None
     doc = json.loads(path.read_text())
     reference = [json.loads(x) for x in (base / "reference.jsonl").read_text().splitlines() if x]
     tops = {p.stem: p for p in (folder / "top").glob("*.jsonl")}
-    values = folder / "kl.json"
+    named = (doc.get("kl") or {}).get("values")  # the values this scoring was computed from
+    values = root / str(named) if named else folder / "kl.json"
     kl = json.loads(values.read_text()) if values.is_file() else None
     try:
         return board_block(doc, rel(root, path), tops, reference, kl)

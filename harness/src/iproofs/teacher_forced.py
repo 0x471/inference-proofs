@@ -318,6 +318,18 @@ def measure_kl(reference: Path, engine: Path, n: int) -> dict[str, object]:
 
 # ---------------------------------------------------------------- teacher-forced.json (FI-15)
 
+
+def scoring_file(folder: Path, stem: str, k: int | None = None) -> Path:
+    """FI-15 with APP-1: a merged scoring is never edited. A later one is `<stem>-<k>.json`, k
+    from 2, and the highest k is the one in force. Without `k`: the file in force (the
+    unnumbered name when no numbered one is stored)."""
+    if k is not None:
+        return folder / (f"{stem}.json" if k == 1 else f"{stem}-{k}.json")
+    numbered = {int(p.stem[len(stem) + 1 :]): p for p in folder.glob(f"{stem}-*.json")
+                if p.stem[len(stem) + 1 :].isdigit()}  # fmt: skip
+    return numbered[max(numbered)] if numbered else folder / f"{stem}.json"
+
+
 ENGINE_NOTE = "computed by the engine on the control's file, on the reference reply"
 NO_KL = "not measured: no lists of the most probable tokens are stored for it"
 NO_REFERENCE_KL = "not measured: the reference's pass stored no lists of its most probable tokens"

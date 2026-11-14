@@ -636,6 +636,25 @@ def _measure(tf: Path, raw: Path, ids: Sequence[str], n: int) -> dict[str, Any]:
             "engines": engines}  # fmt: skip
 
 
+def _scoring_files(tf: Path, args: argparse.Namespace) -> tuple[Path, Path, Path | None]:
+    """The scoring to write, the KL values it reads, and the scoring it replaces. APP-1: a
+    merged scoring is not edited; `--scoring K` writes the next one. Without it the scoring in
+    force is written again."""
+    from iproofs.teacher_forced import scoring_file  # noqa: PLC0415
+
+    k: int | None = getattr(args, "scoring", None)
+    stem, kl_stem = SCORED.removesuffix(".json"), KL_VALUES.removesuffix(".json")
+    prior = scoring_file(tf, stem, k - 1) if k is not None else None
+    if k is not None and (k < 2 or not getattr(args, "reason", None) or prior is None
+                          or not prior.is_file()):  # fmt: skip
+        raise IProofsError(ErrorKind.CONFIG, "--scoring K takes K from 2, a --reason, and the "
+                           f"scoring it replaces stored under {tf}")  # fmt: skip
+    values = scoring_file(tf, kl_stem, k)
+    if args.raw is None and not values.is_file():
+        values = scoring_file(tf, kl_stem)
+    return scoring_file(tf, stem, k), values, prior
+
+
 def score(args: argparse.Namespace) -> int:
     """`iproofs fidelity score --part teacher-forced [--raw DIR]`: prints the document's path."""
     from iproofs.fidelity import SignFlipRule  # noqa: PLC0415
@@ -662,9 +681,10 @@ def score(args: argparse.Namespace) -> int:
     reference_digest = file_digest(base / "reference.jsonl")
     n = len(reference)
     ids = ["reference", *[c.id for c in rung.controls], *sorted(rung.workloads)]
+    scored, values, prior = _scoring_files(tf, args)
     if args.raw is not None:
-        write_json(tf / KL_VALUES, _measure(tf, args.raw, ids[1:], n))
-    kl: dict[str, Any] = json.loads((tf / KL_VALUES).read_text()) if (tf / KL_VALUES).is_file() \
+        write_json(values, _measure(tf, args.raw, ids[1:], n))
+    kl: dict[str, Any] = json.loads(values.read_text()) if values.is_file() \
         else {"engines": {}}  # fmt: skip
 
     def entry(ident: str, spec: Mapping[str, object], system: bool) -> Entry:
@@ -690,11 +710,15 @@ def score(args: argparse.Namespace) -> int:
         "reference": {"replies": f"results/{args.release}/fidelity/{rung.id}/reference.jsonl",
                       "digest": reference_digest},
     }  # fmt: skip
-    doc = build(header, rule, own, controls, rows, f"{ref}/{KL_VALUES}",
+    doc = build(header, rule, own, controls, rows, f"{ref}/{values.name}",
                 "reference" in kl, COMPUTED_BY)  # fmt: skip
+    if prior is not None:
+        doc = {**doc, "replaces": {"document": f"{ref}/{prior.name}", "reason": args.reason}}
+    elif scored.is_file() and "replaces" in (old := json.loads(scored.read_text())):
+        doc = {**doc, "replaces": old["replaces"]}  # the scoring in force, written again
     errors = registry.errors(SCHEMA, doc)
     if errors:
-        raise IProofsError(ErrorKind.INTERNAL, f"{SCORED} fails {SCHEMA}: {errors[0]}")
-    write_json(tf / SCORED, doc)
-    print(tf / SCORED)
+        raise IProofsError(ErrorKind.INTERNAL, f"{scored.name} fails {SCHEMA}: {errors[0]}")
+    write_json(scored, doc)
+    print(scored)
     return 0

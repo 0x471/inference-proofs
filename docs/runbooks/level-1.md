@@ -83,7 +83,7 @@ A scoring image is built by the images workflow with `dockerfile: Dockerfile.sco
 uv run iproofs fidelity score --level L1 --rung llama-3.1-8b --release v1.0 --part teacher-forced --raw <the merged raw directory>
 ```
 
-writes `kl.json` and `teacher-forced.json` in that folder. Without `--raw` it reads the stored `kl.json`.
+writes `kl.json` and `teacher-forced.json` in that folder. Without `--raw` it reads the stored `kl.json`. Once a scoring is merged it is not edited (APP-1): after more passes are added, score with `--scoring 2 --reason "..."` (then 3, and so on), which writes `teacher-forced-2.json` and `kl-2.json`; the board reads the highest.
 
 ## Step 4: release
 

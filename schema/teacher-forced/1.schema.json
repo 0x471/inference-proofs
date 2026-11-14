@@ -424,6 +424,25 @@
         "null"
       ]
     },
+    "replaces": {
+      "$comment": "FI-15, APP-1: a later scoring (teacher-forced-K.json) names the one it replaces; the replaced document stays",
+      "additionalProperties": false,
+      "properties": {
+        "document": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "reason": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "document",
+        "reason"
+      ],
+      "type": "object"
+    },
     "rows": {
       "additionalProperties": {
         "additionalProperties": false,

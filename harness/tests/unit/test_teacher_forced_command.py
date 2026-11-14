@@ -12,7 +12,7 @@ from iproofs.commands import teacher_forced as cmd
 from iproofs.commands.fidelity import Call
 from iproofs.errors import IProofsError
 from iproofs.provenance import file_digest
-from iproofs.teacher_forced import Pass, board_block, score_pass, write_topk
+from iproofs.teacher_forced import Pass, board_block, score_pass, scoring_file, write_topk
 
 D = "sha256:" + "11" * 32
 
@@ -211,3 +211,14 @@ def test_a_finished_system_run_is_a_pass_of_every_prompt(tmp_path: Path) -> None
     record: dict[str, object] = {"prompts": 2, "of": 2}
     assert cmd._system_record(argparse.Namespace(system="sys"), record, part, io, out, 2, None)
     assert (record["prompts"], "stopped" in record, record["ids"]) == (2, False, ["sys"])
+
+
+def test_the_scoring_in_force_is_the_highest_numbered(tmp_path: Path) -> None:
+    """APP-1: a later scoring is a new file; the board must read it, not the merged one."""
+    assert scoring_file(tmp_path, "teacher-forced") == tmp_path / "teacher-forced.json"
+    for name in ("teacher-forced.json", "teacher-forced-2.json", "teacher-forced-10.json",
+                 "teacher-forced-draft.json", "kl.json"):  # fmt: skip
+        (tmp_path / name).write_text("{}")
+    assert scoring_file(tmp_path, "teacher-forced") == tmp_path / "teacher-forced-10.json"
+    assert scoring_file(tmp_path, "kl") == tmp_path / "kl.json"
+    assert scoring_file(tmp_path, "kl", 2) == tmp_path / "kl-2.json"
