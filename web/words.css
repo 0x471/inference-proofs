@@ -965,6 +965,12 @@ html.js .scalepage .scl-panel { margin-top: 0; }
    room under the first; the figure's table has a column for the row's two tests against each control, a line
    each, and a narrower track for it */
 .syspage .blk > .rb.nx { margin-top: 44px; }
+/* the check's table behind a disclosure, under the line that opens its block: closed, its summary says the state,
+   the row's score and the bar */
+.more.fold { margin: 12px 0 0 12px; }
+.more.fold[open] > summary { margin-bottom: 14px; }
+.more.fold > .flead, .more.fold > table { margin-left: -12px; }
+.more.fold > table { width: calc(100% + 12px); }
 .syspage .blk > .rb .k a { color: inherit; }
 .fid.tf .trk { width: 18%; }
 .fid .tst .sub, .fid.tf .fig + .sub { white-space: nowrap; }
@@ -1144,6 +1150,10 @@ html.js .scalepage .scl-panel { margin-top: 0; }
   .fid.stk .tst:before { display: none; }
   .fid .tby { display: inline; }
   .syspage .blk > .rb.nx { margin-top: 32px; }
+  /* a block's opening lines wrap inside their column, and stand clear of the first card under them */
+  .syspage #fidelity > .rb .nw { white-space: normal; }
+  .syspage .blk > .rb + .fid { margin-top: 12px; }
+  .more.fold > summary { white-space: normal; }
   /* a column's label once, on the first card (the system's own) */
   .fid.stk tbody tr:not(:first-child) td[data-l]:before { display: none; }
   .syspage .rt.stk tr { padding-right: 12px; }

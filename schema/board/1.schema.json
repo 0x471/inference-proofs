@@ -1647,6 +1647,43 @@
                     "minimum": 0,
                     "maximum": 100
                   },
+                  "proved_tokens": {
+                    "$comment": "FI-16: the positions at which a proof states the committed model's top token on the reference's text, and those where the row's pass gave it; null without a pass or without a proved reply for every prompt",
+                    "additionalProperties": false,
+                    "properties": {
+                      "agreeing": {
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      "positions": {
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      "prompts": {
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      "split_agreeing": {
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      "split_positions": {
+                        "minimum": 0,
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "prompts",
+                      "positions",
+                      "agreeing",
+                      "split_positions",
+                      "split_agreeing"
+                    ],
+                    "type": [
+                      "object",
+                      "null"
+                    ]
+                  },
                   "run": {
                     "type": [
                       "string",

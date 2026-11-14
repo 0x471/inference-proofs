@@ -1438,6 +1438,13 @@
             "median": 437.0,
             "n": 360,
             "percent": 86.40407986111111,
+            "proved_tokens": {
+              "agreeing": 11034,
+              "positions": 11034,
+              "prompts": 360,
+              "split_agreeing": 357,
+              "split_positions": 357
+            },
             "run": "results/v1.0/teacher-forced/llama-4-maverick/run-flashprove.json",
             "status": "ok",
             "tests": [
@@ -2775,6 +2782,13 @@
             "median": 471.0,
             "n": 15,
             "percent": 92.03125,
+            "proved_tokens": {
+              "agreeing": 480,
+              "positions": 480,
+              "prompts": 15,
+              "split_agreeing": 15,
+              "split_positions": 15
+            },
             "run": "results/v1.0/teacher-forced/llama-3.1-8b/run-sash.json",
             "status": "ok",
             "tests": [

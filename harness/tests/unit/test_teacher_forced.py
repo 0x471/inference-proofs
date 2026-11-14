@@ -18,6 +18,7 @@ from iproofs.teacher_forced import (
     measure_kl,
     position_kl,
     prompt_kl,
+    proved_tokens,
     read_topk,
     row_tests,
     score_pass,
@@ -40,6 +41,30 @@ def test_fidelity_is_the_mean_as_a_percentage_of_positions() -> None:
     assert round(fidelity_percent(471.2, 512) or 0, 1) == 92.0  # SASH's stored mean on 8B
     assert fidelity_percent(512.0, 512) == 100.0
     assert fidelity_percent(None, 512) is None
+
+
+def test_proved_tokens_counts_the_positions_a_proof_covers() -> None:
+    # FI-16, by hand. Reference replies of 4 tokens.
+    # Prompt 0: the proved reply leaves the reference at position 2 (L = 2): positions 0, 1 and
+    #   the split 2 are covered. The pass gives the proved token at 0 and 1 and, at the split,
+    #   the proved token 9 (not the reference's 3): 3 of 3, split 1 of 1.
+    # Prompt 1: the proved reply is the reference (L = 4): 4 positions, no split. The pass
+    #   misses the proved token at position 3: 3 of 4.
+    # Prompt 2: the proved reply leaves at once (L = 0): the split alone, and the pass gives
+    #   the reference's token there, not the proved one: 0 of 1, split 0 of 1.
+    # Prompt 3: no top tokens (the system's code gave none): left out.
+    reference = [[1, 2, 3, 4], [5, 6, 7, 8], [1, 1, 1, 1], [2, 2, 2, 2]]
+    proved = [[1, 2, 9, 9], [5, 6, 7, 8], [4, 1, 1, 1], [2, 2, 2, 2]]
+    tops = [[1, 2, 9, 0], [5, 6, 7, 0], [1, 1, 1, 1], None]
+    assert proved_tokens(proved, reference, tops) == {
+        "prompts": 3,
+        "positions": 8,
+        "agreeing": 6,
+        "split_positions": 2,
+        "split_agreeing": 1,
+    }
+    with pytest.raises(ValueError, match="top tokens"):
+        proved_tokens([[1, 2]], [[1, 2]], [[1]])
 
 
 def test_kl_of_a_full_small_vocabulary() -> None:

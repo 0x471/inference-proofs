@@ -425,9 +425,25 @@ def _fidelity(
     return block, doc if isinstance(doc, dict) else None
 
 
-def _teacher_forced(root: Path, release: str, rung: str) -> dict[str, object] | None:
+def _proved_replies(sessions: RowSessions, slots: int, n: int) -> list[list[int]] | None:
+    """FI-16: a row's proved replies in prompt order, from its counted sessions (FI-6's
+    reading); None unless every slot has a session of n accepted replies."""
+    from iproofs.fidelity import row_replies, session_replies  # noqa: PLC0415
+
+    by_slot = {}
+    for slot, session in sessions.counted.items():
+        found = session_replies(session.run.run)
+        if found is not None:
+            by_slot[slot] = found
+    return row_replies(by_slot, slots, n)
+
+
+def _teacher_forced(
+    root: Path, release: str, rung: str, proved: Mapping[str, list[list[int]] | None]
+) -> dict[str, object] | None:
     """SI-9: the rung's teacher-forced block from `teacher-forced.json` (FI-10 to FI-15), its
-    scores recomputed from the stored top tokens; None when not stored. It gates nothing and no
+    scores recomputed from the stored top tokens, and each row's count of proved tokens
+    (FI-16) from `proved`, its proved replies; None when not stored. It gates nothing and no
     check, petal or position reads it."""
     from iproofs.teacher_forced import board_block  # noqa: PLC0415
 
@@ -442,7 +458,7 @@ def _teacher_forced(root: Path, release: str, rung: str) -> dict[str, object] | 
     values = folder / "kl.json"
     kl = json.loads(values.read_text()) if values.is_file() else None
     try:
-        return board_block(doc, rel(root, path), tops, reference, kl)
+        return board_block(doc, rel(root, path), tops, reference, kl, proved)
     except (ValueError, KeyError) as e:
         raise IProofsError(ErrorKind.INTEGRITY, str(e)) from e
 
@@ -657,6 +673,7 @@ def build_board(root: Path, release: str, level: object) -> dict[str, object]:
     dates: set[str] = set()
     rungs_out, summaries = [], []
     rung_list: Sequence[object] = field_of(level, "rungs") or ()  # type: ignore[assignment]
+    slots = int_of(field_of(level, "sessions"), "slots", 0)
     for ri, rung in enumerate(rung_list):
         rung_id = str(field_of(rung, "id"))
         n = int_of(rung, "requests_per_session", 0)
@@ -668,10 +685,12 @@ def build_board(root: Path, release: str, level: object) -> dict[str, object]:
         fidelity_rows = fidelity_doc.get("rows") if fidelity_doc else None
         fidelity_rows = fidelity_rows if isinstance(fidelity_rows, dict) else {}
         rows = []
+        proved: dict[str, list[list[int]] | None] = {}
         for system, workload in sorted(_workloads(rung).items()):
             sessions = row_sessions(root, release, level, rung_id, system, digest)
             if not sessions.all:
                 continue  # not run: no row (RFC-0018 §The board file)
+            proved[system] = _proved_replies(sessions, slots, n)
             dates |= {s.run_id[:10] for s in sessions.all}
             states = checks_from(root, release, level, rung_id, system, sessions, digest)
             security, stated = _security(level, system)
@@ -718,7 +737,7 @@ def build_board(root: Path, release: str, level: object) -> dict[str, object]:
                                fidelity_rows, n)
                      for j, (s, p) in enumerate(ordered)],
         })  # fmt: skip
-        teacher_forced = _teacher_forced(root, release, rung_id)
+        teacher_forced = _teacher_forced(root, release, rung_id, proved)
         if teacher_forced is not None:  # SI-9: printed figures only; absent while not scored
             rungs_out[-1]["teacher_forced"] = teacher_forced
     request = field_of(level, "request")

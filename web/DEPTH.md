@@ -46,7 +46,8 @@ The shallowest depth where each kind of content may be printed, and its form the
 | the same measure on the model's 8-bit and 4-bit copies | 1, with the figure | figures with their units, named in words (see Exceptions) |
 | the Fidelity check's state | 1 | the standing names a check not held; held, it is under Checks at 3 and in the figure's title |
 | how fidelity is measured (what a row is fed, the positions, the median, the tests, every other control, KL, whose computation) | 3 | the Fidelity section's first block |
-| the check's metrics (matched leading tokens, the bar, p, the controls, KL) | 3 | the Fidelity section's second block |
+| the figure's count against the proofs (FI-16) | 3 | the second line of the Fidelity section; in the surface figure's title above that |
+| the check's metrics (matched leading tokens, the bar, p, the controls, KL) | 3 | the Fidelity section's second block: the state, the row's score and the bar in a disclosure's summary, the table behind it |
 | serving, the figure every multiple is over | 1 | figure with its unit, in the model's head |
 | how the model was served (engine, GPUs, concurrency) | 3 | one line under Cost |
 | what was counted (scope: "whole sessions of N replies", steady, verify) | 2 | once, under the band's figure (a phone's band leaves it to the Cost block); at 3 once for the Cost block, and under a figure whose scope differs |

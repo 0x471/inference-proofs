@@ -87,6 +87,22 @@ def test_fidelity_percentages_are_the_boards(release_site: Any) -> None:
     assert all(any(p.endswith(f"/rows/{s}/percent") for p in seen) for s in scored)
 
 
+def test_the_count_against_the_proofs_is_the_boards(release_site: Any) -> None:
+    """RFC-0018 FI-16: a system's page prints the board's count of positions a proof covers and
+    of those its code agreed at, whole and at the positions where the two replies part."""
+    seen = 0
+    text = "".join(pages(release_site.out).values())
+    for rung in release_site.board["rungs"]:
+        for entry in (rung.get("teacher_forced") or {}).get("rows", {}).values():
+            tie = entry.get("proved_tokens")
+            if tie is None:
+                continue
+            assert f"{tie['agreeing']:,} of {tie['positions']:,} positions" in text
+            assert f"{tie['split_agreeing']:,} of {tie['split_positions']:,} where" in text
+            seen += 1
+    assert seen
+
+
 def arm(p: dict[str, Any]) -> tuple[str, str, str, str, str]:
     """A board petal as its arm must be drawn: (state, form, step, cause). The form is the rule's
     (§The glyph, Q7): cut for amber in lesser part, open for a red the publisher's silence set."""

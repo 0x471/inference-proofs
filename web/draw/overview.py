@@ -28,6 +28,7 @@ from .words import (
     FIDELITY_CHECK_TITLE,
     FIDELITY_COPY_TITLE,
     FIDELITY_FIG_TITLE,
+    FIDELITY_PROVED_TITLE,
     FIDELITY_TITLE,
     FIGURE_HEAD,
     FRONTIER_WORD,
@@ -234,15 +235,21 @@ def fidelity_word(row, page=None):
     """A row's Fidelity as the surface prints it (RFC-0018 SI-9, amended 2026-11-14): FI-10's
     mean as a percentage of the reply's positions, linked to the Fidelity section of the
     system's page, with the model's 8-bit and 4-bit copies under it (`fidelity_against`). Its
-    title says what it is, whose computation, n and the record, and the FIDELITY check's state,
-    which it does not set. A row with no teacher-forced pass prints the check's state in a
-    word (`check_word`)."""
+    title says what it is, whose computation, its count against the proofs (FI-16), n and the
+    record, and the FIDELITY check's state, which it does not set. A row with no
+    teacher-forced pass, or whose pass gave another token than a proof states, prints the
+    check's state in a word (`check_word`)."""
     tf = rung_of(row).get("teacher_forced") or {}
     mine = (tf.get("rows") or {}).get(row["system"])
     if mine is None or mine["status"] != "ok" or mine.get("percent") is None:
         return check_word(row, page)
     check = next(c for c in row["checks"] if c["id"] == "fidelity")
-    title = [FIDELITY_FIG_TITLE, mine["label"], f"n = {mine['n']:,} prompts",
+    tie = mine.get("proved_tokens")
+    if tie is not None and tie["agreeing"] != tie["positions"]:
+        return check_word(row, page)  # FI-16: its code is not shown to be the proved model's
+    title = [FIDELITY_FIG_TITLE, mine["label"],
+             *([FIDELITY_PROVED_TITLE.format(**tie)] if tie is not None else []),
+             f"n = {mine['n']:,} prompts",
              FIDELITY_CHECK_TITLE.format(state=STATE_WORD[check["state"]]),
              f"record: {tf['record']}/rows/{row['system']}/percent"]  # fmt: skip
     at = href(row) if page is None else page

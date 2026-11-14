@@ -62,8 +62,12 @@ from .words import (
     CHECKS_DESC,
     CONTROL_NAME,
     FID_CHECK,
+    FID_CHECK_BAR,
     FID_CHECK_LEAD,
+    FID_CHECK_SCORE,
     FID_FIGURE,
+    FID_NO_BAR,
+    FID_PROOFS,
     FIDELITY_AGAINST,
     FIDELITY_AT,
     FIGURE_HEAD,
@@ -110,6 +114,9 @@ from .words import (
     TF_LEAD,
     TF_N,
     TF_NO_STATE,
+    TF_NOT_PROVED,
+    TF_PROVED,
+    TF_PROVED_SPLIT,
     TF_SUB,
     TF_TEST,
     VISIBLE_TAG_WORD,
@@ -773,12 +780,23 @@ def fidelity_html(row):
     ths = (f'<th scope="col">{e(heads[0])}</th><th scope="col">{e(heads[1])}</th>'
            f'<th scope="col" class="trk" aria-hidden="true"></th>'
            + "".join(f'<th scope="col">{e(h)}</th>' for h in heads[2:]))  # fmt: skip
+    table = (f'{lead}<table class="rt stk fid"><thead><tr>{ths}</tr></thead>'
+             f'<tbody>{"".join(out)}</tbody></table>')  # fmt: skip
     figure = teacher_forced_html(row)
-    if figure:  # two blocks: the check's opens with its own line, its name linked to its rule
-        lead = (f'<p class="rb nx"><span class="k"><a class="df" href="{CHECKS_PAGE}#fidelity">'
-                f"{e(FID_CHECK)}</a></span> <span>{e(FID_CHECK_LEAD)}</span></p>{lead}")  # fmt: skip
-    return (f'{figure}{lead}<table class="rt stk fid"><thead><tr>{ths}</tr></thead>'
-            f'<tbody>{"".join(out)}</tbody></table>')  # fmt: skip
+    if not figure:
+        return table
+    # two blocks: the check's opens with its own line, its name linked to its rule; its table
+    # behind a disclosure whose summary says the state, the row's score and the bar
+    check = next(c for c in row["checks"] if c["id"] == "fidelity")
+    said = [STATE_WORD[check["state"]]]
+    if mine is not None and mine.get("mean_prefix") is not None:
+        said.append(FID_CHECK_SCORE.format(score=sig(mine["mean_prefix"])))
+    said.append(FID_CHECK_BAR.format(bar=sig(edge)) if edge is not None else FID_NO_BAR)
+    summary = " · ".join(f'<span class="nw">{e(w)}</span>' for w in said)
+    return (f'{figure}<p class="rb nx"><span class="k"><a class="df" href="{CHECKS_PAGE}#fidelity">'
+            f"{e(FID_CHECK)}</a></span> <span>{e(FID_CHECK_LEAD)}</span></p>"
+            f'<details class="more fold"><summary>{summary}<span class="sr">, the check\'s '
+            f"table</span></summary>{table}</details>")  # fmt: skip
 
 
 def control_name(c):
@@ -865,6 +883,17 @@ def teacher_forced_html(row):
             f"{e(TF_NO_STATE)}</span>")  # fmt: skip
     lead = (f'<p class="rb"><span class="k"><a class="df" href="{CHECKS_PAGE}#{FIDELITY_AT}">'
             f"{e(FID_FIGURE)}</a></span> <span>{said}</span></p>")  # fmt: skip
+    if mine is not None and mine["status"] == "ok":  # FI-16: the pass against the proofs
+        tie = mine.get("proved_tokens")
+        if tie is None:
+            proofs = e(TF_NOT_PROVED)
+        else:
+            split = TF_PROVED_SPLIT.format(agreeing=tie["split_agreeing"],
+                                           positions=tie["split_positions"])  # fmt: skip
+            proofs = (f"{e(TF_PROVED.format(name=name, **tie))} "
+                      f'<span class="nw">\u00b7\u00a0{e(split)}</span>')  # fmt: skip
+        lead += (f'<p class="rb"><span class="k">{e(FID_PROOFS)}</span> '
+                 f"<span>{proofs}</span></p>")  # fmt: skip
     notes = ""
     if mine is not None:
         sub = [sub_of(mine) if mine["status"] == "ok" else ""]

@@ -245,6 +245,7 @@ FIDELITY_FIG_TITLE = ("Fidelity: the share of reply positions where the system's
                       "the original model's, fed the original model's reply")  # fmt: skip
 FIDELITY_COPY_TITLE = "{id}, the original model's {words}, fed the same replies"
 FIDELITY_CHECK_TITLE = "Fidelity check (leading tokens matching the original): {state}"
+FIDELITY_PROVED_TITLE = "the proved token at {agreeing:,} of {positions:,} positions a proof covers"
 
 
 def beside_unit(name):
@@ -303,7 +304,12 @@ FIGURE_RULE = {
          "proved computation: a proof exists only for the system's own reply. We print this "
          "figure for context; it does not decide any check. The Fidelity check alone sets its "
          "state and the Faithful model petal."),
-        ("none", "A row with no such run prints the Fidelity check's state in its place."),
+        ("checked", "Where a proved reply starts like the original's, both models have read "
+         "the same text, so a proof states which token the proved model picks there, up to "
+         "and including the first token that differs. The system's code must pick that token "
+         "at every such position; the system's page prints the count."),
+        ("none", "A row with no such run, or whose code picks another token than a proof "
+         "states, prints the Fidelity check's state in its place."),
     ),
     "kl": (
         ("kl", "Mean Kullback-Leibler divergence per scored token (in nats) between the model "
@@ -499,13 +505,22 @@ RECORD_WORD = {"run.json": "run record", "controls.json": "controls", "verify-tr
 P_ABOVE = "above the bar: p\u00a0=\u00a0{p}"
 # the Fidelity section's two blocks, each opened by a line: the figure's (RFC-0018 FI-10 to
 # FI-13, SI-9: the teacher-forced table, figures only, no state), then the check's (FI-3 to FI-6)
-FID_FIGURE, FID_CHECK = "Figure", "Check"
+FID_FIGURE, FID_PROOFS, FID_CHECK = "Figure", "Proofs", "Check"
 TF_LEAD = (
     "each row is fed the prompt, then the original's reply token by token: the share of "
     "the reply's {positions:,} positions where its own top token is the original's"
 )
 TF_N = "n\u00a0=\u00a0{n:,} prompts in each row"
 TF_NO_STATE = "sets no state"
+# FI-16: the row's pass against its proofs, the line under the figure's
+TF_PROVED = (
+    "where a proved reply starts like the original's, a proof states the model's token: "
+    "{name}'s code picked it at {agreeing:,} of {positions:,} positions"
+)
+TF_PROVED_SPLIT = "{agreeing:,} of {positions:,} where the two replies part"
+TF_NOT_PROVED = "not compared: the row has no proved reply for every prompt"
+# the check's table behind a disclosure: its summary's pieces
+FID_CHECK_SCORE, FID_CHECK_BAR, FID_NO_BAR = "{score} leading tokens", "bar {bar}", "no bar"
 FID_CHECK_LEAD = (
     "each row writes its own replies: how many leading tokens are the original's. "
     "The check holds where the system scores above the bar"
