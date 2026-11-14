@@ -142,6 +142,14 @@ def register(sub: "argparse._SubParsersAction[argparse.ArgumentParser]", command
         "such run)",
     )
     p.add_argument(
+        "--server-arg",
+        action="append",
+        default=[],
+        metavar="ARG",
+        help="with --teacher-forced in llama.cpp: an option added to llama-server (the image "
+        "allows --swa-full); recorded in the run",
+    )
+    p.add_argument(
         "--offset",
         type=int,
         default=0,
@@ -187,6 +195,14 @@ def register(sub: "argparse._SubParsersAction[argparse.ArgumentParser]", command
         help="with --part teacher-forced: the passes' lists (one directory per id), from which "
         "the KL values are measured into kl.json first",
     )
+    p.add_argument(
+        "--scoring",
+        type=int,
+        metavar="K",
+        help="with --part teacher-forced: write teacher-forced-K.json and kl-K.json (K from 2) "
+        "and leave the merged scoring as it is (APP-1); needs --reason",
+    )
+    p.add_argument("--reason", help="with --scoring: why the earlier scoring is replaced")
     p.set_defaults(handler=fidelity_score)
 
 

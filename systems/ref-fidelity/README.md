@@ -69,7 +69,25 @@ The cause, from a probe of 2026-11-14 (Q4_K_M on 4 H200, 16 slots, 16 prompts an
 | `--ctx-checkpoints 0` | 519 to 521 (the whole prompt again) | 975 ms | 15.6 |
 | `--swa-full` | 1 | 90 ms | 168 |
 
-`--swa-full` is documented ("use full-size SWA cache", [tools/server/README.md](https://github.com/ggml-org/llama.cpp/blob/cd959bae99ff4bed22bef2604f45241c09bbb8c8/tools/server/README.md)); the default and `--swa-full` rows were each measured twice in that job with the same result (n = 2). With it a pass over Maverick's 360 prompts would take about 18 min in place of about 7 h 40 min. Not yet checked: that the option leaves the top tokens and log-probabilities unchanged (the probe's outputs were not kept). The stored Q8_0 and Q4_K_M passes ran with the default cache; a pass with `--swa-full` should first repeat a stored shard and be compared with it. No position came back without a list. An earlier run of the whole Q4_K_M pass in one job was stopped at its deadline and stored nothing (`not-stored.json`).
+`--swa-full` is documented ("use full-size SWA cache", [tools/server/README.md](https://github.com/ggml-org/llama.cpp/blob/cd959bae99ff4bed22bef2604f45241c09bbb8c8/tools/server/README.md)); the default and `--swa-full` rows were each measured twice in that job with the same result (n = 2). A teacher-forced pass takes the option from the job (`teacher_forced.server_args`, `iproofs fidelity run --server-arg=--swa-full`) and its run record names it (`server_args`).
+
+Full passes with `--swa-full` (one job of 2026-11-14, 4 H200, 16 slots, n = 1 run each; first to last request in the server's log):
+
+| Control | Requests | Pass | Positions per second |
+|---|---|---|---|
+| Q4_K_M, prompts 0 to 119 (a repeat) | 61,440 | 421 s | 146 |
+| Q3_K_S, 360 prompts | 184,320 | 1,306 s | 141 |
+| Q2_K, 360 prompts | 184,320 | 1,390 s | 133 |
+
+Every request of the three evaluated 1 prompt token after its prompt's first. The job ran 5,613 s for the three; the Q8_0 and Q4_K_M passes with the default cache took about 7 h 40 min each.
+
+Does the option change the outputs? Not beyond what two runs without it differ by. A llama.cpp pass at 16 slots on this model is not repeatable token for token:
+
+- The Q4_K_M repeat above against the stored pass of the same 120 prompts (default cache, `results/v1.0/teacher-forced/llama-4-maverick/top/q4_k_m@0.jsonl`): 1,689 of 61,440 top tokens differ, in 119 of 120 prompts, from the first request of a prompt on. Mean agreeing positions with the reference: 439.53 with the option, 439.34 without; the repeat is higher on 48 prompts, lower on 52 and equal on 20, by at most 15 positions on one prompt. The stored pass stays the scored one; the repeat is kept in `results/v1.0/teacher-forced/llama-4-maverick/repeat/q4_k_m-0-swa-full/` and is not scored.
+- The same requests twice with the option and twice without (the Q3_K_S file, a server started by hand in the same job, 16 prompts and 16 positions each, 256 requests per run, top tokens in `results/v1.0/teacher-forced/llama-4-maverick/repeat/q3_k_s-by-hand/`): the top token differs on 3 requests between the two runs with the option, on 7 between the two without, and on 3 to 10 between a run with and a run without (4 pairs). The top token equals the reference reply's on 206 and 206 requests with the option, on 204 and 202 without.
+- Llama 3.1 8B, two runs of 15 prompts at 16 slots that differ only in `GGML_CUDA_DISABLE_GRAPHS`: 28 of 7,680 top tokens differ.
+
+So a control's score on one prompt carries run-to-run variation of a few positions, and the mean over 120 prompts moved by 0.19 positions between two runs. What makes two runs differ is not established; the difference shows from a prompt's first request without the option and from later requests with it.
 
 ## Resources
 
