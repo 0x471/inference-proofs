@@ -1337,34 +1337,50 @@
             "status": "ok"
           },
           {
-            "cause": "not run: left out of this job (--only)",
+            "cause": null,
             "failed": [],
             "id": "q3_k_s",
             "kind": "damaged",
-            "kl": null,
-            "kl_note": "not measured: no lists of the most probable tokens are stored for it",
-            "mean": null,
-            "mean_not_failed": null,
-            "median": null,
-            "n": 0,
-            "percent": null,
-            "run": null,
-            "status": "failed"
+            "kl": {
+              "n": 360,
+              "note": "computed by the engine on the control's file, on the reference reply",
+              "positions": 184320,
+              "reference_rest_mass": 0.0023774924369543344,
+              "source": "results/v1.0/teacher-forced/llama-4-maverick/kl.json#/engines/q3_k_s",
+              "unit": "nat/token",
+              "value": 0.6366313691427042
+            },
+            "kl_note": "computed by the engine on the control's file, on the reference reply",
+            "mean": 367.9472222222222,
+            "mean_not_failed": 367.9472222222222,
+            "median": 353.0,
+            "n": 360,
+            "percent": 71.86469184027777,
+            "run": "results/v1.0/teacher-forced/llama-4-maverick/run-controls-q3_k_s.json",
+            "status": "ok"
           },
           {
-            "cause": "not run: left out of this job (--only)",
+            "cause": null,
             "failed": [],
             "id": "q2_k",
             "kind": "damaged",
-            "kl": null,
-            "kl_note": "not measured: no lists of the most probable tokens are stored for it",
-            "mean": null,
-            "mean_not_failed": null,
-            "median": null,
-            "n": 0,
-            "percent": null,
-            "run": null,
-            "status": "failed"
+            "kl": {
+              "n": 360,
+              "note": "computed by the engine on the control's file, on the reference reply",
+              "positions": 184320,
+              "reference_rest_mass": 0.004050482945277871,
+              "source": "results/v1.0/teacher-forced/llama-4-maverick/kl.json#/engines/q2_k",
+              "unit": "nat/token",
+              "value": 0.9713368399417625
+            },
+            "kl_note": "computed by the engine on the control's file, on the reference reply",
+            "mean": 328.18333333333334,
+            "mean_not_failed": 328.18333333333334,
+            "median": 313.0,
+            "n": 360,
+            "percent": 64.09830729166667,
+            "run": "results/v1.0/teacher-forced/llama-4-maverick/run-controls-q2_k.json",
+            "status": "ok"
           },
           {
             "cause": "not run: the copy would be the 16-bit file in llama.cpp, which the level's llama.cpp pin cannot run on this rung (RFC-0018 FI-9)",
@@ -1488,6 +1504,38 @@
                 "n": 360,
                 "p": 1.0,
                 "seed": "0xd826dd3439861a65"
+              },
+              {
+                "a": "flashprove",
+                "b": "q3_k_s",
+                "method": "monte-carlo",
+                "n": 360,
+                "p": 4.9999750001249995e-06,
+                "seed": "0x2148fbc6c944a300"
+              },
+              {
+                "a": "q3_k_s",
+                "b": "flashprove",
+                "method": "monte-carlo",
+                "n": 360,
+                "p": 1.0,
+                "seed": "0x5fe9237daab2e6f4"
+              },
+              {
+                "a": "flashprove",
+                "b": "q2_k",
+                "method": "monte-carlo",
+                "n": 360,
+                "p": 4.9999750001249995e-06,
+                "seed": "0x52ec0280b1a024ab"
+              },
+              {
+                "a": "q2_k",
+                "b": "flashprove",
+                "method": "monte-carlo",
+                "n": 360,
+                "p": 1.0,
+                "seed": "0x188a0b8f7aea0004"
               },
               {
                 "a": "flashprove",
