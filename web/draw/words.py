@@ -228,7 +228,7 @@ PETAL_CHECKS = {"unforgeable": ("model", "prompt", "reply"), "weights_hidden": (
 # file's constants; {reference} is each model's reference precision.
 FIGURE_NAME = {"multiple": "Cost vs serving", "cost": "Cost per reply",
                "check-time": "Verify time per reply", "proof-size": "Proof size per reply",
-               "kl": "KL to the original weights"}  # fmt: skip
+               "top-token": "Fidelity", "kl": "KL to the original weights"}  # fmt: skip
 # a figure's head where its unit stands beside it: the unit says "per reply", so the head does
 # not; and the surface names fidelity, not the metric (KL and the matched tokens' bar are under
 # Fidelity on a system's page)
@@ -236,10 +236,14 @@ FIGURE_HEAD = {"multiple": "Cost vs serving", "cost": "Cost", "check-time": "Ver
                "proof-size": "Proof size", "fidelity": "Fidelity", "serving": "Serving"}  # fmt: skip
 FIDELITY_TITLE = "leading tokens matching the original, mean"  # in a fidelity word's title
 # Fidelity as a figure (RFC-0018 SI-9, amended 2026-11-14): FI-10's mean as a percentage of the
-# reply's positions, beside the model's 8-bit and 4-bit copies; it sets no state
-FIDELITY_AGAINST = ("q8_0", "q4_k_m")  # the controls printed beside a row's Fidelity
+# reply's positions; it sets no state. Under it, the same measure on two copies of the model,
+# named in words at the surface (their ids are the Fidelity table's, and each one's title's)
+FIDELITY_AT = "top-token"  # the figure's definition on the checks page (the check's is "fidelity")
+# (a no-break hyphen: the precision never splits from its number at a line's end)
+FIDELITY_AGAINST = {"q8_0": "8\u2011bit copy", "q4_k_m": "4\u2011bit copy"}
 FIDELITY_FIG_TITLE = ("Fidelity: the share of reply positions where the system's top token is "
                       "the original model's, fed the original model's reply")  # fmt: skip
+FIDELITY_COPY_TITLE = "{id}, the original model's {words}, fed the same replies"
 FIDELITY_CHECK_TITLE = "Fidelity check (leading tokens matching the original): {state}"
 
 
@@ -286,6 +290,20 @@ FIGURE_RULE = {
          "stored), divided by the number of replies in that session. A proof that "
          "covers several replies is counted once. Reported as the mean across {slots} sessions, "
          "in MB (one MB is 1,000,000 bytes)."),
+    ),
+    "top-token": (
+        ("fidelity", "Each system is fed the prompt, then the reply the publisher's original "
+         "weights wrote, token by token. At every position of that reply we compare the "
+         "system's most probable next token with the original's. Fidelity is the share of "
+         "positions where the two are the same, as a percentage, averaged over the prompts."),
+        ("copies", "Under it we print the same measure for two compressed copies of the "
+         "original weights, at 8 bits (Q8_0) and at 4 bits (Q4_K_M), to read the figure "
+         "against. Neither is a pass mark."),
+        ("computed by", "Computed by the system's own code on the original's reply, not by the "
+         "proved computation: a proof exists only for the system's own reply. We print this "
+         "figure for context; it does not decide any check. The Fidelity check alone sets its "
+         "state and the Faithful model petal."),
+        ("none", "A row with no such run prints the Fidelity check's state in its place."),
     ),
     "kl": (
         ("kl", "Mean Kullback-Leibler divergence per scored token (in nats) between the model "
@@ -479,19 +497,29 @@ CONTROL_NAME = {"reference-2": "original, run again"}
 RECORD_WORD = {"run.json": "run record", "controls.json": "controls", "verify-trace": "verify traces",
                "reverify.json": "re-verify record", "fidelity.json": "fidelity record"}  # fmt: skip
 P_ABOVE = "above the bar: p\u00a0=\u00a0{p}"
-# the teacher-forced table under it (RFC-0018 FI-10 to FI-13, SI-9): figures only, no state
+# the Fidelity section's two blocks, each opened by a line: the figure's (RFC-0018 FI-10 to
+# FI-13, SI-9: the teacher-forced table, figures only, no state), then the check's (FI-3 to FI-6)
+FID_FIGURE, FID_CHECK = "Figure", "Check"
 TF_LEAD = (
-    "A second measure, printed beside the check's score; it sets no state. Each row is fed "
-    "the prompt, then the original's reply token by token: at each of the reply's "
-    "{positions:,} positions, is its own top token the original's? Fidelity is the share of "
-    "positions where it is. n\u00a0=\u00a0{n:,} prompts in each row. KL compares, at each "
-    "position, the {k:,} most probable tokens of both, with every other token pooled."
+    "each row is fed the prompt, then the original's reply token by token: the share of "
+    "the reply's {positions:,} positions where its own top token is the original's"
 )
-TF_AGREE = "Fidelity: share of positions where the top token is the original's, mean"
+TF_N = "n\u00a0=\u00a0{n:,} prompts in each row"
+TF_NO_STATE = "sets no state"
+FID_CHECK_LEAD = (
+    "each row writes its own replies: how many leading tokens are the original's. "
+    "The check holds where the system scores above the bar"
+)
+TF_AGREE = "Positions where the top token is the original's, mean"
 TF_KL = "KL to the original, on its reply"
+TF_KL_NOTE = (
+    "KL compares, at each position, the {k:,} most probable tokens of both, with every "
+    "other token pooled."
+)
 TF_SUB = "median {median}"
 TF_FAILED = "{k:,} of {n:,} prompts failed, counted as 0"
-TF_TEST = "{name} above it: p\u00a0=\u00a0{above} · below it: p\u00a0=\u00a0{below}"
+TF_TEST = "{name} against it"  # the tests' column (FI-11): the row above the control, and below
+TF_ABOVE, TF_BELOW = "above: p\u00a0=\u00a0{p}", "below: p\u00a0=\u00a0{p}"
 TF_KL_SUB = "n\u00a0=\u00a0{n:,}"  # under a KL figure whose n is not the block's
 
 

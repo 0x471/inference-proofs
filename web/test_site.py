@@ -64,6 +64,29 @@ def test_every_printed_figure_is_a_board_value(board_site: Any) -> None:
     assert seen > 40
 
 
+PERCENT = re.compile(
+    r'<(?:a|span) class="fig(?: ff)?"[^>]*? title="([^"]*)"><span class="n">([^<]*)</span>'
+    r'<span class="u">%</span>'
+)
+
+
+def test_fidelity_percentages_are_the_boards(release_site: Any) -> None:
+    """RFC-0018 SI-9: every printed Fidelity (a row's on the ladder and on its page, a copy's
+    under it, a control's in the table) is the `percent` the release's board computed, at one
+    decimal."""
+    seen = set()
+    for name, text in pages(release_site.out).items():
+        for title, n in PERCENT.findall(text):
+            record = re.search(r"record: [^#]+#(/[^;\"]+)", html.unescape(title))
+            assert record, (name, title)
+            assert n == f"{resolve(release_site.board, record[1]):.1f}", (name, record[1])
+            seen.add(record[1])
+    scored = [row["system"] for rung in release_site.board["rungs"]
+              for row in rung["rows"] if (rung.get("teacher_forced") or {}).get("rows", {})
+              .get(row["system"], {}).get("percent") is not None]  # fmt: skip
+    assert all(any(p.endswith(f"/rows/{s}/percent") for p in seen) for s in scored)
+
+
 def arm(p: dict[str, Any]) -> tuple[str, str, str, str, str]:
     """A board petal as its arm must be drawn: (state, form, step, cause). The form is the rule's
     (§The glyph, Q7): cut for amber in lesser part, open for a red the publisher's silence set."""

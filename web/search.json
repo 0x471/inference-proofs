@@ -203,6 +203,16 @@
     {
       "group": "Figures",
       "kind": "figure",
+      "meta": "Each system is fed the prompt, then the reply the publisher's original weights wrote, token by token. At every position of that reply we compare the system's most probable next token with the original's. Fidelity is the share of positions where the two are the same, as a percentage, averaged over the prompts.",
+      "name": "Fidelity",
+      "pie": "",
+      "terms": "fidelity each system is fed the prompt, then the reply the publisher's original weights wrote, token by token. at every position of that reply we compare the system's most probable next token with the original's. fidelity is the share of positions where the two are the same, as a percentage, averaged over the prompts.",
+      "tier": 4,
+      "url": "/checks#top-token"
+    },
+    {
+      "group": "Figures",
+      "kind": "figure",
       "meta": "Mean Kullback-Leibler divergence per scored token (in nats) between the model file the system commits to and the publisher's original reference weights (16‑bit for Llama 4 Maverick 17B-128E Instruct and Llama 3.1 8B Instruct, 32‑bit for GPT-2).",
       "name": "KL to the original weights",
       "pie": "",

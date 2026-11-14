@@ -24,7 +24,9 @@ from .words import (
     CAUSE_WORD,
     CHECK_NAME,
     FIDELITY_AGAINST,
+    FIDELITY_AT,
     FIDELITY_CHECK_TITLE,
+    FIDELITY_COPY_TITLE,
     FIDELITY_FIG_TITLE,
     FIDELITY_TITLE,
     FIGURE_HEAD,
@@ -211,21 +213,30 @@ def pct(v):
 
 
 def fidelity_against(rung):
-    """The rung's 8-bit and 4-bit copies' Fidelity in one line ("Q8_0 98.4 % · Q4_K_M 90.6 %"),
-    each that ran; "" where none did."""
+    """Under a row's Fidelity, the same measure on the model's 8-bit and 4-bit copies, one over
+    the other, each named in words before its figure (its id, what it is and n in its title);
+    "" where neither ran. They are marks to read the figure against, never parts of it."""
     tf = rung.get("teacher_forced") or {}
-    by = {c["id"]: c for c in tf.get("controls") or []}
-    out = [f"{i.upper()} {pct(by[i]['percent'])}\u202f%" for i in FIDELITY_AGAINST
-           if i in by and by[i]["status"] == "ok" and by[i].get("percent") is not None]  # fmt: skip
-    return SEP.join(out)
+    out = []
+    for k, c in enumerate(tf.get("controls") or []):
+        words = FIDELITY_AGAINST.get(c["id"])
+        if words is None or c["status"] != "ok" or c.get("percent") is None:
+            continue
+        title = e(f"{FIDELITY_COPY_TITLE.format(id=c['id'].upper(), words=words)}; "
+                  f"n = {c['n']:,} prompts; record: {tf['record']}/controls/{k}/percent")  # fmt: skip
+        out.append(f'<span class="yi"><span class="yl" title="{title}">{e(words)}</span>'
+                   f'<span class="fig" title="{title}"><span class="n">{e(pct(c["percent"]))}'
+                   f'</span><span class="u">%</span></span></span>')  # fmt: skip
+    return f'<span class="ya">{"".join(out)}</span>' if out else ""
 
 
-def fidelity_word(row, page=None, against=True):
+def fidelity_word(row, page=None):
     """A row's Fidelity as the surface prints it (RFC-0018 SI-9, amended 2026-11-14): FI-10's
     mean as a percentage of the reply's positions, linked to the Fidelity section of the
-    system's page, with the rung's Q8_0 and Q4_K_M under it (`against`). Its title says what it
-    is, whose computation, n and the record, and the FIDELITY check's state, which it does not
-    set. A row with no teacher-forced pass prints the check's state in a word, as before."""
+    system's page, with the model's 8-bit and 4-bit copies under it (`fidelity_against`). Its
+    title says what it is, whose computation, n and the record, and the FIDELITY check's state,
+    which it does not set. A row with no teacher-forced pass prints the check's state in a
+    word (`check_word`)."""
     tf = rung_of(row).get("teacher_forced") or {}
     mine = (tf.get("rows") or {}).get(row["system"])
     if mine is None or mine["status"] != "ok" or mine.get("percent") is None:
@@ -233,12 +244,11 @@ def fidelity_word(row, page=None, against=True):
     check = next(c for c in row["checks"] if c["id"] == "fidelity")
     title = [FIDELITY_FIG_TITLE, mine["label"], f"n = {mine['n']:,} prompts",
              FIDELITY_CHECK_TITLE.format(state=STATE_WORD[check["state"]]),
-             f"record: {tf['path']}"]  # fmt: skip
+             f"record: {tf['record']}/rows/{row['system']}/percent"]  # fmt: skip
     at = href(row) if page is None else page
-    line = fidelity_against(rung_of(row)) if against else ""
-    return (f'<a class="fig fp" href="{e(at)}#fidelity" title="{e("; ".join(title))}">'
+    return (f'<a class="fig ff" href="{e(at)}#fidelity" title="{e("; ".join(title))}">'
             f'<span class="n">{e(pct(mine["percent"]))}</span><span class="u">%</span></a>'
-            + (f'<span class="sub">{sub_line(line)}</span>' if line else ""))  # fmt: skip
+            f"{fidelity_against(rung_of(row))}")  # fmt: skip
 
 
 def check_word(row, page=None):
@@ -324,10 +334,15 @@ def filled(text):
 FIGURES = ("multiple", "cost", "check-time", "fidelity")  # the figure columns, in the row's order
 
 
+def head(f):
+    """A figure's head (`FIGURE_HEAD`: no word its unit says), linked to its definition on the
+    checks page (Fidelity's to the figure's, `FIDELITY_AT`: the check of that name has its own)."""
+    return defined(FIGURE_HEAD[f], FIDELITY_AT if f == "fidelity" else f)
+
+
 def heads():
-    """The figure columns' heads (`FIGURE_HEAD`: no word its unit says), each linked to its
-    definition on the checks page."""
-    return [defined(FIGURE_HEAD[f], f) for f in FIGURES]
+    """The figure columns' heads, in the row's order."""
+    return [head(f) for f in FIGURES]
 
 
 def row_html(row, rung):

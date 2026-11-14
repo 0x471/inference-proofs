@@ -260,8 +260,12 @@ def _rung(
     rung["systems_run"] = raw["systems_run"]
     rung["baseline"] = _baseline(raw["baseline"], f"{at}/baseline", board)
     rung["fidelity"] = _fidelity(raw["fidelity"], f"{at}/fidelity", board)
-    # SI-9: the teacher-forced figures, printed beside fidelity; they set no state
-    rung["teacher_forced"] = raw.get("teacher_forced")
+    # SI-9: the teacher-forced figures, printed beside fidelity; they set no state. `record`:
+    # where the board holds them (a printed percentage names its value there)
+    tf = raw.get("teacher_forced")
+    here = f"{at}/teacher_forced"
+    rung["teacher_forced"] = None if tf is None else {
+        **tf, "record": f"{board}#{here}" if board else here}  # fmt: skip
     rung["rows"] = [_row(r, f"{at}/rows/{i}", board, rung) for i, r in enumerate(raw["rows"])]
     return rung
 

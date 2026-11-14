@@ -42,12 +42,15 @@ The shallowest depth where each kind of content may be printed, and its form the
 | cost, verify time | 0 | figure with its unit |
 | proof size | 1 (Scale), 2 | figure with its unit |
 | a unit | wherever its figure is | beside the figure, always |
-| fidelity | 1 | the check's state, one word ("held") |
-| the fidelity metrics (matched leading tokens, the bar, p, the controls, KL) | 3 | the Fidelity table; in the surface word's title above that |
+| fidelity | 1 | figure with its unit (a percentage); the check's state in one word ("held") where the figure is not measured |
+| the same measure on the model's 8-bit and 4-bit copies | 1, with the figure | figures with their units, named in words (see Exceptions) |
+| the Fidelity check's state | 1 | the standing names a check not held; held, it is under Checks at 3 and in the figure's title |
+| how fidelity is measured (what a row is fed, the positions, the median, the tests, every other control, KL, whose computation) | 3 | the Fidelity section's first block |
+| the check's metrics (matched leading tokens, the bar, p, the controls, KL) | 3 | the Fidelity section's second block |
 | serving, the figure every multiple is over | 1 | figure with its unit, in the model's head |
 | how the model was served (engine, GPUs, concurrency) | 3 | one line under Cost |
 | what was counted (scope: "whole sessions of N replies", steady, verify) | 2 | once, under the band's figure (a phone's band leaves it to the Cost block); at 3 once for the Cost block, and under a figure whose scope differs |
-| sample size (n) | 2 | once, beside the scope; at 3 beside the Cost block's scope, and under the system's own Fidelity figure (in replies) |
+| sample size (n) | 2 | once, beside the scope; at 3 beside the Cost block's scope, and in the Fidelity section: in the line that opens the figure's block (in prompts), and under the system's own score in the check's (in replies) |
 | pass thresholds, petal steps | 3 as the bar's row; 4 as rules | |
 | the request (prompt and reply tokens, decoding) | 4 | the line that opens the six checks |
 | the level's name | footer | a link to the mandate |
@@ -64,12 +67,13 @@ The shallowest depth where each kind of content may be printed, and its form the
 
 ## Words follow depth
 
-- **The surface names the property; deeper names the measure.** Depths 0 to 2 say "Fidelity", "Cost", "Verify time". The exact metric ("leading tokens matching the original, mean", "KL to the original weights") first appears at depth 3, as a column head. The surface word links to it.
+- **The surface names the property; deeper names the measure.** Depths 0 to 2 say "Fidelity", "Cost", "Verify time". The exact metric ("positions where the top token is the original's, mean", "leading tokens matching the original, mean", "KL to the original weights") first appears at depth 3, as a column head. The surface figure links to it.
 - **The head says what, the unit says per what.** "Cost" beside USD/reply, never "Cost per reply" beside USD/reply. `FIGURE_HEAD` in `draw/words.py` holds the heads; `beside_unit` trims a longer name where a unit follows it. A name printed with no unit (a definition's title, a sentence) keeps its full form.
 - **Once per block.** What a block's figures share (scope, n, a model, a date) is said once for the block, not on each figure. A figure that differs from its block says so.
 - **No bare fraction.** A figure is not framed "of N" unless N is what it is judged against. The mean matched prefix is judged against the model's bar, not against the reply's length, so it is printed with the bar or not at all.
 - **A state keeps its word at every depth.** held, failed, undecided; in full, in part, in lesser part. An abstraction never softens a state.
-- **No visible id above depth 3.** A rule id, a file name or a control's id is a link's title there.
+- **No visible id above depth 3.** A rule id, a file name or a control's id is a link's title there: the surface says "8-bit copy", its title and the Fidelity table say Q8_0.
+- **One name, two things, two homes.** Fidelity is a figure and a check. The figure is what the surface prints; the check is one of the six. Where both stand (a system's Fidelity section) each block is named for which it is, and each links to its own definition.
 
 ## The test
 
@@ -86,6 +90,7 @@ Then, before printing it: does a head, a unit, the glyph or another block of the
 ## Exceptions, each deliberate
 
 - **The two parts of the multiple are on the ladder**, a depth above where the test puts them. Where a system generates its reply in a phase of its own, most of its multiple can be generation, not proving, and the headline read alone is taken for the cost of proving (RFC-0018 CO-7, Decision Q15). The parts change how the headline reads, so they travel with it.
+- **The two copies are on the ladder, under Fidelity.** A percentage of matching tokens has no scale a reader knows: 86 % reads as a fault until the same model at 4 bits, a copy in everyday use, scores 85.5 %. The two copies give the figure its scale, so they travel with it (RFC-0018 SI-9). They are printed smaller and muted, since they are not the row's figures.
 - **A share card carries the release and its date.** A card outlives the page it was made from; the date says which figures it shows.
 
 ## Known gaps

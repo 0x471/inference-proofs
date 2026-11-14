@@ -37,6 +37,7 @@ from .overview import (
     fidelity_word,
     fig_html,
     filled,
+    head,
     href,
     multiple_html,
     name_of,
@@ -60,6 +61,11 @@ from .words import (
     CHECK_NAME,
     CHECKS_DESC,
     CONTROL_NAME,
+    FID_CHECK,
+    FID_CHECK_LEAD,
+    FID_FIGURE,
+    FIDELITY_AGAINST,
+    FIDELITY_AT,
     FIGURE_HEAD,
     FIGURE_NAME,
     FIGURE_RULE,
@@ -94,11 +100,16 @@ from .words import (
     SEP,
     STATE_WORD,
     STEP_WORD,
+    TF_ABOVE,
     TF_AGREE,
+    TF_BELOW,
     TF_FAILED,
     TF_KL,
+    TF_KL_NOTE,
     TF_KL_SUB,
     TF_LEAD,
+    TF_N,
+    TF_NO_STATE,
     TF_SUB,
     TF_TEST,
     VISIBLE_TAG_WORD,
@@ -692,9 +703,12 @@ def kl_cell(row):
 
 
 def fidelity_html(row):
-    """FI-5, FI-6, FI-7: the row's mean matched prefix and KL beside the model's controls, each
-    drawn on a track from no matched token to the whole reply, the bar marked; the system's own
-    replies a paper row, its p values under its prefix."""
+    """The Fidelity section, in the order its reader arrives: first the figure the surface
+    prints (`teacher_forced_html`, SI-9), then the check (FI-5, FI-6, FI-7): the row's mean
+    matched prefix and KL beside the model's controls, each drawn on a track from no matched
+    token to the whole reply, the bar marked; the system's own replies a paper row, its p
+    values under its prefix. Each block opens with a line that says what it scores, where
+    there are two."""
     fid = rung_of(row)["fidelity"]
     mine = row["fidelity"]
     bar = (fid or {}).get("bar")
@@ -737,10 +751,8 @@ def fidelity_html(row):
             kind += ", failed to run"
         none = "not run" if failed else "not measured"
         kl = fig_html(c["kl"]) if has(c["kl"]) else f'<span class="na">{none}</span>'
-        # a quantized copy by its name in capitals, as the glyph's reason and the checks page say it
-        name = CONTROL_NAME.get(c["id"]) or (c["id"].upper() if QUANT.match(c["id"]) else c["id"])
         out.append(
-            f'<tr class="{"bar" if is_bar else ""}"><th scope="row">{e(name)}</th>'
+            f'<tr class="{"bar" if is_bar else ""}"><th scope="row">{e(control_name(c))}</th>'
             + tds(
                 e(kind),
                 (c["mean_prefix"], "bar" if is_bar else c["kind"]),
@@ -761,8 +773,26 @@ def fidelity_html(row):
     ths = (f'<th scope="col">{e(heads[0])}</th><th scope="col">{e(heads[1])}</th>'
            f'<th scope="col" class="trk" aria-hidden="true"></th>'
            + "".join(f'<th scope="col">{e(h)}</th>' for h in heads[2:]))  # fmt: skip
-    return (f'{lead}<table class="rt stk fid"><thead><tr>{ths}</tr></thead>'
-            f'<tbody>{"".join(out)}</tbody></table>{teacher_forced_html(row)}')  # fmt: skip
+    figure = teacher_forced_html(row)
+    if figure:  # two blocks: the check's opens with its own line, its name linked to its rule
+        lead = (f'<p class="rb nx"><span class="k"><a class="df" href="{CHECKS_PAGE}#fidelity">'
+                f"{e(FID_CHECK)}</a></span> <span>{e(FID_CHECK_LEAD)}</span></p>{lead}")  # fmt: skip
+    return (f'{figure}{lead}<table class="rt stk fid"><thead><tr>{ths}</tr></thead>'
+            f'<tbody>{"".join(out)}</tbody></table>')  # fmt: skip
+
+
+def control_name(c):
+    """A control as its row names it: a quantized copy by its name in capitals, as the glyph's
+    reason and the checks page say it."""
+    return CONTROL_NAME.get(c["id"]) or (c["id"].upper() if QUANT.match(c["id"]) else c["id"])
+
+
+def control_kind(c):
+    """A control's kind in the figure's table, and for the two copies the surface prints under
+    Fidelity the words it names them by ("honest, 8-bit copy"), so a reader from there finds
+    them."""
+    words = FIDELITY_AGAINST.get(c["id"])
+    return c["kind"] + (f", {words}" if words else "")
 
 
 def tf_kl_html(entry, block_n):
@@ -782,23 +812,28 @@ def tf_kl_html(entry, block_n):
 
 
 def teacher_forced_html(row):
-    """SI-9 (FI-10 to FI-13): under the Fidelity table, the row's teacher-forced agreement and
-    KL beside the model's controls, with its label, whose computation it is and its records.
-    Figures only: nothing here sets a state. Nothing is printed while no pass is scored."""
+    """SI-9 (FI-10 to FI-13): the block that opens the Fidelity section, the figure the surface
+    prints. One line says what it scores, its n and that it sets no state; then the row's
+    percentage (its median under it) and KL beside the model's controls, the row's two tests
+    against each control in a column of their own (FI-11); under the table, FI-13's label, whose
+    computation it is, its records and how KL is taken. Figures only: nothing here sets a state.
+    "" while no pass is scored."""
     tf = rung_of(row).get("teacher_forced")
     if tf is None:
         return ""
     mine = tf["rows"].get(row["system"])
-    whole, top_k = tf["positions"], tf["top_k"]
+    name, whole = name_of(row), tf["positions"]
+    tests = {(t["a"], t["b"]): t["p"] for t in mine["tests"]} if mine is not None else {}
+    test_h = TF_TEST.format(name=name)
 
-    def cells(kind, entry, kind_class, sub):
+    def cells(kind, entry, kind_class, sub, at, test=""):
         if entry["status"] != "ok":
             why = entry["cause"] or "not run"
             agree = f'<span class="na" title="{e(why)}">not run</span>'
         else:
             said = (f"mean {sig(entry['mean'])} of {whole:,} positions; "
                     f"n = {entry['n']:,} prompts")  # fmt: skip
-            agree = (f'<span class="fig" title="{e(said)}; record: {e(tf["path"])}">'
+            agree = (f'<span class="fig" title="{e(said)}; record: {e(tf["record"])}/{e(at)}">'
                      f'<span class="n">{e(pct(entry["percent"]))}</span>'
                      f'<span class="u">%</span></span>') + "".join(
                 f'<span class="sub">{e(line)}</span>' for line in sub if line
@@ -807,40 +842,55 @@ def teacher_forced_html(row):
         return (f'<td data-l="Kind">{e(kind)}</td>'
                 f'<td class="trk" aria-hidden="true">{track}</td>'
                 f'<td data-l="{e(TF_AGREE)}">{agree}</td>'
-                f'<td data-l="{e(TF_KL)}">{tf_kl_html(entry, tf["n"])}</td>')  # fmt: skip
+                + (f'<td class="tst" data-l="{e(test_h)}">{test}</td>' if tests else "")
+                + f'<td data-l="{e(TF_KL)}">{tf_kl_html(entry, tf["n"])}</td>')  # fmt: skip
 
     def sub_of(entry):  # the median in the mean's unit, a percentage of the positions
         return TF_SUB.format(median=f"{pct(entry['median'] / whole * 100)}\u202f%")
 
+    def test_of(c):
+        """The row's two tests against a control: a line each, the row's name before the first
+        where the column has no head (a phone)."""
+        above, below = tests.get((row["system"], c["id"])), tests.get((c["id"], row["system"]))
+        if above is None or below is None:
+            return ""
+        return (f'<span class="sub"><span class="tby">{e(name)} </span>'
+                f'{e(TF_ABOVE.format(p="\0")).replace("\0", p_html(above))}</span>'
+                f'<span class="sub">{e(TF_BELOW.format(p="\0")).replace("\0", p_html(below))}'
+                "</span>")  # fmt: skip
+
     out = []
-    lead = f'<p class="flead">{e(TF_LEAD.format(positions=whole, n=tf["n"], k=top_k))}</p>'
-    tests = {}
+    said = (f'{e(TF_LEAD.format(positions=whole))} <span class="nw">\u00b7\u00a0'
+            f'{e(TF_N.format(n=tf["n"]))}</span> <span class="nw">\u00b7\u00a0'
+            f"{e(TF_NO_STATE)}</span>")  # fmt: skip
+    lead = (f'<p class="rb"><span class="k"><a class="df" href="{CHECKS_PAGE}#{FIDELITY_AT}">'
+            f"{e(FID_FIGURE)}</a></span> <span>{said}</span></p>")  # fmt: skip
+    notes = ""
     if mine is not None:
         sub = [sub_of(mine) if mine["status"] == "ok" else ""]
         if mine["failed"]:
             causes = sorted({f["cause"] for f in mine["failed"]})
             failed = TF_FAILED.format(k=len(mine["failed"]), n=mine["n"])
             sub.append(failed + ": " + "; ".join(causes))
-        out.append(f'<tr class="me"><th scope="row">{e(name_of(row))}</th>'
-                   + cells("this system", mine, "me", sub) + "</tr>")  # fmt: skip
-        tests = {(t["a"], t["b"]): t["p"] for t in mine["tests"]}
+        out.append(f'<tr class="me"><th scope="row">{e(name)}</th>'
+                   + cells("this system", mine, "me", sub, f"rows/{row['system']}/percent")
+                   + "</tr>")  # fmt: skip
         records = [p for p in (mine["run"], tf["path"]) if p]
-        lead += (f'<p class="flead">{e(name_of(row))}: {e(mine["label"])}. What ran: '
+        notes = (f'<p class="flead">{e(name)}: {e(mine["label"])}. What ran: '
                  f'{e(mine["computed_by"])}. {''.join(evidence_links(records))}</p>')  # fmt: skip
-    for c in tf["controls"]:
+    for k, c in enumerate(tf["controls"]):
         sub = [sub_of(c) if c["status"] == "ok" else ""]
-        above, below = tests.get((row["system"], c["id"])), tests.get((c["id"], row["system"]))
-        if above is not None and below is not None:
-            sub.append(TF_TEST.format(name=name_of(row), above=sig(above, 2),
-                                      below=sig(below, 2)))  # fmt: skip
-        name = CONTROL_NAME.get(c["id"]) or (c["id"].upper() if QUANT.match(c["id"]) else c["id"])
-        out.append(f'<tr><th scope="row">{e(name)}</th>'
-                   + cells(c["kind"], c, c["kind"], sub) + "</tr>")  # fmt: skip
+        out.append(f'<tr><th scope="row">{e(control_name(c))}</th>'
+                   + cells(control_kind(c), c, c["kind"], sub, f"controls/{k}/percent", test_of(c))
+                   + "</tr>")  # fmt: skip
+    notes += f'<p class="flead">{e(TF_KL_NOTE.format(k=tf["top_k"]))}</p>'
     ths = ('<th scope="col">Replies</th><th scope="col">Kind</th>'
            '<th scope="col" class="trk" aria-hidden="true"></th>'
-           f'<th scope="col">{e(TF_AGREE)}</th><th scope="col">{e(TF_KL)}</th>')  # fmt: skip
-    return (f'{lead}<table class="rt stk fid"><thead><tr>{ths}</tr></thead>'
-            f'<tbody>{"".join(out)}</tbody></table>')  # fmt: skip
+           f'<th scope="col">{e(TF_AGREE)}</th>'
+           + (f'<th scope="col">{e(test_h)}</th>' if tests else "")
+           + f'<th scope="col">{e(TF_KL)}</th>')  # fmt: skip
+    return (f'{lead}<table class="rt stk fid tf"><thead><tr>{ths}</tr></thead>'
+            f'<tbody>{"".join(out)}</tbody></table>{notes}')  # fmt: skip
 
 
 def figures_html(row):
@@ -856,7 +906,7 @@ def figures_html(row):
               fig_html(figs["verify_seconds_per_reply"], sub=BARE)),
              (defined(FIGURE_HEAD["proof-size"], "proof-size"),
               fig_html(figs["proof_bytes_per_reply"], sub=BARE)),
-             (defined(FIGURE_HEAD["fidelity"], "fidelity"), fidelity_word(row, ""))]  # fmt: skip
+             (head("fidelity"), fidelity_word(row, ""))]  # fmt: skip
     return '<dl class="figs">' + "".join(f"<div><dt>{k}</dt><dd>{v}</dd></div>"
                                          for k, v in cells) + "</dl>"  # fmt: skip
 
