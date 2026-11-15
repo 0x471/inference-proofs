@@ -22,11 +22,13 @@ level_statement:
         url: "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/src/boundary.rs#L1120-L1122"
       - text: "the argmax binds the token a head segment emits to the **lowest-indexed** maximum of the logits it computed, which is the rule the model itself decodes by."
         url: "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/docs/statement.md#L147-L149"
-      - text: "| 12 | each matmul's input times the pinned weights into its accumulator | bound |"
+      - text: "| # | edge | default | turned off by |"
+        url: "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/docs/statement.md#L19"
+      - text: "| 12 | each matmul's input times the pinned weights into its accumulator | bound | nothing: it is the Freivalds check itself |"
         url: "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/docs/statement.md#L32"
-      - text: "it commits the weights, and the verifier compares it with the published manifest."
-        url: "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/docs/statement.md#L136"
-    note: "read as: the four quotes together, from two files; none says in one sentence that an accept is the committed model's own greedy reply to the prompt"
+      - text: "The other preprocessed tree is the model's, and its root is not derivable by anyone but the publisher: it commits the weights, and the verifier compares it with the published manifest."
+        url: "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/docs/statement.md#L134-L136"
+    note: "read as: the quotes together, from two files; none says in one sentence that an accept is the committed model's own greedy reply to the prompt"
 # The verifier the row runs, as the publisher names it; no verifier is named for the 100 bits, which
 # pcs_config asserts (read 2026-11-15).
 verifiers:
@@ -40,14 +42,14 @@ petals:
     bound:
       stated:
         value: true
-        quotes: [{text: "so blowup 2 (log_blowup_factor = 1) at 100 conjectured bits means exactly", url: "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/src/util.rs#L11"}]
+        quotes: [{text: "stwo's own conjectured-soundness accounting is security_bits = pow_bits + log_blowup_factor * n_queries so blowup 2 (log_blowup_factor = 1) at 100 conjectured bits means exactly 100 FRI queries and no grinding.", url: "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/src/util.rs#L9-L12"}]
       expression:
         value: "100 conjectured bits"
-        quotes: [{text: "so blowup 2 (log_blowup_factor = 1) at 100 conjectured bits means exactly", url: "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/src/util.rs#L11"}]
+        quotes: [{text: "stwo's own conjectured-soundness accounting is security_bits = pow_bits + log_blowup_factor * n_queries so blowup 2 (log_blowup_factor = 1) at 100 conjectured bits means exactly 100 FRI queries and no grinding.", url: "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/src/util.rs#L9-L12"}]
       terms: [100]
       basis:
         value: "conjectured"
-        quotes: [{text: "stwo's own conjectured-soundness accounting is", url: "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/src/util.rs#L9"}]
+        quotes: [{text: "stwo's own conjectured-soundness accounting is security_bits = pow_bits + log_blowup_factor * n_queries so blowup 2 (log_blowup_factor = 1) at 100 conjectured bits means exactly 100 FRI queries and no grinding.", url: "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/src/util.rs#L9-L12"}]
       unit:
         value: "part"
         quotes: [{text: "A proof made by this prover is about one **segment**: one transformer layer", url: "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/docs/statement.md#L3"}]
@@ -81,7 +83,7 @@ petals:
           prover_run: {value: "not_stated", quotes: []}
           bound:
             value: "100 conjectured bits"
-            quotes: [{text: "so blowup 2 (log_blowup_factor = 1) at 100 conjectured bits means exactly", url: "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/src/util.rs#L11"}]
+            quotes: [{text: "stwo's own conjectured-soundness accounting is security_bits = pow_bits + log_blowup_factor * n_queries so blowup 2 (log_blowup_factor = 1) at 100 conjectured bits means exactly 100 FRI queries and no grinding.", url: "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/src/util.rs#L9-L12"}]
         zero_knowledge:
           protocol: {value: "not_stated", quotes: []}
           verifier_run: {value: "not_stated", quotes: []}
@@ -102,15 +104,17 @@ petals:
       visible_listed: {value: false, quotes: []}
       visible: []
   no_trusted_party:
-    sources_read: ["README.md", "prover/README.md", "docs/statement.md", "prover/src/compose.rs"]
+    sources_read: ["README.md", "prover/README.md", "docs/statement.md", "prover/src/util.rs", "prover/src/compose.rs"]
     trust:
       rests_on:
-        value: "not_stated"
+        value: "transparent"
         quotes:
-          - {text: "A STARK prover for the decode step of a quantized transformer", url: "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/README.md#L3"}
+          - {text: "stwo's own conjectured-soundness accounting is security_bits = pow_bits + log_blowup_factor * n_queries so blowup 2 (log_blowup_factor = 1) at 100 conjectured bits means exactly 100 FRI queries and no grinding.", url: "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/src/util.rs#L9-L12"}
+          - {text: "The preprocessed trace is two committed trees (a shape tree whose root the verifier derives from the public parameters, and a model tree whose root is compared with the published model commitment).", url: "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/README.md#L117-L119"}
+          - {text: "They are committed as a tree of their own, and what says they are the columns the public parameters give is that the verifier **builds that tree itself** and compares its root with the root the statement declares.", url: "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/docs/statement.md#L127-L129"}
           - {text: "`security` (the FRI parameters and the hash)", url: "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/README.md#L324"}
-          - {text: "`Fixed` — produced at setup, trusted by the verifier: the shape and gadget", url: "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/src/compose.rs#L7"}
-        note: "the test FlashProve's row meets (GL-10, amended 2026-11-15): a petal is read as transparent only when the publisher states what soundness rests on, as a theorem or a sentence, and none of it is a setup that produced a secret. SASH states no soundness assumption: it names its construction (a STARK, FRI parameters and a hash), which is not a statement of what soundness rests on, and its Fixed statement is produced at setup and trusted by the verifier, with who produces it not stated. So not stated, with these quotes as what was read"
+          - {text: "`Fixed` — produced at setup, trusted by the verifier: the shape and gadget parameters that determine every column size and selector, the security config, the tree column sizes, and the **pinned preprocessed root** (every table, selector, weight and scale column lives in tree 0, and B4 §3 / B5 / B6 all showed a corrupted table is invisible to everything else).", url: "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/src/compose.rs#L7-L11"}
+        note: "our reading, by the test FlashProve's row meets (GL-10, amended 2026-11-15): a petal is read as transparent when a sentence among its quotes says what soundness rests on and none of it is a setup that produced a secret. SASH states its soundness as stwo's conjectured accounting over the FRI parameters (util.rs L9-L12), and says the setup's two trees are a shape tree the verifier derives from the public parameters and a model tree compared with the published model commitment (prover/README.md L117-L119, docs/statement.md L127-L129). The Fixed statement it calls trusted by the verifier is those parameters and roots (compose.rs L7-L10). No sentence says in words that no setup produced a secret, so read as transparent and drawn amber in part at most, as FlashProve's is"
       publicly_checkable:
         value: true
         quotes: [{text: "The **verifier** (`verify_composed`) takes those two byte strings and the //! serialized proof, and nothing else", url: "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/src/compose.rs#L15-L16"}]
