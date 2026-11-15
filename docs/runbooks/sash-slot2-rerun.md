@@ -72,3 +72,17 @@ ctl h200 39600 p-residual sash-unsound-skip-residual-stream
 
 - Estimate per job. A weakened prove at Level 1 proves the session's five requests (`batches_per_session`): about 11,030 to 12,255 s (`prove_call_seconds` of the five stored sessions, measured, n = 5). Then the honest twin and one verify call per weakened proof, up to six calls of 1,087 to 1,436 s (the reverify above; on the prover's host with a GPU visible they took 994 to 1,087 s per request, `verify_seconds_per_request`, n = 5). With 1,200 s of pull, install, weights and self-test and 600 to 3,600 s to copy the run: 19,352 to 25,671 s, 5.4 to 7.1 hours of one H200, 26.88 to 35.65 USD at 5.00 USD per hour. Timeout 39,600 s (11 h), cap 55.00 USD each. Both jobs: 10.8 to 14.3 H200-hours, 53.76 to 71.30 USD, caps 110.00 USD. A controls job's self-test is recorded in its part; `IPROOFS_REQUIRE_SELFTEST` acts in run mode only.
 - Not resolved before running: `iproofs controls --merge` refuses a part whose ids are outside a level session's suite, which is C1, C2, C3 and P1 (`runner.py`, the split-suite part's `suite`, RFC-0018 CH-1). So the parts of these two jobs cannot become a `controls.json`. Each part is complete on its own (outcome, verify verdicts, binding report, host); decide how it enters `results/` (for example as a record beside the run that gates nothing) before spending on the jobs.
+
+## Step 5: the verifier probes C4, C5, C6 and C8 on SASH's kept proofs (`cpu-xl`)
+
+FlashProve's stored control suites ran C4 to C8; SASH's Level 1 suite ran C1, C2, C3 and P1 only (RFC-0018 CH-1). These four jobs run the same probes on a kept SASH session, so both rows have them. C7 is not applicable to SASH (batch size 1). They use the `R1` and the seed record of step 4 (one seed per stored run), and need no GPU:
+
+```sh
+ctl cpu-xl 25200 c4 C4
+ctl cpu-xl 25200 c5 C5
+ctl cpu-xl 25200 c8 C8
+ctl cpu-xl 61200 c6 C6
+```
+
+- Calls: C4 three (the honest twins of its two proofs, then the replay), C5 and C8 two each, C6 six (the twin and five trials). At 1,087 to 1,436 s a call (the reverify above), with 600 s of install and 600 to 3,600 s to copy the run: c4 4,461 to 8,508 s, c5 and c8 3,374 to 7,072 s each, c6 7,722 to 12,816 s. All four: 18,931 to 35,468 s of `cpu-xl`, 5.26 to 9.85 USD at 1.00 USD per hour; caps 7.00 USD each for c4, c5 and c8 and 17.00 USD for c6 (the timeouts of `hf-jobs.md` stage 5).
+- The same merge refusal as step 4 applies: these ids are outside a level session's suite.
