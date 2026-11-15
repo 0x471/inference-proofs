@@ -1,6 +1,6 @@
 ### Adapter
 
-The wrapper through which the harness runs a system's commands, in a container built at the system's pinned commit. It [changes nothing upstream](/mandate#what-we-do).
+The wrapper through which the harness runs a system's commands, in a container built at the system's pinned commit. It passes no setting the system's documentation does not name ([what we do](/mandate#what-we-do)).
 
 ### AIR
 
