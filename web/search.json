@@ -103,10 +103,10 @@
     {
       "group": "Checks",
       "kind": "check",
-      "meta": "3 slots, each with a complete cold-start session: public pin, unpatched, no weakening flag.",
+      "meta": "3 slots, each with a complete cold-start session: public pin as published, no weakening flag.",
       "name": "Run",
       "pie": "",
-      "terms": "run 3 slots, each with a complete cold-start session: public pin, unpatched, no weakening flag.",
+      "terms": "run 3 slots, each with a complete cold-start session: public pin as published, no weakening flag.",
       "tier": 3,
       "url": "/checks#run"
     },
