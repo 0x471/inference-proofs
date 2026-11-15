@@ -685,12 +685,12 @@ a.fig.fp:hover .n { text-decoration: underline; text-decoration-thickness: 1px; 
   .lad :is(.cc, .ct, .ck) .sub { flex-basis: 100%; text-align: right; }
   .lad .ck .fw { font-size: 14px; }
   .sname { margin-top: -2px; font-size: 26px; line-height: 24px; }
-  .lad .st { margin-top: 5px; font-size: 12px; line-height: 16px; }
+  .lad .st { margin-top: 5px; font-size: 13px; line-height: 18px; }
   .lad .glyph { width: 159px; max-width: 100%; height: auto; }
   .lad .glyph .pie-svg { width: 100%; height: auto; }
   .lad .cm .fig .n { font-size: 26px; letter-spacing: -.04em; }
   .lad .cm .fig .u.x { font-size: 16px; }
-  .lad .sub { margin-top: 4px; font-size: 12px; line-height: 16px; white-space: normal; }
+  .lad .sub { margin-top: 4px; font-size: 13px; line-height: 18px; white-space: normal; }
   /* the list's figures: a step smaller, the unit beside its number */
   .lad :is(.cc, .ct) .fig .n { font-size: 14px; letter-spacing: -.02em; }
   .lad :is(.cc, .ct) .fig .u { font-size: 12px; line-height: 12px; }
@@ -823,7 +823,7 @@ html.js .scalepage .scl-panel { margin-top: 0; }
 @media (max-width: 560px) {
   .scl tr { grid-template-columns: minmax(0, 1fr) fit-content(55%); grid-template-areas: "s f" "x x"; }
   /* a standing as the ladder's phone prints it */
-  .scl .st { font-size: 12px; line-height: 16px; }
+  .scl .st { font-size: 13px; line-height: 18px; }
   .scl tr > .cp { display: none; }
   .scl tr > .csys { padding-left: 12px; }
   .scl .nrun > td { padding-left: 12px; }
@@ -1981,4 +1981,17 @@ ol.ls > li:before { counter-increment: n; content: counter(n); position: absolut
   .sgh .scard :is(th, td) { padding: 2px 0; white-space: normal; }
   .sgh .scard td.sb { min-width: 0; }
   .sgh .scard td::before { content: attr(data-h) ": "; color: var(--muted); }
+}
+
+/* a system's page keeps to a phone's width: the Cost block's clauses and the fidelity tests' summary and
+   lines wrap between words; only a short number keeps with its unit (.nw elsewhere) */
+@media (max-width: 560px) {
+  .rb .nw, .fts .nw { white-space: normal; }
+  .fts > summary { max-width: 100%; white-space: normal; }
+}
+
+/* the glyph head on a phone: its prose at the body's size (13 px at least), each label over its words */
+@media (max-width: 560px) {
+  .sgh .pf > div { grid-template-columns: minmax(0, 1fr); gap: 0; padding: 3px 0; }
+  .sgh .pf dd, .sgh .scard td { font: var(--f-meta); }
 }

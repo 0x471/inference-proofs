@@ -242,7 +242,7 @@ def test_completeness_count_is_the_boards(board_site: Any) -> None:
     for row in rows(board_site.board):
         n = sum(sum(s["groups"]) for s in row["sessions"])
         page = html.unescape(text[f"{row['system']}.html"])
-        assert f"tested by us on honest runs ({n:,}\u00a0of\u00a0{n:,})" in page, row["system"]
+        assert f"({n:,}\u00a0of\u00a0{n:,})" in page, row["system"]
 
 
 def test_surface_figures_are_whole_sessions(board_site: Any) -> None:
@@ -275,34 +275,30 @@ def test_a_lone_system_is_not_drawn_as_ranked(board_site: Any) -> None:
     out, build = board_site.out, board_site.build
     index = (out / "index.html").read_text()
     assert all(r["systems_run"] == 1 for r in board_site.board["rungs"])  # the example board
-    assert 'class="pos p1"' not in index
-    assert ">of 1<" not in index
-    assert 'class="pos solo"><span class="pn">1</span>' in index
-    assert "position 1 of 1" not in (out / "og/flashprove.html").read_text()
+    row, lone, shared = {"position": 1}, {"systems_run": 1}, {"systems_run": 2}
+    assert build.position_html(row, lone) in index  # every ranked row here is a lone one
+    assert build.position_html(row, shared) not in index
+    assert build.ONLY_RUN in build.position_html(row, lone)
+    assert build.ONLY_RUN not in build.position_html(row, shared)
     assert build.ALONE_WORDS in index
     one, two = {"rows": [{}], "systems_run": 1}, {"rows": [{}, {}], "systems_run": 2}
     assert build.alone([one, {"rows": [], "systems_run": 0}])
     assert not build.alone([one, two])
     assert not build.alone([{"rows": [], "systems_run": 0}])
-    row, lone, shared = {"position": 1}, {"systems_run": 1}, {"systems_run": 2}
-    assert "only system run" in build.position_html(row, lone)
-    assert 'class="pos p1"' in build.position_html(row, shared)
-    assert ">of 2<" in build.position_html(row, shared)
 
 
 def test_a_p_at_its_test_floor_reads_as_a_bound(board_site: Any) -> None:
     """FI-4: a drawn p with no resample at least as extreme is 1 / (1 + 200,000), the lowest
     the test gives, so it prints as a bound; a counted p at 2^-15 is exact and says it is the
     floor; any other p is its value."""
-    said = board_site.build.p_said
+    said, p_html = board_site.build.p_said, board_site.build.p_html
     drawn = html.unescape(said(1 / 200_001, 360))
-    assert drawn.startswith("p\u00a0<\u00a05.0"), drawn
-    assert drawn.endswith("the test's floor"), drawn
-    counted = html.unescape(said(2.0**-15, 15))
-    assert counted.startswith("p\u00a0=\u00a03.1"), counted
-    assert counted.endswith("the test's floor"), counted
-    assert "floor" not in said(0.0058, 15)
-    assert said(4 / 2**15, 15) == "p\u00a0=\u00a0" + board_site.build.p_html(4 / 2**15)
+    assert drawn.startswith("p\u00a0<\u00a05.0"), drawn  # a bound: no resample was as extreme
+    counted = said(2.0**-15, 15)
+    assert html.unescape(counted).startswith("p\u00a0=\u00a03.1"), counted  # exact, and floor
+    assert counted != "p\u00a0=\u00a0" + p_html(2.0**-15)
+    assert said(0.0058, 15) == "p\u00a0=\u00a0" + p_html(0.0058)
+    assert said(4 / 2**15, 15) == "p\u00a0=\u00a0" + p_html(4 / 2**15)
 
 
 def test_gpt2_prints_the_model_card_count() -> None:

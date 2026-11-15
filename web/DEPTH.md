@@ -100,4 +100,4 @@ Then, before printing it: does a head, a unit, the glyph or another block of the
 
 Places that do not yet follow the map, found by reading the built pages on 2026-11-13. Fix them as the pages are next touched.
 
-- The "Systems not run" reasons on the ladder ("no configuration at the request", "a different statement") use the method's words. RFC-0018 SI-4 fixes the list and its place, so moving it needs that rule amended.
+- The "Systems not run" reasons on the ladder ("no configuration at the request", "a different statement") use the method's words. RFC-0018 SI-4 fixes the list and its place, and SI-4b (2026-11-15) the order a system's reason is chosen in, each printed with its source on the checks page; moving the list needs SI-4 amended.
