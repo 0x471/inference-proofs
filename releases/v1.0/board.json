@@ -380,7 +380,23 @@
                 "results/v1.0/flashprove/2026-11-11-flashprove-l1-maverick-p512-o512-prover-h200-hosted-1/controls.json#/controls/2"
               ],
               "note": null,
-              "state": "held"
+              "state": "held",
+              "trials": [
+                {
+                  "control": "P1",
+                  "inputs": 1,
+                  "position": null,
+                  "refused": 3,
+                  "trials": 3
+                },
+                {
+                  "control": "C3",
+                  "inputs": 1,
+                  "position": null,
+                  "refused": 3,
+                  "trials": 3
+                }
+              ]
             },
             "no_weight_file": {
               "cause": null,
@@ -398,7 +414,16 @@
                 "results/v1.0/flashprove/2026-11-11-flashprove-l1-maverick-p512-o512-prover-h200-hosted-1/controls.json#/controls/1"
               ],
               "note": null,
-              "state": "held"
+              "state": "held",
+              "trials": [
+                {
+                  "control": "C2",
+                  "inputs": 3,
+                  "position": null,
+                  "refused": 3,
+                  "trials": 3
+                }
+              ]
             },
             "reply": {
               "cause": null,
@@ -409,7 +434,30 @@
                 "results/v1.0/flashprove/2026-11-11-flashprove-l1-maverick-p512-o512-prover-h200-hosted-1/controls.json#/controls/0"
               ],
               "note": null,
-              "state": "held"
+              "state": "held",
+              "trials": [
+                {
+                  "control": "C1",
+                  "inputs": 1,
+                  "position": "first",
+                  "refused": 3,
+                  "trials": 3
+                },
+                {
+                  "control": "C1",
+                  "inputs": 1,
+                  "position": "last",
+                  "refused": 3,
+                  "trials": 3
+                },
+                {
+                  "control": "C1",
+                  "inputs": 3,
+                  "position": "interior",
+                  "refused": 3,
+                  "trials": 3
+                }
+              ]
             },
             "run": {
               "cause": null,
@@ -2009,7 +2057,23 @@
                 "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-3/controls.json#/controls/2"
               ],
               "note": null,
-              "state": "held"
+              "state": "held",
+              "trials": [
+                {
+                  "control": "P1",
+                  "inputs": 1,
+                  "position": null,
+                  "refused": 3,
+                  "trials": 3
+                },
+                {
+                  "control": "C3",
+                  "inputs": 1,
+                  "position": null,
+                  "refused": 3,
+                  "trials": 3
+                }
+              ]
             },
             "no_weight_file": {
               "cause": "not resolved",
@@ -2029,7 +2093,16 @@
                 "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-3/controls.json#/controls/1"
               ],
               "note": null,
-              "state": "held"
+              "state": "held",
+              "trials": [
+                {
+                  "control": "C2",
+                  "inputs": 3,
+                  "position": null,
+                  "refused": 3,
+                  "trials": 3
+                }
+              ]
             },
             "reply": {
               "cause": null,
@@ -2040,7 +2113,30 @@
                 "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-3/controls.json#/controls/0"
               ],
               "note": null,
-              "state": "held"
+              "state": "held",
+              "trials": [
+                {
+                  "control": "C1",
+                  "inputs": 1,
+                  "position": "first",
+                  "refused": 3,
+                  "trials": 3
+                },
+                {
+                  "control": "C1",
+                  "inputs": 1,
+                  "position": "last",
+                  "refused": 3,
+                  "trials": 3
+                },
+                {
+                  "control": "C1",
+                  "inputs": 3,
+                  "position": "interior",
+                  "refused": 3,
+                  "trials": 3
+                }
+              ]
             },
             "run": {
               "cause": null,

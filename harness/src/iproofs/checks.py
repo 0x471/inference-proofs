@@ -11,7 +11,7 @@ import functools
 import json
 import re
 from collections.abc import Iterable, Mapping, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 
 from iproofs.errors import ErrorKind, IProofsError
@@ -50,14 +50,19 @@ class CheckState:
     cause: str | None
     evidence: tuple[str, ...]
     note: str | None = None
+    # CH-1c: what the counted trials sent, per control and position (MODEL, PROMPT, REPLY)
+    trials: tuple[Mapping[str, object], ...] = ()
 
     def tree(self) -> dict[str, object]:
-        return {
+        out: dict[str, object] = {
             "state": self.state,
             "cause": self.cause,
             "evidence": list(self.evidence),
             "note": self.note,
         }
+        if self.trials:
+            out["trials"] = [dict(t) for t in self.trials]
+        return out
 
 
 def _held(evidence: Iterable[str]) -> CheckState:
@@ -450,6 +455,7 @@ class Trial:
     outcome: str
     seed_index: int
     evidence: str
+    sent: str = ""  # the changed input as recorded (`mutation`), with the session it was sent in
 
 
 def _position(trial: Mapping[str, object]) -> str | None:
@@ -519,8 +525,9 @@ def control_trials(
                     and not _interior_ok(seed, t, output)
                 ):
                     continue  # not the seeded interior position: it does not count
+                sent = json.dumps([s.path, t.get("mutation")], sort_keys=True)
                 trials.append(Trial(cid, position, outcome, int(t.get("seed_index") or 0),
-                                    f"{path}#/controls/{i}"))  # fmt: skip
+                                    f"{path}#/controls/{i}", sent))  # fmt: skip
     return trials, present, same_commitment
 
 
@@ -564,6 +571,26 @@ def _reproduced(state: CheckState, root: Path, release: str, system: str, check:
     if found is None:
         return _undecided(NOT_REPRODUCED, state.evidence, state.note)
     return CheckState(FAILED, None, (*state.evidence, rel(root, found)), state.note)
+
+
+def what_ran(
+    trials: Sequence[Trial],
+    parts: Sequence[tuple[str, str | None]],
+    refused: Mapping[str, frozenset[str]],
+) -> tuple[dict[str, object], ...]:
+    """CH-1c: per control and position, the counted trials (`void` and `error` left out), how many
+    of them were refused, and how many distinct changed inputs they sent: a trial at a fixed change
+    (C1 at the first and last positions, C3, P1) sends the same input as the others."""
+    out = []
+    for control, position in parts:
+        counted = [t for t in trials if t.control == control and t.position == position
+                   and t.outcome not in UNCOUNTED]  # fmt: skip
+        if not counted:
+            continue
+        out.append({"control": control, "position": position, "trials": len(counted),
+                    "refused": sum(t.outcome in refused[control] for t in counted),
+                    "inputs": len({t.sent for t in counted})})  # fmt: skip
+    return tuple(out)
 
 
 VERIFIER_REFUSED = frozenset({"rejected"})
@@ -796,6 +823,10 @@ def checks_from(
     positions = _combine([control("C1", VERIFIER_REFUSED, p) for p in C1_POSITIONS])
     positions = _reproduced(positions, root, release, system, "reply")
     reply = coverage if coverage.state == FAILED else _combine([coverage, positions])
+    how = {"P1": PROVER_REFUSED, "C1": VERIFIER_REFUSED, "C2": VERIFIER_REFUSED,
+           "C3": VERIFIER_REFUSED}  # fmt: skip
+    model = replace(model, trials=what_ran(trials, (("P1", None), ("C3", None)), how))
+    reply = replace(reply, trials=what_ran(trials, [("C1", p) for p in C1_POSITIONS], how))
     out = {
         "run": check_run(
             sessions,
@@ -804,7 +835,10 @@ def checks_from(
             refusals(root, release, system, sessions),
         ),
         "model": model,
-        "prompt": _reproduced(control("C2", VERIFIER_REFUSED), root, release, system, "prompt"),
+        "prompt": replace(
+            _reproduced(control("C2", VERIFIER_REFUSED), root, release, system, "prompt"),
+            trials=what_ran(trials, (("C2", None),), how),
+        ),
         "reply": reply,
         "no_weight_file": no_weight_file_state(sessions),
         "fidelity": fidelity_state(root, release, rung, system, digest),

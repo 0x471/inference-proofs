@@ -134,6 +134,51 @@
             "failed",
             "undecided"
           ]
+        },
+        "trials": {
+          "$comment": "RFC-0018 CH-1c: per control and position, the counted trials, how many were refused and how many distinct changed inputs they sent (MODEL, PROMPT, REPLY)",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "control": {
+                "enum": [
+                  "P1",
+                  "C1",
+                  "C2",
+                  "C3"
+                ]
+              },
+              "inputs": {
+                "minimum": 1,
+                "type": "integer"
+              },
+              "position": {
+                "enum": [
+                  null,
+                  "first",
+                  "last",
+                  "interior"
+                ]
+              },
+              "refused": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "trials": {
+                "minimum": 1,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "control",
+              "position",
+              "trials",
+              "refused",
+              "inputs"
+            ],
+            "type": "object"
+          },
+          "type": "array"
         }
       },
       "required": [

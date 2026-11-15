@@ -501,3 +501,18 @@ def test_p1_failed_answer_on_a_system_that_does_not_declare_it_decides_nothing(
     model = checks(tree)["model"]
     assert model.state == "undecided"
     assert model.note == "P1: no counted trial stored"
+
+
+def test_what_ran_counts_distinct_inputs(tree: Tree) -> None:
+    """CH-1c: the first and last C1 positions, C3 and P1 repeat one changed input three times;
+    the seeded interior positions send three; a void trial is not counted. (The fixture's C2
+    changes position 3 in every trial, so it sends one input too.)"""
+    three_sessions(tree, control_doc=controls(c3=("void", REJECT, REJECT, REJECT)))
+    found = checks(tree)
+    ran = {(t["control"], t["position"]): (t["trials"], t["refused"], t["inputs"])
+           for k in ("model", "prompt", "reply") for t in found[k].trials}  # fmt: skip
+    assert ran == {
+        ("P1", None): (3, 3, 1), ("C3", None): (3, 3, 1), ("C2", None): (3, 3, 1),
+        ("C1", "first"): (3, 3, 1), ("C1", "last"): (3, 3, 1), ("C1", "interior"): (3, 3, 3),
+    }  # fmt: skip
+    assert "trials" not in found["run"].tree()
