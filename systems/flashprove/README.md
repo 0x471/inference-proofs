@@ -28,9 +28,10 @@ RFC-0005 §Verdict normalisation, over the exit codes and last lines of [verifie
 | 0, `YES` | `accept` | `exact-match` |
 | 0, `WITHIN LIMITS: clipped-gap C=... sh=...` | `accept` | `clipped-gap` |
 | 1, `NO: <name>` | `reject` | |
+| 1, `NO: internal-<...>` ("Treat it like exit code 5", [verifier/docs/output.md §Rejection names](https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/verifier/docs/output.md#rejection-names)) | `no_verdict` | |
 | 5, `NOT CHECKED: <name>` | `no_verdict` | |
 | 2 (wrong call or unreadable file), 3 (`PART PASSED`), 4 (`PLAN ONLY`), 14 (`NOT-A-VERIFICATION`), 15 (no output) | `invalid_call` | |
-| any other exit code, a signal, or 0 with another last line | none: `verify` exits non-zero | |
+| any other exit code, a signal, 0 with another last line, or 1 with a last line that is not `NO: <name>` | none: `verify` exits non-zero | |
 
 Under the published configuration the policy is exact match ([examples/maverick/README.md#L287-L289](https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/examples/maverick/README.md#L287-L289)), so an accepted proof here ends `YES`. The adapter applies this map only, not the rest of upstream's acceptance rule (the proof-of-work line and the `result-v1` fields, [verifier/docs/output.md#L121-L131](https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/verifier/docs/output.md#L121-L131)); the raw output stays in the step's log.
 
