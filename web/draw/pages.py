@@ -17,6 +17,7 @@ from .chrome import (
     card_current,
     cards_record,
     counted,
+    fig_words,
     footer,
     has,
     header,

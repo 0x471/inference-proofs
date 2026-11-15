@@ -39,7 +39,6 @@ from .words import (
     SEP,
     STATE_WORD,
     STEADY_STATE,
-    STEP_WORD,
     TF_INTERVAL,
     WHOLE_SESSIONS,
     architecture,
