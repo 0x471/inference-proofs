@@ -651,7 +651,7 @@ MANDATE_CORRECTIONS = (
     ("2026-11-15", "A SASH session that failed the machine self-test no longer counts "
      "(RFC-0014); SASH's row reads not passed yet until a replacement session runs."),
     ("2026-11-15", "A state that rests on our reading of a publisher's documents, not on a "
-     "sentence that says it, is marked as read and drawn amber at most, for every system. "
+     "sentence that says it, is marked \u201cread as\u201d and drawn amber at most, for every system. "
      "FlashProve's No third party trusted moves from green to amber."),
     ("2026-11-15", "SASH's pin is disclosed: it runs a pull request this project's owner wrote. "
      "The mandate said our adapter changes no source."),
