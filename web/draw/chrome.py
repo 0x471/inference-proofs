@@ -21,9 +21,9 @@ from .words import (
     PART_WORD,
     PETAL_NAME,
     STATE_WORD,
-    STEP_WORD,
     WHOLE_SESSIONS,
     e,
+    petal_step,
     shown,
 )
 
@@ -338,8 +338,8 @@ def card_alt(card):
             (FIGURE_HEAD["check-time"], row["figures"]["verify_seconds_per_reply"])]  # fmt: skip
     cells = ". ".join(f"{k}: {fig_words(v)}" for k, v in figs)
     states = "; ".join(
-        f"{PETAL_NAME[p['id']]}: {STEP_WORD[p['step']]}"
-        + (f", {CAUSE_WORD[p['cause']]}" if p["cause"] is not None else "")
+        f"{PETAL_NAME[p['id']]}: {petal_step(p)}"
+        + (f", {CAUSE_WORD[p['cause']]}" if p["cause"] not in (None, "not_stated") else "")
         for p in row["glyph"]
     )
     name = S.V["systems"][row["system"]]["name"]

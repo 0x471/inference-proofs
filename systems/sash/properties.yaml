@@ -27,6 +27,13 @@ level_statement:
       - text: "it commits the weights, and the verifier compares it with the published manifest."
         url: "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/docs/statement.md#L136"
     note: "read as: the four quotes together, from two files; none says in one sentence that an accept is the committed model's own greedy reply to the prompt"
+# The verifier the row runs, as the publisher names it; no verifier is named for the 100 bits, which
+# pcs_config asserts (read 2026-11-15).
+verifiers:
+  run:
+    value: "boundary-grid --verify"
+    quotes: [{text: "`verify_composed` -- the only accept path, and what `boundary-grid --verify` runs on every chunk", url: "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/README.md#L34-L35"}]
+  stated: {value: null, quotes: []}
 petals:
   unforgeable:
     sources_read: ["README.md", "prover/README.md", "docs/statement.md", "prover/src/util.rs"]
@@ -61,6 +68,7 @@ petals:
       reach: {value: "not_stated", quotes: []}
       tool: {value: null, quotes: []}
       toolchain: {value: null, quotes: []}
+      conclusion: {value: "not_stated", quotes: []}
       theorem: null
       theorem_url: null
       trusted_base: {value: [], quotes: []}
@@ -71,6 +79,9 @@ petals:
           protocol: {value: "not_stated", quotes: []}
           verifier_run: {value: "not_stated", quotes: []}
           prover_run: {value: "not_stated", quotes: []}
+          bound:
+            value: "100 conjectured bits"
+            quotes: [{text: "so blowup 2 (log_blowup_factor = 1) at 100 conjectured bits means exactly", url: "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/src/util.rs#L11"}]
         zero_knowledge:
           protocol: {value: "not_stated", quotes: []}
           verifier_run: {value: "not_stated", quotes: []}
@@ -95,8 +106,11 @@ petals:
     trust:
       rests_on:
         value: "not_stated"
-        quotes: []
-        note: "the Fixed statement is \"produced at setup, trusted by the verifier\" (compose.rs L7); who produces it, and what soundness rests on, is not stated"
+        quotes:
+          - {text: "A STARK prover for the decode step of a quantized transformer", url: "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/README.md#L3"}
+          - {text: "`security` (the FRI parameters and the hash)", url: "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/README.md#L324"}
+          - {text: "`Fixed` — produced at setup, trusted by the verifier: the shape and gadget", url: "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/src/compose.rs#L7"}
+        note: "the test FlashProve's row meets (GL-10, amended 2026-11-15): a petal is read as transparent only when the publisher states what soundness rests on, as a theorem or a sentence, and none of it is a setup that produced a secret. SASH states no soundness assumption: it names its construction (a STARK, FRI parameters and a hash), which is not a statement of what soundness rests on, and its Fixed statement is produced at setup and trusted by the verifier, with who produces it not stated. So not stated, with these quotes as what was read"
       publicly_checkable:
         value: true
         quotes: [{text: "The **verifier** (`verify_composed`) takes those two byte strings and the //! serialized proof, and nothing else", url: "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/src/compose.rs#L15-L16"}]

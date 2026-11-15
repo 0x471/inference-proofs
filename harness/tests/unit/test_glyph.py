@@ -29,6 +29,7 @@ from iproofs.glyph import (
     PETALS,
     Coverage,
     Petal,
+    control_means,
     faithful_model,
     load_properties,
     machine_checked,
@@ -36,6 +37,7 @@ from iproofs.glyph import (
     not_read_rows,
     properties_problems,
     statement_petals,
+    tokens,
     unforgeable,
     weights_hidden,
 )
@@ -329,7 +331,7 @@ def test_reading_flag_follows_the_notes_read() -> None:
     fact the decision did not read, or no note, leaves it unmarked."""
     noted = {"value": "transparent", "quotes": [quote("q")], "note": "our reading"}
     assert nt(rests_on=noted).reading is True
-    assert got(nt(rests_on=noted)) == GREEN
+    assert got(nt(rests_on=noted)) == amber_upper()  # NT-6, GL-10: a reading is amber at most
     assert nt().reading is False
     assert "reading" not in nt().tree()
     assert nt(rests_on=noted).tree()["reading"] is True
@@ -358,10 +360,99 @@ def test_real_properties_files() -> None:
     workload = yaml.safe_load((ROOT / "workloads/l1-maverick-p512-o512.yaml").read_text())
     assert steps("flashprove", workload["shape"]["batch_size"]) == [
         ("amber_lower", None), ("amber_upper", None), (None, "proof_build_not_run"),
-        ("green", None)]  # fmt: skip
+        ("amber_upper", None)]  # fmt: skip
     for batch in (None, 1):
         assert steps("sash", batch) == [("amber_lower", None), ("red", "not_stated"),
                                         ("red", "not_stated"), ("red", "not_stated")]  # fmt: skip
+
+
+def test_gl10_a_reading_is_amber_in_part_at_most() -> None:
+    """GL-10: a statement petal that would be green on a fact with a note is drawn amber in part
+    at most; a green on the publisher's words alone stays green; a reading below green keeps its
+    step."""
+    later = {"value": "row", "quotes": [quote("q")], "note": "n"}
+    noted = statement_petals(properties2(bound={"parameters": later}), HELD, PIN, ONE, None)
+    plain = statement_petals(properties2(), HELD, PIN, ONE, None)
+    assert got(noted["unforgeable"]) == amber_upper()
+    assert noted["unforgeable"].reading is True
+    assert got(plain["unforgeable"]) == GREEN
+    lower = statement_petals(properties2(bound={"parameters": later, "terms": [124, 90]}), HELD,
+                             PIN, ONE, None)  # fmt: skip
+    assert got(lower["unforgeable"]) == amber_lower()
+
+
+@pytest.mark.parametrize(
+    ("formal", "axioms", "step", "top"),
+    [
+        ({}, ("classic",), "green", "green"),  # a Coq build with its declared axiom: no gap named
+        ({"conclusion": "other"}, ("classic",), "amber_lower", "amber_lower"),  # not the model
+        ({"conclusion": "not_stated"}, ("classic",), "amber_lower", "amber_lower"),
+        (
+            {
+                "axioms": ["classic", "sorryAx"],
+                "trusted_base": fact(["classic", "sorryAx"], "classic, sorryAx"),
+            },
+            ("classic", "sorryAx"),
+            "amber_lower",
+            "green",
+        ),  # a gap, declared
+        (
+            {
+                "tool": "Lean 4",
+                "axioms": ["propext", "Quot.sound"],
+                "trusted_base": fact(["propext", "Quot.sound"], "propext, Quot.sound"),
+            },
+            ("propext", "Quot.sound"),
+            "green",
+            "green",
+        ),  # Lean's standard axioms
+        (
+            {
+                "tool": "Lean 4",
+                "axioms": ["propext", "funext"],
+                "trusted_base": fact(["propext", "funext"], "propext, funext"),
+            },
+            ("propext", "funext"),
+            "amber_lower",
+            "green",
+        ),  # an axiom beyond Lean's three: only the build shows it
+        (
+            {"reach": "protocol_and_statement", "conclusion": "other"},
+            ("classic",),
+            "amber_lower",
+            "amber_lower",
+        ),
+        ({"reach": "protocol"}, ("classic",), "amber_lower", "amber_lower"),  # already the floor
+    ],
+)
+def test_mc7_ceiling(formal: dict[str, object], axioms: tuple[str, ...], step: str,
+                     top: str) -> None:  # fmt: skip
+    """MC-7: a step above amber in lesser part needs a conclusion about the model and, built,
+    only the tool's standard axioms; the board's `ceiling` is the most a build could give, read
+    from the statement alone."""
+    props = properties2(formal=formal)
+    assert got(machine_checked(props, HELD, PIN, build(axioms=axioms))) == (
+        step, None, "statement", ())  # fmt: skip
+    unbuilt = machine_checked(props, HELD, PIN, None)
+    assert got(unbuilt) == (None, "proof_build_not_run", "statement", ())
+    assert unbuilt.formal is not None
+    assert unbuilt.formal["ceiling"] == top
+
+
+def test_real_rows_ceiling_and_scope_card() -> None:
+    """MC-7 on the stored files: FlashProve's named theorem is about the integer model, so a
+    matching build could give amber in part at most (never green); SASH states nothing. The
+    two cells that ask a property of the wrong party do not apply on either row."""
+    for system, top in (("flashprove", "amber_upper"), ("sash", "red")):
+        props = load_properties(ROOT, system)
+        assert props is not None
+        pin = str(props["upstream"]["commit"])  # type: ignore[index]
+        formal = statement_petals(props, HELD, pin, ONE, None)["machine_checked"].formal
+        assert formal is not None
+        assert formal["ceiling"] == top
+        card = formal["scope_card"]
+        assert card["soundness"]["prover_run"]["value"] == "does_not_apply"  # type: ignore[index]
+        assert card["zero_knowledge"]["verifier_run"]["value"] == "does_not_apply"  # type: ignore[index]
 
 
 def test_a_silent_red_carries_its_documents_read() -> None:
@@ -688,3 +779,16 @@ def test_validate_runs_the_offline_checks(tmp_path: Path) -> None:
     system.joinpath("system.yaml").write_text(yaml.safe_dump({"upstream": {"commit": "b" * 40}}))
     release.joinpath("index.json").write_text("{}")
     assert sorted(f.rule for f in g2_glyph(tmp_path, files)) == ["GLYPH", "PROPERTIES"]
+
+
+def test_fm_reason_numbers() -> None:
+    """FM (amended 2026-11-15): the reason's means are computed from the stored scores and
+    printed at three significant digits below 100, whole above: 29.66 is 29.7, a midpoint of
+    47.997 is 48.0, 106.1 is 106, 5.267 is 5.27."""
+    assert [tokens(x) for x in (29.658333, 47.99722, 106.1, 5.2667, 1.4)] == [
+        "29.7", "48.0", "106", "5.27", "1.4"]  # fmt: skip
+    doc = {"controls": [{"id": "reference-2", "recipe": "rerun", "scores": [500, 501]},
+                        {"id": "q8_0", "recipe": "quantize", "scores": [65, 66, 67]},
+                        {"id": "q2_k", "recipe": "quantize", "scores": []}]}  # fmt: skip
+    assert control_means(doc) == {"reference-2": ("the original run again", 500.5),
+                                   "q8_0": ("the 8-bit copy", 66.0)}  # fmt: skip

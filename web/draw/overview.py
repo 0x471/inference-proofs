@@ -38,13 +38,13 @@ from .words import (
     SEP,
     STATE_WORD,
     STEADY_STATE,
-    STEP_WORD,
     WHOLE_SESSIONS,
     architecture,
     e,
     labels,
     number,
     params,
+    petal_step,
     session_count,
     sig,
     sub_words,
@@ -76,8 +76,8 @@ def states(row):
 def petal_words(p):
     """A petal's step in words, and for a red or hollow petal its cause (§The glyph, step table;
     GL-1, GL-3)."""
-    words = STEP_WORD[p["step"]]
-    return f"{words}, {CAUSE_WORD[p['cause']]}" if p["cause"] is not None else words
+    words = petal_step(p)  # a silent red is "red · not stated": its cause is said once
+    return f"{words}, {CAUSE_WORD[p['cause']]}" if p["cause"] not in (None, "not_stated") else words
 
 
 def states_words(row):
@@ -272,7 +272,7 @@ def check_word(row, page=None):
     failed, undecided: FI-6), linked to the Fidelity section of the system's page, which holds
     what it is read from. Its title carries the stored figures: the replies' mean count of
     leading tokens equal to the original's (FI-3), the rung's bar (FI-5) and n. The closeness
-    grade is the glyph's Faithful model petal; KL is under Fidelity on the system's page."""
+    grade is the glyph's Close to the original petal; KL is under Fidelity on the system's page."""
     check = next(c for c in row["checks"] if c["id"] == "fidelity")
     mine, bar = row["fidelity"], (rung_of(row)["fidelity"] or {}).get("bar")
     title = []

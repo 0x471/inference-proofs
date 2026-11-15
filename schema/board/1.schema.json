@@ -315,6 +315,156 @@
             "type": "string"
           },
           "type": "array"
+        },
+        "conclusion": {
+          "$comment": "MC-7 (amended 2026-11-15): what the theorem's conclusion is about, from properties/2",
+          "enum": [
+            "model",
+            "other",
+            "not_stated"
+          ]
+        },
+        "ceiling": {
+          "$comment": "MC-7 (amended 2026-11-15): the most a matching proof build can give, the stated step lowered by MC-7; never above the stated step",
+          "enum": [
+            "green",
+            "amber_upper",
+            "amber_lower",
+            "red"
+          ]
+        },
+        "scope_bounds": {
+          "$comment": "the publisher's bound for each scope-card row, verbatim with its quotes, or null; printed, sets no state",
+          "additionalProperties": false,
+          "properties": {
+            "soundness": {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "text": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "quotes": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "text": {
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "url": {
+                            "minLength": 1,
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "text",
+                          "url"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "text",
+                    "quotes"
+                  ],
+                  "type": "object"
+                }
+              ]
+            },
+            "zero_knowledge": {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "text": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "quotes": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "text": {
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "url": {
+                            "minLength": 1,
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "text",
+                          "url"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "text",
+                    "quotes"
+                  ],
+                  "type": "object"
+                }
+              ]
+            },
+            "completeness": {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "text": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "quotes": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "text": {
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "url": {
+                            "minLength": 1,
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "text",
+                          "url"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "text",
+                    "quotes"
+                  ],
+                  "type": "object"
+                }
+              ]
+            }
+          },
+          "type": "object"
         }
       },
       "required": [
@@ -689,6 +839,50 @@
               "type": "array"
             }
           ]
+        },
+        "forms": {
+          "$comment": "Weights hidden: the forms of the proved zero knowledge, the publisher's words with their quotes (properties/2 hiding.forms); printed, sets no step",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "item": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "quotes": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "text": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "url": {
+                      "minLength": 1,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "text",
+                    "url"
+                  ],
+                  "type": "object"
+                },
+                "minItems": 1,
+                "type": "array"
+              }
+            },
+            "required": [
+              "item",
+              "quotes"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "visible_at_least": {
+          "$comment": "Weights hidden: true when the publisher says its list of visible values is a lower bound",
+          "type": "boolean"
         }
       },
       "required": [
@@ -1926,7 +2120,8 @@
             "machine_checked",
             "paper",
             "tested",
-            "not_stated"
+            "not_stated",
+            "does_not_apply"
           ]
         }
       },

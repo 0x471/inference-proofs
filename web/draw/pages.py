@@ -100,18 +100,22 @@ from .words import (
     PETAL_NAME,
     PETAL_QUESTION,
     PETAL_RULE,
+    PETAL_TERM,
     PREFIX,
     READ_AS,
     READING_RULE,
     REASON_LINK,
     RECORD_WORD,
+    SCOPE_BOUND_HEAD,
     SCOPE_COL_WORD,
+    SCOPE_LINES,
     SCOPE_ROW_WORD,
     SCOPE_SHORT,
     SCOPE_VALUE_WORD,
     SCOPE_WORD,
     SEP,
     STATE_WORD,
+    STATED_SECURITY,
     STATEMENT_HEAD,
     STATEMENT_WORD,
     STEP_WORD,
@@ -133,7 +137,9 @@ from .words import (
     e,
     kl_head,
     number,
+    petal_step,
     quoted,
+    said_word,
     sig,
 )
 
@@ -269,15 +275,16 @@ def quote_links(quotes):
                    for q in quotes)  # fmt: skip
 
 
-def scope_card_html(formal):
-    """Machine-checked's recorded facts, inside its Reason cell: the tool, the theorem (linked at
-    the pin) and the trusted base as the publisher lists it, then the scope card: for soundness,
-    zero knowledge and completeness, what the publisher states of the protocol, the verifier run
-    and the prover run, each word linked to its first quote. It sets no state."""
+def formal_facts_html(formal):
+    """Machine-checked's recorded facts, inside its disclosure: the tool, the theorem (linked at
+    the pin) and the trusted base as the publisher lists it. The scope card is printed at the
+    head of the Glyph section (`scope_head_html`)."""
     if formal is None:
         return ""
-    if silent(formal):  # nothing stated: said once, not in every fact and cell
-        return f'<p class="pvh">Tool, theorem, trusted base, scope card: {e(SCOPE_VALUE_WORD["not_stated"])}</p>'
+    if silent(formal):  # nothing stated: said once, not in every fact
+        return (
+            f'<p class="pvh">Tool, theorem, trusted base: {e(SCOPE_VALUE_WORD["not_stated"])}</p>'
+        )
     theorem = formal["theorem"]
     code = (
         f"<code>{e(theorem).replace('.', '.<wbr>')}</code>" if theorem else None
@@ -291,6 +298,16 @@ def scope_card_html(formal):
               else None))  # fmt: skip
     facts = "".join(f"<div><dt>{e(k)}</dt><dd>{v or e(SCOPE_VALUE_WORD['not_stated'])}</dd></div>"
                     for k, v in lines)  # fmt: skip
+    return f'<dl class="pf">{facts}</dl>'
+
+
+def scope_card_html(formal):
+    """The scope card (MC-6, amended 2026-11-15): for soundness, zero knowledge and completeness,
+    the publisher's bound verbatim and linked, then what it states of the protocol, the verifier
+    run and the prover run, each word linked to its first quote. The two cells that ask a
+    property of the wrong party print "does not apply". It sets no state."""
+    if formal is None:
+        return ""
 
     def cell(c):
         word = e(SCOPE_VALUE_WORD[c["value"]])
@@ -298,30 +315,82 @@ def scope_card_html(formal):
             word = f'<a class="sv" href="{e(c["quotes"][0]["url"])}">{word}</a>'
         return f'<td class="{e(c["value"])}">{word}</td>'
 
+    def bound(r):
+        b = (formal.get("scope_bounds") or {}).get(r)
+        if not b:
+            return f'<td class="not_stated">{e(SCOPE_VALUE_WORD["not_stated"])}</td>'
+        text = quoted(b["text"])
+        if b["quotes"]:
+            text = f'<a class="sv" href="{e(b["quotes"][0]["url"])}">{text}</a>'
+        return f'<td class="sb">{text}</td>'
+
     card = formal["scope_card"]
-    heads = "".join(f'<th scope="col">{e(w)}</th>' for w in SCOPE_COL_WORD.values())
+    heads = f'<th scope="col">{e(SCOPE_BOUND_HEAD)}</th>' + "".join(
+        f'<th scope="col">{e(w)}</th>' for w in SCOPE_COL_WORD.values())  # fmt: skip
     body = "".join(
-        f'<tr><th scope="row">{e(SCOPE_ROW_WORD[r])}</th>'
+        f'<tr><th scope="row">{e(SCOPE_ROW_WORD[r])}</th>{bound(r)}'
         + "".join(cell(card[r][c]) for c in SCOPE_COL_WORD) + "</tr>"
         for r in SCOPE_ROW_WORD
     )  # fmt: skip
-    return (f'<dl class="pf">{facts}</dl><table class="scard"><caption class="sr">Scope card</caption>'
+    return (f'<table class="scard"><caption class="sr">Scope card</caption>'
             f'<thead><tr><td><span class="sr">What</span></td>{heads}</tr></thead>'
             f"<tbody>{body}</tbody></table>")  # fmt: skip
 
 
+def scope_head_html(row):
+    """The head of the Glyph section (MC-6, amended 2026-11-15): the three properties a proof
+    system is read for, each stated by the publisher or tested by us, computed for the row
+    (soundness from Unforgeable's step, zero knowledge from Weights hidden's, completeness from
+    the counted sessions' accepted replies); the publisher's stated security, verbatim with its
+    link; then the scope card."""
+    petal = {p["id"]: p for p in row["glyph"]}
+
+    def stated(pid):
+        p = petal[pid]
+        silent_ = p["step"] is None or (p["step"] == "red" and p["cause"] == "not_stated")
+        return SCOPE_LINES["not_stated" if silent_ else "stated"]
+
+    n = row["honest_accepted"]
+    tested = f"{SCOPE_LINES['tested']} ({n:,}\u00a0of\u00a0{n:,})"
+    if row["incomplete"]:
+        tested += f", {counted_words(len(row['incomplete']), 'incomplete session')} not counted"
+    lines = (("Soundness", stated("unforgeable")), ("Zero knowledge", stated("weights_hidden")),
+             ("Completeness", tested))  # fmt: skip
+    sec = row.get("security") or {}
+    security = ""
+    if sec.get("words"):
+        src = str(sec.get("source") or "")
+        key = src.partition("#")[2]
+        url = S.V["systems"][row["system"]].get("sources", {}).get(key) or (
+            src if src.startswith("https://") else None)  # fmt: skip
+        words = quoted(sec["words"])
+        words = f'<a href="{e(url)}">{words}</a>' if url else words
+        security = f"<div><dt>{e(STATED_SECURITY)}</dt><dd>{words}</dd></div>"
+    facts = "".join(f"<div><dt>{e(k)}</dt><dd>{e(v)}</dd></div>" for k, v in lines)
+    formal = petal["machine_checked"]["formal"]
+    return (f'<div class="sgh"><dl class="pf">{facts}{security}</dl>'
+            f"{scope_card_html(formal)}</div>")  # fmt: skip
+
+
 def silent(formal):
-    """Whether Machine-checked's recorded facts and scope card state nothing at all."""
-    card = formal["scope_card"]
-    return not (formal["tool"] or formal["theorem"] or formal["trusted_base"]) and all(
-        card[r][c]["value"] == "not_stated" for r in SCOPE_ROW_WORD for c in SCOPE_COL_WORD
-    )
+    """Whether Machine-checked's recorded facts state nothing at all."""
+    return not (formal["tool"] or formal["theorem"] or formal["trusted_base"])
 
 
 FITTED = "fitted_to_weights"  # the one kind of visible value that sets Weights hidden's step
 
 
-def visible_html(visible):
+def forms_html(forms):
+    """Weights hidden: the forms of the proved zero knowledge, each the publisher's words linked
+    to its quote (amended 2026-11-15). They set no step."""
+    if not forms:
+        return ""
+    items = "".join(f'<li><a href="{e(f["quotes"][0]["url"])}">{quoted(f["item"])}</a></li>'
+                    for f in forms)  # fmt: skip
+    return f'<p class="pvh">Zero knowledge, as stated</p><ul class="pvis">{items}</ul>'
+
+
+def visible_html(visible, at_least=False):
     """Weights hidden: what the publisher lists as visible to a proof's reader, each item linked
     to its quote, in two groups: those fitted to the weights (the only kind that sets the step,
     WH-5, WH-6), then the others, each with its kind. The second group's head says "others", not
@@ -339,7 +408,8 @@ def visible_html(visible):
     other = [v for v in visible if v["tag"] != FITTED]
     groups = ((f"{len(fitted):,} {VISIBLE_TAG_WORD[FITTED]}", fitted, False),
               (f"{len(other):,} {VISIBLE_OTHERS}" if fitted else "", other, True))  # fmt: skip
-    return '<p class="pvh">Visible, as listed</p>' + "".join(
+    head = "Visible, as listed" + (" (at least these)" if at_least else "")
+    return f'<p class="pvh">{e(head)}</p>' + "".join(
         (f'<p class="pvg">{e(head)}</p>' if head else "")
         + f'<ul class="pvis">{items(vs, tagged)}</ul>'
         for head, vs, tagged in groups
@@ -354,7 +424,7 @@ def basis_html(p):
     if p["basis"] == "test":
         said = f'<a class="df" href="#fidelity">{e(BASIS_WORD["test"])}</a>'
     elif p["basis"] == "statement" and p["reading"]:
-        read = f'<a class="df" href="{CHECKS_PAGE}#reading">{e(AS_READ)}</a>'
+        read = e(AS_READ)  # the step's "read as" links to what a reading means (said_html)
         said = f"{e(BASIS_WORD['statement'])}, {read}"
     else:
         said = e(BASIS_WORD[p["basis"]])
@@ -383,19 +453,34 @@ def petal_more(p):
     if p["quotes"]:
         said.append(counted_words(len(p["quotes"]), "quote"))
     if p["formal"] is not None and not silent(p["formal"]):
-        said.append("scope card")
-    if p["visible"]:
-        said.append(counted_words(len(p["visible"]), "visible value"))
+        said.append("tool and theorem")
+    if p["forms"]:
+        said.append(counted_words(len(p["forms"]), "form"))
+    if p["visible"]:  # the publisher's "at least" kept with its count
+        said.append(("at least " if p["visible_at_least"] else "")
+                    + counted_words(len(p["visible"]), "visible value"))  # fmt: skip
     if not said:
         return f'<span class="bs">{basis}</span>' if basis else ""
     # a silent red: the documents read, each linked at the pin (GL-1)
     docs = ", ".join(f'<a href="{e(d["url"])}">{e(d["path"])}</a>' for d in p["sources"])
     docs = f'<p class="pfrom"><span class="k">{e(DOCS_READ)}</span> {docs}</p>' if docs else ""
-    body = (quote_links(p["quotes"]) + scope_card_html(p["formal"]) + visible_html(p["visible"])
-            + docs + foot)  # fmt: skip
+    body = (quote_links(p["quotes"]) + formal_facts_html(p["formal"]) + forms_html(p["forms"])
+            + visible_html(p["visible"], p["visible_at_least"]) + docs + foot)  # fmt: skip
     said = " · ".join(f'<span class="nw">{e(w)}</span>' for w in said)
     owner = f'<span class="sr">, {e(PETAL_NAME[p["id"]])}</span>'
     return f'{row}<details class="more"><summary>{said}{owner}</summary>{body}</details>'
+
+
+def said_html(p):
+    """What a petal rests on, in one word under its step (amended 2026-11-15): "tested",
+    "stated", or "read as", which links to what a reading means and caps the step (GL-10). A
+    silent red has none: its step already says "not stated"."""
+    if p["cause"] == "not_stated":
+        return ""
+    word = said_word(p)
+    if word == said_word({"basis": "statement", "reading": True}):
+        return f'<a class="sd df" href="{CHECKS_PAGE}#reading">{e(word)}</a>'
+    return f'<span class="sd">{e(word)}</span>'
 
 
 def glyph_html(row):
@@ -408,7 +493,7 @@ def glyph_html(row):
     for i, p in enumerate(row["glyph"]):
         tok = f"{p['state']} {p['form']}".strip()
         data = f' data-step="{e(p["step"] or "none")}"'
-        state = chip(p["state"], STEP_WORD[p["step"]], p["form"])
+        state = chip(p["state"], petal_step(p), p["form"])
         if p["cause"] is not None:  # the reason says it; the chip links its definition
             data += f' data-cause="{e(p["cause"])}"'
             state = (f'<a class="cc" href="{CHECKS_PAGE}#cause-{e(p["cause"])}" '
@@ -416,12 +501,13 @@ def glyph_html(row):
         trs.append(
             f'<tr class="pt {tok}"><th scope="row">'
             f'<a class="sl s{i + 1} {tok}"{data} href="{CHECKS_PAGE}#{p["id"]}" data-k="p{i + 1}">'
-            f"<span>{e(PETAL_NAME[p['id']])}</span></a></th>"
-            f'<td class="cst">{state}</td>'
+            f"<span>{e(PETAL_NAME[p['id']])}</span></a>"
+            f'<span class="pst">{e(PETAL_TERM[p["id"]])}</span></th>'
+            f'<td class="cst">{state}{said_html(p)}</td>'
             f'<td class="prs"><span class="rs">{e(p["reason"])}</span>{petal_more(p)}</td></tr>'
         )
-    return ('<div class="checks"><table class="rt ckt gbig"><caption class="sr">Petal, state, '
-            f'reason</caption><tbody>{"".join(trs)}</tbody></table></div>')  # fmt: skip
+    return (scope_head_html(row) + '<div class="checks"><table class="rt ckt gbig"><caption '
+            f'class="sr">Petal, state, reason</caption><tbody>{"".join(trs)}</tbody></table></div>')  # fmt: skip
 
 
 NOTE_SHORT = 48  # a check's note longer than this, in characters, is left to its records
@@ -1229,8 +1315,8 @@ def title_band(title, cls="ttl"):
 
 def cause_rule(text):
     """A petal cause's rule (PETAL_CAUSE_RULE) with its opening words ("Red (open outline)",
-    "Hollow, Faithful model only") drawn as the chip a system page prints for such a petal, those
-    words kept for a screen reader; what follows the state ("Faithful model only") in words."""
+    "Hollow, Close to the original only") drawn as the chip a system page prints for such a petal, those
+    words kept for a screen reader; what follows the state ("Close to the original only") in words."""
     head, _, rest = text.partition(": ")
     state_words, _, only = head.partition(", ")
     state, form = PETAL_CAUSE_DRAW[state_words]
@@ -1305,7 +1391,7 @@ def build_checks():
     # GL-2, GL-8, FM-2, MC-5, §Reading the tables)
     summary = (
         "The glyph shows how close a row is to a perfect prover. Petals are never added up. Four "
-        "petals are read from the publisher's documents at the pinned commit. Faithful model is "
+        "petals are read from the publisher's documents at the pinned commit. Close to the original is "
         "measured by our fidelity run, and is undecided whenever the Fidelity check is. A failed "
         "check turns red the petals whose claim it contradicts, an undecided check lowers none, "
         "and a held check raises none. On any doubt the lower step wins."

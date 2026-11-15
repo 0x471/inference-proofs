@@ -740,6 +740,7 @@ def build_board(root: Path, release: str, level: object) -> dict[str, object]:
                 system,
                 _policy(root, system, configuration),
                 level_alpha,
+                str(field_of(field_of(rung, "reference"), "dtype")),
             )
             rows.append(_Row(
                 system, str(workload), sessions,

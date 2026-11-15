@@ -1006,6 +1006,24 @@ html.js .scalepage .scl-panel { margin-top: 0; }
 .rt.ckt .scard thead :is(th, td) { color: var(--muted); text-transform: none; letter-spacing: 0; border-bottom: 1px solid var(--line); }
 .rt.ckt .scard tbody th { color: var(--muted); }
 .rt.ckt .scard tbody td.not_stated { color: var(--muted); }
+/* the head of a system's glyph (MC-6, amended 2026-11-15): the three properties, the stated security, then the
+   scope card, before the petals; the card scrolls in its own box on a phone */
+.sgh { margin: 0 0 28px; }
+.sgh .pf { max-width: 70ch; margin: 0; }
+.sgh .pf > div { display: grid; grid-template-columns: 136px minmax(0, 1fr); gap: 12px; padding: 1px 0; }
+.sgh .pf dt { color: var(--muted); }
+.sgh .pf dd { margin: 0; overflow-wrap: anywhere; }
+.sgh :is(dt, dd, th, td) { text-transform: none; letter-spacing: 0; }
+.sgh .scard { display: block; position: relative; max-width: 100%; overflow-x: auto; margin-top: 14px; border-collapse: collapse; font: inherit; }
+.sgh .scard caption { caption-side: top; text-align: left; padding-bottom: 4px; color: var(--muted); }
+.sgh .scard :is(th, td) { padding: 3px 16px 3px 0; vertical-align: top; text-align: left; font: inherit; white-space: nowrap; }
+.sgh .scard thead :is(th, td) { color: var(--muted); border-bottom: 1px solid var(--line); }
+.sgh .scard tbody th { color: var(--muted); font-weight: inherit; }
+.sgh .scard td.sb { white-space: normal; min-width: 18ch; }
+.sgh .scard td:is(.not_stated, .does_not_apply) { color: var(--muted); }
+/* a petal's field term under its name, and the word for what it rests on under its step (amended 2026-11-15) */
+.ckt.gbig th .pst { display: block; margin-top: 4px; color: var(--muted); font-weight: 400; text-transform: none; letter-spacing: 0; }
+.ckt .cst .sd { display: block; margin-top: 6px; color: var(--muted); }
 .ckt .pvh { margin: 12px 0 2px; color: var(--muted); }
 .ckt .pvis { margin: 0; padding: 0; list-style: none; max-width: 70ch; }
 /* the two groups' heads: the values fitted to the weights (the only kind that sets the step), then the others */
@@ -1073,6 +1091,8 @@ html.js .scalepage .scl-panel { margin-top: 0; }
 .ckt.gbig td.prs > .bs { display: grid; grid-template-columns: max-content minmax(0, 1fr); column-gap: 8px; align-items: baseline; max-width: none; margin-top: 8px; white-space: normal; }
 .ckt.gbig td.prs > .bs a.df { white-space: nowrap; }
 .ckt.gbig .more > summary { margin-top: 10px; }
+/* a petal's summary wraps between its counts (never inside one) when they outgrow a phone's cell */
+.ckt.gbig .more > summary { max-width: 100%; white-space: normal; }
 @media (max-width: 760px) {
   .figs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .figs > div { padding: 12px 10px 14px 13px; }

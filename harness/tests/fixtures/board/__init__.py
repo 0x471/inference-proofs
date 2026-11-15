@@ -344,7 +344,8 @@ def properties2(
          "adversary": fact("any_prover", commit=commit), "parameters": fact("row", commit=commit),
          "conditions_shown": fact(True, commit=commit),
          "program": fact("stated", commit=commit)}  # fmt: skip
-    f = {"reach": fact("verifier_run", commit=commit), "tool": fact("Coq 8.20", commit=commit),
+    f = {"reach": fact("verifier_run", commit=commit), "conclusion": fact("model", commit=commit),
+         "tool": fact("Coq 8.20", commit=commit),
          "toolchain": fact(TOOLCHAIN, "coq 8.20.0", commit),
          "theorem": "Fake.Verifier.sound",
          "theorem_url": f"https://github.com/{REPO}/blob/{commit}/coq/V.v#L4",
@@ -364,6 +365,8 @@ def properties2(
     sources = ["README.md", "docs/a.md"]
     return {"schema": "properties/2", "system": system, "configuration": "default",
             "upstream": {"repo": REPO, "commit": commit}, "read": "2026-11-13",
+            "verifiers": {"run": fact("fake-verify", "run fake-verify", commit),
+                          "stated": {"value": None, "quotes": []}},
             "petals": {
                 "unforgeable": {"sources_read": sources,
                                 "bound": _group(b, bound or {}, commit)},

@@ -75,7 +75,7 @@ Failures are sorted by gate, then path bytes, then pointer. After the list, a su
 
 Rule: every document in the tree that has a schema validates against the schema its `schema` field names (RFC-0012). Every `schema/*/examples/valid/*` validates; every `schema/*/examples/invalid/*` fails, and the failure text contains the content of its `.reason` file.
 
-Inputs: files matching `systems/*/claim.yaml`, `systems/*/claims/*.yaml`, `systems/*/{system,external,controls}.yaml`, `workloads/**/*.yaml`, `reference/*.yaml`, `targets/**/*.yaml`, `releases/*/release.yaml`, `releases/*/index.json`, `results/**/{run,manifest,controls}.json`, `web/_data/facts.json`, `web/_data/criteria.json`, `schema/*/examples/**`.
+Inputs: files matching `systems/*/claim.yaml`, `systems/*/claims/*.yaml`, `systems/*/{system,external,controls}.yaml`, `workloads/**/*.yaml`, `reference/*.yaml`, `targets/**/*.yaml`, `releases/*/release.yaml`, `releases/*/index.json`, `results/**/{run,manifest,controls}.json`, `web/_data/facts.json`, `schema/*/examples/**` (`web/_data/criteria.json` until 2026-11-15).
 
 Cross-document checks (also G2, rule ids `XREF-n`):
 
@@ -84,7 +84,7 @@ Cross-document checks (also G2, rule ids `XREF-n`):
 - `XREF-4` every `releases/<r>/release.yaml` lists only existing run directories, and the reference file it names exists.
 - `XREF-5` every target names a metric id that exists in the RFC-0004 formula registry or the raw metric list.
 - `PM-1` and `PM-2` ([RFC-0015 §Precision matching](0015-reference-rows.md#precision-matching)): a reference system that does not use the workload's served precision declares a substitution (`PM-1`); a substitution never goes to a lower bit width, and every quantity of a substituted reference row carries `quality.precision_substituted: true` (`PM-2`).
-- `web/_data/criteria.json` is checked by its schema (`criteria/1`) only.
+- `web/_data/criteria.json` is checked by its schema (`criteria/1`) only (amended 2026-11-15: the file is deleted 2026-11-15: it held RFC-0016's vocabulary (Formally verified "yes" from documents), which no page reads; the v0.1 record is in git history at b9dfa3e; it is no G2 input).
 
 Repository-shape checks (also G2):
 

@@ -52,7 +52,6 @@ G2_GLOBS = (
     "results/**/controls.json",
     "results/**/_controls/*/perturbed.json",
     "web/_data/facts.json",
-    "web/_data/criteria.json",
 )
 # Known-bad gate fixtures: checked by their own tests, never by the tree scan.
 EXCLUDED = ("harness/tests/fixtures/gates/",)

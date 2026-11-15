@@ -39,6 +39,8 @@ The shallowest depth where each kind of content may be printed, and its form the
 | the headline figure (cost vs serving) | 0 | figure with its unit |
 | its two parts (generation, commit and proving) | 0, with the headline | figures with their units (see Exceptions) |
 | the glyph | 0 | drawn, with its petals' names; each petal's step in words at 2; reason and quotes at 3 |
+| a petal's field term ("soundness error, as stated") and what it rests on ("tested", "stated", "read as") | 2 | words under its name and its step, on the system page |
+| soundness, zero knowledge and completeness for the row; the stated security; the scope card | 3 | three lines, the publisher's security words verbatim, then the card with one bound per row, at the head of the Glyph section |
 | cost, verify time | 0 | figure with its unit |
 | proof size | 1 (Scale), 2 | figure with its unit |
 | a unit | wherever its figure is | beside the figure, always |
