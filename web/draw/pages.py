@@ -853,7 +853,7 @@ def tests_html(row, tf, mine):
         return ""
     tests = {(t["a"], t["b"]): t["p"] for t in mine["tests"]}
     lines = []
-    for c in tf["controls"]:
+    for _, c in by_fidelity([(tf_mean(c), c) for c in tf["controls"]]):
         above, below = tests.get((row["system"], c["id"])), tests.get((c["id"], row["system"]))
         if above is None or below is None:
             continue
@@ -887,6 +887,18 @@ def fid_tr(cls, th, kind, cells, heads, tf, entry, ink):
     return f'<tr{at}>{th}<td data-l="Kind">{kind}</td>{track}{tds}</tr>'
 
 
+def tf_mean(entry):
+    """The teacher-forced mean a row of the Fidelity table is sorted by (SI-9), None where its
+    pass did not run."""
+    return entry["mean"] if entry is not None and entry["status"] == "ok" else None
+
+
+def by_fidelity(rows):
+    """SI-9 (amended 2026-11-15): the rows of one system's Fidelity table, highest Fidelity
+    first, the rows without one last; equal ones keep their order, the system's own first."""
+    return sorted(rows, key=lambda r: (r[0] is None, -(r[0] or 0.0)))
+
+
 def own_rows(row, tf, any_kl, heads):
     """The system's own replies: its Fidelity (median and failed prompts under it), its mean
     matched prefix (n in replies, where the Cost's n counts sessions, and p above the bar under
@@ -895,7 +907,7 @@ def own_rows(row, tf, any_kl, heads):
     mine = row["fidelity"]
     tf_mine = tf["rows"].get(row["system"]) if tf else None
     if mine is None and tf_mine is None:
-        return ""
+        return None, ""
     cells = []
     if tf:
         sub = [median_words(tf_mine, tf)]
@@ -926,7 +938,7 @@ def own_rows(row, tf, any_kl, heads):
         label = (f'<p>{e(whose)}: {e(tf_mine["label"])}. What ran: '
                  f'{e(tf_mine["computed_by"])}.</p>{"".join(evidence_links(records))}')  # fmt: skip
         out += f'<tr class="me ml"><td colspan="{len(heads) + 1}">{label}</td></tr>'
-    return out
+    return tf_mean(tf_mine), out
 
 
 def control_rows(fid, tf, any_kl, heads):
@@ -957,9 +969,9 @@ def control_rows(fid, tf, any_kl, heads):
         if any_kl:
             kl = (c or {}).get("kl")
             cells.append(fig_html(kl) if has(kl) else none)
-        out.append(fid_tr("bar" if is_bar else "", control_th(cid), e(kind), cells, heads, tf, t,
-                          (c or t)["kind"]))  # fmt: skip
-    return "".join(out)
+        out.append((tf_mean(t), fid_tr("bar" if is_bar else "", control_th(cid), e(kind), cells,
+                                       heads, tf, t, (c or t)["kind"])))  # fmt: skip
+    return out
 
 
 def fidelity_html(row):
@@ -967,7 +979,7 @@ def fidelity_html(row):
     model's controls, with Fidelity (FI-10's agreement, as a percentage of the reply's positions,
     its median under it) drawn on a track of the positions, the mean matched prefix the check reads
     (FI-3; the system's n and p above the bar under it, the bar's row ruled), and the KL of the
-    teacher-forced pass (FI-12). Under the system's row, in a row of its own, FI-13's label word for
+    teacher-forced pass (FI-12), the rows highest Fidelity first (SI-9). Under the system's row, in a row of its own, FI-13's label word for
     word, what ran and the records. The tests (FI-11) one click away under the table. KL to the
     original weights (FI-7) is a column where a system or a control of the model has the figure;
     where none does, one line at the section's head says why the row's is not measured (law 2)."""
@@ -981,7 +993,8 @@ def fidelity_html(row):
     )
     heads = ["Replies", "Kind", *([TF_AGREE] if tf else []), PREFIX, *([TF_KL] if tf else []),
              *([kl_h] if any_kl else [])]  # fmt: skip
-    body = own_rows(row, tf, any_kl, heads) + control_rows(fid, tf, any_kl, heads)
+    rows = [own_rows(row, tf, any_kl, heads), *control_rows(fid, tf, any_kl, heads)]
+    body = "".join(h for _, h in (by_fidelity(rows) if tf else rows))
     if not body:
         return '<p class="none">Not run yet.</p>'
     lead = ""

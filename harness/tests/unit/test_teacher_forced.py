@@ -139,6 +139,14 @@ def test_a_listed_token_of_probability_zero_adds_nothing() -> None:
     assert kl == pytest.approx(log(2))
 
 
+def test_a_token_the_engine_gives_probability_zero_joins_the_rest() -> None:
+    # common {0}: 0.5 ln(0.5/0.75); rest: m_p = 0.5 (token 1), m_q = 0.25 (token 2), 0.5 ln 2
+    kl, rest = position_kl([0, 1], [log(0.5), log(0.5)], [0, 1, 2],
+                           [log(0.75), float("-inf"), log(0.25)])  # fmt: skip
+    assert kl == pytest.approx(0.5 * log(4 / 3))
+    assert rest == pytest.approx(0.5)
+
+
 def test_document_holds_scores_tests_and_kl(tmp_path: Path) -> None:
     reference = [[1, 1, 1, 1]] * 4
     for name, q in (("reference", 0.5), ("ctl", 0.5), ("row", 0.25)):

@@ -15,7 +15,8 @@ log-probabilities.
   counted in `failed` with its cause.
 - FI-12: KL at one position is the KL divergence, in nats, between the reference's and the
   engine's distributions over this partition of the vocabulary: each token that both lists
-  hold, and one outcome for all the rest. It is at most the KL over the whole vocabulary.
+  hold, and one outcome for all the rest; a token either side gives probability 0 is not
+  common. It is at most the KL over the whole vocabulary.
   With p, q the probabilities on the common tokens S, m_p = 1 - sum_S p and m_q = 1 - sum_S q:
   KL = sum_S p (ln p - ln q) + m_p (ln m_p - ln m_q). A rest mass below `REST_FLOOR` is not
   resolved by float32 log-probabilities: the last term is left out when m_p is below it, and
@@ -60,7 +61,8 @@ SEED_RULE_TEXT = (
 KL_RULE = (
     "per position, the KL divergence in nats between the reference's and the engine's "
     "distributions over: each token both lists of the top_k most probable tokens hold, and one "
-    "outcome for every other token; at most the KL over the whole vocabulary. A rest mass "
+    "outcome for every other token (a token either side gives probability 0 is not common); "
+    "at most the KL over the whole vocabulary. A rest mass "
     "below rest_floor is left out on the reference's side and taken as rest_floor on the "
     "engine's. A prompt's value is the mean over its positions"
 )
@@ -139,7 +141,9 @@ def position_kl(
     qs: list[float] = []
     for token, a in zip(ref_ids, ref_lp, strict=True):
         b = theirs.get(token)
-        if b is None or a == NO_MASS:  # a listed token of probability 0 adds nothing
+        # a token of probability 0 on either side is not common: it joins the rest on both
+        # (FI-12), so the KL stays finite
+        if b is None or NO_MASS in (a, b):
             continue
         p = exp(a)
         ps.append(p)
