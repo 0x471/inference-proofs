@@ -230,3 +230,13 @@ def test_session_parts_print_beside_the_whole_sessions_figure(board_site: Any) -
         for part in ("generation_multiple", "commit_and_proving_multiple"):
             assert f"{at}{part}" in text, (page, part)
     assert '<rect class="bp" width="83.47"' in (out / "index.html").read_text()
+
+
+def test_completeness_count_is_the_boards(board_site: Any) -> None:
+    """MC-6 (amended 2026-11-15): the Completeness line at the head of a system's glyph counts the
+    replies of the board's counted sessions (their release groups summed), N of N."""
+    text = pages(board_site.out)
+    for row in rows(board_site.board):
+        n = sum(sum(s["groups"]) for s in row["sessions"])
+        page = html.unescape(text[f"{row['system']}.html"])
+        assert f"tested by us on honest runs ({n:,}\u00a0of\u00a0{n:,})" in page, row["system"]

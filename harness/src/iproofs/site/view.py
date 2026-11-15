@@ -31,7 +31,7 @@ BASES = ("statement", "test")
 # Machine-checked's scope card (MC-1 to MC-6): printed as recorded facts, it sets no state
 SCOPE_ROWS = ("soundness", "zero_knowledge", "completeness")
 SCOPE_COLS = ("protocol", "verifier_run", "prover_run")
-SCOPE_VALUES = ("machine_checked", "paper", "tested", "not_stated")
+SCOPE_VALUES = ("machine_checked", "paper", "tested", "not_stated", "does_not_apply")
 
 
 def _escape(part: str) -> str:
@@ -62,13 +62,17 @@ def _system(sid: str, facts: Any, root: Path) -> dict[str, Any]:
     row = facts.rows.get(sid)
     # the publisher's repository, as the claim card pins it (`upstream.repo`)
     card = root / "systems" / sid / "claim.yaml"
-    up = inputs.read_yaml(card).get("upstream") if card.is_file() else None
+    doc = inputs.read_yaml(card) if card.is_file() else {}
+    up = doc.get("upstream")
+    sources = doc.get("sources") or {}
     return {
         "id": sid,
         "name": row.name if row is not None else sid,
         "licence": None if row is None or row.licence is None else
         {"name": row.licence.name, "url": row.licence.url},
         "repo": str(up["repo"]) if isinstance(up, dict) and up.get("repo") else None,
+        # the claim card's links by field (`sources`), for the Stated security line's link
+        "sources": {str(k): str(v) for k, v in sources.items()},
     }  # fmt: skip
 
 
@@ -105,6 +109,12 @@ def _formal(pid: str, raw: dict[str, Any] | None) -> dict[str, Any] | None:
         "scope_card": {r: {c: {"value": card[r][c]["value"],
                                "quotes": _quotes(card[r][c]["quotes"])}
                            for c in SCOPE_COLS} for r in SCOPE_ROWS},
+        # MC-7 and the scope card's bounds (amended 2026-11-15); absent from an older board
+        "ceiling": raw.get("ceiling"),
+        "scope_bounds": {r: None if not (raw.get("scope_bounds") or {}).get(r) else
+                         {"text": raw["scope_bounds"][r]["text"],
+                          "quotes": _quotes(raw["scope_bounds"][r]["quotes"])}
+                         for r in SCOPE_ROWS},
     }  # fmt: skip
 
 
@@ -137,7 +147,10 @@ def _glyph(raw: list[dict[str, Any]]) -> list[dict[str, Any]]:
                     "formal": _formal(pid, p.get("formal")),
                     "visible": None if visible is None else
                     [{"item": v["item"], "tag": v["tag"], "quotes": _quotes(v["quotes"])}
-                     for v in visible]})  # fmt: skip
+                     for v in visible],
+                    "visible_at_least": p.get("visible_at_least", False) is True,
+                    "forms": [{"item": f["item"], "quotes": _quotes(f["quotes"])}
+                              for f in p.get("forms") or []]})  # fmt: skip
     return out
 
 
@@ -185,6 +198,9 @@ def _row(raw: dict[str, Any], at: str, board: str | None, rung: dict[str, Any]) 
             **{k: fid[k] for k in ("n", "mean_prefix", "p_above_bar", "p_below_bar", "kl_note")},
             "kl": figure(fid.get("kl"), f"{at}/fidelity/kl", board)},
         "security": raw.get("security"),
+        # completeness, the one property tested here (MC-6, amended 2026-11-15): the replies of
+        # the counted sessions, every one released with an accepted proof (Terms, Session)
+        "honest_accepted": sum(sum(s.get("groups") or ()) for s in raw["sessions"]),
         # where the row's plain numbers (session values, mean prefix) are read from
         "record": f"{board}#{at}" if board else at,
     }  # fmt: skip

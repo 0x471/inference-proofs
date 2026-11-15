@@ -5,7 +5,7 @@
       "kind": "system",
       "meta": "Llama 4 Maverick 17B-128E Instruct · passed",
       "name": "FlashProve",
-      "pie": "<svg class=\"pie-svg\" viewBox=\"0 -1 25 31\" width=\"25\" height=\"31\" shape-rendering=\"crispEdges\" aria-hidden=\"true\" focusable=\"false\"><rect class=\"stem\" fill=\"#5b7bff\" y=\"-1\" width=\"3\" height=\"31\"/><path class=\"sl s1 amber cut\" data-step=\"amber_lower\" fill=\"#e49921\" d=\"M3 0H18V5H3ZM20 0H25V5H20Z\"/><rect class=\"sl s2 amber\" data-step=\"amber_upper\" fill=\"#e49921\" x=\"3\" y=\"6\" width=\"22\" height=\"5\"/><path class=\"sl s3 amber cut\" data-step=\"amber_lower\" fill=\"#e49921\" d=\"M3 12H18V17H3ZM20 12H25V17H20Z\"/><path class=\"sl s4 hollow\" data-step=\"none\" data-cause=\"proof_build_not_run\" fill=\"none\" stroke=\"#9b978e\" stroke-width=\"1\" d=\"M3 18.5H24.5V22.5H3\"/><rect class=\"sl s5 green\" data-step=\"green\" fill=\"#6ffeb7\" x=\"3\" y=\"24\" width=\"22\" height=\"5\"/></svg>",
+      "pie": "<svg class=\"pie-svg\" viewBox=\"0 -1 25 31\" width=\"25\" height=\"31\" shape-rendering=\"crispEdges\" aria-hidden=\"true\" focusable=\"false\"><rect class=\"stem\" fill=\"#5b7bff\" y=\"-1\" width=\"3\" height=\"31\"/><path class=\"sl s1 amber cut\" data-step=\"amber_lower\" fill=\"#e49921\" d=\"M3 0H18V5H3ZM20 0H25V5H20Z\"/><rect class=\"sl s2 amber\" data-step=\"amber_upper\" fill=\"#e49921\" x=\"3\" y=\"6\" width=\"22\" height=\"5\"/><path class=\"sl s3 amber cut\" data-step=\"amber_lower\" fill=\"#e49921\" d=\"M3 12H18V17H3ZM20 12H25V17H20Z\"/><path class=\"sl s4 hollow\" data-step=\"none\" data-cause=\"proof_build_not_run\" fill=\"none\" stroke=\"#9b978e\" stroke-width=\"1\" d=\"M3 18.5H24.5V22.5H3\"/><rect class=\"sl s5 amber\" data-step=\"amber_upper\" fill=\"#e49921\" x=\"3\" y=\"24\" width=\"22\" height=\"5\"/></svg>",
       "terms": "flashprove llama 4 maverick 17b-128e instruct · passed l1-maverick-p512-o512 flashprove",
       "tier": 0,
       "url": "/flashprove"
@@ -74,9 +74,9 @@
       "group": "Glyph",
       "kind": "petal",
       "meta": "How close the proved replies stay to the model publisher's own release, against the model's controls.",
-      "name": "Faithful model",
+      "name": "Close to the original",
       "pie": "",
-      "terms": "faithful model how close the proved replies stay to the model publisher's own release, against the model's controls.",
+      "terms": "close to the original how close the proved replies stay to the model publisher's own release, against the model's controls.",
       "tier": 2,
       "url": "/checks#faithful_model"
     },
@@ -383,6 +383,16 @@
     {
       "group": "Glossary",
       "kind": "term",
+      "meta": "The petal that grades how close a system's proved replies stay to the model its publisher released: how many leading reply tokens match the original's before the first difference, on average, against the same count for the model's 8-bit and 4-bit copies.",
+      "name": "Close to the original",
+      "pie": "",
+      "terms": "close to the original the petal that grades how close a system's proved replies stay to the model its publisher released: how many leading reply tokens match the original's before the first difference, on average, against the same count for the model's 8-bit and 4-bit copies.",
+      "tier": 4.2,
+      "url": "/glossary#close-to-the-original"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
       "meta": "A value computed from data, such as a model's weights, that fixes them for later proofs without publishing them.",
       "name": "Commitment",
       "pie": "",
@@ -393,10 +403,10 @@
     {
       "group": "Glossary",
       "kind": "term",
-      "meta": "The property that a verifier accepts every proof an honest prover makes of a true statement.",
+      "meta": "The property that a verifier accepts every proof an honest prover makes of a true statement, often except with a small stated probability.",
       "name": "Completeness",
       "pie": "",
-      "terms": "completeness the property that a verifier accepts every proof an honest prover makes of a true statement.",
+      "terms": "completeness the property that a verifier accepts every proof an honest prover makes of a true statement, often except with a small stated probability.",
       "tier": 4.2,
       "url": "/glossary#completeness"
     },
@@ -713,6 +723,16 @@
     {
       "group": "Glossary",
       "kind": "term",
+      "meta": "Said of a petal whose state rests on our reading of a publisher's documents, not on a sentence that says it.",
+      "name": "Read as",
+      "pie": "",
+      "terms": "read as said of a petal whose state rests on our reading of a publisher's documents, not on a sentence that says it.",
+      "tier": 4.2,
+      "url": "/glossary#read-as"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
       "meta": "Checking a claimed output by running the computation again and comparing.",
       "name": "Recomputation",
       "pie": "",
@@ -809,6 +829,16 @@
       "terms": "soundness the property that a verifier refuses proofs of false statements, except with a probability the security level bounds.",
       "tier": 4.2,
       "url": "/glossary#soundness"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
+      "meta": "The probability, as the publisher states it, that a verifier accepts a proof of a false statement: the bound behind soundness.",
+      "name": "Soundness error",
+      "pie": "",
+      "terms": "soundness error the probability, as the publisher states it, that a verifier accepts a proof of a false statement: the bound behind soundness.",
+      "tier": 4.2,
+      "url": "/glossary#soundness-error"
     },
     {
       "group": "Glossary",
@@ -913,10 +943,10 @@
     {
       "group": "Glossary",
       "kind": "term",
-      "meta": "The property that a proof shows nothing beyond the truth of its statement.",
+      "meta": "The property that a proof shows nothing beyond the truth of its statement: all a verifier sees could be simulated without the weights.",
       "name": "Zero knowledge",
       "pie": "",
-      "terms": "zero knowledge the property that a proof shows nothing beyond the truth of its statement.",
+      "terms": "zero knowledge the property that a proof shows nothing beyond the truth of its statement: all a verifier sees could be simulated without the weights.",
       "tier": 4.2,
       "url": "/glossary#zero-knowledge"
     },

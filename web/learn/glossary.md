@@ -22,13 +22,17 @@ One of the six tests of Level 1: Run, Model, Prompt, Reply, Verify without weigh
 
 The record of what one system's accepted proofs establish in one configuration, as its publisher states it. Each field is copied from the publisher's documents at the pinned commit and linked, or reads "not stated" ([RFC-0002](repo:rfcs/0002-claim-card.md)).
 
+### Close to the original
+
+The [petal](/checks#faithful_model) that grades how close a system's proved replies stay to the model its publisher released: how many leading reply tokens match the original's before the first difference, on average, against the same count for the model's 8-bit and 4-bit copies. It is a different measure from the [[fidelity]] figure, which counts top-token agreement. Until 2026-11-15 it was called Faithful model, a word that means something else in interpretability.
+
 ### Commitment
 
 A value computed from data, such as a model's weights, that fixes them for later proofs without publishing them. The verifier takes it from [the harness's record](/statement#the-committed-weights), never from files sent with a proof. In policy writing, a commitment is a pledge.
 
 ### Completeness
 
-The property that a verifier accepts every proof an honest prover makes of a true statement. In safeguards writing, a complete declaration leaves nothing out.
+The property that a verifier accepts every proof an honest prover makes of a true statement, often except with a small stated probability. It is the one of the three properties a test can show: on a system's page, completeness reads "tested by us on honest runs" with the count of honest replies whose proofs were accepted. In safeguards writing, a complete declaration leaves nothing out.
 
 ### Conjectured
 
@@ -48,7 +52,7 @@ A transform that makes an interactive proof non-interactive by hashing the state
 
 ### Fidelity
 
-How closely the copy a system proves follows the model its publisher released. The Fidelity figure is the share of reply positions where the system's top token is the original's, with the system fed the prompt and then the original's reply (teacher forcing). It sets no state and is labelled "computed by the system's own code on the reference reply, not by the proved computation". The [Fidelity check](/checks#fidelity) and the Faithful model petal score a proved reply by its leading tokens matching the original's.
+How closely the copy a system proves follows the model its publisher released. The Fidelity figure is the share of reply positions where the system's top token is the original's, with the system fed the prompt and then the original's reply (teacher forcing). It sets no state and is labelled "computed by the system's own code on the reference reply, not by the proved computation". The [Fidelity check](/checks#fidelity) and the [[close to the original]] petal score a proved reply by its leading tokens matching the original's.
 
 ### Field
 
@@ -60,7 +64,7 @@ A protocol that shows committed values lie close to a Reed-Solomon codeword, the
 
 ### Glyph
 
-A five-petal figure of how close a system is to a perfect prover. Its [petals](/checks#glyph), all green for such a prover, are Unforgeable, Weights hidden, Faithful model, Machine-checked and No third party trusted. Nothing adds them up, and the glyph never changes a system's position.
+A five-petal figure of how close a system is to a perfect prover. Its [petals](/checks#glyph), all green for such a prover, are Unforgeable, Weights hidden, Close to the original, Machine-checked and No third party trusted. Nothing adds them up, and the glyph never changes a system's position.
 
 ### Greedy decoding
 
@@ -154,6 +158,10 @@ Storing a model's weights, and often its activations, as low-precision integers 
 
 An ideal hash function that gives every new input a fresh, uniformly random output. [[Fiat-Shamir]] proofs are usually proved sound with the hash taken as one.
 
+### Read as
+
+Said of a petal whose state rests on our reading of a publisher's documents, not on a sentence that says it. The petal prints the quotes it rests on and is drawn amber at most, for every system alike. The name of a construction, such as STARK, is never read as a claim.
+
 ### Recomputation
 
 Checking a claimed output by [running the computation again](/deployment) and comparing. It needs the weights, hardware to run them, and arithmetic that two honest runs agree on or a tolerance between them.
@@ -176,7 +184,7 @@ Said of a guarantee that comes from checking [a random part of the work](/deploy
 
 ### Security level
 
-A measure, in bits, of how hard it is to get a false proof accepted. At 100 bits, one attempt succeeds with probability at most 1 in 2^100. A stated level's basis is proved, [[conjectured]] or not said, and Level 1 prints the level as stated.
+A measure, in bits, of how hard it is to get a false proof accepted. It is not a fixed chance per attempt: the [[soundness error]] usually grows with the forger's work. FlashProve states q/2^124 + 2^-101 after q hash queries, so each further query adds to a forger's chance. A stated level's basis is proved, [[conjectured]] or not said, and Level 1 prints the level as stated.
 
 ### Serving baseline
 
@@ -193,6 +201,10 @@ Two names for proof systems: SNARKs (succinct non-interactive arguments of knowl
 ### Soundness
 
 The property that a verifier refuses proofs of false statements, except with a probability the [[security level]] bounds. It rests on a security proof under stated assumptions. A test can refute it but never establish it.
+
+### Soundness error
+
+The probability, as the publisher states it, that a verifier accepts a proof of a false statement: the bound behind [[soundness]]. It is stated for a given verifier, per proof or per part of one, often as a function of the forger's hash queries. The [Unforgeable](/checks#unforgeable) petal prints it first, then every condition that keeps it from covering what the row runs, such as a verifier other than the one the bound is stated for.
 
 ### Statement
 
@@ -236,4 +248,4 @@ Everything the prover uses to build a proof and the verifier does not see. In a 
 
 ### Zero knowledge
 
-The property that a proof shows nothing beyond the truth of its statement. What the statement makes public stays visible: the model's sizes, the prompt, the reply. The [Weights hidden](/checks#weights_hidden) petal asks it of the programs that run, not only of the protocol.
+The property that a proof shows nothing beyond the truth of its statement: all a verifier sees could be simulated without the weights. It comes in forms. Honest-verifier zero knowledge holds only against a verifier that follows the protocol. After Fiat-Shamir it can hold against any verifier, often within a stated number of hash queries and in the [[random oracle]] model. It is perfect, statistical or computational as the simulated view is identical, close up to a stated distance, or only hard to tell apart. What the statement makes public stays visible: the model's sizes, the prompt, the reply. The [Weights hidden](/checks#weights_hidden) petal prints the form the publisher states, asks it of the programs that run, not only of the protocol, and of the row's batches.

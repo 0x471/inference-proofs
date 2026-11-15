@@ -23,7 +23,7 @@ those records and the rows' counted sessions into `fidelity.json` (schema `fidel
   file. No honest control ran, or no damaged control qualifies: no bar.
 - FI-6: a row is `held` when it beats the bar, `failed` when the bar beats it, else
   `undecided`, cause `not resolved` (also with no bar).
-- Faithful model's steps (RFC-0018 FM-4 to FM-7): T_green is the midpoint of the reference
+- Close to the original's steps (RFC-0018 FM-4 to FM-7): T_green is the midpoint of the reference
   rerun's and Q8_0's mean scores, T_upper of Q8_0's and Q4_K_M's. A row is shown above a
   threshold T = (S_a + S_b) / (2n), S the two controls' score sums over the n prompts, when the
   FI-4 test on d_i = 2n s_i - (S_a + S_b) gives p < alpha. Multiplying s_i - T by 2n > 0 keeps

@@ -782,7 +782,7 @@ def read_as(p: Petal) -> Petal:
                    "part at most")  # fmt: skip
 
 
-# ---------------------------------------------------------------- Faithful model (FM-1 to FM-7)
+# ------------------------------------------------------------ Close to the original (FM-1 to FM-7)
 
 
 def _scores(found: object) -> list[int] | None:
