@@ -1262,7 +1262,7 @@ main { flex: 1 0 auto; }
 .foot a:focus-visible, .cs dt a:focus-visible { outline-color: var(--paper); outline-offset: 5px; }
 .foot code { color: var(--muted); font-weight: 400; overflow-wrap: anywhere; }
 /* a name printed on a phone only (its list names every line) */
-.fp { display: none; }
+.fk.fp { display: none; }
 
 /* the Learn strip's fading ends (.lpn .ps, below): the fades' widths, tied to the strip's scroll */
 @property --psl { syntax: "<length>"; inherits: false; initial-value: 0px; }
@@ -1837,7 +1837,7 @@ ol.ls > li:before { counter-increment: n; content: counter(n); position: absolut
   .foot { margin-top: 72px; }
   .fcells { display: block; margin: 0 var(--gut); padding: 0 0 40px; overflow: visible; }
   .foot .fcells li { display: block; margin: 0; padding: 0; box-shadow: none; }
-  .fp { display: inline; }
+  .fk.fp { display: inline; }
   .fx { display: none; }
   .foot .fcr { display: block; line-height: inherit; }
   .fcells li > a, .fci { display: flex; justify-content: space-between; align-items: baseline; column-gap: 16px; min-height: 44px; padding: 13px 0 11px; box-shadow: inset 0 -1px 0 var(--line); text-decoration: none; white-space: normal; }
