@@ -84,6 +84,8 @@ jobs:
           else
             uv run iproofs validate --all
           fi
+      - name: the board recomputes byte for byte from the stored records (RFC-0018 §The board file)
+        run: uv run iproofs release board v1.0 --check
       - name: tooling budgets on the synthetic tree (default branch, docs/spec/08)
         if: github.event_name == 'push'
         run: IPROOFS_BENCH=1 IPROOFS_BENCH_SUMMARY="$GITHUB_STEP_SUMMARY" uv run pytest harness/tests/bench -q
