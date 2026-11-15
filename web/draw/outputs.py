@@ -16,12 +16,14 @@ from .chrome import (
     HEAD_SCRIPT,
     LEARN_PAGE,
     MANDATE_PAGE,
+    ONLY_RUN,
     SCALE_PAGE,
     SITE_URL,
     counted,
     credit_words,
     font_faces,
     lead_figure,
+    only_run,
     parts_of,
     row_cost,
     rung_of,
@@ -338,8 +340,8 @@ def system_card(pid):
                       f'{fig_html(p, n, sub=BARE)}</span>' for w, p in parts)  # fmt: skip
         lead = fig_html(f, n, sub=BARE) + f'<span class="pts">{pts}</span>'
     head, _, why = standing(row).partition(": ")
-    if row["position"] is not None:
-        why = f"position {row['position']} of {rung['systems_run']}"
+    if row["position"] is not None:  # OR-4: no count where nothing else ran on the model
+        why = ONLY_RUN if only_run(row) else f"position {row['position']} of {rung['systems_run']}"
     rel = S.V["release"]
     when = f"Release {rel['id']}" + (f", {rel['date']}" if rel["date"] else "") if rel else ""
     weight = 600 if row["position"] is not None else 400

@@ -330,10 +330,7 @@ def card_alt(card):
     if card == "home":
         return "Inference proofs."
     row = S.PAGE[card]
-    _, f, key = lead_figure(row)
-    lead = f"{FIGURE_HEAD['multiple']}: {fig_words(f)}"
-    if parts := parts_of(row, key):  # CO-7: "of which" once, before both parts
-        lead += f", {OF_WHICH} " + " and ".join(f"{w} {fig_words(p)}" for w, p in parts)
+    lead = lead_words(row)
     figs = [(FIGURE_HEAD["cost"], row_cost(row)),
             (FIGURE_HEAD["check-time"], row["figures"]["verify_seconds_per_reply"])]  # fmt: skip
     cells = ". ".join(f"{k}: {fig_words(v)}" for k, v in figs)
@@ -378,11 +375,12 @@ SPLITS = {"multiple": (("proving", "proving_multiple"), ("generation", "generati
 
 
 def lead_figure(row):
-    """A row's one figure (CO-5): the multiple of serving; with no steady state, the whole
-    sessions' multiple, named so in its label; else the multiple's null. Returns (label, figure,
-    its key in the row's figures)."""
+    """A row's one figure (CO-5, amended 2026-11-15): the whole sessions' multiple, named so in
+    its label, on every row that has one, so the rows of a rung print one scope; else the steady
+    multiple (or its null). The order rule still reads the steady multiple (OR-3): this changes
+    what is printed, never a position. Returns (label, figure, its key in the row's figures)."""
     figs = row["figures"]
-    if not has(figs["multiple"]) and has(figs["session_multiple"]):
+    if has(figs["session_multiple"]):
         n = rung_of(row)["requests_per_session"]
         return (f"{FIGURE_NAME['multiple']}, {WHOLE_SESSIONS.format(n=n)}",
                 figs["session_multiple"], "session_multiple")  # fmt: skip
@@ -397,11 +395,40 @@ def parts_of(row, key):
 
 
 def row_cost(row):
-    """The cost per reply at the multiple's own scope: steady when the row has a steady
-    multiple, else its whole sessions, so one row never mixes two scopes."""
+    """The cost per reply at the printed multiple's scope (`lead_figure`): the whole sessions'
+    on every row that has one (SI-1), else the steady one, so one row never mixes two scopes."""
     figs = row["figures"]
-    steady = figs["multiple"].get("value") is not None
-    return figs["steady_usd_per_reply" if steady else "session_usd_per_reply"]
+    whole = has(figs["session_multiple"]) or not has(figs["multiple"])
+    return figs["session_usd_per_reply" if whole else "steady_usd_per_reply"]
+
+
+def only_run(row):
+    """Whether the row is the only system run on its model (OR-4, amended 2026-11-15): its
+    position is then printed unfilled, with no count, since nothing on the model was ranked
+    against it."""
+    return rung_of(row)["systems_run"] == 1
+
+
+ONLY_RUN = "only system run on this model"
+
+
+def share_words(row):
+    """A system page in a sentence (its description and share text, depth 0): the system, its
+    model and standing, its one figure and, where it has them, its two parts (CO-7), as the card
+    prints them."""
+    name = S.V["systems"][row["system"]]["name"]
+    return f"{name} on {rung_of(row)['model']}, {standing(row)}. {lead_words(row)}."
+
+
+def lead_words(row):
+    """The row's one figure in words, with its two parts where it has them (CO-7: "of which"
+    once, before both): "Cost vs serving: 1,317×, of which commit and proving 118.2× and
+    generation 1,199×"."""
+    _, f, key = lead_figure(row)
+    lead = f"{FIGURE_HEAD['multiple']}: {fig_words(f)}"
+    if parts := parts_of(row, key):
+        lead += f", {OF_WHICH} " + " and ".join(f"{w} {fig_words(p)}" for w, p in parts)
+    return lead
 
 
 def not_passed(row):

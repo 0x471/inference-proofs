@@ -25,6 +25,7 @@ from .chrome import (
     footer,
     has,
     header,
+    lead_figure,
     page,
     pnav,
     row_cost,
@@ -84,11 +85,11 @@ def baseline_value(rung, key):
 
 
 def figure_of(row, dim):
-    """The row's one stored figure for this dimension, as the ladder prints it."""
+    """The row's one stored figure for this dimension, as the ladder prints it (the multiple and
+    the cost at the whole sessions' scope wherever the row has it: `lead_figure`, `row_cost`)."""
     figs = row["figures"]
     if dim == "multiple":
-        m = figs["multiple"]
-        return m if has(m) or not has(figs["session_multiple"]) else figs["session_multiple"]
+        return lead_figure(row)[1]
     if dim == "cost":
         return row_cost(row)
     return figs["verify_seconds_per_reply" if dim == "check-time" else "proof_bytes_per_reply"]
@@ -96,11 +97,12 @@ def figure_of(row, dim):
 
 def ticks_of(row, dim, rung):
     """Where the counted sessions sit, in the axis's unit: the multiple and the cost from each
-    session's GPU time (m where the row has a steady state, else the whole session), placed by
-    the rung's serving GPU time or by the row's own price (its stored USD over its stored GPU
-    time); none for check time and proof size, which store no value per session."""
+    session's GPU time at the printed figure's scope (the whole session, or m where the row has
+    only a steady figure), placed by the rung's serving GPU time or by the row's own price (its
+    stored USD over its stored GPU time); none for check time and proof size, which store no
+    value per session."""
     figs = row["figures"]
-    steady = has(figs["multiple"])
+    steady = lead_figure(row)[2] == "multiple"
     vals = [s.get("m" if steady else "session") for s in row["sessions"]]
     vals = [v for v in vals if v is not None]
     if dim == "multiple":
