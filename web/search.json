@@ -293,10 +293,10 @@
     {
       "group": "Learn",
       "kind": "learn",
-      "meta": "The systems on the ladder prove a committed, quantized copy's greedy reply. They differ in what one proof covers and what their error bound covers.",
+      "meta": "The ladder's verifiers check a committed, quantized copy's greedy reply. No row has a proved error bound that covers what it runs.",
       "name": "The statement",
       "pie": "",
-      "terms": "the statement the systems on the ladder prove a committed, quantized copy's greedy reply. they differ in what one proof covers and what their error bound covers. for prover teams and engineers each system's statement the committed weights integer arithmetic checked tokens the seams the error bound claim cards",
+      "terms": "the statement the ladder's verifiers check a committed, quantized copy's greedy reply. no row has a proved error bound that covers what it runs. for prover teams and engineers each system's statement the committed weights integer arithmetic checked tokens the seams the error bound claim cards",
       "tier": 4.1,
       "url": "/statement"
     },
@@ -933,10 +933,10 @@
     {
       "group": "Not run",
       "kind": "notrun",
-      "meta": "licence",
+      "meta": "no public verifier",
       "name": "DeepProve",
       "pie": "",
-      "terms": "deepprove licence",
+      "terms": "deepprove no public verifier",
       "tier": 5,
       "url": "/#nr-deepprove"
     },
@@ -953,10 +953,10 @@
     {
       "group": "Not run",
       "kind": "notrun",
-      "meta": "licence",
+      "meta": "no public verifier",
       "name": "JOLT Atlas",
       "pie": "",
-      "terms": "jolt atlas licence",
+      "terms": "jolt atlas no public verifier",
       "tier": 5,
       "url": "/#nr-jolt-atlas"
     },
@@ -1063,20 +1063,20 @@
     {
       "group": "Not run",
       "kind": "notrun",
-      "meta": "no configuration at the request",
+      "meta": "a different statement",
       "name": "zkGPT",
       "pie": "",
-      "terms": "zkgpt no configuration at the request",
+      "terms": "zkgpt a different statement",
       "tier": 5,
       "url": "/#nr-zkgpt"
     },
     {
       "group": "Not run",
       "kind": "notrun",
-      "meta": "no configuration at the request",
+      "meta": "no public verifier",
       "name": "zkLLM",
       "pie": "",
-      "terms": "zkllm no configuration at the request",
+      "terms": "zkllm no public verifier",
       "tier": 5,
       "url": "/#nr-zkllm"
     },
