@@ -16,7 +16,7 @@ from dataclasses import dataclass, replace
 from pathlib import Path
 
 from iproofs.errors import ErrorKind, IProofsError
-from iproofs.fidelity import sign_flip_p
+from iproofs.fidelity import sign_flip_p, step_diffs
 from iproofs.serialize import load_yaml
 
 GREEN, AMBER, RED, HOLLOW = "green", "amber", "red", "hollow"
@@ -608,15 +608,15 @@ _THRESHOLD_NAMES = (("green", "T_green"), ("upper", "T_upper"))
 _LINE_WORDS = {"green": "rerun and Q8_0", "upper": "Q8_0 and Q4_K_M"}  # whose midpoint each is
 
 
-def recheck(doc: Mapping[str, object]) -> dict[str, int]:
+def recheck(doc: Mapping[str, object]) -> dict[str, list[int]]:
     """Spec 1.4, rule 3: each stored threshold is recomputed from its controls' scores with the
-    same expression; any difference stops the board. Returns each threshold's score sum
-    S_a + S_b, by step key."""
+    same expression; any difference stops the board. Returns each threshold's per-prompt score
+    sums a_i + b_i, by step key."""
     steps = doc.get("steps")
     if not isinstance(steps, Mapping):
         return {}
     controls = {str(_m(c).get("id")): _m(c) for c in doc.get("controls") or ()}  # type: ignore[attr-defined]
-    totals: dict[str, int] = {}
+    totals: dict[str, list[int]] = {}
     for key, name in _THRESHOLD_NAMES:
         threshold = _m(steps.get(key))
         stored = threshold.get("value")
@@ -634,7 +634,7 @@ def recheck(doc: Mapping[str, object]) -> dict[str, int]:
             raise IProofsError(
                 ErrorKind.CONFIG, f"fidelity.json {name} {stored}, its controls give {computed}"
             )
-        totals[key] = sum(a) + sum(b)
+        totals[key] = [x + y for x, y in zip(a, b, strict=True)]
     return totals
 
 
@@ -642,7 +642,7 @@ def _tie_step_tests(
     steps: Mapping[str, object],
     tests: Mapping[str, object],
     scores: Sequence[int],
-    totals: Mapping[str, int],
+    totals: Mapping[str, Sequence[int]],
     system: str,
 ) -> None:
     """F5: each stored step test is the test of the row's scores over its stored threshold: its
@@ -662,7 +662,7 @@ def _tie_step_tests(
                                f"{stored.get('value')} over n = {stored.get('n')}, the stored "
                                f"step is {name} = {value} over n = {n}")  # fmt: skip
         if stored.get("method") == "exact" and key in totals:
-            diffs = [2 * n * s - totals[key] for s in scores]
+            diffs = step_diffs(scores, totals[key])  # FM-5: paired by prompt
             p = sign_flip_p(diffs, exact_up_to=n, resamples=1, seed=0)
             if p != stored.get("p"):
                 raise IProofsError(ErrorKind.CONFIG, f"{where} has p = {stored.get('p')}, the "
@@ -740,7 +740,9 @@ def faithful_model(  # noqa: PLR0911, PLR0912 (one return per line of the table)
     slots = doc.get("slots")
     if green_shown and slots == 1:  # FM-5 (F2)
         return petal(GREEN, f"shown above {t_green}")
-    had = "no slot count is stored" if slots is None else f"the run had {slots} slots"
+    cause = doc.get("slots_cause")
+    had = (str(cause) if cause else "no slot count is stored") if slots is None else (
+        f"the run had {slots} slots")  # fmt: skip
     if upper_shown:  # FM-6 (F3)
         if green_shown:
             return petal(AMBER_UPPER, f"shown above {t_green}, but {had} and green needs 1")

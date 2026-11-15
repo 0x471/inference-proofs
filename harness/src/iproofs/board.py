@@ -40,6 +40,7 @@ from iproofs.derive import (
     steady_per_reply,
 )
 from iproofs.errors import ErrorKind, IProofsError
+from iproofs.fidelity import run_slots as fidelity_run_slots
 from iproofs.fidelity import with_steps as fidelity_with_steps
 from iproofs.glyph import (
     Coverage,
@@ -634,13 +635,13 @@ def _with_steps(
     randomness = beacon_randomness(root, level_id(level))
     if randomness is None:
         return doc  # no beacon record: FM-4 reads "no step tests stored"
-    run_path = fidelity_path(root, release, str(field_of(rung, "id"))).with_name(
-        "fidelity-run.json"
-    )
-    slots = json.loads(run_path.read_text()).get("slots") if run_path.is_file() else None
+    folder = fidelity_path(root, release, str(field_of(rung, "id"))).parent
+    records = [json.loads(p.read_text()) for p in [folder / "fidelity-run.json",
+               *sorted(folder.glob("fidelity-run-*.json"))] if p.is_file()]  # fmt: skip
+    slots, slots_cause = fidelity_run_slots(records)  # FM-5: every part of the run
     controls: Sequence[object] = field_of(rung, "controls") or ()  # type: ignore[assignment]
     specs = [{k: field_of(c, k) for k in ("id", "kind", "recipe", "type")} for c in controls]
-    return fidelity_with_steps(doc, specs, slots if isinstance(slots, int) else None, randomness)
+    return fidelity_with_steps(doc, specs, slots, randomness, slots_cause)
 
 
 def build_board(root: Path, release: str, level: object) -> dict[str, object]:
