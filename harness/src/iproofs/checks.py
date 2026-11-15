@@ -581,7 +581,7 @@ def what_ran(
     """CH-1c: per control and position, the counted trials (`void` and `error` left out), how many
     of them were refused, and how many distinct changed inputs they sent: a trial at a fixed change
     (C1 at the first and last positions, C3, P1) sends the same input as the others."""
-    out = []
+    out: list[dict[str, object]] = []
     for control, position in parts:
         counted = [t for t in trials if t.control == control and t.position == position
                    and t.outcome not in UNCOUNTED]  # fmt: skip
