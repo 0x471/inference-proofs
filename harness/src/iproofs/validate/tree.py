@@ -43,6 +43,7 @@ G2_GLOBS = (
     "results/**/teacher-forced/*/run-*.json",
     "results/**/proof-build/*/proof-build.json",
     "results/**/verify-trace/*.json",
+    "results/**/refusals/slot-*.json",
     "targets/**/*.yaml",
     "releases/*/release.yaml",
     "releases/*/index.json",

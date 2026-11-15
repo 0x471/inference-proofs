@@ -168,7 +168,7 @@ AGENTS.md rule 6: the commitment the verifier checks comes from the harness reco
 
 ### Eligibility
 
-A run is eligible for a release (RFC-0009 freeze) only if it belongs to that release, every pin in the manifest is in full form (the manifest is valid `manifest/1`), `self_test.passed` is true, the claim card named in `claim` is the one the release lists (prover runs), `harness.git_dirty` is false and `system.adapter_dirty` is false. Reason codes: `other_release`, `manifest_invalid`, `self_test_failed`, `claim_card_not_listed`, `harness_dirty`, `adapter_dirty`. A run that fails eligibility stays in `results/` (append-only) and is shown, if at all, as ineligible with the reason. Upstream results with a dirty or unknown tree enter only as `external` quantities.
+A run is eligible for a release (RFC-0009 freeze) only if it belongs to that release, every pin in the manifest is in full form (the manifest is valid `manifest/1`), `self_test.passed` is true, the claim card named in `claim` is the one the release lists (prover runs), `harness.git_dirty` is false and `system.adapter_dirty` is false. Reason codes: `other_release`, `manifest_invalid`, `self_test_failed`, `claim_card_not_listed`, `harness_dirty`, `adapter_dirty`. A run that fails eligibility stays in `results/` (append-only) and is shown, if at all, as ineligible with the reason. The Level 1 board applies the same rule to every session, control run and replacement it counts, before any release record exists (RFC-0018 SE-3b, amended 2026-11-15); `iproofs.release.ineligible` computes the codes for both. Upstream results with a dirty or unknown tree enter only as `external` quantities.
 
 ### Supply-chain threats and responses
 

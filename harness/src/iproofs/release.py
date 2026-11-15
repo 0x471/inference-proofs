@@ -112,17 +112,34 @@ def eligibility(
     REASONS, in that order). Reads only the run's documents, the release record and
     system.yaml at the run's adapter commit."""
     run = RunView.read(run_dir)
-    m, system = run.manifest, run.get("manifest", "system")
+    system = run.get("manifest", "system")
     assert isinstance(system, dict)
-    claim = m.get("claim")
     pinned = _system_at(root, str(system.get("adapter_commit")), str(system.get("name"))) or {}
     reference = pinned.get("kind") == "reference"  # RFC-0015: no claim card, no proofs (REF-2)
-    cards = {(c.system, c.configuration, c.card_version, c.digest) for c in release.claim_cards}
+    cards: set[tuple[object, ...]] = {
+        (c.system, c.configuration, c.card_version, c.digest) for c in release.claim_cards
+    }
+    reasons = ineligible(run, release.release, None if reference else cards, registry)
+    return not reasons, reasons
+
+
+def ineligible(
+    run: RunView,
+    release: str,
+    cards: "set[tuple[object, ...]] | None",
+    registry: SchemaRegistry,
+) -> list[str]:
+    """RFC-0014 §Eligibility, the reason codes of one run, in REASONS order. `cards` holds the
+    listed claim cards as (system, configuration, card_version, digest); None for a run that
+    names no card (a reference row, RFC-0015)."""
+    m, system = run.manifest, run.get("manifest", "system")
+    system = system if isinstance(system, dict) else {}
+    claim = m.get("claim")
     failed = {
-        "other_release": m.get("release") != release.release,
+        "other_release": m.get("release") != release,
         "manifest_invalid": bool(registry.errors("manifest/1", m)),
         "self_test_failed": run.get("manifest", "self_test", "passed") is not True,
-        "claim_card_not_listed": not reference
+        "claim_card_not_listed": cards is not None
         and (
             not isinstance(claim, dict)
             or (
@@ -136,8 +153,7 @@ def eligibility(
         "harness_dirty": run.get("manifest", "harness", "git_dirty") is not False,
         "adapter_dirty": system.get("adapter_dirty") is not False,
     }
-    reasons = [code for code in REASONS if failed[code]]
-    return not reasons, reasons
+    return [code for code in REASONS if failed[code]]
 
 
 @functools.cache

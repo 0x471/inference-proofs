@@ -910,6 +910,45 @@
           },
           "type": "array"
         },
+        "ineligible_sessions": {
+          "$comment": "RFC-0018 SE-3b: a run RFC-0014 §Eligibility keeps out of the release, with its reason codes; it enters no figure and no check, RUN's attempts included",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "reasons": {
+                "items": {
+                  "enum": [
+                    "other_release",
+                    "manifest_invalid",
+                    "self_test_failed",
+                    "claim_card_not_listed",
+                    "harness_dirty",
+                    "adapter_dirty"
+                  ]
+                },
+                "minItems": 1,
+                "type": "array"
+              },
+              "run_id": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "slot": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "run_id",
+              "slot",
+              "reasons"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
         "multiple": {
           "$comment": "CO-5: mean steady m over the baseline's GPU-seconds per reply; null (not_applicable) when the row has no steady state",
           "$ref": "#/$defs/value"

@@ -509,7 +509,8 @@ def replaced_why(s):
 def sessions_html(row):
     """SE-3: each counted session (slot, run, m or why there is none, session cost per reply),
     then every incomplete session with its exit code and last line (AGENTS.md rule 5), then each
-    replaced session (SE-3a), its reason said once over the table where the sessions share it."""
+    replaced session (SE-3a), its reason said once over the table where the sessions share it,
+    then each run RFC-0014 keeps out of the release with its reasons (SE-3b)."""
     rec = row["record"]
     gen = any(s.get("generation_gpu_seconds_per_reply") is not None for s in row["sessions"])
     # release groups: a column where the sessions differ, else said once over the table
@@ -573,6 +574,16 @@ def sessions_html(row):
             + lead
             + stacked(["Slot", "Run", "Replaced by", *([] if once else ["Why"])], rows)
         )
+    if row.get("ineligible"):  # SE-3b: kept out by RFC-0014, in no figure and no check
+        rows = [
+            [
+                str(s["slot"]) if s["slot"] is not None else "",
+                run_link(row, s["run_id"]),
+                e("; ".join(s["words"])),
+            ]
+            for s in row["ineligible"]
+        ]
+        out += '<h3 class="sub-h">Ineligible sessions</h3>' + stacked(["Slot", "Run", "Why"], rows)
     return out
 
 

@@ -566,7 +566,8 @@ def _row_tree(
                              session_generation)  # fmt: skip
     commit_proving_in = (f"{index}/session_commit_and_proving_gpu_seconds_per_reply",
                          commit_proving)  # fmt: skip
-    first = (row.sessions.counted_in_order() or row.sessions.all)[0]
+    first = (row.sessions.counted_in_order() or row.sessions.all
+             or [s for s, _ in row.sessions.ineligible])[0]  # fmt: skip
     commit = first.run.get("manifest", "system", "upstream", "commit")
     configuration = first.run.get("manifest", "claim", "configuration")
     return {
@@ -609,6 +610,11 @@ def _row_tree(
         "replaced_sessions": [
             {"run_id": a.run_id, "slot": a.slot, "replaced_by": b.run_id, "cause": why}
             for a, b, why in row.sessions.replaced
+        ],
+        # SE-3b: runs kept out of the release by RFC-0014 §Eligibility, with its reason codes
+        "ineligible_sessions": [
+            {"run_id": s.run_id, "slot": s.slot, "reasons": list(reasons)}
+            for s, reasons in row.sessions.ineligible
         ],
         "fidelity": _row_fidelity(fidelity_rows.get(row.system)),
         "security": row.security,
@@ -671,12 +677,13 @@ def build_board(root: Path, release: str, level: object) -> dict[str, object]:
         rows = []
         for system, workload in sorted(_workloads(rung).items()):
             sessions = row_sessions(root, release, level, rung_id, system, digest)
-            if not sessions.all:
+            kept_out = [s for s, _ in sessions.ineligible]
+            if not sessions.all and not kept_out:
                 continue  # not run: no row (RFC-0018 §The board file)
-            dates |= {s.run_id[:10] for s in sessions.all}
+            dates |= {s.run_id[:10] for s in (*sessions.all, *kept_out)}
             states = checks_from(root, release, level, rung_id, system, sessions, digest)
             security, stated = _security(level, system)
-            first = (sessions.counted_in_order() or sessions.all)[0]
+            first = (sessions.counted_in_order() or sessions.all or kept_out)[0]
             commit = first.run.get("manifest", "system", "upstream", "commit")
             configuration = first.run.get("manifest", "claim", "configuration")
             coverage = Coverage(_granularity(root, system), _batch_size(root, str(workload)))
