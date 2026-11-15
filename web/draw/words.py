@@ -713,12 +713,40 @@ CONTROL_NAME = {"reference-2": "original, run again",
 # a check's record as its link reads, by the file's name (the path stands in the link's title)
 RECORD_WORD = {"run.json": "run record", "controls.json": "controls", "verify-trace": "verify traces",
                "reverify.json": "re-verify record", "fidelity.json": "fidelity record"}  # fmt: skip
-P_ABOVE = "above the bar: p\u00a0=\u00a0{p}"
-# the teacher-forced table under it (RFC-0018 FI-10 to FI-13, SI-9): figures only, no state
-TF_LEAD = (
-    "{both}: each row is fed the prompt, then the original's reply, token by token. "
-    "n\u00a0=\u00a0{n:,} prompts in each row. They set no state."
+P_ABOVE = "above the bar: {p}"  # {p} reads "p = 0.0058" or the floor's bound (`p_said`)
+P_FLOOR = ", the test's floor"  # after a p at the lowest value its test can give (FI-4)
+# the reference's precision in words, where a line names the original (FI-1)
+DTYPE_BITS = {"bf16": "16-bit", "f16": "16-bit", "f32": "32-bit"}
+# the line that opens the table: which measure sets a state and which is the surface figure, and
+# that neither compares logits (the KL columns do); {prefix} the check's column head
+FID_LEAD_PREFIX = (
+    "{prefix} sets the Fidelity check and the Close to the original petal: the tokens at the start of "
+    "each reply that equal the {bits} original's reply, counted up to the first difference."
 )
+FID_LEAD_TF = (
+    " Fidelity, the figure at the top of the page, sets no state: each row is fed the prompt, "
+    "then the original's reply, token by token, and Fidelity is the share of reply positions "
+    "where its top token is the original's token. n\u00a0=\u00a0{n:,} prompts in each row."
+)
+FID_LEAD_LOGITS = " Neither compares logits: the KL columns do."
+# what a column is called on a phone, where each card repeats it (the heads in full above)
+FID_LABEL = {"Fidelity: share of positions where the top token is the reply token, mean":
+             "Fidelity: top-token share",
+             "Leading tokens matching the original, mean": "Leading tokens matched, mean"}  # fmt: skip
+TF_INTERVAL = "95\u00a0% interval {low} to {high}\u202f%"  # SI-9, under and in a percentage's title
+# the limits under the table (depth 3), each generated from the board, the level and its records
+LIM_ORIGINAL = "Original: {repo} at {rev}, {bits}."
+LIM_COPY = " It is a copy on the Hub, not {publisher}'s own repository."
+LIM_CEILING = (" Fed its own reply, the original's engine picks that reply's token at {ceiling}\u202f%"
+               " of positions: the figure of the original itself.")  # fmt: skip
+LIM_ENGINES = "Engines: {parts}."
+LIM_PART = {None: "the original and the controls run with it", "controls": "the quantized controls"}
+LIM_VLLM = "{part} in vLLM, every prompt sent in one call"
+LIM_LLAMA = "{part} in llama.cpp, {slots} at a time"
+LIM_GREEN = (" Close to the original needs one request at a time for green, so it cannot be "
+             "green on this model.")  # fmt: skip
+LIM_PROMPTS = ("Prompts: {tokens}-token windows of {texts} texts from {hosts} ({licences}), with "
+               "no chat template.")  # fmt: skip
 TF_AGREE = "Fidelity: share of positions where the top token is the reply token, mean"
 TF_KL = "KL to the original, on its reply"
 # the two teacher-forced columns by name: the lead and FI-13's label say which columns they are about
@@ -730,7 +758,7 @@ TF_KL_TITLE = (
 )
 TF_SUB = "median {median}"
 TF_FAILED = "{k:,} of {n:,} prompts failed, counted as 0"
-TF_TEST = "{name} above it: p\u00a0=\u00a0{above} · below it: p\u00a0=\u00a0{below}"
+TF_TEST = "{name} above it: {above} · below it: {below}"  # each p as `p_said` reads it
 TF_KL_SUB = "n\u00a0=\u00a0{n:,}"  # under a KL figure whose n is not the block's
 
 
@@ -778,7 +806,7 @@ def shown(v, unit):
 
 
 def params(n):
-    """A parameter count in billions, or millions below one billion ("400B", "8.03B", "137M")."""
+    """A parameter count in billions, or millions below one billion ("400B", "8.03B", "124M")."""
     text = sig(n / 1e9, 3) if n >= 1e9 else sig(n / 1e6, 3)
     text = text.rstrip("0").rstrip(".") if "." in text else text  # "17.0" reads "17"
     return f"{text}B" if n >= 1e9 else f"{text}M"

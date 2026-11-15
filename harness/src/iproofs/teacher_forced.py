@@ -24,10 +24,16 @@ log-probabilities.
   the mean over the prompts that have one.
 - FI-15: `build` writes `teacher-forced.json` (schema `teacher-forced/1`): the reference's own
   pass, each control, each row with its tests, and the KL figures.
+- SI-9 (amended 2026-11-15): the board prints each percentage with a 95 % bootstrap interval
+  over the prompts (`percent_interval`): `INTERVAL_RESAMPLES` resamples of the n per-prompt
+  scores, with replacement, drawn by `random.Random(seed).choices`, seed the first 8 bytes,
+  big-endian, of sha256("fidelity-interval" || 0x00 || utf8(id)); the interval runs from the
+  251st to the 9,750th of the sorted resample means, as percentages of the positions.
 """
 
 import hashlib
 import json
+import random
 import statistics
 import struct
 from array import array
@@ -77,6 +83,35 @@ def agreement(top: Sequence[int], reference: Sequence[int]) -> int:
     if len(top) != len(reference):
         raise ValueError(f"{len(top)} top tokens for a reply of {len(reference)}")
     return sum(1 for a, b in zip(top, reference, strict=True) if a == b)
+
+
+INTERVAL_RESAMPLES = 10_000  # SI-9: bootstrap resamples of the prompts
+INTERVAL_TAIL = 250  # resample means left out below and above: 2.5 % of 10,000 on each side
+INTERVAL_RULE = (
+    "95 % bootstrap interval over the prompts: 10,000 resamples of the n per-prompt scores with "
+    "replacement, random.Random(seed).choices, seed the first 8 bytes, big-endian, of "
+    "sha256('fidelity-interval' || 0x00 || utf8(id)); the 251st to the 9,750th sorted mean"
+)
+
+
+def interval_seed(ident: str) -> int:
+    """SI-9: the seed of an entry's bootstrap interval, from its id alone."""
+    data = b"fidelity-interval\x00" + ident.encode()
+    return int.from_bytes(hashlib.sha256(data).digest()[:8], "big")
+
+
+def percent_interval(ident: str, scores: Sequence[int], positions: int) -> list[float] | None:
+    """SI-9: the 95 % bootstrap interval of the Fidelity percentage over the prompts
+    (`INTERVAL_RULE`), [low, high]; None with fewer than two scores."""
+    n = len(scores)
+    if n < 2:
+        return None
+    if positions < 1:
+        raise ValueError(f"{positions} positions")
+    draw = random.Random(interval_seed(ident)).choices
+    sums = sorted(sum(draw(scores, k=n)) for _ in range(INTERVAL_RESAMPLES))
+    low, high = sums[INTERVAL_TAIL], sums[INTERVAL_RESAMPLES - INTERVAL_TAIL - 1]
+    return [low / n / positions * 100, high / n / positions * 100]
 
 
 def fidelity_percent(mean: float | None, positions: int) -> float | None:
@@ -455,11 +490,14 @@ def board_block(doc: Mapping[str, Any], path: str, tops: Mapping[str, Path],
                 raise ValueError(f"{path}: the KL figure of {ident} is not the mean of its "
                                  "stored per-prompt values")  # fmt: skip
 
-    def figure(entry: Mapping[str, Any]) -> dict[str, object]:
+    def figure(ident: str, entry: Mapping[str, Any]) -> dict[str, object]:
         kl = entry.get("kl")
         return {"status": entry["status"], "cause": entry["cause"], "n": len(entry["scores"]),
                 "mean": entry["mean"], "median": entry["median"],
                 "percent": fidelity_percent(entry["mean"], int(doc["positions"])),
+                "percent_interval": percent_interval(ident, [int(x) for x in entry["scores"]],
+                                                     int(doc["positions"]))
+                if entry["status"] == "ok" else None,
                 "mean_not_failed": entry["mean_not_failed"],
                 "failed": [dict(f) for f in entry["failed"]], "run": entry["run"],
                 "kl": None if kl is None else {k: kl[k] for k in (
@@ -470,11 +508,11 @@ def board_block(doc: Mapping[str, Any], path: str, tops: Mapping[str, Path],
     controls = []
     for c in doc["controls"]:
         checked(str(c["id"]), c, False)
-        controls.append({"id": c["id"], "kind": c["kind"], **figure(c)})
+        controls.append({"id": c["id"], "kind": c["kind"], **figure(str(c["id"]), c)})
     rows = {}
     for system, r in doc["rows"].items():
         checked(system, r, True)
-        rows[system] = {**figure(r), "computed_by": r["computed_by"], "label": r["label"],
+        rows[system] = {**figure(system, r), "computed_by": r["computed_by"], "label": r["label"],
                         "tests": [dict(t) for t in r["tests"]]}  # fmt: skip
     own = doc.get("reference_pass")
     if own is not None:
@@ -487,6 +525,7 @@ def board_block(doc: Mapping[str, Any], path: str, tops: Mapping[str, Path],
         "label": doc["measure"]["label"],
         "gating": False,
         "alpha": doc["measure"]["alpha"],
+        "interval_rule": INTERVAL_RULE,
         "top_k": doc["kl"]["top_k"],
         "reference_pass": None if own is None else {
             k: own[k] for k in ("status", "cause", "mean", "median", "run")},

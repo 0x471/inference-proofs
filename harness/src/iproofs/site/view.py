@@ -7,6 +7,7 @@ or recomputed here (AGENTS.md rule 3): every figure is a `quantity/1` value as t
 stores it, with the JSON Pointer it was read from. Pure apart from the reads in `inputs`.
 """
 
+import math
 from pathlib import Path
 from typing import Any
 
@@ -261,6 +262,10 @@ def _fidelity(raw: dict[str, Any] | None, at: str, board: str | None) -> dict[st
         "record": f"{board}#{at}" if board else at,
         "bar": raw["bar"],
         "cause": raw["cause"],
+        # FI-9, FM-5: each part of the fidelity run, its engine and slots, and the count FM-5 reads
+        "runs": raw.get("runs") or [],
+        "slots": raw.get("slots"),
+        "slots_cause": raw.get("slots_cause"),
         "controls": [{"id": c["id"], "kind": c["kind"], "status": c["status"],
                       "mean_prefix": c["mean_prefix"],
                       "kl": figure(c.get("kl"), f"{at}/controls/{i}/kl", board)}
@@ -305,6 +310,24 @@ def _rung(
     rung["teacher_forced"] = raw.get("teacher_forced")
     rung["rows"] = [_row(r, f"{at}/rows/{i}", board, rung) for i, r in enumerate(raw["rows"])]
     return rung
+
+
+def _correct_size(rung: dict[str, Any], fix: dict[str, Any] | None) -> None:
+    """An erratum to a frozen level's parameter count (`web/_data/errata.json`): the count less
+    the tensors it names that are not weights (GPT-2's checkpoint stores 12 causal-mask buffers,
+    which the Hub's safetensors total counts). The stored count must be the one it corrects."""
+    if fix is None:
+        return
+    if rung["parameters_total"] != fix["level_value"]:
+        raise inputs.config(f"{inputs.ERRATA}: {rung['id']} has {rung['parameters_total']:,} "
+                            f"parameters, the erratum corrects {fix['level_value']:,}")  # fmt: skip
+    drop = fix["not_parameters"]
+    count = rung["parameters_total"] - int(drop["count"]) * math.prod(drop["shape"])
+    for key in ("parameters_total", "parameters_active"):
+        if rung.get(key) == fix["level_value"]:
+            rung[key] = count
+    rung["parameters_erratum"] = {"level_value": fix["level_value"], "why": fix["why"],
+                                  "card": fix["card"]}  # fmt: skip
 
 
 def _pages(rungs: list[dict[str, Any]]) -> None:
@@ -361,9 +384,12 @@ def site_view(root: Path, board: Path | None = None) -> dict[str, Any]:
     if unknown := set(raw) - {r["id"] for r in level["rungs"]}:
         raise inputs.config(f"{shown}: rungs {sorted(unknown)} are not in {inputs.LEVEL}")
     rungs = []
+    corrections = inputs.errata(root).get("parameters") or {}
     for lr in level["rungs"]:
         i, found = raw.get(lr["id"], (None, None))
         rungs.append(_rung(lr, found, f"/rungs/{i}", shown))
+        rungs[-1]["original"] = inputs.original(root, lr)  # FI-1: where the reference came from
+        _correct_size(rungs[-1], corrections.get(lr["id"]))
     _pages(rungs)
     ran = {row["system"] for r in rungs for row in r["rows"]}
     systems = {sid: _system(sid, facts, root) for sid in sorted(ran)}
@@ -435,7 +461,12 @@ def site_view(root: Path, board: Path | None = None) -> dict[str, Any]:
             "plateau": level["baseline"]["plateau"],
             "ladder_top": max(level["baseline"]["ladder"]),
             "timed_batches": level["baseline"]["timed_batches"],
+            # FI-4: where a test's p reaches its floor (2^-n exact, 1 / (1 + resamples) drawn)
+            "fidelity_exact_up_to": level["fidelity"]["exact_up_to"],
+            "fidelity_resamples": level["fidelity"]["resamples"],
         },
+        # what the prompts are cut from (RFC-0003), for the Fidelity section's limits
+        "corpus": inputs.corpus(root),
         "frontier": frontier,
         "rungs": rungs,
         "systems": systems,

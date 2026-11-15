@@ -11,6 +11,7 @@ import statistics
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 from iproofs import __version__
 from iproofs.checks import (
@@ -40,6 +41,7 @@ from iproofs.derive import (
     steady_per_reply,
 )
 from iproofs.errors import ErrorKind, IProofsError
+from iproofs.fidelity import run_slots as fidelity_run_slots
 from iproofs.fidelity import with_steps as fidelity_with_steps
 from iproofs.glyph import (
     Coverage,
@@ -423,6 +425,8 @@ def _fidelity(
                  "mean_prefix": c.get("mean_prefix"), "kl": c.get("kl")}
                 for c in doc.get("controls") or [] if isinstance(c, dict)]  # fmt: skip
     bar = doc.get("bar")
+    records = _run_records(path.parent)
+    slots, slots_cause = fidelity_run_slots(records)
     block: dict[str, object] = {
         "path": rel(root, path),
         "bar": {"control": str(bar["control"]), "mean_prefix": bar["mean_prefix"]}
@@ -430,8 +434,20 @@ def _fidelity(
         "controls": controls,
         "cause": None if isinstance(bar, dict) else "no damaged control that every honest "
         "control scores above (FI-5)",
+        # FI-8, FI-9, FM-5: each part of the fidelity run, its engine and the slot count it
+        # stores, and the count FM-5 reads (none for a vLLM part, with why)
+        "runs": [{"part": r.get("part"), "engine": (r.get("engine") or {}).get("tool"),
+                  "slots": r.get("slots")} for r in records],
+        "slots": slots,
+        "slots_cause": slots_cause,
     }  # fmt: skip
     return block, doc if isinstance(doc, dict) else None
+
+
+def _run_records(folder: Path) -> list[dict[str, Any]]:
+    """The rung's fidelity run records: `fidelity-run.json`, then each part's."""
+    paths = [folder / "fidelity-run.json", *sorted(folder.glob("fidelity-run-*.json"))]
+    return [json.loads(p.read_text()) for p in paths if p.is_file()]
 
 
 def _teacher_forced(root: Path, release: str, rung: str) -> dict[str, object] | None:
@@ -704,13 +720,11 @@ def _with_steps(
     randomness = beacon_randomness(root, level_id(level))
     if randomness is None:
         return doc  # no beacon record: FM-4 reads "no step tests stored"
-    run_path = fidelity_path(root, release, str(field_of(rung, "id"))).with_name(
-        "fidelity-run.json"
-    )
-    slots = json.loads(run_path.read_text()).get("slots") if run_path.is_file() else None
+    folder = fidelity_path(root, release, str(field_of(rung, "id"))).parent
+    slots, slots_cause = fidelity_run_slots(_run_records(folder))  # FM-5: every part of the run
     controls: Sequence[object] = field_of(rung, "controls") or ()  # type: ignore[assignment]
     specs = [{k: field_of(c, k) for k in ("id", "kind", "recipe", "type")} for c in controls]
-    return fidelity_with_steps(doc, specs, slots if isinstance(slots, int) else None, randomness)
+    return fidelity_with_steps(doc, specs, slots, randomness, slots_cause)
 
 
 def build_board(root: Path, release: str, level: object) -> dict[str, object]:

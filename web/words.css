@@ -1182,10 +1182,7 @@ html.js .scalepage .scl-panel { margin-top: 0; }
   .parts .fig { flex-wrap: wrap; }
   .cl { grid-template-columns: minmax(0, 1fr); grid-template-areas: "k" "f" "b" "s"; row-gap: 8px; }
   .fid .trk { width: auto; grid-column: 1 / -1; padding: 0; }
-  /* a column's label once, on the first card (the system's own) */
-  .fid.stk tbody tr:not(:first-child) td[data-l]:before { display: none; }
-  /* both KL columns: in the same unit, each keeps its label on every card */
-  .fid.stk:has(thead th:nth-child(7)) tbody tr:not(:first-child) td[data-l^="KL"]:before { display: block; }
+  /* every card repeats its columns' labels (short names, data-l): a card read alone says what each figure is */
   .syspage .rt.stk tr { padding-right: 12px; }
   /* a finger's targets: 40 px */
   .more > summary { padding: 13px 10px; }

@@ -43,10 +43,10 @@
     {
       "group": "Models",
       "kind": "model",
-      "meta": "OpenAI · Dense, 137M",
+      "meta": "OpenAI · Dense, 124M",
       "name": "GPT-2",
       "pie": "",
-      "terms": "gpt-2 openai · dense, 137m gpt-2",
+      "terms": "gpt-2 openai · dense, 124m gpt-2",
       "tier": 1,
       "url": "/#gpt-2"
     },

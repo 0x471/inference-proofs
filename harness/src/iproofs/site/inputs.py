@@ -6,9 +6,11 @@ no clock: the same files give the same view in a full clone, a depth-1 clone or 
 `.git` (CLI-4). Each file is read once per build.
 """
 
+import json
 import re
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 
 from iproofs.errors import ErrorKind, IProofsError
 from iproofs.model import SiteFacts, load
@@ -117,6 +119,51 @@ def learn(root: Path) -> dict[str, Any] | None:
         }
     except (KeyError, TypeError) as e:
         raise config(f"{LEARN}/index.yaml: a field is missing or of the wrong type ({e})") from e
+
+
+ERRATA = "web/_data/errata.json"
+CORPUS = "workloads/prompts/corpus.yaml"
+
+
+def errata(root: Path) -> dict[str, Any]:
+    """Corrections the site prints in place of a frozen level file's value (`ERRATA`), each
+    with what it removes and where it was read; {} when there is none."""
+    path = root / ERRATA
+    return dict(json.loads(path.read_text())) if path.is_file() else {}
+
+
+def corpus(root: Path) -> dict[str, Any] | None:
+    """What the prompts are cut from (RFC-0003): the corpus file's text count, hosts and
+    licences; None in a tree without it."""
+    path = root / CORPUS
+    if not path.is_file():
+        return None
+    texts = read_yaml(path).get("texts") or []
+    return {
+        "path": CORPUS,
+        "texts": len(texts),
+        "hosts": sorted({urlparse(str(t.get("source_url"))).netloc for t in texts}),
+        "licences": sorted({str(t.get("licence")) for t in texts}),
+    }
+
+
+def original(root: Path, rung: dict[str, Any]) -> dict[str, Any] | None:
+    """Where the rung's fidelity reference was fetched from (FI-1): the level's `reference.source`,
+    or the serving record's copy when the reference uses the serving files, beside the
+    publisher's own repository the serving record names."""
+    path = root / "workloads" / "serving" / f"{rung.get('serving')}.yaml"
+    record = read_yaml(path) if path.is_file() else {}
+    publisher = ((record.get("publisher") or {}).get("release") or {}).get("repo")
+    ref = rung.get("reference") or {}
+    if ref.get("source"):
+        repo, revision = ref["source"].get("repo"), ref["source"].get("revision")
+    elif ref.get("serving_files") and record:
+        model = record.get("model") or {}
+        repo, revision = (model.get("source") or {}).get("repo"), model.get("revision")
+    else:
+        return None
+    return {"repo": repo, "revision": revision, "publisher_repo": publisher,
+            "dtype": ref.get("dtype")}  # fmt: skip
 
 
 def engine(root: Path) -> dict[str, Any] | None:

@@ -288,3 +288,30 @@ def test_a_lone_system_is_not_drawn_as_ranked(board_site: Any) -> None:
     assert "only system run" in build.position_html(row, lone)
     assert 'class="pos p1"' in build.position_html(row, shared)
     assert ">of 2<" in build.position_html(row, shared)
+
+
+def test_a_p_at_its_test_floor_reads_as_a_bound(board_site: Any) -> None:
+    """FI-4: a drawn p with no resample at least as extreme is 1 / (1 + 200,000), the lowest
+    the test gives, so it prints as a bound; a counted p at 2^-15 is exact and says it is the
+    floor; any other p is its value."""
+    said = board_site.build.p_said
+    drawn = html.unescape(said(1 / 200_001, 360))
+    assert drawn.startswith("p\u00a0<\u00a05.0"), drawn
+    assert drawn.endswith("the test's floor"), drawn
+    counted = html.unescape(said(2.0**-15, 15))
+    assert counted.startswith("p\u00a0=\u00a03.1"), counted
+    assert counted.endswith("the test's floor"), counted
+    assert "floor" not in said(0.0058, 15)
+    assert said(4 / 2**15, 15) == "p\u00a0=\u00a0" + board_site.build.p_html(4 / 2**15)
+
+
+def test_gpt2_prints_the_model_card_count() -> None:
+    """The level file records GPT-2 at 137,022,720, the Hub's safetensors total, which counts its
+    12 causal-mask buffers of 1 x 1 x 1,024 x 1,024; the site prints 137,022,720 less them,
+    124,439,808, which reads 124M, the count the model card states."""
+    from iproofs.site.view import site_view  # noqa: PLC0415
+
+    view = site_view(Path(__file__).resolve().parents[1])
+    gpt2 = next(r for r in view["rungs"] if r["id"] == "gpt-2")
+    assert gpt2["parameters_total"] == 137_022_720 - 12 * 1024 * 1024 == 124_439_808
+    assert "124M" in gpt2["parameters_erratum"]["card"]["quote"]

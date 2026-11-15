@@ -700,7 +700,7 @@ def _rows(
 
 def fidelity_score(args: argparse.Namespace) -> int:
     """`iproofs fidelity score`: FI-3 to FI-6 from stored records; prints fidelity.json's path."""
-    from iproofs.fidelity import Header, SignFlipRule, build_fidelity  # noqa: PLC0415
+    from iproofs.fidelity import Header, SignFlipRule, build_fidelity, run_slots  # noqa: PLC0415
     from iproofs.level import level_digest, level_file, load_beacon, load_level  # noqa: PLC0415
     from iproofs.provenance import file_digest  # noqa: PLC0415
     from iproofs.schema import SchemaRegistry  # noqa: PLC0415
@@ -721,8 +721,10 @@ def fidelity_score(args: argparse.Namespace) -> int:
         raise IProofsError(ErrorKind.CONFIG, f"no {record_path}: run `iproofs fidelity run`")
     record = json.loads(record_path.read_text())
     digest = level_digest(level_file(root, level.id))
+    parts: list[dict[str, object]] = []
     for path in [record_path, *sorted(base.glob("fidelity-run-*.json"))]:
         part = json.loads(path.read_text())
+        parts.append(part)
         if part["level"]["digest"] != digest:
             ran = part["level"]["digest"]
             raise IProofsError(ErrorKind.CONFIG, f"{path} ran under level digest {ran}, the "
@@ -743,7 +745,7 @@ def fidelity_score(args: argparse.Namespace) -> int:
     header = Header(level.id, digest, rung.id, str(record["prompts_digest"]),
                     {k: engine.get(k) for k in ("tool", "repo", "commit", "image")},
                     f"{ref}/reference.jsonl", file_digest(reference_path),
-                    int(record["slots"]))  # fmt: skip
+                    *run_slots(parts))  # fmt: skip
     doc = build_fidelity(header, rule, reference, controls, rows, row_kl)
     errors = registry.errors("fidelity/1", doc)
     if errors:

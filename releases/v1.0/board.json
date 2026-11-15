@@ -353,7 +353,21 @@
             "status": "ok"
           }
         ],
-        "path": "results/v1.0/fidelity/llama-4-maverick/fidelity.json"
+        "path": "results/v1.0/fidelity/llama-4-maverick/fidelity.json",
+        "runs": [
+          {
+            "engine": "vllm",
+            "part": null,
+            "slots": 1
+          },
+          {
+            "engine": "llama.cpp",
+            "part": "controls",
+            "slots": 16
+          }
+        ],
+        "slots": null,
+        "slots_cause": "the vLLM run takes no slot count and sends every prompt in one generate call (FI-9)"
       },
       "id": "llama-4-maverick",
       "model": "Llama 4 Maverick 17B-128E Instruct",
@@ -1535,6 +1549,10 @@
             "median": 508.0,
             "n": 360,
             "percent": 98.97515190972223,
+            "percent_interval": [
+              98.87261284722221,
+              99.07172309027777
+            ],
             "run": "results/v1.0/teacher-forced/llama-4-maverick/run-vllm.json",
             "status": "ok"
           },
@@ -1558,6 +1576,10 @@
             "median": 491.5,
             "n": 360,
             "percent": 96.15776909722223,
+            "percent_interval": [
+              96.0009765625,
+              96.31781684027779
+            ],
             "run": "results/v1.0/teacher-forced/llama-4-maverick/run-controls-q8_0-0.json",
             "status": "ok"
           },
@@ -1581,6 +1603,10 @@
             "median": 431.0,
             "n": 360,
             "percent": 85.54741753472223,
+            "percent_interval": [
+              85.07649739583333,
+              86.04654947916667
+            ],
             "run": "results/v1.0/teacher-forced/llama-4-maverick/run-controls-q4_k_m-0.json",
             "status": "ok"
           },
@@ -1604,6 +1630,10 @@
             "median": 353.0,
             "n": 360,
             "percent": 71.86469184027777,
+            "percent_interval": [
+              70.98958333333333,
+              72.79079861111111
+            ],
             "run": "results/v1.0/teacher-forced/llama-4-maverick/run-controls-q3_k_s.json",
             "status": "ok"
           },
@@ -1627,6 +1657,10 @@
             "median": 313.0,
             "n": 360,
             "percent": 64.09830729166667,
+            "percent_interval": [
+              63.09678819444444,
+              65.15028211805556
+            ],
             "run": "results/v1.0/teacher-forced/llama-4-maverick/run-controls-q2_k.json",
             "status": "ok"
           },
@@ -1642,6 +1676,7 @@
             "median": null,
             "n": 0,
             "percent": null,
+            "percent_interval": null,
             "run": null,
             "status": "failed"
           },
@@ -1665,11 +1700,16 @@
             "median": 248.0,
             "n": 360,
             "percent": 51.68348524305556,
+            "percent_interval": [
+              50.529513888888886,
+              52.87217881944445
+            ],
             "run": "results/v1.0/teacher-forced/llama-4-maverick/run-vllm.json",
             "status": "ok"
           }
         ],
         "gating": false,
+        "interval_rule": "95 % bootstrap interval over the prompts: 10,000 resamples of the n per-prompt scores with replacement, random.Random(seed).choices, seed the first 8 bytes, big-endian, of sha256('fidelity-interval' || 0x00 || utf8(id)); the 251st to the 9,750th sorted mean",
         "label": "computed by the system's own code on the reference reply, not by the proved computation",
         "n": 360,
         "path": "results/v1.0/teacher-forced/llama-4-maverick/teacher-forced-2.json",
@@ -1702,6 +1742,10 @@
             "median": 437.0,
             "n": 360,
             "percent": 86.40407986111111,
+            "percent_interval": [
+              85.94455295138889,
+              86.88151041666666
+            ],
             "run": "results/v1.0/teacher-forced/llama-4-maverick/run-flashprove.json",
             "status": "ok",
             "tests": [
@@ -2212,7 +2256,16 @@
             "status": "ok"
           }
         ],
-        "path": "results/v1.0/fidelity/llama-3.1-8b/fidelity.json"
+        "path": "results/v1.0/fidelity/llama-3.1-8b/fidelity.json",
+        "runs": [
+          {
+            "engine": "llama.cpp",
+            "part": null,
+            "slots": 1
+          }
+        ],
+        "slots": 1,
+        "slots_cause": null
       },
       "id": "llama-3.1-8b",
       "model": "Llama 3.1 8B Instruct",
@@ -3068,6 +3121,10 @@
             "median": 512.0,
             "n": 15,
             "percent": 100.0,
+            "percent_interval": [
+              100.0,
+              100.0
+            ],
             "run": "results/v1.0/teacher-forced/llama-3.1-8b/run-llama.cpp.json",
             "status": "ok"
           },
@@ -3091,6 +3148,10 @@
             "median": 504.0,
             "n": 15,
             "percent": 98.359375,
+            "percent_interval": [
+              97.6171875,
+              98.984375
+            ],
             "run": "results/v1.0/teacher-forced/llama-3.1-8b/run-llama.cpp.json",
             "status": "ok"
           },
@@ -3114,6 +3175,10 @@
             "median": 467.0,
             "n": 15,
             "percent": 90.63802083333333,
+            "percent_interval": [
+              87.5,
+              93.3984375
+            ],
             "run": "results/v1.0/teacher-forced/llama-3.1-8b/run-llama.cpp.json",
             "status": "ok"
           },
@@ -3137,6 +3202,10 @@
             "median": 401.0,
             "n": 15,
             "percent": 78.0859375,
+            "percent_interval": [
+              73.15104166666667,
+              82.94270833333334
+            ],
             "run": "results/v1.0/teacher-forced/llama-3.1-8b/run-llama.cpp.json",
             "status": "ok"
           },
@@ -3160,6 +3229,10 @@
             "median": 374.0,
             "n": 15,
             "percent": 72.21354166666667,
+            "percent_interval": [
+              65.92447916666667,
+              78.29427083333333
+            ],
             "run": "results/v1.0/teacher-forced/llama-3.1-8b/run-llama.cpp.json",
             "status": "ok"
           },
@@ -3183,6 +3256,10 @@
             "median": 204.0,
             "n": 15,
             "percent": 44.127604166666664,
+            "percent_interval": [
+              38.307291666666664,
+              50.846354166666664
+            ],
             "run": "results/v1.0/teacher-forced/llama-3.1-8b/run-llama.cpp.json",
             "status": "ok"
           },
@@ -3206,11 +3283,16 @@
             "median": 358.0,
             "n": 15,
             "percent": 71.015625,
+            "percent_interval": [
+              64.71354166666666,
+              77.35677083333333
+            ],
             "run": "results/v1.0/teacher-forced/llama-3.1-8b/run-llama.cpp.json",
             "status": "ok"
           }
         ],
         "gating": false,
+        "interval_rule": "95 % bootstrap interval over the prompts: 10,000 resamples of the n per-prompt scores with replacement, random.Random(seed).choices, seed the first 8 bytes, big-endian, of sha256('fidelity-interval' || 0x00 || utf8(id)); the 251st to the 9,750th sorted mean",
         "label": "computed by the system's own code on the reference reply, not by the proved computation",
         "n": 15,
         "path": "results/v1.0/teacher-forced/llama-3.1-8b/teacher-forced.json",
@@ -3243,6 +3325,10 @@
             "median": 471.0,
             "n": 15,
             "percent": 92.03125,
+            "percent_interval": [
+              89.46614583333333,
+              94.46614583333334
+            ],
             "run": "results/v1.0/teacher-forced/llama-3.1-8b/run-sash.json",
             "status": "ok",
             "tests": [

@@ -1585,6 +1585,54 @@
                 "string",
                 "null"
               ]
+            },
+            "runs": {
+              "$comment": "RFC-0018 FI-8, FI-9 (amended 2026-11-15): each fidelity run record of the rung, its part (null for fidelity-run.json), its engine and the slot count it stores",
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "part": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "engine": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "slots": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "part",
+                  "engine",
+                  "slots"
+                ]
+              }
+            },
+            "slots": {
+              "$comment": "FM-5 (amended 2026-11-15): the slot count of the rung's fidelity runs; null for a run part in vLLM, which sends every prompt in one generate call",
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 1
+            },
+            "slots_cause": {
+              "$comment": "why slots is null",
+              "type": [
+                "string",
+                "null"
+              ]
             }
           },
           "required": [
@@ -1635,6 +1683,10 @@
           "properties": {
             "alpha": {
               "type": "number"
+            },
+            "interval_rule": {
+              "$comment": "SI-9 (amended 2026-11-15): how percent_interval is computed",
+              "type": "string"
             },
             "controls": {
               "items": {
@@ -1754,6 +1806,20 @@
                   "n": {
                     "minimum": 0,
                     "type": "integer"
+                  },
+                  "percent_interval": {
+                    "$comment": "SI-9 (amended 2026-11-15): the 95 % bootstrap interval of percent over the prompts, [low, high], computed by the board (interval_rule); null for a failed entry",
+                    "items": {
+                      "maximum": 100,
+                      "minimum": 0,
+                      "type": "number"
+                    },
+                    "maxItems": 2,
+                    "minItems": 2,
+                    "type": [
+                      "array",
+                      "null"
+                    ]
                   },
                   "percent": {
                     "$comment": "SI-9 (amended 2026-11-14): mean ÷ positions × 100, the site's Fidelity; computed by the board",
@@ -1978,6 +2044,20 @@
                   "n": {
                     "minimum": 0,
                     "type": "integer"
+                  },
+                  "percent_interval": {
+                    "$comment": "SI-9 (amended 2026-11-15): the 95 % bootstrap interval of percent over the prompts, [low, high], computed by the board (interval_rule); null for a failed entry",
+                    "items": {
+                      "maximum": 100,
+                      "minimum": 0,
+                      "type": "number"
+                    },
+                    "maxItems": 2,
+                    "minItems": 2,
+                    "type": [
+                      "array",
+                      "null"
+                    ]
                   },
                   "percent": {
                     "$comment": "SI-9 (amended 2026-11-14): mean ÷ positions × 100, the site's Fidelity; computed by the board",
