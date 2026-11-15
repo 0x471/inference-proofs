@@ -708,11 +708,21 @@ def _scan(text: str) -> list[tuple[int, str, str]]:
                     or line[: m.start()].endswith("==")  # a requirement pin, pkg==13.4.1.3
                 ):
                     continue
-                if p.rule == "SEC-6" and not is_ipv6(hit):
+                if p.rule == "SEC-6" and (not is_ipv6(hit) or _source_location(line, m)):
                     continue
                 spans.append(m.span())
                 found.append((n, p.rule, p.kind))
     return found
+
+
+_LINE_COL = re.compile(r":\d+:\d+:?")
+_FILE_EXTENSION = re.compile(r"\.[A-Za-z][A-Za-z0-9]*$")
+
+
+def _source_location(line: str, m: "re.Match[str]") -> bool:
+    """A compiler's file, line and column (`File.lean:83:0:`), whose line and column the IPv6
+    pattern reads as an address: never one (a build log in a proof-build record, RFC-0018 MC-5)."""
+    return bool(_LINE_COL.fullmatch(m.group(0)) and _FILE_EXTENSION.search(line[: m.start()]))
 
 
 def _allowlisted(rel: str) -> bool:

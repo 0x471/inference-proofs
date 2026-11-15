@@ -23,21 +23,21 @@ FORMAL = {
 # Lean prints one `#print axioms` line per theorem; the file holds a second theorem whose name
 # ends the same way, and a line may wrap (lean/THEOREM.md L455-L456 at the pin).
 LOG = f"""✔ [16056/16057] Built Johnson.Goal.Skeleton.Other
-info: SoundOfVerifyAt.lean, line 83: '{NAME}' depends on axioms:
+info: ././Johnson/Goal/Skeleton/SoundOfVerifyAt.lean:83:0: '{NAME}' depends on axioms:
 [propext, Classical.choice,
  Quot.sound]
-info: SoundOfVerifyAt.lean, line 84: \
+info: ././Johnson/Goal/Skeleton/SoundOfVerifyAt.lean:84:0: \
 'VerifierAndGoals.AtTheName.nearestSound_of_verify' depends on axioms: [propext, sorryAx]
 Build completed successfully (16057 jobs).
 """
 
 
-def folder(tmp: Path, exit_code: int, log: str = LOG) -> Path:
+def folder(tmp: Path, exit_code: int, log: str = LOG, seconds: int = 5400) -> Path:
     rows = [
         {"started_at": "2026-11-15T21:30:00Z", "image": f"docker.io/library/ubuntu@{IMAGE}",
          "repo": "anthropics/FlashProve", "commit": PIN, "target": TARGET, "timeout_s": 25200,
          "toolchain_file": "leanprover/lean4:v4.29.1"},
-        {"exit_code": exit_code, "seconds": 5400},
+        {"exit_code": exit_code, "seconds": seconds},
     ]  # fmt: skip
     (tmp / "meta.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows))
     (tmp / "build.log").write_text(log)
@@ -56,17 +56,28 @@ def test_built_record_reads_the_theorem_own_axioms_and_the_toolchain_file(tmp_pa
     assert SchemaRegistry.from_tree(ROOT / "schema").errors("proof-build/1", rec) == []
 
 
+PANIC = "PANIC at Lean.Expr.bindingBody! Lean.Expr:1:0: binding expected\nbacktrace:\n"
+CHILD = "error: ././Johnson/X.lean: Lean exited with code "
+
+
 @pytest.mark.parametrize(
-    ("code", "log", "status", "cause"),
+    ("code", "log", "seconds", "status", "cause"),
     [
-        (124, "partial\n", "stopped", "timeout"),
-        (137, "partial\n", "stopped", "signal"),
-        (1, "error: external command 'lean' exited with code 137\n", "stopped", "signal"),
-        (1, "error: X.lean, line 3: unknown identifier 'foo'\n", "failed", None),
+        (124, "partial\n", 25200, "stopped", "timeout"),
+        (137, "partial\n", 25260, "stopped", "timeout"),  # `timeout -k 60` sent KILL at the limit
+        (137, "partial\n", 3000, "stopped", "signal"),  # killed below the limit: out of memory
+        (1, CHILD + "137\n", 3000, "stopped", "signal"),
+        (1, "error: ././Johnson/X.lean:3:0: unknown identifier 'foo'\n", 3000, "failed", None),
+        (1, PANIC + CHILD + "134\n", 3000, "failed", None),  # LEAN_ABORT_ON_PANIC: Lean's verdict
+        (1, "Stack overflow detected. Aborting.\n" + CHILD + "134\n", 3000, "failed", None),
+        (134, "partial\n" + PANIC, 3000, "failed", None),
+        (1, PANIC + CHILD + "137\n", 3000, "failed", None),  # a kill after a panic: still failed
     ],
 )
-def test_status(tmp_path: Path, code: int, log: str, status: str, cause: str | None) -> None:
-    rec = build_record(folder(tmp_path, code, log), "flashprove", FORMAL)
+def test_status(
+    tmp_path: Path, code: int, log: str, seconds: int, status: str, cause: str | None
+) -> None:
+    rec = build_record(folder(tmp_path, code, log, seconds), "flashprove", FORMAL)
     assert rec["status"] == status
     stop = rec.get("stop")
     assert (stop.get("cause") if isinstance(stop, dict) else None) == cause

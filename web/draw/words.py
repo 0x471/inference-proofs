@@ -250,7 +250,7 @@ CAUSE_WORD = {"not_stated": "not stated",
               "check_failed": "a check failed, or the proof build failed",
               "not_read": "not read yet",
               "not_decided": "Fidelity check not decided or not recorded",
-              "proof_build_not_run": "waits on our build of the publisher's machine-checked proof"}  # fmt: skip
+              "proof_build_not_run": "waits on our finished build of the publisher's machine-checked proof"}  # fmt: skip
 # each cause in a line, on the checks page (#cause-<id>), opened by its word and how it is drawn:
 # the checks page draws that opening as the chip a system page prints for the petal
 # (PETAL_CAUSE_DRAW), the words kept for a screen reader
@@ -270,7 +270,8 @@ PETAL_CAUSE_RULE = {
     "or the row has no fidelity record or no scores.",
     "proof_build_not_run": "Not decided (drawn hollow), Formally verified only: the publisher "
     "states a machine-checked proof, and no build of the named theorem is recorded at the pinned "
-    "commit with the publisher's toolchain. None can match where the publisher names no "
+    "commit with the publisher's toolchain, or the one recorded was stopped at its time limit or "
+    "by a kill before it reached a verdict. None can match where the publisher names no "
     "toolchain.",
 }
 # how a cause's opening words are drawn: (state, form) of the chip, its word the cause's step's

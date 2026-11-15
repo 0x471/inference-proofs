@@ -83,6 +83,7 @@ def test_machine_record_example_passes() -> None:
         '"sha256": "ab01cd02"',
         '"driver_version": "560.35.03.01"',  # four groups inside a version field
         "nvidia-cublas==13.4.1.3 \\",  # a pip requirement pin
+        "info: ././Johnson/X.lean:83:0: 'X' depends on axioms",  # a compiler's file:line:col
     ],
 )
 def test_not_secrets(line: str) -> None:
@@ -93,6 +94,12 @@ def test_address_after_other_operator_still_found() -> None:
     addr = ".".join(["10", "1", "2", "3"])  # built here so the repository scan (G9) passes
     assert [f.rule for f in scan_text(f"host={addr}", "x")] == ["SEC-5"]
     assert [f.rule for f in scan_text(f"pkg>={addr}", "x")] == ["SEC-5"]
+
+
+def test_ipv6_after_a_file_name_still_found() -> None:
+    addr = ":".join(["fe80", "", "1"])  # built here so the repository scan (G9) passes
+    assert [f.rule for f in scan_text(f"see X.lean {addr}", "x")] == ["SEC-6"]
+    assert [f.rule for f in scan_text(f"X.lean:{addr}", "x")] == ["SEC-6"]
 
 
 def test_redactor_and_scanner_share_patterns() -> None:

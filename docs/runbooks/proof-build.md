@@ -41,8 +41,9 @@ iproofs release board v1.0
 iproofs validate --all
 ```
 
-The record's status follows from the exit code and the output (MC-4a): `built` at exit 0 with
-the theorem's axioms line; `stopped` at the build's own time limit (exit 124) or a signal (out of
-memory among them), which leaves the petal hollow; `failed` otherwise, which sets it red. A job
-whose setup failed never started the build and gives no record. A stored record is never written
-over.
+The record's status follows from the exit code and the output (MC-4, MC-4a): `built` at exit 0
+with the theorem's axioms line; `failed` when Lean gave up on its own (a panic, which
+`LEAN_ABORT_ON_PANIC=1` turns into an abort, a stack overflow or another abort), which sets the
+petal red; `stopped` at the build's own time limit or a SIGKILL or SIGTERM (out of memory among
+them), which leaves it hollow; `failed` otherwise. A job whose setup failed never started the
+build and gives no record. A stored record is never written over.

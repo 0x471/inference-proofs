@@ -7,11 +7,13 @@ lines) and `lean-version.txt`. This module reads that folder and writes nothing;
 value: the toolchain comes from the toolchain file the job read at the pin, the axioms from the
 build's own line for the theorem, the status from the exit code and the output.
 
-Status (MC-4a): `stopped` when the build reached no verdict on the theorem: the build's own time
-limit stopped it (exit code 124), or a signal killed the build or a process it started (an exit
-code of 128 or more, or Lake's line for a process it started that was killed). Otherwise `built`
-when the exit code is 0, else `failed`. A job whose setup failed never started the build and
-gives no record.
+Status (MC-4, MC-4a): `failed` when Lean itself gave up, whatever else the log holds: a panic
+(the publisher's LEAN_ABORT_ON_PANIC=1 makes it abort, exit 134, lean/scripts/check.py L1280 at
+the pin), a stack overflow or another abort. `stopped` when the build reached no verdict because
+we stopped it: its own time limit (exit 124, or 137 at or past the limit when `timeout -k` sends
+KILL), or SIGKILL or SIGTERM to the build or a process it started (137 or 143, the kernel's
+out-of-memory kill among them). Otherwise `built` at exit 0, else `failed`. A job whose setup
+failed never started the build and gives no record.
 """
 
 import json
@@ -23,11 +25,18 @@ from iproofs.errors import ErrorKind, IProofsError
 
 LAST_LINES = 20
 TIMEOUT_EXIT = 124  # coreutils `timeout`: the command ran past its limit
-SIGNAL_EXIT = 128  # a shell's exit code for a process killed by signal N is 128 + N
-# Lake's report of a process it started that a signal ended (the kernel's out-of-memory kill is
-# signal 9): "... exited with code 137", "... terminated by signal 9" or the shell's "Killed".
+KILLED_EXITS = {137: "SIGKILL", 143: "SIGTERM"}  # 128 + 9, 128 + 15: we, or the kernel, ended it
+# Lake's line for a process it started that SIGKILL or SIGTERM ended (the out-of-memory kill is
+# SIGKILL): "... exited with code 137", "... terminated by signal 9" or the shell's "Killed".
 CHILD_KILLED = re.compile(
-    r"exited with code (?:1[3-9][0-9]|2[0-5][0-9])\b|terminated by signal|^Killed$", re.M
+    r"exited with code (?:137|143)\b|terminated by signal (?:9|15)\b|^Killed$", re.M
+)
+# Lean gave up on its own: a panic (aborts under LEAN_ABORT_ON_PANIC=1), a stack overflow, or an
+# abort (SIGABRT, 134) or crash (SIGSEGV, 139) of a process the build started.
+LEAN_GAVE_UP = re.compile(
+    r"^(?:INTERNAL )?PANIC\b|Stack overflow detected|exited with code (?:134|139)\b"
+    r"|terminated by signal (?:6|11)\b",
+    re.M,
 )
 
 
@@ -68,22 +77,26 @@ def _last_lines(text: str) -> list[str]:
     return lines[-LAST_LINES:]
 
 
-def status_of(exit_code: int, log: str) -> tuple[str, dict[str, str] | None]:
-    """`built`, `failed` or `stopped` and its stop (MC-4a), from the exit code and the output."""
-    if exit_code == TIMEOUT_EXIT:
-        return "stopped", {"cause": "timeout", "detail": "the build's own time limit (exit 124)"}
-    if exit_code >= SIGNAL_EXIT:
-        return "stopped", {
-            "cause": "signal",
-            "detail": f"killed by signal {exit_code - SIGNAL_EXIT}",
-        }
-    if exit_code != 0:
-        killed = CHILD_KILLED.search(log)
-        if killed:
-            detail = f"a process the build started: {killed.group(0)!r}"
-            return "stopped", {"cause": "signal", "detail": detail}
+def status_of(
+    exit_code: int, log: str, seconds: float, limit: float
+) -> tuple[str, dict[str, str] | None]:
+    """`built`, `failed` or `stopped` and its stop (MC-4, MC-4a), from the exit code, the output,
+    the build's seconds and its own time limit."""
+    if exit_code == 0:
+        return "built", None
+    if LEAN_GAVE_UP.search(log):  # Lean's own verdict, even if a kill came after it
         return "failed", None
-    return "built", None
+    if exit_code == TIMEOUT_EXIT or (exit_code in KILLED_EXITS and seconds >= limit):
+        detail = f"the build's own time limit of {limit:.0f} s (exit {exit_code})"
+        return "stopped", {"cause": "timeout", "detail": detail}
+    if exit_code in KILLED_EXITS:
+        detail = f"{KILLED_EXITS[exit_code]} (exit {exit_code})"
+        return "stopped", {"cause": "signal", "detail": detail}
+    killed = CHILD_KILLED.search(log)
+    if killed:
+        detail = f"a process the build started: {killed.group(0)!r}"
+        return "stopped", {"cause": "signal", "detail": detail}
+    return "failed", None
 
 
 def build_record(folder: Path, system: str, formal: Mapping[str, object]) -> dict[str, object]:
@@ -106,7 +119,8 @@ def build_record(folder: Path, system: str, formal: Mapping[str, object]) -> dic
     if not isinstance(exit_code, int):
         raise IProofsError(ErrorKind.CONFIG, "meta.jsonl's exit_code is not an integer")
     log = (folder / "build.log").read_text(errors="replace")
-    status, stop = status_of(exit_code, log)
+    seconds = float(str(meta["seconds"]))
+    status, stop = status_of(exit_code, log, seconds, float(str(meta["timeout_s"])))
     found = axioms_of(log, theorem)
     if status == "built" and found is None:
         raise IProofsError(ErrorKind.CONFIG, f"the build exited 0 and printed no axioms line for "
@@ -122,7 +136,7 @@ def build_record(folder: Path, system: str, formal: Mapping[str, object]) -> dic
         "toolchain": {**toolchain_of(str(meta["toolchain_file"])), "image": image},
         "argv": argv,
         "started_at": str(meta["started_at"]),
-        "seconds": float(str(meta["seconds"])),
+        "seconds": seconds,
         "exit_code": exit_code,
         "status": status,
         "last_lines": _last_lines(log),
