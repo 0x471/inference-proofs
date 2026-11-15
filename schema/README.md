@@ -42,7 +42,7 @@ Schemas in the RFC-0012 catalogue that have landed, with their Python model in `
 | `target/1` | `targets/<author>/<id>.yaml` | none (read as a tree) |
 | `perturbed-commitment/1` | `results/<release>/<system>/_controls/<workload>/perturbed.json` | `PerturbedCommitmentRecord` |
 | `site-facts/1` | `web/_data/facts.json` | `SiteFacts`, `SiteInfo`, `ModelFacts`, `RowFacts`, `LicenceFacts`, `StatusFacts` |
-| `criteria/1` | `web/_data/criteria.json` | none (read as a tree) |
+| `criteria/1` | `web/_data/criteria.json` (deleted 2026-11-15: it held RFC-0016's vocabulary (Formally verified "yes" from documents), which no page reads; the v0.1 record is in git history at b9dfa3e) | none (read as a tree) |
 | `level/1` | `levels/L<k>.yaml` (RFC-0018) | none (read by `iproofs.level`) |
 | `beacon/1` | `levels/L<k>-beacon.json`, the drand round the prompts are drawn from (RFC-0018 PR-2) | none (read as a tree) |
 | `verify-trace/1` | `<run-dir>/verify-trace/<proof-id>.json`, the file opens of one verify call (RFC-0018 CH-4) | none (read as a tree) |

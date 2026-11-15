@@ -63,7 +63,7 @@ All schemas use JSON Schema Draft 2020-12. Each lives at `schema/<name>/<major>.
 | `controls-seed` | `schema/controls-seed/1.schema.json` | generated JSON | `<run-dir>/controls-seed.json`, written once before the first part, never in `results/` | RFC-0008 §Split suites |
 | `perturbed-commitment` | `schema/perturbed-commitment/1.schema.json` | generated JSON | `results/<release>/<system>/_controls/<workload>/perturbed.json` | RFC-0008 |
 | `site-facts` | `schema/site-facts/1.schema.json` | authored JSON | `web/_data/facts.json` | RFC-0009 |
-| `criteria` | `schema/criteria/1.schema.json` | authored JSON | `web/_data/criteria.json` | RFC-0016 |
+| `criteria` | `schema/criteria/1.schema.json` | authored JSON | `web/_data/criteria.json` (deleted 2026-11-15: it held RFC-0016's vocabulary (Formally verified "yes" from documents), which no page reads; the v0.1 record is in git history at b9dfa3e) | RFC-0016 |
 
 `external/1` holds upstream figures per system as quantities with `grade: external`; `system-controls/1` registers system-specific controls. Both reuse `$defs` from `quantity/1`. A claim card carries an integer `card_version`, starting at 1 and incremented by every merged change; a system with several statement-changing configurations has one file per configuration under `systems/<name>/claims/` (RFC-0002).
 

@@ -42,7 +42,7 @@ The site's Learn glossary ([`web/learn/glossary.md`](../../web/learn/glossary.md
 
 <a id="corpus"></a>**Corpus (prompt corpus).** The fixed set of public-domain texts from which prompt sets are drawn, listed with source and digest in `workloads/prompts/corpus.yaml`. [RFC-0003](../../rfcs/0003-workloads.md).
 
-<a id="criteria-file"></a>**Criteria file.** `web/_data/criteria.json` (schema `criteria/1`): the six [glyph properties](#glyph-property), the four [glyph states](#glyph-state) and one row per system, reference and public-source system, each cell with its state, our short reason and the quotes or sources read behind it. Checked under G2 by its schema. [RFC-0016](../../rfcs/0016-glyph-properties-and-states.md#criteria-file-contract).
+<a id="criteria-file"></a>**Criteria file.** `web/_data/criteria.json`, the v0.1 glyph record, deleted on 2026-11-15 (in git history at b9dfa3e) (schema `criteria/1`): the six [glyph properties](#glyph-property), the four [glyph states](#glyph-state) and one row per system, reference and public-source system, each cell with its state, our short reason and the quotes or sources read behind it. Checked under G2 by its schema. [RFC-0016](../../rfcs/0016-glyph-properties-and-states.md#criteria-file-contract).
 
 <a id="derived-metric"></a>**Derived metric.** A number computed by the derivation code from stored raw numbers by a formula with a stable identifier (for example `D-RATE-S`). Never typed by hand. [RFC-0004](../../rfcs/0004-metrics-timing-grades.md).
 

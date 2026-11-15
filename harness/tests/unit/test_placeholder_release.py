@@ -208,8 +208,6 @@ def test_deployed_build_has_no_extras(tree: Path) -> None:
     release = yaml.safe_load((tree / "releases/v0.1/release.yaml").read_text())
     assert release["superseded_runs"] == []
     assert not (tree / "targets").exists()
-    criteria = json.loads((tree / "web/_data/criteria.json").read_text())
-    assert criteria == json.loads((ROOT / "web/_data/criteria.json").read_text())
     assert not (tree / "web/shots").exists()
 
 
@@ -248,15 +246,6 @@ def test_extras_cases(extras: Path) -> None:
                for o in c["outside_expected"]}  # fmt: skip
     assert outside == {("flashprove", "C1"), ("sash", "C2")}
     assert [t["target"] for t in doc["targets"]] == [ph.TARGET] * 2  # the two on its workload
-    criteria = json.loads((extras / "web/_data/criteria.json").read_text())
-    assert criteria["release"] == "v0.1"
-    rows = {r["id"]: r for r in criteria["rows"]}
-    sash = rows["sash"]["cells"]["whole_output"]
-    assert (sash["stated"], sash["state"]) == ("yes", "no")
-    cell = rows["flashprove"]["cells"]["whole_output"]
-    assert (cell["stated"], cell["state"]) == ("partly", "no")
-    assert cell["contradicted_by"] == [{"control": "C1", "run_id": ph.run_id(
-        "flashprove", ph.WORKLOAD, 1)}]  # fmt: skip
 
 
 def test_repetitions_scale(tmp_path: Path) -> None:
