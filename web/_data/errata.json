@@ -1,0 +1,23 @@
+{
+  "parameters": {
+    "gpt-2": {
+      "card": {
+        "quote": "This is the **smallest** version of GPT-2, with 124M parameters.",
+        "url": "https://huggingface.co/openai-community/gpt2/blob/607a30d783dfa663caf39e06633721c8d4cfcd7e/README.md"
+      },
+      "level_value": 137022720,
+      "not_parameters": {
+        "count": 12,
+        "shape": [
+          1,
+          1,
+          1024,
+          1024
+        ],
+        "tensors": "h.0.attn.bias to h.11.attn.bias"
+      },
+      "read_from": "the safetensors header of openai-community/gpt2 model.safetensors at 607a30d783dfa663caf39e06633721c8d4cfcd7e, read 2026-11-15",
+      "why": "The level file's count is the Hub's safetensors total, which counts the 12 causal-mask buffers the checkpoint stores (attn.bias); they are not weights."
+    }
+  }
+}

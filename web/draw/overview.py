@@ -39,6 +39,7 @@ from .words import (
     STATE_WORD,
     STEADY_STATE,
     STEP_WORD,
+    TF_INTERVAL,
     WHOLE_SESSIONS,
     architecture,
     e,
@@ -250,7 +251,10 @@ def fidelity_word(row, page=None, against=True):
     if mine is None or mine["status"] != "ok" or mine.get("percent") is None:
         return check_word(row, page)
     check = next(c for c in row["checks"] if c["id"] == "fidelity")
-    title = [FIDELITY_FIG_TITLE, mine["label"], f"n = {mine['n']:,} prompts",
+    low_high = mine.get("percent_interval")
+    spread = ([TF_INTERVAL.format(low=pct(low_high[0]), high=pct(low_high[1]))]
+              if low_high else [])  # fmt: skip
+    title = [FIDELITY_FIG_TITLE, mine["label"], f"n = {mine['n']:,} prompts", *spread,
              FIDELITY_CHECK_TITLE.format(state=STATE_WORD[check["state"]]),
              f"record: {tf['path']}"]  # fmt: skip
     at = href(row) if page is None else page

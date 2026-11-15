@@ -65,11 +65,25 @@ from .words import (
     CHECKS_DESC,
     CONTROL_NAME,
     DOCS_READ,
+    DTYPE_BITS,
+    FID_LABEL,
+    FID_LEAD_LOGITS,
+    FID_LEAD_PREFIX,
+    FID_LEAD_TF,
     FIGURE_ANCHOR,
     FIGURE_HEAD,
     FIGURE_NAME,
     FIGURE_RULE,
     FULL_LOAD_WORD,
+    LIM_CEILING,
+    LIM_COPY,
+    LIM_ENGINES,
+    LIM_GREEN,
+    LIM_LLAMA,
+    LIM_ORIGINAL,
+    LIM_PART,
+    LIM_PROMPTS,
+    LIM_VLLM,
     M_COL,
     M_HEAD,
     M_NAME,
@@ -85,6 +99,7 @@ from .words import (
     OF_WHICH,
     ORDER_RULE,
     P_ABOVE,
+    P_FLOOR,
     PART_WORD,
     PETAL_CAUSE_DRAW,
     PETAL_CAUSE_RULE,
@@ -108,10 +123,10 @@ from .words import (
     TF_AGREE,
     TF_BOTH,
     TF_FAILED,
+    TF_INTERVAL,
     TF_KL,
     TF_KL_SUB,
     TF_KL_TITLE,
-    TF_LEAD,
     TF_SUB,
     TF_TEST,
     TIER_WORD,
@@ -772,6 +787,30 @@ def p_html(p):
     return f"{mant}\u00a0\u00d7\u00a010<sup>\u2212{-exp}</sup>"
 
 
+def p_floor(n):
+    """FI-4: the lowest p a test on n prompts can give: 2^-n when it counts every sign vector,
+    1 / (1 + resamples) when it draws them."""
+    c = S.V["constants"]
+    return 2.0**-n if n <= c["fidelity_exact_up_to"] else 1 / (1 + c["fidelity_resamples"])
+
+
+def p_said(p, n):
+    """A p as a line prints it: "p = 0.0058"; at its test's floor a drawn p is a bound, "p <
+    5.0 × 10^-6, the test's floor", and a counted one its value with the same words."""
+    if p != p_floor(n):
+        return f"p\u00a0=\u00a0{p_html(p)}"
+    if n <= S.V["constants"]["fidelity_exact_up_to"]:
+        return f"p\u00a0=\u00a0{p_html(p)}{e(P_FLOOR)}"
+    return f"p\u00a0&lt;\u00a0{p_html(p_bound(p))}{e(P_FLOOR)}"
+
+
+def p_bound(p):
+    """The two-digit power of ten at or above p, so "p < bound" holds as printed."""
+    exp = math.floor(math.log10(p))
+    mant = math.ceil(p / 10**exp * 10) / 10
+    return mant * 10**exp
+
+
 QUANT = re.compile(r"q\d")  # a quantized copy's id ("q8_0", "q4_k_m")
 RULE_AT = re.compile(r"\s*\((?:RFC-\d+ )?[A-Z]{2}-\d+[a-z]?\)$")  # a note's closing rule id
 
@@ -833,9 +872,17 @@ def agree_html(entry, tf, sub):
         why = (entry or {}).get("cause") or "not run"
         return f'<span class="na" title="{e(why)}">not run</span>'
     said = f"mean {sig(entry['mean'])} of {tf['positions']:,} positions; n = {entry['n']:,} prompts"
+    if entry.get("percent_interval"):
+        said += "; " + interval_words(entry)
     return (f'<span class="fig" title="{e(said)}; record: {e(tf["path"])}">'
             f'<span class="n">{e(pct(entry["percent"]))}</span><span class="u">%</span></span>'
             + "".join(f'<span class="sub">{e(line)}</span>' for line in sub if line))  # fmt: skip
+
+
+def interval_words(entry):
+    """SI-9: a percentage's 95 % bootstrap interval over the prompts, as the board computed it."""
+    low, high = entry["percent_interval"]
+    return TF_INTERVAL.format(low=pct(low), high=pct(high))
 
 
 def median_words(entry, tf):
@@ -860,7 +907,8 @@ def tests_html(row, tf, mine):
         name, title = control_name(c["id"])
         at = f' title="{e(title)}"' if title else ""
         words = (e(TF_TEST.format(name=name_of(row), above="\0", below="\1"))
-                 .replace("\0", p_html(above)).replace("\1", p_html(below)))  # fmt: skip
+                 .replace("\0", p_said(above, tf["n"]))
+                 .replace("\1", p_said(below, tf["n"])))  # fmt: skip
         lines.append(f"<div><dt{at}>{e(name)}</dt><dd>{kept(*words.split(' · '))}</dd></div>")
     if not lines:
         return ""
@@ -882,7 +930,8 @@ def fid_tr(cls, th, kind, cells, heads, tf, entry, ink):
         track = (
             f'<td class="trk" aria-hidden="true">{fid_svg(mean, None, tf["positions"], ink)}</td>'
         )
-    tds = "".join(f'<td data-l="{e(h)}">{c}</td>' for h, c in zip(heads[2:], cells, strict=True))
+    tds = "".join(f'<td data-l="{e(FID_LABEL.get(h, h))}">{c}</td>'
+                  for h, c in zip(heads[2:], cells, strict=True))  # fmt: skip
     at = f' class="{cls}"' if cls else ""
     return f'<tr{at}>{th}<td data-l="Kind">{kind}</td>{track}{tds}</tr>'
 
@@ -899,6 +948,8 @@ def own_rows(row, tf, any_kl, heads):
     cells = []
     if tf:
         sub = [median_words(tf_mine, tf)]
+        if tf_mine is not None and tf_mine.get("percent_interval"):
+            sub.append(interval_words(tf_mine))
         if tf_mine is not None and tf_mine["failed"]:
             causes = sorted({f["cause"] for f in tf_mine["failed"]})
             sub.append(TF_FAILED.format(k=len(tf_mine["failed"]), n=tf_mine["n"]) + ": "
@@ -909,7 +960,9 @@ def own_rows(row, tf, any_kl, heads):
                        f"n = {mine['n']:,} replies")  # fmt: skip
         said = [e(f"n\u00a0=\u00a0{mine['n']:,} replies")]
         if mine["p_above_bar"] is not None:
-            said.append(e(P_ABOVE.format(p="\0")).replace("\0", p_html(mine["p_above_bar"])))
+            said.append(
+                e(P_ABOVE.format(p="\0")).replace("\0", p_said(mine["p_above_bar"], mine["n"]))
+            )
         cells.append(f'{prefix}<span class="sub">{kept(*said)}</span>')
     else:
         cells.append(NOT_RUN)
@@ -991,14 +1044,61 @@ def fidelity_html(row):
         why, note = kl_why(row)
         lead += (f'<p class="flead">{e(kl_h)}: <span class="na" title="{e(note or "not measured")}">'
                  f"not measured</span>{f' ({e(why)})' if why else ''}</p>")  # fmt: skip
-    if tf:  # it names the columns it is about: the leading tokens' sets the check's state
-        lead += f'<p class="flead">{e(TF_LEAD.format(both=TF_BOTH, n=tf["n"]))}</p>'
+    lead += f'<p class="flead">{e(fid_lead(rung, tf))}</p>'
     ths = (f'<th scope="col">{e(heads[0])}</th><th scope="col">{e(heads[1])}</th>'
            + ('<th scope="col" class="trk" aria-hidden="true"></th>' if tf else "")
            + "".join(f'<th scope="col"{tf_title(h, tf)}>{e(h)}</th>' for h in heads[2:]))  # fmt: skip
     tests = tests_html(row, tf, tf["rows"].get(row["system"])) if tf else ""
+    limits = "".join(f'<p class="flead">{e(line)}</p>' for line in fid_limits(rung, tf))
     return (f'{lead}<table class="rt stk fid"><thead><tr>{ths}</tr></thead>'
-            f"<tbody>{body}</tbody></table>{tests}")  # fmt: skip
+            f"<tbody>{body}</tbody></table>{limits}{tests}")  # fmt: skip
+
+
+def fid_lead(rung, tf):
+    """The line over the Fidelity table: which measure sets the check and the petal (the leading
+    tokens, FI-3), which is the surface figure (FI-10's share, SI-9), and that neither compares
+    logits."""
+    bits = DTYPE_BITS.get(rung["reference_dtype"], rung["reference_dtype"])
+    line = FID_LEAD_PREFIX.format(prefix=PREFIX, bits=bits)
+    if tf:
+        line += FID_LEAD_TF.format(n=tf["n"])
+    return line + FID_LEAD_LOGITS
+
+
+def fid_limits(rung, tf):
+    """What the Fidelity measures rest on, each line from the records (depth 3): where the
+    original was fetched and the ceiling its own pass sets (FI-1, FI-15), the engines and slots
+    of each part of the fidelity run (FI-9, FM-5), and what the prompts are cut from."""
+    out = []
+    o = rung.get("original")
+    if o and o.get("repo"):
+        bits = DTYPE_BITS.get(o["dtype"], o["dtype"])
+        line = LIM_ORIGINAL.format(repo=o["repo"], rev=str(o["revision"])[:7], bits=bits)
+        owner = str(o["repo"]).split("/")[0]
+        if o.get("publisher_repo") and str(o["publisher_repo"]).split("/")[0] != owner:
+            line += LIM_COPY.format(publisher=rung["publisher"])
+        own = (tf or {}).get("reference_pass")
+        if own and own.get("status") == "ok" and own.get("mean") is not None:
+            line += LIM_CEILING.format(ceiling=pct(own["mean"] / tf["positions"] * 100))
+        out.append(line)
+    fid = rung.get("fidelity") or {}
+    parts = []
+    for r in fid.get("runs") or []:
+        part = LIM_PART.get(r["part"], r["part"] or "")
+        if r["engine"] == "vllm":
+            parts.append(LIM_VLLM.format(part=part))
+        elif r["engine"] is not None and r["slots"] is not None:
+            slots = "one request" if r["slots"] == 1 else f"{r['slots']:,} requests"
+            parts.append(LIM_LLAMA.format(part=part, slots=slots))
+    if parts:
+        line = LIM_ENGINES.format(parts="; ".join(parts))
+        out.append(line + (LIM_GREEN if fid.get("slots") != 1 else ""))
+    corpus = S.V.get("corpus")
+    if corpus and corpus["texts"]:
+        out.append(LIM_PROMPTS.format(tokens=S.V["request"]["prompt_tokens"], texts=corpus["texts"],
+                                      hosts=", ".join(corpus["hosts"]),
+                                      licences="; ".join(corpus["licences"])))  # fmt: skip
+    return out
 
 
 def tf_title(head, tf):
