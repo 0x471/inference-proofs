@@ -19,6 +19,8 @@ Several open systems produce cryptographic proofs that a language model produced
 | One proof covers | one segment (a layer over a block of positions, or the output head); a sequence is a grid of segments | one request: a pass over a 1,024-token window, stating the next token |
 | Headline rate (external, reported, upstream at the pins) | 1.251 positions/s over 4,608 positions, upstream loop scope; 0.840 positions/s, upstream whole-wall scope | 111.23 ± 0.92 tokens/s of prefill at 24 requests per batch, upstream steady scope, start-up and commitment excluded |
 
+Level 1 v1.0 runs SASH at `4f41667297430a598165c4a8604258fe37d952ae`, the head of [pull request #36](https://github.com/sg-ai-safety-hub/zk-inference-prover/pull/36) on 2026-11-12, written by this project's owner and not merged upstream: upstream `eb95bfa` refuses one of the level's prompts ([`systems/sash/README.md`](../../systems/sash/README.md)).
+
 Different models, phases, timing scopes and claims: dividing one headline by the other says nothing. The questions users actually have (what is proved, what it costs per token on given hardware, how long verification takes, whether the verifier rejects tampering, whether a rerun gives the same numbers) have no common answer today.
 
 ## Users

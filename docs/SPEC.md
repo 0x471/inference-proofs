@@ -64,3 +64,5 @@ Benchmark release v0.1 covers two systems on their native workloads on one NVIDI
 | FlashProve | `anthropics/FlashProve` | `9e2bdd8ff5bf9c62f18263d7dac189b0400b260c` (v0.16.0) |
 
 Full hashes were resolved from the abbreviated pins in the PRD through the GitHub API on 2026-11-03.
+
+Level 1 v1.0 runs SASH at `4f41667297430a598165c4a8604258fe37d952ae`, the head of [pull request #36](https://github.com/sg-ai-safety-hub/zk-inference-prover/pull/36) on 2026-11-12, written by this project's owner and not merged upstream: upstream `eb95bfa` refuses one of the level's prompts ([`systems/sash/README.md`](../systems/sash/README.md)).
