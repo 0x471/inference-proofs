@@ -627,16 +627,16 @@ def test_board_glyph(tmp_path: Path) -> None:
     Q4_K_M 300 on all 15 prompts, T_green = (7650 + 7200) / 30 = 495, T_upper = 390; the row's
     500s give d_green = 150 on each prompt, p = 1 / 2^15."""
     tree = Tree(tmp_path)
-    three_sessions(tree)
     system = tmp_path / "systems" / SYSTEM
+    card = {"system": SYSTEM, "configuration": "default", "card_version": 1,
+            "coverage": {"policy": {"kind": "exact_match"}}}  # fmt: skip
+    system.joinpath("claim.yaml").write_text(yaml.safe_dump(card))  # before the sessions name it
+    three_sessions(tree)
     flags = {"forbidden_flags": ["--unsound-skip-"], "proofs": {"granularity": "request"}}
     system.joinpath("system.yaml").write_text(yaml.safe_dump(flags))
     workload = tmp_path / "workloads" / f"{WORKLOAD}.yaml"
     workload.parent.mkdir()
     workload.write_text(yaml.safe_dump({"shape": {"batch_size": 1}}))
-    system.joinpath("claim.yaml").write_text(
-        yaml.safe_dump({"coverage": {"policy": {"kind": "exact_match"}}})
-    )
     system.joinpath("properties.yaml").write_text(json.dumps(
         properties2(bound={"unit": "proof"}, trust={"rests_on": "not_stated"})))  # fmt: skip
     controls = [{"id": c, "kind": "honest", "recipe": r, "status": "ok", "scores": [s] * 15,
@@ -657,6 +657,7 @@ def test_board_glyph(tmp_path: Path) -> None:
     board = build_board(tree.root, RELEASE, tree.level)
     assert SchemaRegistry.from_tree(ROOT / "schema").errors("board/1", board) == []
     (r,) = board["rungs"][1]["rows"]  # type: ignore[index]
+    assert r["ineligible_sessions"] == []
     assert [p["id"] for p in r["glyph"]] == list(PETALS)
     assert [(p["step"], p["cause"]) for p in r["glyph"]] == [
         ("green", None), ("green", None), ("green", None), (None, "proof_build_not_run"),
