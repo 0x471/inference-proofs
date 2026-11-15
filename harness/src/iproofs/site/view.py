@@ -343,14 +343,19 @@ def _pages(rungs: list[dict[str, Any]]) -> None:
 
 
 def not_run(facts: Any, ran: set[str]) -> list[dict[str, Any]]:
-    """SI-4: every system of the facts file with a reason and no row on the board, A to Z."""
+    """SI-4: every system of the facts file with a reason and no row on the board, A to Z, each
+    with the source of its reason (SI-4b)."""
     out = []
     for sid, row in facts.rows.items():
         if row.reason is None or sid in ran:
             continue
         if row.reason not in inputs.REASONS:
             raise inputs.config(f"{inputs.FACTS} {sid}: unknown reason {row.reason!r}")
-        out.append({"id": sid, "name": row.name, "reason": row.reason})
+        src = row.reason_source
+        if src is None and row.reason != "not yet run":  # SI-4b: the one reason with no source
+            raise inputs.config(f"{inputs.FACTS} {sid}: a reason with no reason_source (SI-4b)")
+        source = None if src is None else {"words": src.words, "url": src.url}
+        out.append({"id": sid, "name": row.name, "reason": row.reason, "source": source})
     return sorted(out, key=lambda r: str(r["name"]).lower())
 
 

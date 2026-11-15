@@ -36,6 +36,10 @@
       ],
       "name": "Attestable prover",
       "reason": "no public verifier",
+      "reason_source": {
+        "url": "https://attestable.com/blog/proving-llms-scale",
+        "words": "No public code: its blog post describes \"a standalone CPU verifier\" and links no repository (read 2026-11-15)."
+      },
       "status": {
         "state": "no_repository"
       }
@@ -48,7 +52,11 @@
         "meta-llama/Llama-2-7b-hf (model id as given)"
       ],
       "name": "DeepProve",
-      "reason": "licence",
+      "reason": "no public verifier",
+      "reason_source": {
+        "url": "https://github.com/Lagrange-Labs/deep-prove/blob/9d1a53e2ef49ffa2c902b8689cd3c58057a4e662/deep-prove/src/bin/cli/main.rs#L221-L235",
+        "words": "Its verifier, deep-prove-cli verify, takes one argument, the proof file, and checks the proof against the verifier key inside that file; no documented step makes the key from the weights alone (read at 9d1a53e2)."
+      },
       "status": {
         "state": "active"
       },
@@ -61,6 +69,10 @@
       ],
       "name": "EZKL",
       "reason": "licence",
+      "reason_source": {
+        "url": "https://github.com/zkonduit/ezkl/tree/e196b111c1bafaa61b92ae431cd3c3fe9371da05",
+        "words": "No licence file at the root of the repository at e196b111."
+      },
       "status": {
         "state": "active"
       },
@@ -92,7 +104,11 @@
         "Qwen/Qwen2-0.5B (model id as given)"
       ],
       "name": "JOLT Atlas",
-      "reason": "licence",
+      "reason": "no public verifier",
+      "reason_source": {
+        "url": "https://github.com/ICME-Lab/jolt-atlas/blob/329b21efa6f6a74355e6096cf27c3e0cc7dfc226/README.md?plain=1#L19-L20",
+        "words": "Its one program, the prove example, \"proves and verifies any model in the zoo\"; no program at 329b21ef verifies a stored proof on its own."
+      },
       "status": {
         "state": "active"
       },
@@ -105,6 +121,10 @@
       ],
       "name": "JSTprove",
       "reason": "licence",
+      "reason_source": {
+        "url": "https://github.com/inference-labs-inc/JSTprove/blob/7c3cbbee83aaa01adde700673f00e317a4e902f9/LICENSE#L13",
+        "words": "Its licence: \"NO USE RIGHTS ARE GRANTED BY THIS LICENSE.\""
+      },
       "status": {
         "state": "active"
       },
@@ -117,6 +137,10 @@
       ],
       "name": "LuminAIR",
       "reason": "no configuration at the request",
+      "reason_source": {
+        "url": "https://github.com/gizatechxyz/LuminAIR/blob/9026bd3d0934a35479e6b3b76353a6ac5facd9e8/README.md",
+        "words": "Its README proves a graph run and names no language model (read at 9026bd3d)."
+      },
       "status": {
         "state": "active"
       },
@@ -129,6 +153,10 @@
       ],
       "name": "NanoZK",
       "reason": "no public verifier",
+      "reason_source": {
+        "url": "https://arxiv.org/abs/2603.18046",
+        "words": "No public code: its paper names no repository (read 2026-11-15)."
+      },
       "status": {
         "state": "no_repository"
       }
@@ -140,6 +168,10 @@
       ],
       "name": "opML",
       "reason": "another kind of check",
+      "reason_source": {
+        "url": "https://github.com/ora-io/opml/blob/2fa43311a4a95bcd96f5092d0a3b34e84da49eb0/README.md?plain=1#L20",
+        "words": "A fault proof: \"the challenge game and single step verification\"."
+      },
       "status": {
         "state": "unmaintained"
       }
@@ -151,6 +183,10 @@
       ],
       "name": "Private ML SDK",
       "reason": "another kind of check",
+      "reason_source": {
+        "url": "https://github.com/nearai/private-ml-sdk/blob/25c25025c556ab2f797eeda3bab433f38a8ffb7a/e2e/README.md?plain=1#L71",
+        "words": "Its check is a signature over the sha256 of the HTTP request body and of the HTTP response body; it makes no proof."
+      },
       "status": {
         "state": "archived"
       }
@@ -170,6 +206,10 @@
       ],
       "name": "Remainder (Community Edition)",
       "reason": "no configuration at the request",
+      "reason_source": {
+        "url": "https://github.com/worldcoin/Remainder_CE/blob/5687fe7f3a077c75c374422ef79f22e3860de9c1/README.md",
+        "words": "A general GKR prover; its README names no model or language-model circuit (read at 5687fe7f)."
+      },
       "status": {
         "state": "active"
       },
@@ -206,6 +246,10 @@
       ],
       "name": "Tinfoil",
       "reason": "another kind of check",
+      "reason_source": {
+        "url": "https://docs.tinfoil.sh/verification/attestation-architecture",
+        "words": "Its check is a hardware attestation, as its attestation architecture page describes; it makes no proof (read 2026-11-08)."
+      },
       "status": {
         "state": "active"
       }
@@ -217,6 +261,10 @@
       ],
       "name": "TOPLOC",
       "reason": "another kind of check",
+      "reason_source": {
+        "url": "https://github.com/PrimeIntellect-ai/toploc-experiments/blob/1d8323203dbec04873a0b1a0530c6bcaa80233bf/README.md?plain=1#L23",
+        "words": "A fingerprint of the activations, not a proof: its validation \"Validates against predefined error thresholds\"."
+      },
       "status": {
         "state": "active"
       }
@@ -228,6 +276,10 @@
       ],
       "name": "Verde (with RepOps)",
       "reason": "another kind of check",
+      "reason_source": {
+        "url": "https://arxiv.org/abs/2502.19405",
+        "words": "A re-execution: \"we design Verde, a dispute arbitration protocol\"."
+      },
       "status": {
         "state": "no_repository"
       }
@@ -240,6 +292,10 @@
       ],
       "name": "VerInf",
       "reason": "a different statement",
+      "reason_source": {
+        "url": "https://github.com/JamesPetrie/VerInf/blob/7947bb9a6c7ec86ea97927c76370b3920b6269f6/README.md?plain=1#L5",
+        "words": "It \"certifies an observed output stream against a committed integer model\", \"proving similarity rather than exact reproduction\"."
+      },
       "status": {
         "state": "active"
       },
@@ -251,7 +307,11 @@
         "GPT-2"
       ],
       "name": "zkGPT",
-      "reason": "no configuration at the request",
+      "reason": "a different statement",
+      "reason_source": {
+        "url": "https://web.archive.org/web/20250902071715/https://eprint.iacr.org/2025/1184.pdf",
+        "words": "Its paper leaves the reply out of the proof, Appendix A: \"we omit proving the final linear projection and the token generation procedure\" (read in the archived copy of 2025-09-02)."
+      },
       "status": {
         "state": "active"
       }
@@ -262,7 +322,11 @@
         "Llama-2-7B and Llama-2-13B"
       ],
       "name": "zkLLM",
-      "reason": "no configuration at the request",
+      "reason": "no public verifier",
+      "reason_source": {
+        "url": "https://github.com/jvhs0706/zkllm-ccs2024/blob/993311ea8e2346b90efacb35337b2e3cfe0d6f8d/README.md?plain=1#L9",
+        "words": "An interactive proof: \"the prover and verifier works are implemented side-by-side for each component\"."
+      },
       "status": {
         "state": "archived"
       }
@@ -274,6 +338,10 @@
       ],
       "name": "ZKML",
       "reason": "no configuration at the request",
+      "reason_source": {
+        "url": "https://github.com/ddkang/zkml/blob/43789582671f16148dd02cbac5654f462d4fe3e4/README.md",
+        "words": "Its README proves a model run and names no output tokens; the language model it names is a distilled GPT-2 (read at 43789582)."
+      },
       "status": {
         "state": "unmaintained"
       },
@@ -287,6 +355,10 @@
       ],
       "name": "zkPyTorch",
       "reason": "no public verifier",
+      "reason_source": {
+        "url": "https://eprint.iacr.org/2025/535",
+        "words": "No public code: its paper and its page at polyhedra.network name no repository (read 2026-11-08)."
+      },
       "status": {
         "state": "no_repository"
       }
@@ -298,6 +370,10 @@
       ],
       "name": "ZKTorch",
       "reason": "no configuration at the request",
+      "reason_source": {
+        "url": "https://github.com/uiuc-kang-lab/zk-torch/blob/63b9c68960f3ca84026d89428dd6d8129e930d53/README.md",
+        "words": "Its README proves a model run and names no output tokens (read at 63b9c689)."
+      },
       "status": {
         "state": "active"
       },

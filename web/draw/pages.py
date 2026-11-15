@@ -97,12 +97,16 @@ from .words import (
     M_NAME,
     MANDATE,
     MANDATE_BELIEF,
+    MANDATE_CORRECTIONS,
+    MANDATE_CORRECTIONS_IN,
     MANDATE_DESC,
     MANDATE_LEVEL,
     MANDATE_LEVEL_IN,
     MANDATE_LEVEL_LINK,
     MANDATE_MEMBERS_IN,
     NO_STEADY_WORD,
+    NOT_RUN_LEAD,
+    NOT_RUN_RULE,
     NULL_WORD,
     OF_WHICH,
     ORDER_RULE,
@@ -150,6 +154,7 @@ from .words import (
     VISIBLE_TAG_WORD,
     architecture,
     beside_unit,
+    curly,
     e,
     kl_head,
     number,
@@ -1654,6 +1659,30 @@ def know_html():
             + stacked(list(KNOW_COLS), rows))  # fmt: skip
 
 
+def source_html(src):
+    """The fact that sets a not-run reason, linked to where it is read; nothing for `not yet
+    run`, which needs none (SI-4b)."""
+    return f'<a href="{e(src["url"])}">{e(curly(src["words"]))}</a>' if src else ""
+
+
+def not_run_rules():
+    """SI-4b: the order of the reasons a system is not run, each reason with its words and the
+    systems it holds, each system with the fact that sets its reason, linked to its source."""
+    groups: dict[str, list[dict]] = {}
+    for r in S.V["not_run"]:
+        groups.setdefault(r["reason"], []).append(r)
+    blocks = "".join(
+        f'<div class="chk" id="nr-{e(reason.replace(" ", "-"))}"><h3 class="cn2">'
+        f'{e(reason[0].upper() + reason[1:])}</h3><dl class="cs">'
+        + rule_lines((("", words),))
+        + "".join(f'<div><dt>{e(r["name"])}</dt><dd>{source_html(r["source"])}</dd></div>'
+                  for r in sorted(groups.get(reason, []), key=lambda r: r["name"].lower()))
+        + "</dl></div>"
+        for reason, words in NOT_RUN_RULE.items()
+    )  # fmt: skip
+    return f'<p class="rd">{e(NOT_RUN_LEAD)}</p><div class="clist">{blocks}</div>'
+
+
 def build_checks():
     """The rules behind a row: the request and the six checks as the entry gate (RFC-0018 §The six
     checks) with what is not tested, then the undecided causes; the figures (§Cost, FI-7, SI-9);
@@ -1732,7 +1761,7 @@ def build_checks():
     six = (f'{passed}<div class="clist six">{checks}</div><div class="clist">{undecided}</div>'
            f"{know_html()}")  # fmt: skip
     parts = (("checks", "Six checks"), ("figures", "Figures"), ("order", "Order"),
-             ("glyph", "Glyph"))  # fmt: skip
+             ("glyph", "Glyph"), ("not-run", "Not run"))  # fmt: skip
     # the order rule; "largest model proved" (OR-6) is an address the ladder's mark can link
     order = rules(ORDER_RULE, ids=("unranked", "largest model proved"), at="ORDER_RULE")
     key = (f'<p class="rd">{linked(summary, ("summary", ""))}</p>'
@@ -1748,6 +1777,7 @@ def build_checks():
     {section("figures", "Figures", f'<div class="clist">{figures}</div>')}
     {section("order", "Order", order)}
     {section("glyph", "Glyph", key)}
+    {section("not-run", "Systems not run", not_run_rules())}
   </div>
 </main>
 {footer()}"""
@@ -1765,6 +1795,8 @@ def build_mandate():
     def label(text, name, path):
         if not path:
             return e(text)
+        if isinstance(path, str) and path.startswith("https://"):  # a source outside the repo
+            return f'{e(text)}<a class="rl" href="{e(path)}">{e(name)}</a>'
         names, paths = (name, path) if isinstance(path, tuple) else ((name,), (path,))
         file = paths[0].split("#", 1)[0]
         rfc = re.match(r"rfcs/(\d{4})-", file)
@@ -1799,12 +1831,17 @@ def build_mandate():
     level = (f'<div id="{LEVEL_ANCHOR}"><dt>{e(lv["name"])}<a class="rl" href="{e(link(lv["path"]))}" '
              f'title="{e(lv["digest"])}">{e(lv["path"])}</a></dt>'
              f"<dd>{e(state)} {history}</dd></div>")  # fmt: skip
+    # the dated corrections, newest first, the last row of their section
+    corrections = ('<div id="corrections"><dt>Corrections</dt><dd><ul>' + "".join(
+        f"<li>{e(day)}: {e(words)}</li>" for day, words in MANDATE_CORRECTIONS)
+        + "</ul></dd></div>")  # fmt: skip
     blocks = "".join(
         section(title.lower().replace(" ", "-"), title, '<dl class="cs">' + "".join(
             f"<div><dt>{label(text, name, path)}</dt><dd>{words_html(words)}</dd></div>"
             for text, name, path, words in lines)
             + (row if title == MANDATE_MEMBERS_IN else "")
-            + (level if title == MANDATE_LEVEL_IN else "") + "</dl>")
+            + (level if title == MANDATE_LEVEL_IN else "")
+            + (corrections if title == MANDATE_CORRECTIONS_IN else "") + "</dl>")
         for title, lines in MANDATE
     )  # fmt: skip
     parts = [(title.lower().replace(" ", "-"), title) for title, _ in MANDATE]

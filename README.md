@@ -4,12 +4,12 @@
 
 <h1>Inference Proofs</h1>
 
-<p><strong>An open, neutral benchmark for provable inference.</strong><br>
+<p><strong>An open benchmark for provable inference.</strong><br>
 The same models, the same reference hardware, the same timing rules,<br>
 and a claim card beside every number saying what the proof establishes.</p>
 
 <a href="https://github.com/ai-verification-observatory/inference-proofs/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/ai-verification-observatory/inference-proofs/ci.yml?branch=main&style=for-the-badge&label=CI&logo=githubactions&logoColor=white"></a>
-<a href="releases/v0.1/release.yaml"><img alt="Benchmark release v0.1" src="https://img.shields.io/badge/release-v0.1-5B7BFF?style=for-the-badge"></a>
+<a href="releases/v1.0/board.json"><img alt="Level 1, release v1.0" src="https://img.shields.io/badge/Level%201-v1.0-5B7BFF?style=for-the-badge"></a>
 <a href="https://www.inferenceproofs.ai"><img alt="Site" src="https://img.shields.io/badge/site-inferenceproofs.ai-0B0B0B?style=for-the-badge"></a>
 <br>
 <a href="pyproject.toml"><img alt="Python 3.12 | 3.13" src="https://img.shields.io/badge/python-3.12%20%7C%203.13-3776AB?style=for-the-badge&logo=python&logoColor=white"></a>
@@ -17,7 +17,7 @@ and a claim card beside every number saying what the proof establishes.</p>
 <a href="docs/spec/07-testing-strategy.md"><img alt="mypy strict" src="https://img.shields.io/badge/types-mypy%20strict-2A6DB2?style=for-the-badge"></a>
 <a href="https://docs.astral.sh/ruff/"><img alt="Ruff" src="https://img.shields.io/badge/lint-ruff-D7FF64?style=for-the-badge&logo=ruff&logoColor=black"></a>
 <br>
-<a href="rfcs/README.md"><img alt="16 RFCs" src="https://img.shields.io/badge/methodology-16%20RFCs-F2A900?style=for-the-badge"></a>
+<a href="rfcs/README.md"><img alt="Methodology: RFCs" src="https://img.shields.io/badge/methodology-RFCs-F2A900?style=for-the-badge"></a>
 <a href="LICENSE"><img alt="Code: Apache-2.0" src="https://img.shields.io/badge/code-Apache--2.0-D22128?style=for-the-badge&logo=apache&logoColor=white"></a>
 <a href="LICENSES/CC-BY-4.0.txt"><img alt="Data: CC BY 4.0" src="https://img.shields.io/badge/data-CC%20BY%204.0-EF9421?style=for-the-badge&logo=creativecommons&logoColor=white"></a>
 <a href="CONTRIBUTING.md"><img alt="DCO" src="https://img.shields.io/badge/commits-DCO%20signed-2EA44F?style=for-the-badge"></a>
@@ -45,7 +45,7 @@ and a claim card beside every number saying what the proof establishes.</p>
 - [Timing scopes](#timing-scopes)
 - [Negative controls](#negative-controls)
 - [How a run works](#how-a-run-works)
-- [Release v0.1](#release-v01)
+- [Level 1, release v1.0](#level-1-release-v10)
 - [Quick start](#quick-start)
 - [Repository layout](#repository-layout)
 - [Principles and non-goals](#principles-and-non-goals)
@@ -72,7 +72,7 @@ The first three can be removed. The fourth cannot: two systems that prove differ
 
 ## What gets measured
 
-Each system runs **unchanged**, at a full commit hash, inside a network-less container behind a five-subcommand [adapter contract](rfcs/0005-adapter-contract.md):
+Each system runs at a full commit hash, with no setting its documentation does not name, inside a network-less container behind a five-subcommand [adapter contract](rfcs/0005-adapter-contract.md):
 
 ```
 info → setup → commit → prove → verify
@@ -153,7 +153,7 @@ A claim card ([RFC-0002](rfcs/0002-claim-card.md)) is the machine-checkable stat
 Every field is copied from the system's own documentation at the pinned commit, with a line-anchored link, or written `not stated` where the source is silent. Nothing is inferred. An excerpt from [`systems/sash/claim.yaml`](systems/sash/claim.yaml):
 
 ```yaml
-upstream: {repo: "sg-ai-safety-hub/zk-inference-prover", commit: "eb95bfa887299d1637550228d42086c27cbb2b3b"}
+upstream: {repo: "sg-ai-safety-hub/zk-inference-prover", commit: "4f41667297430a598165c4a8604258fe37d952ae"}
 claim_class: "greedy-continuation/exact-match/committed-weights"
 security:
   notion:
@@ -168,7 +168,7 @@ A system enters the ranking by passing six checks we run ourselves ([RFC-0018](r
 
 | Check | Held when |
 |---|---|
-| **Run** | three sessions, each from a cold start on its own prompts, built from the public pin, unpatched, each returned an accepted proof for every request |
+| **Run** | three sessions, each from a cold start on its own prompts, built from the pinned public commit, each returned an accepted proof for every request |
 | **Model** | a proof made after changing one committed weight was never accepted, and an honest proof was refused against another commitment |
 | **Prompt** | a proof was refused for a prompt with one token changed |
 | **Reply** | proofs cover all 512 reply tokens, and a changed token at the first, the last and an interior position was refused |
@@ -243,22 +243,24 @@ flowchart LR
     F --> S["iproofs site build<br/>inferenceproofs.ai"]
 ```
 
-The commitment the verifier checks is taken from the harness's own record of the `commit` step, never from files shipped with a proof. Proof bytes are archived in a public dataset at URIs pinned to the dataset commit ([RFC-0009](rfcs/0009-results-and-publication.md), [RFC-0014](rfcs/0014-provenance-and-integrity.md)).
+The commitment the verifier checks is taken from the harness's own record of the `commit` step, never from files shipped with a proof. Proof bytes are not in the repository and are not public yet: each run directory names them by sha256 in `digests.txt`, and the bytes sit in a private bucket ([RFC-0009](rfcs/0009-results-and-publication.md), [RFC-0014](rfcs/0014-provenance-and-integrity.md)). [docs/REPRODUCE.md](docs/REPRODUCE.md) says what can be checked without them.
 
-## Release v0.1
+## Level 1, release v1.0
 
-Release v0.1 is frozen in [`releases/v0.1/`](releases/v0.1/): two systems on their native workloads, plus production-serving reference rows, on NVIDIA H200 141 GB hosted profiles ([RFC-0006 §H200 profiles](rfcs/0006-reference-hardware-and-cost.md#h200-profiles)). Every configuration in it is at evidence tier `reported`: one runner, not yet peer-reviewed or reproduced.
+Level 1 ([RFC-0018](rfcs/0018-level-1-ladder.md), [`levels/L1.yaml`](levels/L1.yaml), frozen 2026-11-11) is a ladder of three open-weights models: Llama 4 Maverick, Llama 3.1 8B and GPT-2. Release v1.0's board, [`releases/v1.0/board.json`](releases/v1.0/board.json), is computed from the run records in [`results/v1.0/`](results/v1.0/) by `iproofs release board v1.0`, on NVIDIA H200 141 GB hosted profiles. Every figure in it is at evidence tier `reported`: one runner, not reproduced. [docs/REPRODUCE.md](docs/REPRODUCE.md) rebuilds it.
 
-| System | Pinned upstream | Native workload | Claim card |
+| System | Pinned upstream | Rung | Claim card |
 |---|---|---|---|
-| SASH zk-inference-prover | [`sg-ai-safety-hub/zk-inference-prover@eb95bfa`](https://github.com/sg-ai-safety-hub/zk-inference-prover/tree/eb95bfa887299d1637550228d42086c27cbb2b3b) | Llama 3.1 8B, W8A8 (`sash-l31-8b-c1024`) | [`sound-defaults`](systems/sash/claim.yaml) |
-| FlashProve | [`anthropics/FlashProve@9e2bdd8`](https://github.com/anthropics/FlashProve/tree/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c) (v0.16.0) | Llama 4 Maverick, 4-bit GGUF (`fp-maverick-w1024-b1`, `-b24`) | [`exact-match-cp-verify`](systems/flashprove/claim.yaml) |
-| Production serving (reference) | vLLM v0.32.0 | the same models at the publisher's release precision | not a proof |
+| FlashProve | [`anthropics/FlashProve@9e2bdd8`](https://github.com/anthropics/FlashProve/tree/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c) (v0.16.0) | Llama 4 Maverick (`l1-maverick-p512-o512`) | [`exact-match-cp-verify`](systems/flashprove/claim.yaml) |
+| SASH zk-inference-prover | commit [`4f41667`](https://github.com/sg-ai-safety-hub/zk-inference-prover/pull/36/commits/4f41667297430a598165c4a8604258fe37d952ae) of [pull request #36](https://github.com/sg-ai-safety-hub/zk-inference-prover/pull/36), written by this project's owner and not merged upstream; upstream `eb95bfa` refuses one of the level's prompts | Llama 3.1 8B, W8A8 (`l1-l31-8b-p512-o512`) | [`sound-defaults`](systems/sash/claim.yaml) |
+| Production serving (reference) | vLLM | each rung's model at the publisher's release precision | not a proof |
 
-Native rows sit side by side, never head to head: the systems prove different statements on different models. The figures, with their scopes, sample sizes and ranges, are on **[inferenceproofs.ai](https://www.inferenceproofs.ai)** and in [`releases/v0.1/index.json`](releases/v0.1/index.json); this README quotes none, so it cannot drift from them.
+No two systems share a rung, so nothing on the board is ranked against another system yet. The figures, with their scopes, sample sizes and ranges, are on **[inferenceproofs.ai](https://www.inferenceproofs.ai)** and in the board file; this README quotes none, so it cannot drift from them.
+
+Release v0.1 stays in [`releases/v0.1/`](releases/v0.1/) as a record (two systems on their native workloads); the site prints none of its figures (RFC-0018 SI-5).
 
 > [!NOTE]
-> One control outcome sits outside its expected set and is kept as recorded: a C6 bit flip on FlashProve run `2026-11-08-…-b1-prover-h200-hosted-3` landed in a proof part the adapter's `verify` does not read, and was accepted. That is a gap in the control design, not a finding against FlashProve; the [RFC-0008 amendment](rfcs/0008-negative-controls.md) now restricts C5, C6 and C8 to the parts a verifier declares it reads. Stored records are never rewritten; a rerun is a new record.
+> In v0.1, one control outcome sits outside its expected set and is kept as recorded: a C6 bit flip on FlashProve run `2026-11-08-…-b1-prover-h200-hosted-3` landed in a proof part the adapter's `verify` does not read, and was accepted. That is a gap in the control design, not a finding against FlashProve; the [RFC-0008 amendment](rfcs/0008-negative-controls.md) now restricts C5, C6 and C8 to the parts a verifier declares it reads. Stored records are never rewritten; a rerun is a new record.
 
 ## Quick start
 
@@ -276,6 +278,12 @@ uv run iproofs --version
 ```bash
 uv run iproofs validate --all
 make ci          # lint, mypy --strict, tests, coverage gate, validate
+```
+
+**Rebuild the Level 1 board** from the stored run records and compare it byte for byte ([docs/REPRODUCE.md](docs/REPRODUCE.md)):
+
+```bash
+uv run iproofs release board v1.0 --check
 ```
 
 **Recompute a stored run's derived metrics** from its raw records and compare them bit for bit:
@@ -338,7 +346,7 @@ inference-proofs/
 | We do | We do not |
 |---|---|
 | put a claim card beside every number | publish a number without its scope, grade, tier and source |
-| run provers unchanged, at pinned commits | patch, tune or fork a prover |
+| run provers at pinned commits, with documented settings only | patch or tune a prover (SASH's Level 1 pin is a pull request this project's owner wrote, not merged upstream: [systems/sash/README.md](systems/sash/README.md)) |
 | report ranges and sample sizes | report a single "best" run |
 | record failed runs with their exit code and last lines | drop or round away a result |
 | apply the same controls to every verifier | let a system choose its own tests |

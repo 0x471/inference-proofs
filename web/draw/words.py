@@ -551,10 +551,11 @@ SCALE_LEAD = "Every system run, on a log axis"
 # beside the size tab of the frontier's rung on the ladder (OR-6: the largest with a passed row)
 FRONTIER_WORD = "Largest model proved"
 # ------------------------------------------------------------------ the mandate page
-# The headline, then who runs it, what we do, what we do not do and how to check us: each line
+# The headline, then who runs it, its ties, what we do, what we do not do, how to check us and how
+# a row is changed, with the dated corrections: each line
 # (a plain label, the rule that binds it, the file that holds the rule with its section's anchor,
-# the words; two rules of one file in two sections: a pair of each). A line with no file is the
-# owner's commitment. {lead} and {builder} are the names
+# the words; two rules of one file in two sections: a pair of each; a source outside the
+# repository: its link's words and its address). A line with no file is the owner's commitment. {lead} and {builder} are the names
 # facts.json `credit` gives, linked as the footer links them. The members (`credit`) are listed in
 # the section MANDATE_MEMBERS_IN names, once any has agreed.
 RFC_18 = "rfcs/0018-level-1-ladder.md"
@@ -569,13 +570,36 @@ MANDATE = (
         ("Run by", "", None, "{lead}."),
         ("Built by", "", None, "The {builder}, led by {lead}."),
     )),
+    ("Ties", (
+        ("Its business", "lucidcomputing.ai", "https://lucidcomputing.ai/", "{lead} runs this "
+         "project and builds the site. It sells inference run in hardware enclaves: \u201cAll "
+         "inference runs inside hardware-encrypted Trusted Execution Environments.\u201d It "
+         "builds none of the listed provers. Two systems listed as another kind of check, "
+         "Private ML SDK and Tinfoil, are enclave systems too."),
+        ("Rules", "Conflicts of Interest", f"{RFC_18}#conflicts-of-interest", "Level 1's rules "
+         "were drafted with an AI model made by FlashProve's publisher. RFC-0018 names the rules "
+         "this touches and the readings taken that favour FlashProve."),
+        ("SASH's change", "pull request #36",
+         "https://github.com/sg-ai-safety-hub/zk-inference-prover/pull/36", "SASH runs commit "
+         "4f41667 of pull request #36 to SASH, written by this project's owner and not merged "
+         "upstream; a SASH maintainer has since added commits to it. At upstream's own commit, "
+         "eb95bfa, SASH refused one of the level's prompts."),
+        ("After the freeze", ("CH-1a", "SE-3a"),
+         (f"{RFC_18}#the-six-checks", f"{RFC_18}#sessions-and-what-is-recorded"), "Two rules "
+         "added to RFC-0018 after the level was frozen decided rows. Under CH-1a, FlashProve's "
+         "Model check held on its prover answering \u201cfailed\u201d. Under SE-3a, two SASH "
+         "slots went to later sessions."),
+    )),
     ("What we do", (
         ("Pinned commit", "rule 1", "AGENTS.md#hard-rules", "Each system runs at one pinned "
-         "public commit. Our adapter changes no source and passes no setting the system's "
-         "documentation does not name."),
+         "public commit, and our adapter passes no setting the system's documentation does not "
+         "name. FlashProve runs its upstream commit unchanged. SASH runs a commit of a pull "
+         "request to SASH that this project's owner wrote and upstream has not merged (see Ties)."),
         ("Same request", "Prompts, PR-2", f"{RFC_18}#prompts", "Every system gets the same "
-         "request. A public randomness beacon picked the prompts, at its first round after the "
-         "level was frozen, so nobody, we included, chose them or set a constant knowing them."),
+         "request. Its prompts come from a public randomness beacon: drand's first round after "
+         "the commit that froze the level, by that commit's own time, which our own clock sets. "
+         "GitHub recorded each freeze 2 s after that time. The level was frozen three times on "
+         "2026-11-11, and each freeze drew new prompts; every counted run uses the third draw."),
         ("Sample size", "rule 5", "AGENTS.md#hard-rules", "Cost figures come with their sample "
          "size and each counted session's value, never one best run."),
         ("Computed", ("CO-6", "CH-6"), (f"{RFC_18}#cost", f"{RFC_18}#the-six-checks"),
@@ -602,8 +626,39 @@ MANDATE = (
          "runs."),
         ("Repository", "Licence", "README.md#licence", "The rules, the adapters, the measuring "
          "code and the run records are in one public repository. Proofs, weights and other bulk "
-         "files stay outside it, named by digest."),
+         "files stay outside it, named by digest. The proofs are not public yet."),
+        ("Rebuild", "Tier 1", "docs/REPRODUCE.md", "Anyone can rebuild the board from the run "
+         "records, recompute every figure and validate the repository on a laptop, with no GPU. "
+         "Verifying a proof again needs its bytes."),
     )),
+    ("Changes and corrections", (
+        ("Contest a row", "issues", "https://github.com/ai-verification-observatory/"
+         "inference-proofs/issues", "Open an issue naming the row and the fact you hold wrong, "
+         "with your source. The answer goes in the issue, and a change goes in the list below."),
+        ("A petal", "GL-1", f"{RFC_18}#the-glyph", "A statement petal moves on a sentence the "
+         "publisher wrote at the pinned commit, quoted with its link, or on a failed check. A "
+         "state we read rather than copied says so and is drawn amber at most. Faithful model "
+         "moves on a fidelity run."),
+        ("A check", "CH-6", f"{RFC_18}#the-six-checks", "A check moves on a stored run record "
+         "only. A changed input accepted in our adapter fails a check once the system's own "
+         "command accepts it too."),
+    )),
+)  # fmt: skip
+# the corrections the mandate lists in the section MANDATE_CORRECTIONS_IN names, newest first:
+# (date, words). A correction is added here when it is made; none is removed.
+MANDATE_CORRECTIONS_IN = "Changes and corrections"
+MANDATE_CORRECTIONS = (
+    ("2026-11-15", "A SASH session that failed the machine self-test no longer counts "
+     "(RFC-0014); SASH's row reads not passed yet until a replacement session runs."),
+    ("2026-11-15", "A state that rests on our reading of a publisher's documents, not on a "
+     "sentence that says it, is marked as read and drawn amber at most, for every system. "
+     "FlashProve's No third party trusted moves from green to amber."),
+    ("2026-11-15", "SASH's pin is disclosed: it runs a pull request this project's owner wrote. "
+     "The mandate said our adapter changes no source."),
+    ("2026-11-15", "The beacon line said nobody chose the prompts. The freeze time is ours, and "
+     "each of the three freezes drew new prompts."),
+    ("2026-11-15", "The reasons a system is not run follow one written rule: DeepProve, JOLT "
+     "Atlas and zkLLM are listed under no public verifier, zkGPT under a different statement."),
 )  # fmt: skip
 MANDATE_MEMBERS_IN = "Who runs it"
 # the mandate's line on the level (its label is the level and its state, linked to the level
@@ -865,3 +920,29 @@ def sub_words(f, n=None):
 
 # the dot between a scope and its sample size
 SEP = "\u00a0· "
+
+
+# ------------------------------------------------------------------ systems not run (SI-4b)
+# the checks page's last section: the one rule that gives a system not run its reason, each
+# reason with its words, then the systems it holds, each with the fact that sets it and its link
+NOT_RUN_LEAD = (
+    "A system with no row is listed after the ladder with one reason: the first of these that "
+    "holds in its sources, in this order. Each system's line is the fact that sets its reason, "
+    "linked to where we read it."
+)
+NOT_RUN_RULE = {
+    "another kind of check": "It makes no proof. Its check is an attestation, a re-execution, a "
+    "dispute game or a fingerprint.",
+    "a different statement": "It proves a statement other than Level 1's: that a reply is the "
+    "committed model's own greedy reply to a prompt the verifier is given.",
+    "no public verifier": "No public code to pin, or no public program that checks a stored proof "
+    "apart from the prover against a commitment the verifier is given. A prover and verifier "
+    "that run only together, and a verifier that reads the commitment from the proof file, are "
+    "both this case.",
+    "licence": "No licence file, or a licence that grants no use. A licence that grants internal "
+    "use for testing and evaluating is read as covering runs we make ourselves; it grants no "
+    "right to hand the software to anyone else.",
+    "no configuration at the request": "No configuration its sources name proves a reply to the "
+    "Level 1 request on a Level 1 model.",
+    "not yet run": "Nothing above holds, and no session has run yet.",
+}

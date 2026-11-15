@@ -803,6 +803,14 @@ class LicenceFacts(Document):
 
 
 @dataclasses.dataclass(frozen=True, slots=True, kw_only=True)
+class ReasonSource(Document):
+    """RFC-0018 SI-4b: the fact that sets a system's reason, in words, and where it is read."""
+
+    words: str
+    url: str
+
+
+@dataclasses.dataclass(frozen=True, slots=True, kw_only=True)
 class StatusFacts(Document):
     state: str
     last_push: str | None = None
@@ -846,6 +854,7 @@ class RowFacts(Document):
     reason: str | None = None  # RFC-0018 SI-4: why a system has no row on the board
     pin: PinFacts | None = None
     generation: GenerationFacts | None = None
+    reason_source: ReasonSource | None = None  # SI-4b
 
 
 @dataclasses.dataclass(frozen=True, slots=True, kw_only=True)
@@ -1080,6 +1089,7 @@ MODELS: dict[tuple[str, str], type[Any]] = {
     ("site-facts/1", "#/$defs/row/properties/status"): StatusFacts,
     ("site-facts/1", "#/$defs/row/properties/pin"): PinFacts,
     ("site-facts/1", "#/$defs/row/properties/generation"): GenerationFacts,
+    ("site-facts/1", "#/$defs/row/properties/reason_source"): ReasonSource,
     ("serving-model/1", "#"): ServingModel,
     ("serving-model/1", "#/properties/publisher"): ServingPublisher,
     ("serving-model/1", "#/properties/publisher/properties/release"): ServingRelease,

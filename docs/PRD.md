@@ -25,13 +25,13 @@ The first two open systems show the gap clearly. Both are Apache-2.0, both run o
 | Soundness statement | per-edge binding table, each edge switchable off by an `--unsound-skip-*` flag | Lean theorem for the Lean verifier, exact-match policy, random-oracle model |
 | How numbers are graded | `constants.json`: each number names card, context, timing scope and a grade (measured, derived, projected, external, asserted) | `docs/figures.tsv` and `limits-all-rows.tsv`; the measuring scripts and run records are not in the repository |
 
-Every cell above comes from the two repositories at the stated pins. Different models, phases, timing scopes and claims: a reader who divides one headline by the other learns nothing. That is the problem this project exists to solve.
+Every cell above comes from the two repositories at the stated pins. Level 1 v1.0 runs SASH at `4f41667297430a598165c4a8604258fe37d952ae`, the head of [pull request #36](https://github.com/sg-ai-safety-hub/zk-inference-prover/pull/36) on 2026-11-12, written by this project's owner and not merged upstream: upstream `eb95bfa` refuses one of the level's prompts ([`systems/sash/README.md`](../systems/sash/README.md)). Different models, phases, timing scopes and claims: a reader who divides one headline by the other learns nothing. That is the problem this project exists to solve.
 
 ## 2. Vision
 
-A neutral, open, reproducible benchmark for provable inference: the same models, the same reference hardware, the same timing rules and an explicit statement of what each proof claims, maintained by the teams that build the provers and the people who would rely on them.
+An open, reproducible benchmark for provable inference: the same models, the same reference hardware, the same timing rules and an explicit statement of what each proof claims, run in the open so that the teams that build the provers and the people who would rely on them can check it and correct it.
 
-The model is Ethproofs, which made zkVM provers for Ethereum blocks comparable by fixing the workload (real blocks), publishing per-prover rows (hardware, latency, cost) and letting a credible convener publish targets that teams then raced to meet. Two lessons carry over: a fixed workload makes rows comparable, and targets set by users serve readers better than rankings set by the benchmark. One lesson does not: Ethereum blocks are one well-defined statement. Inference proofs make different statements, so the claim has to travel with every number.
+The model is Ethproofs, which made zkVM provers for Ethereum blocks comparable by fixing the workload (real blocks), publishing per-prover rows (hardware, latency, cost) and letting a credible convener publish targets that teams then raced to meet. Two lessons carry over: a fixed workload makes rows comparable, and targets set by relying parties tell readers what matters. Level 1 also ranks, but only inside one model's rung, by one published order rule ([RFC-0018](../rfcs/0018-level-1-ladder.md#order)), and never across rungs. One lesson does not: Ethereum blocks are one well-defined statement. Inference proofs make different statements, so the claim has to travel with every number.
 
 ## 3. Users
 
@@ -48,8 +48,8 @@ The model is Ethproofs, which made zkVM provers for Ethereum blocks comparable b
 2. **G2. Comparable by construction.** Fixed workloads, fixed reference hardware, fixed timing scopes, fixed cost basis. Where systems cannot run the same workload, the benchmark says so and compares only what is comparable.
 3. **G3. Reproducible.** Every row pins the prover commit, container digest, model hash, hardware and driver versions, and the exact command. A number is called measured only once someone other than the authors has reproduced it.
 4. **G4. Adversarial.** Every system faces the same negative controls; each row reports which ones it rejects.
-5. **G5. Neutral.** Open methodology in RFCs, neutral language. One ranked figure inside a model's rung, by a published order rule (RFC-0018); no single score across properties and no ranking across rungs.
-6. **G6. Low cost to join.** A prover joins through a thin adapter. The harness never forks or patches a prover.
+5. **G5. Open rules.** Open methodology in RFCs, and measurement words only (no superlatives, no self-description). One ranked figure inside a model's rung, by a published order rule (RFC-0018); no single score across properties and no ranking across rungs.
+6. **G6. Low cost to join.** A prover joins through a thin adapter. The harness never forks or patches a prover. Level 1's SASH pin is the exception on record: a pull request to SASH, written by this project's owner and not merged upstream (Section 1).
 
 ## 5. Non-goals
 
