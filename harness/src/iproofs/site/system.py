@@ -245,7 +245,7 @@ def kept_trials(root: Path, release: str | None, row: dict[str, Any]) -> list[di
     counted = {str(s["run_id"]) for s in row["sessions"]}
     out = []
     for path in sorted(folder.glob("*/trial.json")):
-        doc = parse_tree(path)
+        doc: dict[str, Any] = parse_tree(path)
         kinds = {str(c["change"]["kind"]) for c in doc["calls"] if c["change"] is not None}
         if run and str(run) in str(doc["program"]["name"]):
             places = {TRIAL_PLACE[k] for k in kinds if k in TRIAL_PLACE}
