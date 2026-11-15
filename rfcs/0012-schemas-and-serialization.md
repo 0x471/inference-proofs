@@ -63,6 +63,7 @@ All schemas use JSON Schema Draft 2020-12. Each lives at `schema/<name>/<major>.
 | `controls-seed` | `schema/controls-seed/1.schema.json` | generated JSON | `<run-dir>/controls-seed.json`, written once before the first part, never in `results/` | RFC-0008 §Split suites |
 | `perturbed-commitment` | `schema/perturbed-commitment/1.schema.json` | generated JSON | `results/<release>/<system>/_controls/<workload>/perturbed.json` | RFC-0008 |
 | `verifier-trial` | `schema/verifier-trial/1.schema.json` | generated JSON | `results/<release>/<system>/_trials/<trial id>/trial.json` | RFC-0008 §Verifier trials (amended 2026-11-15) |
+| `refusal` | `schema/refusal/1.schema.json` | authored JSON | `results/<release>/<system>/refusals/slot-<k>.json` | RFC-0018 SE-5 (amended 2026-11-15) |
 | `site-facts` | `schema/site-facts/1.schema.json` | authored JSON | `web/_data/facts.json` | RFC-0009 |
 | `criteria` | `schema/criteria/1.schema.json` | authored JSON | `web/_data/criteria.json` (deleted 2026-11-15: it held RFC-0016's vocabulary (Formally verified "yes" from documents), which no page reads; the v0.1 record is in git history at b9dfa3e) | RFC-0016 |
 
@@ -380,6 +381,15 @@ Amendment of 2026-11-13 (RFC-0018 §The glyph). No frozen release exists, and th
 - `proof-build/1`, new: `results/<release>/proof-build/<system>/proof-build.json`, the record of one build of a publisher's machine-checked proof (RFC-0018 MC-4, MC-5), whose `toolchain.image` is a required sha256 digest; none is stored.
 
 Amendment of 2026-11-15 (RFC-0008 §Verifier trials): `verifier-trial/1`, new, `results/<release>/<system>/_trials/<trial id>/trial.json`, verify calls on stored proofs outside any session's suite; `gates` is the constant `nothing`, `program.patched` the constant `false`, and every time is a quantity. It changes no stored record.
+
+Amendment of 2026-11-15 (RFC-0018 SE-3b, SE-5, SI-3, SI-4a, CO-7, MC-7, WH-6, FM-5). Additive, and the one stored board is recomputed in the same change (RFC-0018 Q14), so no stored run record changes:
+
+- `refusal/1`, new: a refusal by a system's own code of a Level 1 request, naming the upstream commit it was made at (SE-5).
+- `board/1`: per row `ineligible_sessions` (SE-3b), `level_statement` (SI-4a), `session_commit_gpu_seconds_per_reply`, `session_proving_gpu_seconds_per_reply` and `generation_gpu_seconds_per_reply_token` (CO-7); per check, `trials` (what each control's trials sent and how many were refused); on Machine-checked's `formal`, `conclusion`, `ceiling` and `scope_bounds`; on a petal, `forms` and `visible_at_least` (Weights hidden); on a rung's `fidelity`, each run part's `engine` and `slots_cause`; on its `teacher_forced`, `interval_rule` and each row's and control's `percent_interval`.
+- `properties/2`: `level_statement.accept_is_model_reply` with its `sources_read` (SI-4a); `verifiers` and Machine-checked's `formal.conclusion` (MC-7), with a `bound` on each property of its scope card; `hiding.zk_kind`, `zk_model`, `zk_unit`, `forms` and `visible_at_least` (WH-6); `verifier_inputs`, the claim card's fields the Statement block prints (SI-3).
+- `fidelity/1`: `slots_cause` (FM-5).
+- `site-facts/1`: per system `pin` (the pull request a row runs, SI-3), `generation`, and per not-run reason `reason_source` (SI-4b).
+- `claim/1` is unchanged: the Statement block's fields stay in `properties/2`, so the claim card digests the v1.0 runs record stay valid.
 
 ## Testing Strategy
 

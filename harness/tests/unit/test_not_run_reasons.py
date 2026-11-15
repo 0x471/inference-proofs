@@ -1,5 +1,5 @@
 """RFC-0018 SI-4b: a system not run carries the source of its reason, and the stored facts follow
-the rule's order where the review of 2026-11-15 found them filed apart."""
+the rule's order where they were filed apart before 2026-11-15."""
 
 import json
 from pathlib import Path
