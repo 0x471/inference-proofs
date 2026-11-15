@@ -100,6 +100,7 @@ class Petal:
     formal: Mapping[str, object] | None = None
     visible: Sequence[Mapping[str, object]] | None = None
     reading: bool = False  # a fact the decision read carries a note: the reader's reading (N1)
+    notes: tuple[str, ...] = ()  # those notes, printed with the petal (GL-10, amended 2026-11-15)
     sources: tuple[Mapping[str, str], ...] = ()  # R-SILENT: the documents read, linked at the pin
     forms: Sequence[Mapping[str, object]] | None = None  # Weights hidden: the stated ZK forms
     visible_at_least: bool = False  # Weights hidden: the publisher's list is a lower bound
@@ -132,6 +133,7 @@ class Petal:
             out["visible_at_least"] = True
         if self.reading:
             out["reading"] = True
+            out["notes"] = list(self.notes)
         if self.sources:
             out["sources_read"] = [dict(s) for s in self.sources]
         return out
@@ -193,12 +195,19 @@ class _Facts:
     def __init__(self, group: Mapping[str, object]) -> None:
         self.group = group
         self.noted = False
+        self.read: list[str] = []  # the notes of the facts read, in order, each once
 
     def __call__(self, key: str) -> object:
         fact = _m(self.group.get(key))
-        if fact.get("note"):
+        if note := fact.get("note"):
             self.noted = True
+            if str(note) not in self.read:
+                self.read.append(str(note))
         return fact.get("value")
+
+    @property
+    def notes(self) -> tuple[str, ...]:
+        return tuple(self.read)
 
 
 def _pin(props: Mapping[str, object]) -> str:
@@ -398,13 +407,13 @@ def unforgeable(  # noqa: PLR0911 (one return per line of the table)
     terms = [int(t) for t in raw_terms] if isinstance(raw_terms, list) else []
     if v("stated") is not True or not terms:  # UF-3
         return Petal(pid, RED, NOT_STATED, STATEMENT, _silent(petal, props), quotes,
-                     reading=v.noted)  # fmt: skip
+                     reading=v.noted, notes=v.notes)  # fmt: skip
     run, stated_for = _verifiers(props)
     head = _bound_head(b, stated_for)
 
     def decided(step: str, cause: str | None, *why: str) -> Petal:
         return Petal(pid, step, cause, STATEMENT, "; ".join((head, *why)), quotes,
-                     reading=v.noted)  # fmt: skip
+                     reading=v.noted, notes=v.notes)  # fmt: skip
 
     least = min(terms)
     if v("adversary") == "weaker":  # UF-4
@@ -522,15 +531,20 @@ def _toolchain(found: object) -> str:
 def _mc_tail(fm: Mapping[str, object], r: object, run: str | None, stated_for: str | None,
              top: str | None) -> str:  # fmt: skip
     """Machine-checked's reason after its first clause (amended 2026-11-15): the verifier the
-    theorem is stated for against the one the row runs, the most a build can give, and that no
-    outside reader of the tool has reviewed the statement (none is recorded at Level 1)."""
+    theorem is stated for against the one the row runs, the most a build can give (and, when the
+    `model` conclusion that ceiling rests on carries a note, that it is our reading, GL-10), and
+    that no outside reader of the tool has reviewed the statement (none is recorded at Level 1)."""
     out = []
+    conclusion = _m(fm.get("conclusion"))
     if r == "verifier_run" and run:
         out.append(f"it is stated for {run}, which this row runs")
     elif stated_for and run:
         out.append(f"it is stated for {stated_for}, not for {run}, which this row runs")
     if top is not None:
-        out.append(f"once built: {_STEP_WORDS[top]} at most")
+        read = conclusion.get("value") == "model" and bool(conclusion.get("note"))
+        out.append(f"once built: {_STEP_WORDS[top]} at most"
+                   + (", on our reading that its conclusion is about the model" if read
+                      else ""))  # fmt: skip
     tool = _v(fm.get("tool"))
     if fm.get("theorem") is not None and tool:
         out.append(f"statement not reviewed by an outside {str(tool).split()[0]} reader")
@@ -560,9 +574,9 @@ def machine_checked(  # noqa: PLR0911, PLR0912, PLR0915 (one return per line of 
     if stated == RED:  # MC-2
         if r == "none":
             return Petal(pid, RED, STATED, STATEMENT, "stated that nothing is machine-checked",
-                         quotes, formal=formal, reading=v.noted)  # fmt: skip
+                         quotes, formal=formal, reading=v.noted, notes=v.notes)  # fmt: skip
         return Petal(pid, RED, NOT_STATED, STATEMENT, _silent(petal, props), quotes,
-                     formal=formal, reading=v.noted)  # fmt: skip
+                     formal=formal, reading=v.noted, notes=v.notes)  # fmt: skip
     f = failed(checks, LOWERED_BY[pid])
     if f and stated == GREEN:  # MC-3
         return _check_failed(pid, f, quotes, formal=formal)
@@ -608,7 +622,7 @@ def machine_checked(  # noqa: PLR0911, PLR0912, PLR0915 (one return per line of 
             reason = "no proof build of the named theorem is recorded yet"
         reason += _mc_tail(fm, r, run, stated_for, top)
         return Petal(pid, None, PROOF_BUILD_NOT_RUN, STATEMENT, reason, quotes, formal=formal,
-                     reading=v.noted)  # fmt: skip
+                     reading=v.noted, notes=v.notes)  # fmt: skip
     step = ceiling(stated, conclusion, _v(fm.get("tool")), reported)  # MC-7
     reason = f"the named theorem builds at {pin7}, stated to reach {reach}"  # MC-6
     if r == "verifier_run" and stated == AMBER_UPPER:
@@ -623,7 +637,9 @@ def machine_checked(  # noqa: PLR0911, PLR0912, PLR0915 (one return per line of 
                    f", but the build reports axioms {', '.join(sorted(reported))}, not only its "
                    "tool's standard ones")  # fmt: skip
     reason += _mc_tail(fm, r, run, stated_for, None)
-    return Petal(pid, step, None, STATEMENT, reason, quotes, formal=formal, reading=v.noted)
+    return Petal(
+        pid, step, None, STATEMENT, reason, quotes, formal=formal, reading=v.noted, notes=v.notes
+    )
 
 
 # ---------------------------------------------------------------- Weights hidden (WH-1 to WH-6)
@@ -681,7 +697,8 @@ def weights_hidden(  # noqa: PLR0911 (one return per line of the table)
 
     def decided(step: str, cause: str | None, reason: str) -> Petal:
         return Petal(pid, step, cause, STATEMENT, reason, quotes, visible=visible,
-                     reading=v.noted, forms=forms, visible_at_least=at_least)  # fmt: skip
+                     reading=v.noted, notes=v.notes, forms=forms,
+                     visible_at_least=at_least)  # fmt: skip
 
     if v("verifier_gets_weights") is True:  # WH-3
         return decided(RED, STATED, "the verifier receives the weights")
@@ -731,7 +748,7 @@ def no_trusted_party(  # noqa: PLR0911 (one return per line of the table)
     quotes = petal_quotes(pid, petal)
 
     def decided(step: str, cause: str | None, reason: str) -> Petal:
-        return Petal(pid, step, cause, STATEMENT, reason, quotes, reading=v.noted)
+        return Petal(pid, step, cause, STATEMENT, reason, quotes, reading=v.noted, notes=v.notes)
 
     r = v("rests_on")
     rests_noted = v.noted  # N1: the value of rests_on is the reader's reading

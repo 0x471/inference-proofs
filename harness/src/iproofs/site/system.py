@@ -9,11 +9,14 @@ serving-model records. Nothing is computed but counts and sets of what the recor
 """
 
 import json
+from dataclasses import asdict
 from pathlib import Path
 from typing import Any
 
 from iproofs.model import card_path
+from iproofs.schema import parse_tree
 from iproofs.site import inputs
+from iproofs.trials import summary
 
 # RFC-0018 SI-3 (amended 2026-11-15): the Statement block's rows, in the page's order
 STATEMENT_ROWS = ("commit_record", "request", "proof", "decoding", "unchecked", "architecture")
@@ -204,3 +207,41 @@ def precision(root: Path, row: dict[str, Any], models: dict[str, Any]) -> dict[s
         "bits_source": bits.get("source"),
         "record": f"workloads/{row['workload']}.yaml",
     }
+
+
+# RFC-0008 §Verifier trials: where a stored trial is printed (it gates nothing). A trial of the
+# verifier the row runs goes beside the check whose change it makes, by its calls' change kind; a
+# trial of another of the publisher's verifiers goes under Machine-checked, the petal that names
+# the verifier a theorem is stated for (MC-7). A trial of the row's verifier whose changes name no
+# one check is printed nowhere.
+TRIAL_PLACE = {"reply_token": "reply", "other_session_commitment": "model"}
+OTHER_VERIFIER = "machine_checked"
+
+
+def kept_trials(root: Path, release: str | None, row: dict[str, Any]) -> list[dict[str, Any]]:
+    """The row's verifier trials, each with its place, the verifier's name (the properties
+    file's `verifiers`), its record and its counts (`iproofs.trials.summary`, over the row's
+    counted sessions)."""
+    if not release:
+        return []
+    folder = root / "results" / release / row["system"] / "_trials"
+    props = root / "systems" / row["system"] / "properties.yaml"
+    named = (inputs.read_yaml(props) if props.is_file() else {}).get("verifiers") or {}
+    run = (named.get("run") or {}).get("value")
+    stated = (named.get("stated") or {}).get("value")
+    counted = {str(s["run_id"]) for s in row["sessions"]}
+    out = []
+    for path in sorted(folder.glob("*/trial.json")):
+        doc = parse_tree(path)
+        kinds = {str(c["change"]["kind"]) for c in doc["calls"] if c["change"] is not None}
+        if run and str(run) in str(doc["program"]["name"]):
+            places = {TRIAL_PLACE[k] for k in kinds if k in TRIAL_PLACE}
+            if len(places) != 1:
+                continue
+            place, verifier = places.pop(), str(run)
+        else:
+            place, verifier = OTHER_VERIFIER, str(stated or doc["program"]["name"])
+        out.append({"id": str(doc["id"]), "place": place, "verifier": verifier,
+                    "changes": sorted(kinds), "record": path.relative_to(root).as_posix(),
+                    **asdict(summary(doc, counted))})  # fmt: skip
+    return out

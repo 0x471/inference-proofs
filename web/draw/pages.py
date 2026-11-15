@@ -77,6 +77,11 @@ from .words import (
     FIGURE_NAME,
     FIGURE_RULE,
     FULL_LOAD_WORD,
+    KEPT_CHANGE,
+    KEPT_HEAD,
+    KEPT_MEANS,
+    KEPT_SETS,
+    KEPT_TIME,
     KNOW_COLS,
     KNOW_HEAD,
     KNOW_LINES,
@@ -123,6 +128,7 @@ from .words import (
     PETAL_TERM,
     PREFIX,
     READ_AS,
+    READING_HEAD,
     READING_RULE,
     REASON_LINK,
     RECORD_WORD,
@@ -138,6 +144,7 @@ from .words import (
     STATED_SECURITY,
     STATEMENT_WORD,
     STEP_WORD,
+    TERM_STATED,
     TF_AGREE,
     TF_BOTH,
     TF_FAILED,
@@ -148,6 +155,8 @@ from .words import (
     TF_SUB,
     TF_TEST,
     TIER_WORD,
+    TRIAL_NO_PROOF,
+    TRIAL_REFUSED,
     TRIAL_WHAT,
     TRIALS_HEAD,
     VISIBLE_OTHERS,
@@ -459,7 +468,7 @@ def counted_words(k, one):
     return f"{k:,} {one}" if k == 1 else f"{k:,} {one}s"
 
 
-def petal_more(p):
+def petal_more(p, of=None):
     """What a petal holds beyond its reason: first, in the row, what it rests on (a silent red's
     reason already names the publisher's documents, so it prints this line only when a fact is our
     reading); then, one click away, a native disclosure whose summary names by count what it
@@ -478,6 +487,13 @@ def petal_more(p):
         said.append("tool and theorem")
     if p["forms"]:
         said.append(counted_words(len(p["forms"]), "form"))
+    kept = kept_html(of, p["id"]) if of is not None else ""  # `of`: the row
+    if kept:
+        said.append(counted_words(kept.count('<p class="cn">'), "trial"))
+    notes = "".join(f'<p class="cn">{e(n)}</p>' for n in p["notes"])
+    if notes:  # GL-10: what the reading rests on, in our words, apart from the quotes
+        notes = f'<p class="pvh">{e(READING_HEAD)}</p>{notes}'
+        said.append(READING_HEAD.lower())
     if p["visible"]:  # the publisher's "at least" kept with its count
         said.append(("at least " if p["visible_at_least"] else "")
                     + counted_words(len(p["visible"]), "visible value"))  # fmt: skip
@@ -486,8 +502,8 @@ def petal_more(p):
     # a silent red: the documents read, each linked at the pin (GL-1)
     docs = ", ".join(f'<a href="{e(d["url"])}">{e(d["path"])}</a>' for d in p["sources"])
     docs = f'<p class="pfrom"><span class="k">{e(DOCS_READ)}</span> {docs}</p>' if docs else ""
-    body = (quote_links(p["quotes"]) + formal_facts_html(p["formal"]) + forms_html(p["forms"])
-            + visible_html(p["visible"], p["visible_at_least"]) + docs + foot)  # fmt: skip
+    body = (quote_links(p["quotes"]) + notes + formal_facts_html(p["formal"]) + forms_html(p["forms"])
+            + visible_html(p["visible"], p["visible_at_least"]) + kept + docs + foot)  # fmt: skip
     said = " · ".join(f'<span class="nw">{e(w)}</span>' for w in said)
     owner = f'<span class="sr">, {e(PETAL_NAME[p["id"]])}</span>'
     return f'{row}<details class="more"><summary>{said}{owner}</summary>{body}</details>'
@@ -514,6 +530,8 @@ def glyph_html(row):
     trs = []
     for i, p in enumerate(row["glyph"]):
         tok = f"{p['state']} {p['form']}".strip()
+        term = PETAL_TERM[p["id"]]  # a reading is not as stated (GL-10): its term says less
+        term = term.removesuffix(TERM_STATED) if p["reading"] else term
         data = f' data-step="{e(p["step"] or "none")}"'
         state = chip(p["state"], petal_step(p), p["form"])
         if p["cause"] is not None:  # the reason says it; the chip links its definition
@@ -524,9 +542,9 @@ def glyph_html(row):
             f'<tr class="pt {tok}"><th scope="row">'
             f'<a class="sl s{i + 1} {tok}"{data} href="{CHECKS_PAGE}#{p["id"]}" data-k="p{i + 1}">'
             f"<span>{e(PETAL_NAME[p['id']])}</span></a>"
-            f'<span class="pst">{e(PETAL_TERM[p["id"]])}</span></th>'
+            f'<span class="pst">{e(term)}</span></th>'
             f'<td class="cst">{state}{said_html(p)}</td>'
-            f'<td class="prs"><span class="rs">{e(p["reason"])}</span>{petal_more(p)}</td></tr>'
+            f'<td class="prs"><span class="rs">{e(p["reason"])}</span>{petal_more(p, row)}</td></tr>'
         )
     return (scope_head_html(row) + '<div class="checks"><table class="rt ckt gbig"><caption '
             f'class="sr">Petal, state, reason</caption><tbody>{"".join(trs)}</tbody></table></div>')  # fmt: skip
@@ -632,7 +650,7 @@ def checks_html(row):
         links = evidence_links(c["evidence"])  # counted as printed: a file's entries are one link
         recs = counted_words(len(links), "record") if links else "note"
         owner = f'<span class="sr">, {e(CHECK_NAME[c["id"]])}</span>'
-        ran = trials_html(c.get("trials") or ())
+        ran = trials_html(c.get("trials") or ()) + kept_html(row, c["id"])
         more = (f'<details class="more"><summary>{e(recs)}{owner}</summary>{full}{ran}'
                 f"{''.join(links)}</details>"
                 if c["evidence"] or full else "")  # fmt: skip
@@ -664,11 +682,51 @@ def trials_html(trials):
         sent = ("the same input each time" if inputs == 1 and n > 1
                 else "a new input each time" if inputs == n
                 else f"{inputs:,} inputs")  # fmt: skip
-        return f"{TRIAL_WHAT[(t['control'], t['position'])]}: {n:,} trials, {sent}, " \
-            f"{t['refused']:,} refused"  # fmt: skip
+        none, by = t.get("no_proof", 0), t["refused"] - t.get("no_proof", 0)
+        how = [f"in {none:,}, {TRIAL_NO_PROOF}"] if none else []
+        how += [f"{by:,} {TRIAL_REFUSED}"] if by or not none else []
+        return f"{TRIAL_WHAT[(t['control'], t['position'])]}: {n:,} trials, {sent}; " \
+            + ", ".join(how)  # fmt: skip
 
     words = "; ".join(one(t) for t in trials)
     return f'<p class="cn"><span class="k">{e(TRIALS_HEAD)}</span> {e(words)}</p>'
+
+
+TRIAL_OTHER = (
+    "machine_checked"  # the view's place of another verifier's trial (iproofs.site.system)
+)
+
+
+def kept_html(row, place):
+    """The row's stored verifier trials printed at `place` (a check's id, or Machine-checked),
+    each from its record: what its changed calls did and how many the verifier refused, beside
+    its honest calls accepted, with its record. A trial sets no state (RFC-0008 §Verifier
+    trials). Only a trial of another of the publisher's verifiers prints its times: they are what
+    no counted session took (the Verifying line); the row's own verifier is timed there."""
+    out = []
+    for t in row.get("trials_kept") or ():
+        if t["place"] != place:
+            continue
+        said = [f"{t['accepted']:,} of {counted_words(t['honest'], 'honest proof')} accepted"
+                + (f" ({t['counted']:,} from counted sessions)" if t["counted"] < t["honest"]
+                   else "")]  # fmt: skip
+        said += [f"{KEPT_CHANGE.get(k, k)}: {t['changed_rejected']:,} of {t['changed']:,} refused"
+                 for k in t["changes"]]  # fmt: skip
+        if place == TRIAL_OTHER and t["seconds_min"] is not None:
+            lo, hi = f"{t['seconds_min']:,.0f}", f"{t['seconds_max']:,.0f}"
+            span = lo if lo == hi else f"{lo} to {hi}"
+            said.append(f"{span}\u00a0s per proof, {KEPT_TIME}, n\u00a0=\u00a0"
+                        f"{t['honest'] - t['no_verdict']:,}")  # fmt: skip
+        who = f"{t['verifier'][0].upper()}{t['verifier'][1:]}, " if place == TRIAL_OTHER else ""
+        means = " ".join(KEPT_MEANS[k] for k in t["changes"]
+                         if k in KEPT_MEANS and t["changed_rejected"] == t["changed"])  # fmt: skip
+        words = f"{who}{'; '.join(said)}." + (f" {means}" if means else "")
+        rec = (
+            f'<a class="ev" href="{e(link(t["record"]))}" title="{e(t["record"])}">trial record</a>'
+        )
+        out.append(f'<p class="cn"><span class="k">{e(KEPT_HEAD)}, {e(KEPT_SETS)}</span> '
+                   f"{e(words)} {rec}</p>")  # fmt: skip
+    return "".join(out)
 
 
 def level_statement_html(row):
@@ -946,8 +1004,10 @@ def verifying_html(row):
     timed = (f"{spread}, the {count:,} sessions' means" if spread
              else fig_words(f)) + f", n\u00a0=\u00a0{count:,}"  # fmt: skip
     rel = (S.V["release"] or {}).get("id")
-    untimed = "".join(f'<span class="nw">\u00a0\u00b7 {e(u)}: not timed'
-                      + (f" in {e(rel)}" if rel else "") + "</span>"
+    untimed = "".join(f" \u00b7 {e(u)}: not timed" + (f" in {e(rel)}'s sessions" if rel else "")
+                      + (" (a trial under Machine-checked)" if any(
+                          t["place"] == TRIAL_OTHER and u.lower() in t["verifier"].lower()
+                          for t in row.get("trials_kept") or ()) else "")
                       for u in st["untimed"])  # fmt: skip
     return (f'<p class="rb"><span class="k">Verifying</span> <span>{" ".join(said)}; '
             f"{e(timed)}{untimed}</span></p>")  # fmt: skip

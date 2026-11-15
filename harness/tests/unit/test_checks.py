@@ -483,6 +483,9 @@ def test_p1_failed_answer_with_the_honest_twin_accepted_is_refused(tree: Tree) -
     declare(tree, DECLARES_FAILED_ANSWER)
     p1_failed(tree, FAILED_ANSWER)
     assert states(tree)["model"] == ("held", None)
+    # CH-1c: the prover refused by making no proof, so no verifier saw one; the page says which
+    p1 = next(t for t in checks(tree)["model"].trials if t["control"] == "P1")
+    assert (p1["trials"], p1["refused"], p1["no_proof"]) == (3, 3, 3)
 
 
 def test_p1_failed_answer_without_an_accepted_twin_decides_nothing(tree: Tree) -> None:
@@ -511,6 +514,7 @@ def test_what_ran_counts_distinct_inputs(tree: Tree) -> None:
     found = checks(tree)
     ran = {(t["control"], t["position"]): (t["trials"], t["refused"], t["inputs"])
            for k in ("model", "prompt", "reply") for t in found[k].trials}  # fmt: skip
+    assert {t["no_proof"] for k in ("model", "prompt", "reply") for t in found[k].trials} == {0}
     assert ran == {
         ("P1", None): (3, 3, 1), ("C3", None): (3, 3, 1), ("C2", None): (3, 3, 1),
         ("C1", "first"): (3, 3, 1), ("C1", "last"): (3, 3, 1), ("C1", "interior"): (3, 3, 3),

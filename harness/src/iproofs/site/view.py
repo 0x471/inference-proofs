@@ -151,6 +151,7 @@ def _glyph(raw: list[dict[str, Any]]) -> list[dict[str, Any]]:
         visible = p.get("visible")
         out.append({"id": pid, "state": state, "step": step, "cause": cause,
                     "basis": p["basis"], "reading": reading, "reason": p["reason"],
+                    "notes": [str(n) for n in p.get("notes") or []],  # GL-10: our reading
                     "quotes": _quotes(p.get("quotes")),
                     "sources": [{"path": d["path"], "url": d["url"]}
                                 for d in p.get("sources_read") or []],
@@ -417,6 +418,7 @@ def site_view(root: Path, board: Path | None = None) -> dict[str, Any]:
             row["statement"] = system.statement(root, release_id, row, request)
             row["machine"] = system.machine(root, release_id, row, dict(facts.gpus))
             row["precision"] = system.precision(root, row, models)
+            row["trials_kept"] = system.kept_trials(root, release_id, row)
     engine = inputs.engine(root)
     return {
         "repository": REPOSITORY,

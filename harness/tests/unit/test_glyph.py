@@ -335,6 +335,8 @@ def test_reading_flag_follows_the_notes_read() -> None:
     assert nt().reading is False
     assert "reading" not in nt().tree()
     assert nt(rests_on=noted).tree()["reading"] is True
+    assert nt(rests_on=noted).tree()["notes"] == ["our reading"]  # GL-10: printed with the petal
+    assert "notes" not in nt().tree()
     later = {"value": "row", "quotes": [quote("q")], "note": "n"}  # read after the basis fails
     assert uf(basis="conjectured", terms=[100], parameters=later).reading is False
     assert uf(parameters=later).reading is True
@@ -363,7 +365,7 @@ def test_real_properties_files() -> None:
         ("amber_upper", None)]  # fmt: skip
     for batch in (None, 1):
         assert steps("sash", batch) == [("amber_lower", None), ("red", "not_stated"),
-                                        ("red", "not_stated"), ("red", "not_stated")]  # fmt: skip
+                                        ("red", "not_stated"), ("amber_upper", None)]  # fmt: skip
 
 
 def test_gl10_a_reading_is_amber_in_part_at_most() -> None:
@@ -457,15 +459,17 @@ def test_real_rows_ceiling_and_scope_card() -> None:
 
 def test_a_silent_red_carries_its_documents_read() -> None:
     """GL-1: a `not_stated` red carries the petal's `sources_read`, each linked at the pin; no
-    other petal carries any. SASH's No third party trusted read four files at 4f41667."""
+    other petal carries any. SASH's Machine-checked read four files at 4f41667; its No third party
+    trusted is a reading since 2026-11-15 (GL-10), not silent, so it carries none."""
     props = load_properties(ROOT, "sash")
     assert props is not None
     pin = str(props["upstream"]["commit"])  # type: ignore[index]
     petals = statement_petals(props, HELD, pin, Coverage("part", 1), None)
     assert "sources_read" not in petals["unforgeable"].tree()
-    got_ = petals["no_trusted_party"].tree()["sources_read"]
+    assert "sources_read" not in petals["no_trusted_party"].tree()
+    got_ = petals["machine_checked"].tree()["sources_read"]
     base = f"https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/{pin}/"
-    docs = ("README.md", "prover/README.md", "docs/statement.md", "prover/src/compose.rs")
+    docs = ("README.md", "prover/README.md", "docs/statement.md", "prover/src/util.rs")
     assert got_ == [{"path": d, "url": base + d} for d in docs]
 
 

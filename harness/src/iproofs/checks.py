@@ -579,8 +579,10 @@ def what_ran(
     refused: Mapping[str, frozenset[str]],
 ) -> tuple[dict[str, object], ...]:
     """CH-1c: per control and position, the counted trials (`void` and `error` left out), how many
-    of them were refused, and how many distinct changed inputs they sent: a trial at a fixed change
-    (C1 at the first and last positions, C3, P1) sends the same input as the others."""
+    of them were refused, how many of those the prover refused by making no proof (`no_proof`: a
+    declared P1 stop, CH-1a; the rest reached a verifier), and how many distinct changed inputs
+    they sent: a trial at a fixed change (C1 at the first and last positions, C3, P1) sends the
+    same input as the others."""
     out: list[dict[str, object]] = []
     for control, position in parts:
         counted = [t for t in trials if t.control == control and t.position == position
@@ -589,6 +591,7 @@ def what_ran(
             continue
         out.append({"control": control, "position": position, "trials": len(counted),
                     "refused": sum(t.outcome in refused[control] for t in counted),
+                    "no_proof": sum(t.outcome == "prover_failed" for t in counted),
                     "inputs": len({t.sent for t in counted})})  # fmt: skip
     return tuple(out)
 

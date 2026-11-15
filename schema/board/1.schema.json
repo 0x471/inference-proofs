@@ -136,7 +136,7 @@
           ]
         },
         "trials": {
-          "$comment": "RFC-0018 CH-1c: per control and position, the counted trials, how many were refused and how many distinct changed inputs they sent (MODEL, PROMPT, REPLY)",
+          "$comment": "RFC-0018 CH-1c: per control and position, the counted trials, how many were refused, how many of those by the prover making no proof (no_proof, a declared P1 stop, CH-1a), and how many distinct changed inputs they sent (MODEL, PROMPT, REPLY)",
           "items": {
             "additionalProperties": false,
             "properties": {
@@ -150,6 +150,10 @@
               },
               "inputs": {
                 "minimum": 1,
+                "type": "integer"
+              },
+              "no_proof": {
+                "minimum": 0,
                 "type": "integer"
               },
               "position": {
@@ -883,6 +887,14 @@
         "visible_at_least": {
           "$comment": "Weights hidden: true when the publisher says its list of visible values is a lower bound",
           "type": "boolean"
+        },
+        "notes": {
+          "$comment": "RFC-0018 GL-10 (amended 2026-11-15): with reading true, the notes of the facts the decision read, our reading in words, printed with the petal",
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
         }
       },
       "required": [

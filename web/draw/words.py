@@ -125,6 +125,22 @@ TRIAL_WHAT = {("P1", None): "proved with one weight changed",
               ("C1", "last"): "the last reply token changed",
               ("C1", "interior"): "one interior reply token changed"}  # fmt: skip
 TRIALS_HEAD = "What ran"
+# how a counted trial was refused (CH-1c): the prover made no proof (`no_proof`, a stop its
+# publisher documents, CH-1a), so no verifier saw one; or a verifier refused the proof
+TRIAL_NO_PROOF = "the prover made no proof, as its publisher documents"
+TRIAL_REFUSED = "refused by the verifier"
+# a stored verifier trial (RFC-0008 §Verifier trials), printed beside the check whose change it
+# makes, or under Machine-checked for another of the publisher's verifiers; it sets no state
+KEPT_HEAD = "Outside the counted suite"
+KEPT_SETS = "it sets no state"
+KEPT_CHANGE = {"reply_token": "one reply token changed, at every reply position in turn",
+               "other_session_commitment": "checked against another session's commitment of "
+               "the same weights",
+               "commitment_id": "checked against a commitment ID no session recorded"}  # fmt: skip
+# what a trial whose every changed call was refused shows, by its change
+KEPT_MEANS = {"other_session_commitment": "So C3 is refused for any second commitment of the "
+              "same weights: its refusal does not show that the weights differ."}  # fmt: skip
+KEPT_TIME = "the trial script's wall clock"
 # the Level 1 statement on a system page (RFC-0018 SI-4a): the label, and the line by whether
 # the publisher's documents state it at the pin
 LEVEL_STATEMENT_HEAD = "Level 1 statement"  # SI-4a; the page's Statement section is SI-3's
@@ -150,6 +166,10 @@ PETAL_TERM = {"unforgeable": "soundness error, as stated",
               "faithful_model": "matched leading tokens",
               "machine_checked": "soundness, machine-checked",
               "no_trusted_party": "trusted setup, as stated"}  # fmt: skip
+# the end of a field term that a petal resting on our reading drops (GL-10): it is not as stated
+TERM_STATED = ", as stated"
+# a reading's notes, in a petal's disclosure (GL-10, amended 2026-11-15): our words, not a quote
+READING_HEAD = "Our reading"
 # a petal's stored step in words (None: hollow, undecided), §The glyph, step table and GL-8
 STEP_WORD = {"green": "green · in full", "amber_upper": "amber · in part",
              "amber_lower": "amber · in lesser part", "red": "red · no",
