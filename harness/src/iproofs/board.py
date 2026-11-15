@@ -56,6 +56,7 @@ from iproofs.release import RunView
 from iproofs.serialize import load_yaml
 
 NO_SECURITY_LEVEL = "publisher states no security level"  # OR-2
+NO_LEVEL_STATEMENT = "publisher states no Level 1 statement"  # SI-4a
 
 # ---------------------------------------------------------------- order rule (OR-1 to OR-6)
 
@@ -73,11 +74,13 @@ class RowSummary:
     m: tuple[float, ...] = ()
     session_mean: float | None = None
     session: tuple[float, ...] = ()
+    relation: bool = True  # SI-4a: the publisher states Level 1's statement at the pin
 
     @property
     def ranked(self) -> bool:
-        """OR-1, OR-2: a passed row whose publisher states a security level."""
-        return self.passed and self.stated
+        """OR-1, OR-2, SI-4a: a passed row whose publisher states a security level and states
+        that an accept is the committed model's own greedy reply to the prompt."""
+        return self.passed and self.stated and self.relation
 
 
 def placed_above(a: RowSummary, b: RowSummary, margin: float) -> bool:
@@ -133,10 +136,11 @@ class RungSummary:
 
 
 def frontier(rungs: Sequence[RungSummary]) -> dict[str, object] | None:
-    """OR-6: the largest rung by total parameters with a passed row; the rows at position 1
-    there, or every passed row when none is ranked; and the count of systems run on it."""
+    """OR-6: the largest rung by total parameters with a passed row whose publisher states Level
+    1's statement (SI-4a); the rows at position 1 there, or every such row when none is ranked;
+    and the count of systems run on it."""
     for rung in sorted(rungs, key=lambda r: -r.parameters_total):
-        passed = [(r, p) for r, p in rung.rows if r.passed]
+        passed = [(r, p) for r, p in rung.rows if r.passed and r.relation]
         if not passed:
             continue
         first = [r.system for r, p in passed if p == 1]
@@ -476,6 +480,7 @@ class _Row:
     security: dict[str, object] | None
     stated: bool
     petals: dict[str, Petal]
+    relation: dict[str, object]  # SI-4a, `level_statement`
 
     def summary(self, has_baseline: bool) -> RowSummary:
         ms = [f.m for f in self.figures]
@@ -489,7 +494,40 @@ class _Row:
             m=tuple(m for m in ms if m is not None) if steady else (),
             session_mean=statistics.mean(c for c in cost if c is not None) if full else None,
             session=tuple(c for c in cost if c is not None) if full else (),
+            relation=self.relation["stated"] is True,
         )  # fmt: skip
+
+
+def level_statement(props: Mapping[str, object] | None, commit: object) -> dict[str, object]:
+    """SI-4a: whether the properties file, read at the row's commit, records the publisher's
+    statement that an accept means the reply is the committed model's own computation, decoded
+    greedily, on the prompt (`level_statement.accept_is_model_reply`, true with quotes). `read`
+    is false for a file missing, without the fact, or read at another commit; `reading` is true
+    when the fact carries a note (the reader's reading, not one sentence that says it)."""
+    upstream = props.get("upstream") if props else None
+    at_pin = isinstance(upstream, Mapping) and upstream.get("commit") == commit
+    block = props.get("level_statement") if props and at_pin else None
+    block = block if isinstance(block, Mapping) else {}
+    fact = block.get("accept_is_model_reply")
+    fact = fact if isinstance(fact, Mapping) else {}
+    found = fact.get("quotes")
+    quotes = [{"text": str(q["text"]), "url": str(q["url"])}
+              for q in (found if isinstance(found, list) else [])
+              if isinstance(q, Mapping) and q.get("text") and q.get("url")]  # fmt: skip
+    stated = fact.get("value") is True and bool(quotes)
+    read = block.get("sources_read")
+    return {"read": bool(fact), "stated": stated, "reading": stated and bool(fact.get("note")),
+            "quotes": quotes,
+            "sources_read": [str(x) for x in read] if isinstance(read, list) else []}  # fmt: skip
+
+
+def _unranked(row: _Row) -> str | None:
+    """Why a passed row has no position: SI-4a first (no Level 1 statement), then OR-2."""
+    if not row.passed:
+        return None
+    if row.relation["stated"] is not True:
+        return NO_LEVEL_STATEMENT
+    return None if row.stated else NO_SECURITY_LEVEL
 
 
 def _security(level: object, system: str) -> tuple[dict[str, object] | None, bool]:
@@ -566,7 +604,8 @@ def _row_tree(
                              session_generation)  # fmt: skip
     commit_proving_in = (f"{index}/session_commit_and_proving_gpu_seconds_per_reply",
                          commit_proving)  # fmt: skip
-    first = (row.sessions.counted_in_order() or row.sessions.all)[0]
+    first = (row.sessions.counted_in_order() or row.sessions.all
+             or [s for s, _ in row.sessions.ineligible])[0]  # fmt: skip
     commit = first.run.get("manifest", "system", "upstream", "commit")
     configuration = first.run.get("manifest", "claim", "configuration")
     return {
@@ -579,7 +618,8 @@ def _row_tree(
         "glyph": glyph(row.petals),
         "ranked": position is not None,
         "position": position,
-        "unranked_reason": NO_SECURITY_LEVEL if row.passed and not row.stated else None,
+        "unranked_reason": _unranked(row),
+        "level_statement": row.relation,
         "multiple": _ratio("D-L1-MULTIPLE", Unit.RATIO, Scope.PROVE_STEADY, steady_in, baseline),
         "session_multiple": _ratio(
             "D-L1-MULTIPLE", Unit.RATIO, Scope.WHOLE_WALL, session_in, baseline
@@ -609,6 +649,11 @@ def _row_tree(
         "replaced_sessions": [
             {"run_id": a.run_id, "slot": a.slot, "replaced_by": b.run_id, "cause": why}
             for a, b, why in row.sessions.replaced
+        ],
+        # SE-3b: runs kept out of the release by RFC-0014 §Eligibility, with its reason codes
+        "ineligible_sessions": [
+            {"run_id": s.run_id, "slot": s.slot, "reasons": list(reasons)}
+            for s, reasons in row.sessions.ineligible
         ],
         "fidelity": _row_fidelity(fidelity_rows.get(row.system)),
         "security": row.security,
@@ -671,17 +716,19 @@ def build_board(root: Path, release: str, level: object) -> dict[str, object]:
         rows = []
         for system, workload in sorted(_workloads(rung).items()):
             sessions = row_sessions(root, release, level, rung_id, system, digest)
-            if not sessions.all:
+            kept_out = [s for s, _ in sessions.ineligible]
+            if not sessions.all and not kept_out:
                 continue  # not run: no row (RFC-0018 §The board file)
-            dates |= {s.run_id[:10] for s in sessions.all}
+            dates |= {s.run_id[:10] for s in (*sessions.all, *kept_out)}
             states = checks_from(root, release, level, rung_id, system, sessions, digest)
             security, stated = _security(level, system)
-            first = (sessions.counted_in_order() or sessions.all)[0]
+            first = (sessions.counted_in_order() or sessions.all or kept_out)[0]
             commit = first.run.get("manifest", "system", "upstream", "commit")
             configuration = first.run.get("manifest", "claim", "configuration")
             coverage = Coverage(_granularity(root, system), _batch_size(root, str(workload)))
+            props = load_properties(root, system)
             petals = statement_petals(
-                load_properties(root, system), {k: v.state for k, v in states.items()},
+                props, {k: v.state for k, v in states.items()},
                 str(commit) if isinstance(commit, str) else None, coverage,
                 load_proof_build(root, release, system),
             )  # fmt: skip
@@ -699,6 +746,7 @@ def build_board(root: Path, release: str, level: object) -> dict[str, object]:
                 [session_figures(s, n, level) for s in sessions.counted_in_order()],
                 {name: states[name].tree() for name in CHECKS},
                 all(states[name].state == HELD for name in CHECKS), security, stated, petals,
+                level_statement(props, commit),
             ))  # fmt: skip
         has_baseline = baseline[1] is not None and baseline[1].get("value") is not None
         ordered = order([r.summary(has_baseline) for r in rows], float(margin))

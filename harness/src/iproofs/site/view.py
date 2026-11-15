@@ -10,6 +10,7 @@ stores it, with the JSON Pointer it was read from. Pure apart from the reads in 
 from pathlib import Path
 from typing import Any
 
+from iproofs.release import REASONS
 from iproofs.schema import SchemaRegistry
 from iproofs.site import inputs
 from iproofs.site.inputs import REPOSITORY
@@ -148,7 +149,8 @@ def _checks(raw: dict[str, Any]) -> list[dict[str, Any]]:
         if c["state"] not in STATES:
             raise inputs.config(f"check {cid}: unknown state {c['state']!r}")
         out.append({"id": cid, "state": c["state"], "cause": c["cause"],
-                    "note": c.get("note"), "evidence": list(c["evidence"])})  # fmt: skip
+                    "note": c.get("note"), "evidence": list(c["evidence"]),
+                    "trials": [dict(t) for t in c.get("trials", [])]})  # fmt: skip
     return out
 
 
@@ -181,10 +183,16 @@ def _row(raw: dict[str, Any], at: str, board: str | None, rung: dict[str, Any]) 
         "sessions": [dict(s) for s in raw["sessions"]],
         "incomplete": [dict(s) for s in raw["incomplete_sessions"]],
         "replaced": [dict(s) for s in raw.get("replaced_sessions", [])],
+        # SE-3b: kept out of the release by RFC-0014, each reason code with its stable words
+        "ineligible": [
+            {**s, "words": [REASONS[c] for c in s["reasons"]]}
+            for s in raw.get("ineligible_sessions", [])
+        ],
         "fidelity": None if fid is None else {
             **{k: fid[k] for k in ("n", "mean_prefix", "p_above_bar", "p_below_bar", "kl_note")},
             "kl": figure(fid.get("kl"), f"{at}/fidelity/kl", board)},
         "security": raw.get("security"),
+        "level_statement": raw.get("level_statement"),  # SI-4a
         # where the row's plain numbers (session values, mean prefix) are read from
         "record": f"{board}#{at}" if board else at,
     }  # fmt: skip

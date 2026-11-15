@@ -380,7 +380,23 @@
                 "results/v1.0/flashprove/2026-11-11-flashprove-l1-maverick-p512-o512-prover-h200-hosted-1/controls.json#/controls/2"
               ],
               "note": null,
-              "state": "held"
+              "state": "held",
+              "trials": [
+                {
+                  "control": "P1",
+                  "inputs": 1,
+                  "position": null,
+                  "refused": 3,
+                  "trials": 3
+                },
+                {
+                  "control": "C3",
+                  "inputs": 1,
+                  "position": null,
+                  "refused": 3,
+                  "trials": 3
+                }
+              ]
             },
             "no_weight_file": {
               "cause": null,
@@ -398,7 +414,16 @@
                 "results/v1.0/flashprove/2026-11-11-flashprove-l1-maverick-p512-o512-prover-h200-hosted-1/controls.json#/controls/1"
               ],
               "note": null,
-              "state": "held"
+              "state": "held",
+              "trials": [
+                {
+                  "control": "C2",
+                  "inputs": 3,
+                  "position": null,
+                  "refused": 3,
+                  "trials": 3
+                }
+              ]
             },
             "reply": {
               "cause": null,
@@ -409,7 +434,30 @@
                 "results/v1.0/flashprove/2026-11-11-flashprove-l1-maverick-p512-o512-prover-h200-hosted-1/controls.json#/controls/0"
               ],
               "note": null,
-              "state": "held"
+              "state": "held",
+              "trials": [
+                {
+                  "control": "C1",
+                  "inputs": 1,
+                  "position": "first",
+                  "refused": 3,
+                  "trials": 3
+                },
+                {
+                  "control": "C1",
+                  "inputs": 1,
+                  "position": "last",
+                  "refused": 3,
+                  "trials": 3
+                },
+                {
+                  "control": "C1",
+                  "inputs": 3,
+                  "position": "interior",
+                  "refused": 3,
+                  "trials": 3
+                }
+              ]
             },
             "run": {
               "cause": null,
@@ -887,6 +935,25 @@
             }
           ],
           "incomplete_sessions": [],
+          "ineligible_sessions": [],
+          "level_statement": {
+            "quotes": [
+              {
+                "text": "Under exact match, a `YES` [is meant to show](../docs/limits.md#what-a-yes-covers) that each checked token is the committed integer model's top choice at its position",
+                "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/how-it-works.md#L57-L58"
+              },
+              {
+                "text": "For a prompt of P tokens and a reply of R, r = P − 1 and e = P + R − 1.",
+                "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/how-it-works.md#L49"
+              }
+            ],
+            "read": true,
+            "reading": false,
+            "sources_read": [
+              "guide/how-it-works.md"
+            ],
+            "stated": true
+          },
           "multiple": {
             "grade": "derived",
             "null_reason": "not_applicable",
@@ -1990,20 +2057,35 @@
                 "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-3/controls.json#/controls/2"
               ],
               "note": null,
-              "state": "held"
+              "state": "held",
+              "trials": [
+                {
+                  "control": "P1",
+                  "inputs": 1,
+                  "position": null,
+                  "refused": 3,
+                  "trials": 3
+                },
+                {
+                  "control": "C3",
+                  "inputs": 1,
+                  "position": null,
+                  "refused": 3,
+                  "trials": 3
+                }
+              ]
             },
             "no_weight_file": {
-              "cause": null,
+              "cause": "not resolved",
               "evidence": [
                 "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1/verify-trace/",
                 "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1/reverify/reverify.json",
-                "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2/verify-trace/",
-                "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2/reverify/reverify.json",
+                "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2/verify-trace/",
                 "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-3/verify-trace/",
                 "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-3/reverify/reverify.json"
               ],
-              "note": null,
-              "state": "held"
+              "note": "2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2/req-0: a GPU was visible (and 4 more requests)",
+              "state": "undecided"
             },
             "prompt": {
               "cause": null,
@@ -2011,24 +2093,56 @@
                 "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-3/controls.json#/controls/1"
               ],
               "note": null,
-              "state": "held"
+              "state": "held",
+              "trials": [
+                {
+                  "control": "C2",
+                  "inputs": 3,
+                  "position": null,
+                  "refused": 3,
+                  "trials": 3
+                }
+              ]
             },
             "reply": {
               "cause": null,
               "evidence": [
                 "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1/run.json",
-                "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2/run.json",
+                "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2/run.json",
                 "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-3/run.json",
                 "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-3/controls.json#/controls/0"
               ],
               "note": null,
-              "state": "held"
+              "state": "held",
+              "trials": [
+                {
+                  "control": "C1",
+                  "inputs": 1,
+                  "position": "first",
+                  "refused": 3,
+                  "trials": 3
+                },
+                {
+                  "control": "C1",
+                  "inputs": 1,
+                  "position": "last",
+                  "refused": 3,
+                  "trials": 3
+                },
+                {
+                  "control": "C1",
+                  "inputs": 3,
+                  "position": "interior",
+                  "refused": 3,
+                  "trials": 3
+                }
+              ]
             },
             "run": {
               "cause": null,
               "evidence": [
                 "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1/run.json",
-                "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2/run.json",
+                "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2/run.json",
                 "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-3/run.json"
               ],
               "note": null,
@@ -2250,9 +2364,47 @@
             }
           ],
           "incomplete_sessions": [],
+          "ineligible_sessions": [
+            {
+              "reasons": [
+                "self_test_failed"
+              ],
+              "run_id": "2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2",
+              "slot": 2
+            }
+          ],
+          "level_statement": {
+            "quotes": [
+              {
+                "text": "Exit status 0 only when every implied link ran and chained on its own /// axis, every tag sits where its statement says it sits, every position's id /// is the prompt's or the previous position's proved argmax",
+                "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/src/boundary.rs#L1120-L1122"
+              },
+              {
+                "text": "the argmax binds the token a head segment emits to the **lowest-indexed** maximum of the logits it computed, which is the rule the model itself decodes by.",
+                "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/docs/statement.md#L147-L149"
+              },
+              {
+                "text": "| 12 | each matmul's input times the pinned weights into its accumulator | bound |",
+                "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/docs/statement.md#L32"
+              },
+              {
+                "text": "it commits the weights, and the verifier compares it with the published manifest.",
+                "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/docs/statement.md#L136"
+              }
+            ],
+            "read": true,
+            "reading": true,
+            "sources_read": [
+              "prover/src/boundary.rs",
+              "docs/statement.md",
+              "README.md",
+              "prover/README.md"
+            ],
+            "stated": true
+          },
           "multiple": {
             "grade": "derived",
-            "null_reason": null,
+            "null_reason": "not_applicable",
             "scope": "prove.steady",
             "source": {
               "inputs": [
@@ -2264,10 +2416,10 @@
             },
             "tier": "reported",
             "unit": "ratio",
-            "value": 55938.92636846443
+            "value": null
           },
-          "passed": true,
-          "position": 1,
+          "passed": false,
+          "position": null,
           "proof_bytes_per_reply": {
             "grade": "derived",
             "null_reason": null,
@@ -2275,7 +2427,7 @@
             "source": {
               "inputs": [
                 "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1/run.json#/metrics/proof_bytes_per_request",
-                "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2/run.json#/metrics/proof_bytes_per_request",
+                "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2/run.json#/metrics/proof_bytes_per_request",
                 "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-3/run.json#/metrics/proof_bytes_per_request"
               ],
               "kind": "derivation",
@@ -2310,19 +2462,13 @@
             "unit": "ratio",
             "value": null
           },
-          "ranked": true,
+          "ranked": false,
           "replaced_sessions": [
             {
               "cause": "its verify ran on a host with a GPU visible and its proofs were not kept to verify again (SE-3a); slot 1 counts 2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1",
               "replaced_by": "2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1",
               "run_id": "2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1",
               "slot": 1
-            },
-            {
-              "cause": "its verify ran on a host with a GPU visible and its proofs were not kept to verify again (SE-3a); slot 2 counts 2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2",
-              "replaced_by": "2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2",
-              "run_id": "2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2",
-              "slot": 2
             }
           ],
           "security": {
@@ -2338,10 +2484,10 @@
             "source": {
               "inputs": [
                 "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1/run.json#/events",
-                "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2/run.json#/events",
+                "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2/run.json#/events",
                 "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-3/run.json#/events",
                 "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1/run.json#/proofs",
-                "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2/run.json#/proofs",
+                "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2/run.json#/proofs",
                 "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-3/run.json#/proofs"
               ],
               "kind": "derivation",
@@ -2375,7 +2521,7 @@
             "source": {
               "inputs": [
                 "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1/run.json#/proofs",
-                "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2/run.json#/proofs",
+                "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2/run.json#/proofs",
                 "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-3/run.json#/proofs"
               ],
               "kind": "derivation",
@@ -2408,10 +2554,10 @@
             "source": {
               "inputs": [
                 "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1/run.json#/events",
-                "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2/run.json#/events",
+                "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2/run.json#/events",
                 "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-3/run.json#/events",
                 "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1/run.json#/proofs",
-                "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2/run.json#/proofs",
+                "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2/run.json#/proofs",
                 "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-3/run.json#/proofs"
               ],
               "kind": "derivation",
@@ -2419,16 +2565,16 @@
             },
             "stats": {
               "max": 2800.9012595783997,
-              "mean": 2772.159324302533,
-              "median": 2797.6558480602002,
+              "mean": 2748.0869605946664,
+              "median": 2725.4387569366,
               "min": 2717.920865269,
               "n": 3,
               "n_failed": 0,
-              "stdev": 46.999904284262364
+              "stdev": 45.89272607547751
             },
             "tier": "reported",
             "unit": "gpu_s/request",
-            "value": 2772.159324302533
+            "value": 2748.0869605946664
           },
           "session_multiple": {
             "grade": "derived",
@@ -2444,7 +2590,7 @@
             },
             "tier": "reported",
             "unit": "ratio",
-            "value": 64302.09886587567
+            "value": 63743.7242091564
           },
           "session_usd_per_reply": {
             "grade": "derived",
@@ -2460,7 +2606,7 @@
             },
             "tier": "reported",
             "unit": "USD/request",
-            "value": 4.115886552332511
+            "value": 4.080145778994025
           },
           "sessions": [
             {
@@ -2481,7 +2627,7 @@
               "steady": true
             },
             {
-              "cause": null,
+              "cause": "uneven groups",
               "generation_gpu_seconds_per_reply": null,
               "gpus": 1,
               "groups": [
@@ -2491,11 +2637,11 @@
                 1,
                 1
               ],
-              "m": 2421.7624822435,
-              "run_id": "2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2",
-              "session": 2797.6558480602002,
+              "m": null,
+              "run_id": "2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2",
+              "session": 2725.4387569366,
               "slot": 2,
-              "steady": true
+              "steady": false
             },
             {
               "cause": null,
@@ -2523,7 +2669,7 @@
             "source": {
               "inputs": [
                 "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1/run.json#/proofs",
-                "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2/run.json#/proofs",
+                "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2/run.json#/proofs",
                 "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-3/run.json#/proofs"
               ],
               "kind": "derivation",
@@ -2535,29 +2681,21 @@
           },
           "steady_gpu_seconds_per_reply": {
             "grade": "derived",
-            "null_reason": null,
+            "note": "no steady state: slot 2: uneven groups",
+            "null_reason": "not_applicable",
             "scope": "prove.steady",
             "source": {
               "inputs": [
                 "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1/run.json#/proofs",
-                "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2/run.json#/proofs",
+                "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2/run.json#/proofs",
                 "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-3/run.json#/proofs"
               ],
               "kind": "derivation",
               "ref": "derive:D-L1-STEADY@0.1.0.dev0"
             },
-            "stats": {
-              "max": 2428.94690599575,
-              "mean": 2411.610492641417,
-              "median": 2421.7624822435,
-              "min": 2384.122089685,
-              "n": 3,
-              "n_failed": 0,
-              "stdev": 24.07515750693497
-            },
             "tier": "reported",
             "unit": "gpu_s/request",
-            "value": 2411.610492641417
+            "value": null
           },
           "steady_proving_gpu_seconds_per_reply": {
             "grade": "derived",
@@ -2567,7 +2705,7 @@
             "source": {
               "inputs": [
                 "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1/run.json#/proofs",
-                "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2/run.json#/proofs",
+                "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2/run.json#/proofs",
                 "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-3/run.json#/proofs"
               ],
               "kind": "derivation",
@@ -2579,7 +2717,7 @@
           },
           "steady_usd_per_reply": {
             "grade": "derived",
-            "null_reason": null,
+            "null_reason": "not_applicable",
             "scope": "prove.steady",
             "source": {
               "inputs": [
@@ -2591,7 +2729,7 @@
             },
             "tier": "reported",
             "unit": "USD/request",
-            "value": 3.5805716897689925
+            "value": null
           },
           "system": "sash",
           "unranked_reason": null,
@@ -2602,7 +2740,7 @@
             "source": {
               "inputs": [
                 "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1/run.json#/metrics/verify_seconds_per_request",
-                "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2/run.json#/metrics/verify_seconds_per_request",
+                "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2/run.json#/metrics/verify_seconds_per_request",
                 "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-3/run.json#/metrics/verify_seconds_per_request"
               ],
               "kind": "derivation",
@@ -2610,16 +2748,16 @@
             },
             "stats": {
               "max": 1087.4793005342,
-              "mean": 1079.7332305248,
-              "median": 1087.268625866,
-              "min": 1064.4517651742,
+              "mean": 1068.238369155,
+              "median": 1064.4517651742,
+              "min": 1052.7840417566,
               "n": 3,
               "n_failed": 0,
-              "stdev": 13.23455641115888
+              "stdev": 17.65485833111437
             },
             "tier": "reported",
             "unit": "s/request",
-            "value": 1079.7332305248
+            "value": 1068.238369155
           },
           "workload": "l1-l31-8b-p512-o512"
         }

@@ -7,6 +7,17 @@ system: "flashprove"
 configuration: "exact-match-cp-verify"
 upstream: {repo: "anthropics/FlashProve", commit: "9e2bdd8ff5bf9c62f18263d7dac189b0400b260c"}
 read: "2026-11-13"
+# RFC-0018 SI-4a, read 2026-11-15: one sentence says what an accept means, the committed model's top choice
+# at each checked position; the second says which positions a request checks (the adapter sends the reply's).
+level_statement:
+  sources_read: ["guide/how-it-works.md"]
+  accept_is_model_reply:
+    value: true
+    quotes:
+      - text: "Under exact match, a `YES` [is meant to show](../docs/limits.md#what-a-yes-covers) that each checked token is the committed integer model's top choice at its position"
+        url: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/how-it-works.md#L57-L58"
+      - text: "For a prompt of P tokens and a reply of R, r = P − 1 and e = P + R − 1."
+        url: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/how-it-works.md#L49"
 petals:
   unforgeable:
     sources_read: ["README.md", "guide/what-is-proved.md", "lean/THEOREM.md", "guide/known-limits.md"]

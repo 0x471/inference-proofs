@@ -40,15 +40,16 @@ CHECK_HELD = {
     # P1 against the commitment of W, CH-1a (p1_refusals: an outcome the publisher documents at
     # the pin as meaning the weights are not the committed ones; a layout guard is not one), C3
     "model": "Proving with one weight changed, against the commitment to the unchanged weights, "
-    "gives no accepted proof in 3\u00a0of\u00a03 trials. A prove call that makes no proof counts "
-    "only when its publisher documents, at the pinned commit, that this outcome means the weights "
-    "are not the committed ones. An honest proof checked against the changed weights' commitment "
-    "is refused in 3\u00a0of\u00a03 trials.",
-    "prompt": "With one prompt token changed, at a position set by a seed, the verifier refuses "
-    "the proof in 3\u00a0of\u00a03 trials.",
+    "gives no accepted proof in 3\u00a0of\u00a03 trials of the same change. A prove call that "
+    "makes no proof counts only when its publisher documents, at the pinned commit, that this "
+    "outcome means the weights are not the committed ones. An honest proof checked against the "
+    "changed weights' commitment is refused in 3\u00a0of\u00a03 trials of the same pair.",
+    "prompt": "With one prompt token changed, at a position set by a seed and new in each trial, "
+    "the verifier refuses the proof in 3\u00a0of\u00a03 trials.",
     "reply": "Every accepted proof covers all {reply_tokens} reply tokens. With one reply token "
-    "changed, the verifier refuses the proof at the first position, at the last, and at one "
-    "interior position set by a seed: 3\u00a0of\u00a03 trials each.",
+    "changed, the verifier refuses the proof at the first position and at the last, 3\u00a0of"
+    "\u00a03 trials of the same change each, and at an interior position set by a seed, new in "
+    "each of 3\u00a0trials.",
     # the table's (a) to (c), CH-4a (the re-verify counts in the run's image, when it accepts)
     "no_weight_file": "Every counted verdict comes from a verify call with no GPU visible and no "
     "file of the model on its filesystem, and the trace of the files it opened names none. A "
@@ -99,7 +100,7 @@ CHECK_LINE = {
     "run": "{slots} slots, each with a complete cold-start session: public pin, unpatched, no "
     "weakening flag.",
     "model": "Commit, change a weight: no accepted proof. Honest proof, changed commitment: "
-    "refused. 3\u00a0of\u00a03 each.",
+    "refused. 3\u00a0of\u00a03 of one change each.",
     "prompt": "One prompt token changed, at a seeded position: the verifier refuses, "
     "3\u00a0of\u00a03 trials.",
     "reply": "All {reply_tokens} reply tokens covered. First, last, seeded interior token changed: "
@@ -110,6 +111,33 @@ CHECK_LINE = {
     "p\u00a0<\u00a00.05.",
 }
 STATE_WORD = {"held": "held", "failed": "failed", "undecided": "undecided"}
+# under a system page's Checks head (depth 3): what a held check is
+CHECKS_LEAD = (
+    "Run with the publisher's own prover. A held check is a refused change, not a test of "
+    "soundness."
+)
+# what a control's counted trials sent, from the board's `trials` (RFC-0018 CH-1c), by control
+# and C1's position; printed with a check's records
+TRIAL_WHAT = {("P1", None): "proved with one weight changed",
+              ("C3", None): "an honest proof checked against the changed weights' commitment",
+              ("C2", None): "one prompt token changed",
+              ("C1", "first"): "the first reply token changed",
+              ("C1", "last"): "the last reply token changed",
+              ("C1", "interior"): "one interior reply token changed"}  # fmt: skip
+TRIALS_HEAD = "What ran"
+# the Level 1 statement on a system page (RFC-0018 SI-4a): the label, and the line by whether
+# the publisher's documents state it at the pin
+STATEMENT_HEAD = "Statement"
+STATEMENT_WORD = {
+    "stated": "the publisher states that an accept means the reply is the committed model's own "
+    "greedy reply to the prompt",
+    "read": "stating that an accept means the reply is the committed model's own greedy reply to "
+    "the prompt, from several of the publisher's sentences, none of which says it alone",
+    "not": "the publisher's documents read at the pinned commit do not state that an accept means "
+    "the reply is the committed model's own greedy reply to the prompt, so the system has no "
+    "position",
+}
+READ_AS = "read as"  # before STATEMENT_WORD["read"], linked to the checks page's #reading
 
 # ------------------------------------------------------------------ the five petals (RFC-0018 §The glyph)
 PETAL_NAME = {"unforgeable": "Unforgeable", "weights_hidden": "Weights hidden",
@@ -407,9 +435,11 @@ def kl_head(dtype):
 ORDER_RULE = (
     ("ranked", "Only systems that passed on a model are ranked."),
     # OR-2; no floor: Non-Goals (printed as stated), Alternatives (a security floor, rejected)
-    ("unranked", "A system that passed is ranked only if the level file records a numeric security "
-     "level that its publisher states at the pinned commit, for at least one verifier it ships. "
-     "Otherwise it is listed as passed, unranked. Level 1 sets no minimum."),
+    ("unranked", "A system that passed is ranked only if its publisher states, at the pinned "
+     "commit, that an accept means the reply is the committed model's own greedy reply to the "
+     "prompt, and the level file records a numeric security level that its publisher states "
+     "there, for at least one verifier it ships. Otherwise it is listed as passed, unranked, with "
+     "the reason. Level 1 sets no minimum level."),
     ("above", "One system is placed above another when both have a multiple, its mean multiple is "
      "at least {margin} lower, and its highest session m is below the other's lowest. A system "
      "with a multiple is placed above one without. Two systems without one compare the same way, "
@@ -420,10 +450,36 @@ ORDER_RULE = (
      "alphabetical order. A system that has not passed prints its checks and figures and has no "
      "position."),
     ("largest model proved", "The largest model, by total parameters, with at least one system "
-     "that passed."),
+     "that passed and whose publisher states that an accept is the model's own reply."),
     ("glyph", "The glyph never moves a position."),
     ("models", "Nothing is ranked across models."),
 )  # fmt: skip
+# the checks page's table of what we test and what we read (RFC-0018 CH-6, GL-1, OR-2, SI-4a):
+# what a line is about, where a row shows it (checks, petals, figures and the order rule, by their
+# addresses on the checks page; "figures" stands for every figure) and how it is known
+KNOW_HEAD = "What we test and what we read"
+KNOW_COLS = ("What", "Where", "How we know it")
+KNOW_WORD = {"test": "we test it", "read": "we read it from the publisher's documents",
+             "neither": "neither: no check tests it and no row reads it"}  # fmt: skip
+KNOW_LINES = (
+    ("completeness: the publisher's prover, run honestly, gives accepted proofs", ("run",),
+     "test"),
+    ("binding: a changed weight, commitment, prompt token or reply token is refused",
+     ("model", "prompt", "reply"), "test"),
+    ("verdicts reached with no model file and no GPU", ("no_weight_file",), "test"),
+    ("how close the proved replies stay to the original's", ("fidelity", "faithful_model"),
+     "test"),
+    ("every figure", ("figures",), "test"),
+    ("soundness, as a stated bound", ("unforgeable",), "read"),
+    ("zero knowledge", ("weights_hidden",), "read"),
+    ("formal proofs", ("machine_checked",), "read"),
+    ("setup", ("no_trusted_party",), "read"),
+    ("the stated security level", ("unranked",), "read"),
+    ("that an accept is the committed model's own greedy reply", ("unranked",), "read"),
+    ("soundness against a cheating prover", (), "neither"),
+    ("zero knowledge of the programs the row runs", (), "neither"),
+)  # fmt: skip
+KNOW_WHERE = {"figures": "Figures", "unranked": "Order"}  # the two that are no check or petal
 # the checks page in one sentence: its description and its search entry
 CHECKS_DESC = (
     "The rules behind a row of the ladder: the six checks, each figure, the order and the glyph's "

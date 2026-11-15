@@ -1,0 +1,13 @@
+{
+  "schema": "refusal/1",
+  "rule": "RFC-0018 SE-5",
+  "run_id": "2026-12-01-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1",
+  "slot": 1,
+  "step": "prove",
+  "exit_code": 1,
+  "upstream": {"repo": "example/prover"},
+  "refusal": "AssertionError: the window does not fit",
+  "raised_at": "https://github.com/example/prover/blob/0123456789abcdef0123456789abcdef01234567/witness.py#L10",
+  "why_a_refusal": "The prover checks the window and refuses by design when it does not fit.",
+  "recorded": "2026-12-01"
+}

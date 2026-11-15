@@ -7,14 +7,18 @@ and refusal records `results/<release>/<system>/refusals/slot-<k>.json` (SE-5).
 No reviewer sets a state. Nothing here writes a file or reads a clock.
 """
 
+import functools
 import json
 import re
 from collections.abc import Iterable, Mapping, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 
 from iproofs.errors import ErrorKind, IProofsError
-from iproofs.release import RunView
+from iproofs.model import card_path
+from iproofs.provenance import file_digest
+from iproofs.release import RunView, ineligible
+from iproofs.schema import SchemaRegistry
 from iproofs.serialize import load_yaml
 
 HELD, FAILED, UNDECIDED = "held", "failed", "undecided"
@@ -46,14 +50,19 @@ class CheckState:
     cause: str | None
     evidence: tuple[str, ...]
     note: str | None = None
+    # CH-1c: what the counted trials sent, per control and position (MODEL, PROMPT, REPLY)
+    trials: tuple[Mapping[str, object], ...] = ()
 
     def tree(self) -> dict[str, object]:
-        return {
+        out: dict[str, object] = {
             "state": self.state,
             "cause": self.cause,
             "evidence": list(self.evidence),
             "note": self.note,
         }
+        if self.trials:
+            out["trials"] = [dict(t) for t in self.trials]
+        return out
 
 
 def _held(evidence: Iterable[str]) -> CheckState:
@@ -183,13 +192,16 @@ class Session:
 
 @dataclass(frozen=True)
 class RowSessions:
-    """SE-3: per slot the first complete session by start time; every incomplete one."""
+    """SE-3: per slot the first complete session by start time; every incomplete one. `all`
+    holds the eligible sessions; `ineligible` the runs RFC-0014 §Eligibility keeps out of the
+    release (SE-3b), each with its reason codes."""
 
     counted: dict[int, Session]
     incomplete: list[Session]
     all: list[Session] = field(default_factory=list)
     control_runs: list[Session] = field(default_factory=list)  # CH-1b: P1 from these
     replaced: list[tuple[Session, Session, str]] = field(default_factory=list)  # SE-3a
+    ineligible: list[tuple[Session, tuple[str, ...]]] = field(default_factory=list)  # SE-3b
 
     def counted_in_order(self) -> list[Session]:
         return [self.counted[k] for k in sorted(self.counted)]
@@ -218,8 +230,6 @@ def _incomplete_cause(run: RunView, n: int) -> str | None:
         failure = run.run.get("failure")
         message = failure.get("message") if isinstance(failure, dict) else None
         return str(message) if message else "the session did not complete"
-    if run.get("manifest", "system", "adapter_dirty") is not False:
-        return "the adapter tree was dirty or unknown"
     requests = _requests(run)
     accepted = sum(
         1 for i in range(n)
@@ -230,32 +240,72 @@ def _incomplete_cause(run: RunView, n: int) -> str | None:
     return None
 
 
+@functools.cache
+def _registry(schema: Path) -> SchemaRegistry:
+    return SchemaRegistry.from_tree(schema)
+
+
+def _listed_cards(root: Path, release: str, run: RunView) -> set[tuple[object, ...]]:
+    """The claim cards a run may name (RFC-0014 §Eligibility): those `release.yaml` lists when
+    the record exists; until then the card the repository holds for the run's system and
+    configuration, by its digest today (a card edited after the run is not the one in force)."""
+    record = root / "releases" / release / "release.yaml"
+    if record.is_file():
+        cards = _list(load_yaml(record).get("claim_cards"))
+        return {(c.get("system"), c.get("configuration"), c.get("card_version"), c.get("digest"))
+                for c in cards if isinstance(c, dict)}  # fmt: skip
+    claim = run.manifest.get("claim")
+    claim = claim if isinstance(claim, dict) else {}
+    path = card_path(root, str(claim.get("system")), str(claim.get("configuration")))
+    if path is None:
+        return set()
+    card = load_yaml(path)
+    return {(card.get("system"), card.get("configuration"), card.get("card_version"),
+             file_digest(path))}  # fmt: skip
+
+
+def eligibility_reasons(root: Path, release: str, run: RunView) -> tuple[str, ...]:
+    """SE-3b: the RFC-0014 reason codes that keep a run out of `release`, none when eligible."""
+    cards = _listed_cards(root, release, run)
+    return tuple(ineligible(run, release, cards, _registry(root / "schema")))
+
+
 def row_sessions(
     root: Path, release: str, level: object, rung: str, system: str, digest: str | None = None
 ) -> RowSessions:
     """The row's sessions among the release's runs: the system's runs of the rung's workload
-    whose manifest names this level by digest, controls excluded, ordered by start time."""
+    whose manifest names this level by digest, controls excluded, ordered by start time. A run
+    RFC-0014 makes ineligible for the release is kept apart with its reasons (SE-3b): it is never
+    counted, never an incomplete attempt, never a replacement and never a control run."""
     workload = rung_workload(level, rung, system)
     n = int_of(rung_of(level, rung), "requests_per_session", 0)
     digest = digest or level_digest(root, level)
     found = []
     controls: list[Session] = []
+    kept_out: list[tuple[Session, tuple[str, ...]]] = []
     for path in release_run_dirs(root, release):
         run = RunView.read(path)
         if (run.run.get("system") != system
                 or run.get("manifest", "workload", "id") != workload
                 or run.get("manifest", "level", "digest") != digest):  # fmt: skip
             continue
+        slot = run.get("manifest", "session", "slot")
+        slot = slot if isinstance(slot, int) else None
+        reasons = eligibility_reasons(root, release, run)
+        if reasons:
+            kept_out.append((Session(run, rel(root, path), slot, started_at(run), False, None),
+                             reasons))  # fmt: skip
+            continue
         if run.run.get("control") is True:  # CH-1b: a control run, never a session
-            if run.ok and run.get("manifest", "system", "adapter_dirty") is False:
+            if run.ok:
                 controls.append(Session(run, rel(root, path), None, started_at(run), True, None))
             continue
-        slot = run.get("manifest", "session", "slot")
         cause = _incomplete_cause(run, n)
-        if not isinstance(slot, int):
-            slot, cause = None, cause or "the manifest names no session slot"
+        if slot is None:
+            cause = cause or "the manifest names no session slot"
         found.append(Session(run, rel(root, path), slot, started_at(run), cause is None, cause))
     found.sort(key=lambda s: (s.started, s.run_id))
+    kept_out.sort(key=lambda x: (x[0].started, x[0].run_id))
     counted: dict[int, Session] = {}
     for s in found:
         if s.complete and s.slot is not None and s.slot not in counted:
@@ -264,8 +314,9 @@ def row_sessions(
     same_pin = [c for c in controls if len(pin) == 1 and _pin(c) in pin]
     replaced = _replace_for_ch4(counted, found)
     return RowSessions(
-        counted, [s for s in found if not s.complete], found, same_pin, replaced=replaced
-    )
+        counted, [s for s in found if not s.complete], found, same_pin, replaced=replaced,
+        ineligible=kept_out,
+    )  # fmt: skip
 
 
 def _pin(s: Session) -> tuple[object, object]:
@@ -336,13 +387,21 @@ def _weakened(run: RunView, flags: Sequence[str]) -> list[str]:
 
 def refusals(root: Path, release: str, system: str, sessions: RowSessions) -> dict[int, str]:
     """SE-5: slot -> the refusal record's repository path, for each record
-    `results/<release>/<system>/refusals/slot-<k>.json` whose `run_id` is an incomplete run of
-    that slot. A record naming another run is refused, so it cannot stand for a run it does not
-    describe."""
+    `results/<release>/<system>/refusals/slot-<k>.json` (schema `refusal/1`) made at the upstream
+    commit the row's sessions run and whose `run_id` is an incomplete run of that slot. A record
+    made at another upstream commit is a record of that pin and is not read here (amended
+    2026-11-15). A record at the row's commit naming another run is refused, so it cannot stand
+    for a run it does not describe."""
     out: dict[int, str] = {}
     folder = root / "results" / release / system / "refusals"
+    commits = {s.run.get("manifest", "system", "upstream", "commit") for s in sessions.all}
     for path in sorted(folder.glob("slot-*.json")) if folder.is_dir() else []:
         doc = json.loads(path.read_text())
+        made_at = (doc.get("upstream") or {}).get("commit")
+        if not isinstance(made_at, str):
+            raise IProofsError(ErrorKind.CONFIG, f"{rel(root, path)}: names no upstream commit")
+        if made_at not in commits:
+            continue  # a refusal at another pin: kept as a record, it decides nothing here
         slot = int(path.stem.removeprefix("slot-"))
         ids = {s.run_id for s in sessions.incomplete if s.slot == slot}
         if doc.get("run_id") not in ids:
@@ -396,6 +455,7 @@ class Trial:
     outcome: str
     seed_index: int
     evidence: str
+    sent: str = ""  # the changed input as recorded (`mutation`), with the session it was sent in
 
 
 def _position(trial: Mapping[str, object]) -> str | None:
@@ -465,8 +525,9 @@ def control_trials(
                     and not _interior_ok(seed, t, output)
                 ):
                     continue  # not the seeded interior position: it does not count
+                sent = json.dumps([s.path, t.get("mutation")], sort_keys=True)
                 trials.append(Trial(cid, position, outcome, int(t.get("seed_index") or 0),
-                                    f"{path}#/controls/{i}"))  # fmt: skip
+                                    f"{path}#/controls/{i}", sent))  # fmt: skip
     return trials, present, same_commitment
 
 
@@ -510,6 +571,26 @@ def _reproduced(state: CheckState, root: Path, release: str, system: str, check:
     if found is None:
         return _undecided(NOT_REPRODUCED, state.evidence, state.note)
     return CheckState(FAILED, None, (*state.evidence, rel(root, found)), state.note)
+
+
+def what_ran(
+    trials: Sequence[Trial],
+    parts: Sequence[tuple[str, str | None]],
+    refused: Mapping[str, frozenset[str]],
+) -> tuple[dict[str, object], ...]:
+    """CH-1c: per control and position, the counted trials (`void` and `error` left out), how many
+    of them were refused, and how many distinct changed inputs they sent: a trial at a fixed change
+    (C1 at the first and last positions, C3, P1) sends the same input as the others."""
+    out: list[dict[str, object]] = []
+    for control, position in parts:
+        counted = [t for t in trials if t.control == control and t.position == position
+                   and t.outcome not in UNCOUNTED]  # fmt: skip
+        if not counted:
+            continue
+        out.append({"control": control, "position": position, "trials": len(counted),
+                    "refused": sum(t.outcome in refused[control] for t in counted),
+                    "inputs": len({t.sent for t in counted})})  # fmt: skip
+    return tuple(out)
 
 
 VERIFIER_REFUSED = frozenset({"rejected"})
@@ -742,6 +823,10 @@ def checks_from(
     positions = _combine([control("C1", VERIFIER_REFUSED, p) for p in C1_POSITIONS])
     positions = _reproduced(positions, root, release, system, "reply")
     reply = coverage if coverage.state == FAILED else _combine([coverage, positions])
+    how = {"P1": PROVER_REFUSED, "C1": VERIFIER_REFUSED, "C2": VERIFIER_REFUSED,
+           "C3": VERIFIER_REFUSED}  # fmt: skip
+    model = replace(model, trials=what_ran(trials, (("P1", None), ("C3", None)), how))
+    reply = replace(reply, trials=what_ran(trials, [("C1", p) for p in C1_POSITIONS], how))
     out = {
         "run": check_run(
             sessions,
@@ -750,7 +835,10 @@ def checks_from(
             refusals(root, release, system, sessions),
         ),
         "model": model,
-        "prompt": _reproduced(control("C2", VERIFIER_REFUSED), root, release, system, "prompt"),
+        "prompt": replace(
+            _reproduced(control("C2", VERIFIER_REFUSED), root, release, system, "prompt"),
+            trials=what_ran(trials, (("C2", None),), how),
+        ),
         "reply": reply,
         "no_weight_file": no_weight_file_state(sessions),
         "fidelity": fidelity_state(root, release, rung, system, digest),

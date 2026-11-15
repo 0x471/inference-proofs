@@ -55,6 +55,13 @@ NOT_TESTED = (
     "No check attempts a forged proof. Soundness and weight secrecy are not tested: the glyph "
     "reports what the publisher's documents state about them."
 )
+# the binding-only gap (RFC-0018 SI-4, SI-4a), on the checks page beside NOT_TESTED
+BINDING_GAP = (
+    "The checks run the publisher's own prover honestly and try changes it should refuse. A hash "
+    "of the commitment, prompt and reply, computed from the weights the prover loads, would hold "
+    "all six. Level 1 keeps such a system off the ladder on its publisher's recorded statement "
+    "that an accept is the committed model's own greedy reply, not by a test."
+)
 ROW_GLYPH = 3  # the row glyph's unit in px: its arms carry their names (159 by 87 px)
 # a phone's row glyph, px a unit, no names (62.5 by 77.5 px): whole device pixels at 2x
 PHONE_GLYPH = 2.5

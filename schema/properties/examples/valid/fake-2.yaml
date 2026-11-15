@@ -4,6 +4,13 @@ system: "fake"
 configuration: "default"
 upstream: {repo: "example/fake-prover", commit: "0123456789abcdef0123456789abcdef01234567"}
 read: "2026-11-13"
+level_statement:
+  sources_read: ["README.md"]
+  accept_is_model_reply:
+    value: true
+    quotes:
+      - text: "An accepted proof shows that each reply token is the committed model's greedy choice on the prompt."
+        url: "https://github.com/example/fake-prover/blob/0123456789abcdef0123456789abcdef01234567/README.md#L9"
 petals:
   unforgeable:
     sources_read: ["README.md", "docs/soundness.md"]

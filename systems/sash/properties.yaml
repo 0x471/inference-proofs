@@ -9,6 +9,24 @@ system: "sash"
 configuration: "sound-defaults"
 upstream: {repo: "sg-ai-safety-hub/zk-inference-prover", commit: "4f41667297430a598165c4a8604258fe37d952ae"}
 read: "2026-11-13"
+# RFC-0018 SI-4a, read 2026-11-15. No one sentence at the pin says that an accept is the committed model's own
+# greedy reply: boundary-grid's exit 0 says each position's id is the prompt's or the previous position's proved
+# argmax, the statement page says the argmax is the rule the model decodes by, and that each segment's matmuls
+# are bound to the pinned weights, whose root the verifier compares with the published manifest.
+level_statement:
+  sources_read: ["prover/src/boundary.rs", "docs/statement.md", "README.md", "prover/README.md"]
+  accept_is_model_reply:
+    value: true
+    quotes:
+      - text: "Exit status 0 only when every implied link ran and chained on its own /// axis, every tag sits where its statement says it sits, every position's id /// is the prompt's or the previous position's proved argmax"
+        url: "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/src/boundary.rs#L1120-L1122"
+      - text: "the argmax binds the token a head segment emits to the **lowest-indexed** maximum of the logits it computed, which is the rule the model itself decodes by."
+        url: "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/docs/statement.md#L147-L149"
+      - text: "| 12 | each matmul's input times the pinned weights into its accumulator | bound |"
+        url: "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/docs/statement.md#L32"
+      - text: "it commits the weights, and the verifier compares it with the published manifest."
+        url: "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/docs/statement.md#L136"
+    note: "read as: the four quotes together, from two files; none says in one sentence that an accept is the committed model's own greedy reply to the prompt"
 petals:
   unforgeable:
     sources_read: ["README.md", "prover/README.md", "docs/statement.md", "prover/src/util.rs"]

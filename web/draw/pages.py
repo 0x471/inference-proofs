@@ -32,6 +32,7 @@ from .chrome import (
 from .hexagon import glyph_svg
 from .overview import (
     BARE,
+    BINDING_GAP,
     NOT_TESTED,
     defined,
     fidelity_word,
@@ -63,6 +64,7 @@ from .words import (
     CHECK_MORE,
     CHECK_NAME,
     CHECKS_DESC,
+    CHECKS_LEAD,
     CONTROL_NAME,
     DOCS_READ,
     FIGURE_ANCHOR,
@@ -70,6 +72,11 @@ from .words import (
     FIGURE_NAME,
     FIGURE_RULE,
     FULL_LOAD_WORD,
+    KNOW_COLS,
+    KNOW_HEAD,
+    KNOW_LINES,
+    KNOW_WHERE,
+    KNOW_WORD,
     M_COL,
     M_HEAD,
     M_NAME,
@@ -94,6 +101,7 @@ from .words import (
     PETAL_QUESTION,
     PETAL_RULE,
     PREFIX,
+    READ_AS,
     READING_RULE,
     REASON_LINK,
     RECORD_WORD,
@@ -104,6 +112,8 @@ from .words import (
     SCOPE_WORD,
     SEP,
     STATE_WORD,
+    STATEMENT_HEAD,
+    STATEMENT_WORD,
     STEP_WORD,
     TF_AGREE,
     TF_BOTH,
@@ -115,6 +125,8 @@ from .words import (
     TF_SUB,
     TF_TEST,
     TIER_WORD,
+    TRIAL_WHAT,
+    TRIALS_HEAD,
     VISIBLE_OTHERS,
     VISIBLE_TAG_WORD,
     beside_unit,
@@ -453,7 +465,8 @@ def checks_html(row):
         links = evidence_links(c["evidence"])  # counted as printed: a file's entries are one link
         recs = counted_words(len(links), "record") if links else "note"
         owner = f'<span class="sr">, {e(CHECK_NAME[c["id"]])}</span>'
-        more = (f'<details class="more"><summary>{e(recs)}{owner}</summary>{full}'
+        ran = trials_html(c.get("trials") or ())
+        more = (f'<details class="more"><summary>{e(recs)}{owner}</summary>{full}{ran}'
                 f"{''.join(links)}</details>"
                 if c["evidence"] or full else "")  # fmt: skip
         to = petals_of(c["id"])
@@ -466,9 +479,47 @@ def checks_html(row):
             + f"<td>{more}</td></tr>"
         )
     cause_th = '<th scope="col">Cause</th>' if caused else ""
-    return ('<table class="rt ckt cks"><thead><tr><th scope="col">Check</th><th scope="col">'
+    return (f'<p class="rd">{e(CHECKS_LEAD)}</p>'
+            '<table class="rt ckt cks"><thead><tr><th scope="col">Check</th><th scope="col">'
             f'State</th>{cause_th}<th scope="col">Evidence</th></tr></thead>'
-            f'<tbody>{"".join(trs)}</tbody></table>')  # fmt: skip
+            f'<tbody>{"".join(trs)}</tbody></table>{statement_html(row)}')  # fmt: skip
+
+
+def trials_html(trials):
+    """What a check's counted trials sent (RFC-0018 CH-1c), from the board: per control and
+    position, the trials, the inputs they sent and how many were refused, so three trials of one
+    changed input never read as three inputs."""
+    if not trials:
+        return ""
+
+    def one(t):
+        n, inputs = t["trials"], t["inputs"]
+        sent = ("the same input each time" if inputs == 1 and n > 1
+                else "a new input each time" if inputs == n
+                else f"{inputs:,} inputs")  # fmt: skip
+        return f"{TRIAL_WHAT[(t['control'], t['position'])]}: {n:,} trials, {sent}, " \
+            f"{t['refused']:,} refused"  # fmt: skip
+
+    words = "; ".join(one(t) for t in trials)
+    return f'<p class="cn"><span class="k">{e(TRIALS_HEAD)}</span> {e(words)}</p>'
+
+
+def statement_html(row):
+    """SI-4a: whether the publisher states Level 1's statement at the pin, with its quotes one
+    click away; "read as", linked to what that means, when the fact is our reading."""
+    st = row.get("level_statement")
+    if st is None:
+        return ""
+    if st["reading"]:
+        said = (f'<a class="df" href="{CHECKS_PAGE}#reading">{e(READ_AS.capitalize())}</a> '
+                f"{e(STATEMENT_WORD['read'])}")  # fmt: skip
+    else:
+        said = e(STATEMENT_WORD["stated" if st["stated"] else "not"])
+    quotes = (f'<details class="more"><summary>{e(counted_words(len(st["quotes"]), "quote"))}'
+              f'</summary>{quote_links(st["quotes"])}</details>' if st["quotes"] else "")  # fmt: skip
+    return (
+        f'<p class="rb"><span class="k">{e(STATEMENT_HEAD)}</span> <span>{said}</span></p>{quotes}'
+    )
 
 
 def plain(v, unit, record, said="", missing="none"):
@@ -509,7 +560,8 @@ def replaced_why(s):
 def sessions_html(row):
     """SE-3: each counted session (slot, run, m or why there is none, session cost per reply),
     then every incomplete session with its exit code and last line (AGENTS.md rule 5), then each
-    replaced session (SE-3a), its reason said once over the table where the sessions share it."""
+    replaced session (SE-3a), its reason said once over the table where the sessions share it,
+    then each run RFC-0014 keeps out of the release with its reasons (SE-3b)."""
     rec = row["record"]
     gen = any(s.get("generation_gpu_seconds_per_reply") is not None for s in row["sessions"])
     # release groups: a column where the sessions differ, else said once over the table
@@ -573,6 +625,16 @@ def sessions_html(row):
             + lead
             + stacked(["Slot", "Run", "Replaced by", *([] if once else ["Why"])], rows)
         )
+    if row.get("ineligible"):  # SE-3b: kept out by RFC-0014, in no figure and no check
+        rows = [
+            [
+                str(s["slot"]) if s["slot"] is not None else "",
+                run_link(row, s["run_id"]),
+                e("; ".join(s["words"])),
+            ]
+            for s in row["ineligible"]
+        ]
+        out += '<h3 class="sub-h">Ineligible sessions</h3>' + stacked(["Slot", "Run", "Why"], rows)
     return out
 
 
@@ -1178,6 +1240,25 @@ def cause_rule(text):
             f'{", " if only else ": "}</span>{lead}{e(rest)}')  # fmt: skip
 
 
+def know_html():
+    """What we test and what we read (KNOW_LINES): what a line is about, where a row shows it,
+    each check, petal and figure linked to its rule on this page by the name the site gives it,
+    and how it is known."""
+
+    def where(ids):
+        names = []
+        for i in ids:
+            if i == "figures":
+                names += [(f, FIGURE_NAME[f]) for f in FIGURE_RULE]
+            else:
+                names.append((i, CHECK_NAME.get(i) or PETAL_NAME.get(i) or KNOW_WHERE[i]))
+        return ", ".join(f'<a href="#{e(a)}">{e(n)}</a>' for a, n in names) or "none"
+
+    rows = [[e(what), where(ids), e(KNOW_WORD[how])] for what, ids, how in KNOW_LINES]
+    return (f'<h3 class="sub-h" id="what-we-test">{e(KNOW_HEAD)}</h3>'
+            + stacked(list(KNOW_COLS), rows))  # fmt: skip
+
+
 def build_checks():
     """The rules behind a row: the request and the six checks as the entry gate (RFC-0018 §The six
     checks) with what is not tested, then the undecided causes; the figures (§Cost, FI-7, SI-9);
@@ -1251,8 +1332,10 @@ def build_checks():
     undecided = (f'<div class="chk" id="undecided"><h3 class="cn2">Undecided checks</h3>'
                  f'<dl class="cs">{rule_lines((("", CHECK_CAUSE_LEAD),))}{causes}</dl></div>')  # fmt: skip
     passed = (f'<p class="rd" id="passed">{e(gate)}</p>'
-              f'<p class="rd" id="not-tested">{linked(NOT_TESTED, ("NOT_TESTED", ""))}</p>')  # fmt: skip
-    six = f'{passed}<div class="clist six">{checks}</div><div class="clist">{undecided}</div>'
+              f'<p class="rd" id="not-tested">{linked(NOT_TESTED, ("NOT_TESTED", ""))}</p>'
+              f'<p class="rd" id="binding">{e(BINDING_GAP)}</p>')  # fmt: skip
+    six = (f'{passed}<div class="clist six">{checks}</div><div class="clist">{undecided}</div>'
+           f"{know_html()}")  # fmt: skip
     parts = (("checks", "Six checks"), ("figures", "Figures"), ("order", "Order"),
              ("glyph", "Glyph"))  # fmt: skip
     # the order rule; "largest model proved" (OR-6) is an address the ladder's mark can link

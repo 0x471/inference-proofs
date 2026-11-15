@@ -7,8 +7,20 @@ from pathlib import Path
 
 import pytest
 
-from fixtures.board import RELEASE, RUNG, SYSTEM, Tree, fidelity, fidelity_row, three_sessions
+from fixtures.board import (
+    RELEASE,
+    RUNG,
+    SYSTEM,
+    Tree,
+    fidelity,
+    fidelity_row,
+    level_statement,
+    properties2,
+    session,
+    three_sessions,
+)
 from iproofs.board import (
+    NO_LEVEL_STATEMENT,
     NO_SECURITY_LEVEL,
     RowSummary,
     RungSummary,
@@ -344,3 +356,68 @@ def test_board_session_split_needs_a_generation_phase(tree: Tree) -> None:
     for key in ("session_generation_gpu_seconds_per_reply",
                 "session_commit_and_proving_gpu_seconds_per_reply"):  # fmt: skip
         assert (r[key]["value"], r[key]["null_reason"]) == (None, "not_applicable")
+
+
+# ---------------------------------------------------------------- SI-4a and SE-3b on the board
+
+
+def test_fake_binding_system_holds_six_checks_and_takes_no_position(tree: Tree) -> None:
+    """The binding-only gap: `systems/fake` keys an HMAC of the request and reply with the
+    commitment of the weights it loads. With stored real replies its row holds all six checks
+    (its C3 and P1 trials are refused, so Model holds) and its publisher states a security level;
+    its documents state no Level 1 statement (the repository's fake has no properties file), so
+    it takes no position and does not make its rung the frontier (SI-4a)."""
+    assert not (ROOT / "systems/fake/properties.yaml").exists()
+    tree.add_system(RUNG, "fake", "l1-fake")
+    flags = (ROOT / "systems/fake/system.yaml").read_text()
+    (tree.root / "systems/fake").mkdir()
+    (tree.root / "systems/fake/system.yaml").write_text(flags)
+    three_sessions(tree, system="fake", workload="l1-fake")
+    fidelity(tree, {"fake": fidelity_row()})  # the stored replies are the model's own
+    board = build_board(tree.root, RELEASE, tree.level)
+    valid(board)
+    (r,) = board["rungs"][1]["rows"]  # type: ignore[index]
+    assert {k: v["state"] for k, v in r["checks"].items()} == dict.fromkeys(r["checks"], "held")
+    assert (r["passed"], r["ranked"], r["position"]) == (True, False, None)
+    assert r["unranked_reason"] == NO_LEVEL_STATEMENT
+    assert r["level_statement"]["stated"] is False
+    assert board["frontier"] is None
+    # the same records with the publisher's statement recorded at the pin: position 1
+    tree.properties("fake", properties2(system="fake"))
+    board = build_board(tree.root, RELEASE, tree.level)
+    (r,) = board["rungs"][1]["rows"]  # type: ignore[index]
+    assert (r["position"], r["unranked_reason"]) == (1, None)
+    assert board["frontier"] == {"rung": RUNG, "rows": ["fake"], "systems_run": 1}
+
+
+def test_level_statement_false_or_at_another_commit_takes_no_position(tree: Tree) -> None:
+    """SI-4a: a file that says an accept is not the model's own reply, or one read at another
+    commit than the row runs, records no Level 1 statement."""
+    three_sessions(tree)
+    fidelity(tree, {SYSTEM: fidelity_row()})
+    tree.properties(SYSTEM, {**properties2(), "level_statement": level_statement(False)})
+    (r,) = build_board(tree.root, RELEASE, tree.level)["rungs"][1]["rows"]  # type: ignore[index]
+    assert (r["passed"], r["position"], r["unranked_reason"]) == (True, None, NO_LEVEL_STATEMENT)
+    tree.properties(SYSTEM, properties2(commit="b" * 40))
+    (r,) = build_board(tree.root, RELEASE, tree.level)["rungs"][1]["rows"]  # type: ignore[index]
+    assert (r["position"], r["level_statement"]["read"]) == (None, False)
+
+
+def test_board_lists_an_ineligible_session_with_its_reason(tree: Tree) -> None:
+    """SE-3b: a session whose host failed its self-test is listed with its reason and enters
+    no figure: the row's sessions are the three eligible ones."""
+    three_sessions(tree)
+    fidelity(tree, {SYSTEM: fidelity_row()})
+
+    def failed(m: dict[str, object]) -> None:
+        m["self_test"] = {"passed": False, "checks": [{"name": "ST-SAMPLER", "passed": False}]}
+
+    late = session(tree, 2, 9, day=2, manifest_edit=failed)
+    board = build_board(tree.root, RELEASE, tree.level)
+    valid(board)
+    (r,) = board["rungs"][1]["rows"]  # type: ignore[index]
+    assert r["ineligible_sessions"] == [
+        {"run_id": late.name, "slot": 2, "reasons": ["self_test_failed"]}
+    ]
+    assert late.name not in [s["run_id"] for s in r["sessions"]]
+    assert r["steady_gpu_seconds_per_reply"]["stats"]["n"] == 3
