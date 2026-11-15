@@ -67,3 +67,16 @@ def test_a_source_the_run_does_not_record_is_refused(
     doc["calls"][0]["proof"][field] = value
     (folder / "trial.json").write_text(json.dumps(doc))
     assert pointer in [where for where, _ in problems(folder / "trial.json", root)]
+
+
+def test_stored_c3_null_twin() -> None:
+    """2026-11-15: each kept proof accepted against its own session's commitment (3 of 3) and
+    rejected against another session's commitment of the same weights (3 of 3)."""
+    path = ROOT / "results/v1.0/flashprove/_trials/2026-11-15-c3-null-twin/trial.json"
+    doc = json.loads(path.read_text())
+    s = summary(doc)
+    assert (s.honest, s.accepted, s.changed, s.changed_rejected) == (3, 3, 3, 3)
+    assert {c["change"]["kind"] for c in doc["calls"] if c["change"]} == {
+        "other_session_commitment"
+    }
+    assert problems(path, ROOT) == []
