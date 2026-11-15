@@ -637,8 +637,8 @@ MANDATE = (
          "with your source. The answer goes in the issue, and a change goes in the list below."),
         ("A petal", "GL-1", f"{RFC_18}#the-glyph", "A statement petal moves on a sentence the "
          "publisher wrote at the pinned commit, quoted with its link, or on a failed check. A "
-         "state we read rather than copied says so and is drawn amber at most. Faithful model "
-         "moves on a fidelity run."),
+         "state we read rather than copied says so and is drawn amber at most. Close to the "
+         "original moves on a fidelity run."),
         ("A check", "CH-6", f"{RFC_18}#the-six-checks", "A check moves on a stored run record "
          "only. A changed input accepted in our adapter fails a check once the system's own "
          "command accepts it too."),

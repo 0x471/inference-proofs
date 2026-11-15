@@ -183,11 +183,11 @@ The glyph then shows how far a system that ran is from a perfect prover ([RFC-00
 |---|---|
 | **Unforgeable** | a bound on a false reply being accepted, proved, that covers what the row runs, with every exponent in the stated bound 128 or more (a term 2^-t or q/2^t has exponent t) |
 | **Weights hidden** | zero knowledge proved for the configuration the row runs, the programs stated to implement it, and a published list of what stays visible with nothing fitted to the weights |
-| **Faithful model** | the proved replies are shown above the midpoint between a second run of the publisher's model and its Q8_0 copy, in a fidelity run of one request at a time |
+| **Close to the original** | the proved replies are shown above the midpoint between a second run of the publisher's model and its Q8_0 copy, in a fidelity run of one request at a time |
 | **Machine-checked** | a machine-checked soundness theorem covers the verifier program the row runs, with its trusted base listed and no input code outside the proof, and a build of it at the pin, with the toolchain the publisher pins, is recorded |
 | **No third party trusted** | soundness rests on cryptographic assumptions alone, and no setup ever produced a secret |
 
-Unforgeable, Weights hidden, Machine-checked and No third party trusted are computed from facts a reviewer copies, each with its quote, from the publisher's documents at the pin (`systems/<name>/properties.yaml`); no state is typed by hand. A value that is the reader's reading rather than the publisher's words carries a note, and the system page says so. Faithful model is measured by our fidelity run. A failed check turns red the petals it contradicts. Nothing adds the petals up, and the glyph never moves a position: the order is cost among the systems that passed.
+Unforgeable, Weights hidden, Machine-checked and No third party trusted are computed from facts a reviewer copies, each with its quote, from the publisher's documents at the pin (`systems/<name>/properties.yaml`); no state is typed by hand. A value that is the reader's reading rather than the publisher's words carries a note; the system page marks the petal "read as" and draws it amber at most. Close to the original is measured by our fidelity run. A failed check turns red the petals it contradicts. Nothing adds the petals up, and the glyph never moves a position: the order is cost among the systems that passed.
 
 ## Timing scopes
 
