@@ -205,9 +205,73 @@
       "type": "object"
     },
     "formal": {
-      "$comment": "Machine-checked's facts copied from properties/2 (RFC-0018 MC-1 to MC-6): the step the publisher's words reach before the proof build lowers it, and the scope card",
+      "$comment": "Machine-checked's facts copied from properties/2 (RFC-0018 MC-1 to MC-6): the step the publisher's words reach before the proof build lowers it, and the scope card; build, present when a proof-build record is stored, is that record as the system page prints it (RFC-0018 GL-5, amended 2026-11-16)",
       "additionalProperties": false,
       "properties": {
+        "build": {
+          "additionalProperties": false,
+          "properties": {
+            "command": {
+              "$comment": "the publisher's command, without our env prefix and time-limit wrapper",
+              "items": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "minItems": 1,
+              "type": "array"
+            },
+            "exit_code": {
+              "type": "integer"
+            },
+            "record": {
+              "pattern": "^results/[^/]+/proof-build/[^/]+/proof-build\\.json$",
+              "type": "string"
+            },
+            "seconds": {
+              "minimum": 0,
+              "type": "number"
+            },
+            "started_at": {
+              "format": "date-time",
+              "type": "string"
+            },
+            "status": {
+              "enum": [
+                "built",
+                "failed",
+                "stopped"
+              ]
+            },
+            "toolchain": {
+              "additionalProperties": false,
+              "properties": {
+                "name": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "version": {
+                  "minLength": 1,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name",
+                "version"
+              ],
+              "type": "object"
+            }
+          },
+          "required": [
+            "record",
+            "toolchain",
+            "command",
+            "started_at",
+            "seconds",
+            "exit_code",
+            "status"
+          ],
+          "type": "object"
+        },
         "input_code_unverified": {
           "type": [
             "boolean",

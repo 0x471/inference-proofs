@@ -298,6 +298,8 @@ SCOPE_ROW_WORD = {"soundness": "Soundness", "zero_knowledge": "Zero knowledge",
                   "completeness": "Completeness"}  # fmt: skip
 SCOPE_COL_WORD = {"protocol": "Protocol", "verifier_run": "Verifier code this row runs",
                   "prover_run": "Prover code this row runs"}  # fmt: skip
+# a fact beside the tool on the scope card: Formally verified's stored build (GL-5)
+PROOF_BUILD_HEAD = "Proof build"
 # "tested" is the publisher's word for its own tests ("tested, not proved"), never ours: our runs are
 # the Completeness line above the card
 SCOPE_VALUE_WORD = {"machine_checked": "machine-checked", "paper": "on paper",
@@ -459,8 +461,9 @@ PETAL_MORE = {
     ),
     "machine_checked": (
         ("build", "Each step above Not met needs a matching build of the named theorem: one "
-         "recorded at the pinned commit with the publisher's toolchain. Level 1 reads that record "
-         "and makes none."),
+         "recorded at the pinned commit with the publisher's toolchain. We run the publisher's own "
+         "command for it, unpatched, and record what it reports. We do not review what the theorem "
+         "states: the step is read from the publisher's words, printed with the petal."),
         ("above Partly met", "Needs a theorem whose conclusion is about a reference definition of "
          "the model, and a build that reports only its tool's standard axioms (for Lean, propext, "
          "Classical.choice and Quot.sound), so no sorry. The petal's reason prints the most a "

@@ -240,6 +240,21 @@ def test_mc4a_stopped_build_is_hollow() -> None:
     )
 
 
+def test_formal_carries_the_stored_build_without_our_wrapper() -> None:
+    path = "results/v1.0/proof-build/fake/proof-build.json"
+    stored = {**build(), "argv": ["env", "X=1", "timeout", "-k", "60", "9", "make", "check"],
+              "started_at": "2026-11-15T21:09:43Z", "seconds": 6388.0}  # fmt: skip
+    petal = machine_checked(properties2(), HELD, PIN, stored, path)
+    assert petal.formal is not None
+    assert petal.formal["build"] == {
+        "record": path, "toolchain": {"name": TOOLCHAIN["name"], "version": TOOLCHAIN["version"]},
+        "command": ["make", "check"], "started_at": "2026-11-15T21:09:43Z", "seconds": 6388.0,
+        "exit_code": 0, "status": "built"}  # fmt: skip
+    absent = machine_checked(properties2(), HELD, PIN, None, None).formal
+    assert absent is not None
+    assert "build" not in absent
+
+
 def test_mc5_no_matching_build_is_hollow() -> None:
     hollow = (None, "proof_build_not_run", "statement", ())
     assert got(mc(None)) == hollow

@@ -123,7 +123,11 @@ def _formal(pid: str, raw: dict[str, Any] | None) -> dict[str, Any] | None:
         for c in SCOPE_COLS:
             if card[r][c]["value"] not in SCOPE_VALUES:
                 raise inputs.config(f"petal {pid}: scope card {r}/{c} {card[r][c]['value']!r}")
+    build = raw.get("build")
+    if build is not None and build["status"] not in ("built", "failed", "stopped"):
+        raise inputs.config(f"petal {pid}: proof build status {build['status']!r}")
     return {
+        "build": build,
         "stated_step": raw["stated_step"],
         "reach": raw["reach"],
         "tool": raw["tool"],

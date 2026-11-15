@@ -8,7 +8,7 @@ import yaml
 
 from iproofs.errors import IProofsError
 from iproofs.glyph import machine_checked
-from iproofs.proof_build import build_record
+from iproofs.proof_build import build_record, publisher_command
 from iproofs.schema import SchemaRegistry
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -41,7 +41,11 @@ def folder(tmp: Path, exit_code: int, log: str = LOG, seconds: int = 5400) -> Pa
     ]  # fmt: skip
     (tmp / "meta.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows))
     (tmp / "build.log").write_text(log)
+    (tmp / "lean-version.txt").write_text(LEAN)
     return tmp
+
+
+LEAN = "Lean (version 4.29.1, x86_64-unknown-linux-gnu, commit f72c35b, Release)\n"
 
 
 def test_built_record_reads_the_theorem_own_axioms_and_the_toolchain_file(tmp_path: Path) -> None:
@@ -104,3 +108,134 @@ def test_the_flashprove_record_draws_the_stated_step(tmp_path: Path) -> None:
     rec = build_record(folder(tmp_path, 0), "flashprove", formal)
     petal = machine_checked(props, {}, PIN, rec)
     assert (petal.step, petal.cause) == ("amber_upper", None)
+
+
+def test_another_lean_than_the_toolchain_file_is_refused(tmp_path: Path) -> None:
+    (folder(tmp_path, 0) / "lean-version.txt").write_text("Lean (version 4.30.0, x86_64)\n")
+    with pytest.raises(IProofsError, match=r"does not show Lean v4\.29\.1"):
+        build_record(tmp_path, "flashprove", FORMAL)
+
+
+# ---------------------------------------------------------------- the full check (check.py)
+
+ARGV = ["timeout", "-k", "60", "23400", "python3", "-B", "scripts/check.py", "--wide-jobs", "24"]
+PASSED = (
+    "All steps passed: tree, words, imports, build (kernel replay, audit). This script runs no "
+    "mutation tests and no second, independent proof checker."
+)
+AUDIT = f"   AUDIT {NAME}: general; 3 binders after unfolding; axioms [propext, Classical.choice, Quot.sound]; reach 12\n"  # noqa: E501
+LEAN_LINE = (
+    f"info: x.lean:83:0: '{NAME}' depends on axioms: [propext, Classical.choice, Quot.sound]\n"
+)
+
+
+def check_folder(
+    tmp: Path, code: int, out: str, kept: str = LEAN_LINE, seconds: int = 16000
+) -> Path:
+    rows = [
+        {"started_at": "2026-11-16T00:00:00Z", "image": f"docker.io/library/ubuntu@{IMAGE}",
+         "repo": "anthropics/FlashProve", "commit": PIN, "timeout_s": 23400, "mode": "check",
+         "toolchain_file": "leanprover/lean4:v4.29.1", "argv": ARGV},
+        {"exit_code": code, "seconds": seconds},
+    ]  # fmt: skip
+    (tmp / "meta.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows))
+    (tmp / "build.log").write_text(out)
+    (tmp / "lean-version.txt").write_text(LEAN)
+    logs = tmp / "check" / "home" / "lean-check-x"
+    logs.mkdir(parents=True)
+    (logs / "build.log").write_text(kept)
+    (logs / "panic-control.log").write_text("PANIC at the control, by design\n")
+    return tmp
+
+
+def test_full_check_built_reads_the_audit_axioms_and_keeps_the_job_argv(tmp_path: Path) -> None:
+    rec = build_record(check_folder(tmp_path, 0, AUDIT + PASSED + "\n"), "flashprove", FORMAL)
+    assert (rec["status"], rec["argv"]) == ("built", ARGV)
+    assert rec["axioms_reported"] == ["propext", "Classical.choice", "Quot.sound"]
+    assert SchemaRegistry.from_tree(ROOT / "schema").errors("proof-build/1", rec) == []
+
+
+@pytest.mark.parametrize(
+    ("code", "out", "kept", "seconds", "status", "cause"),
+    [
+        (1, "   REPLAY FAILED (exit 1): x\nCheck failed: build\n", LEAN_LINE, 9000, "failed", None),
+        (
+            1,
+            "   PANIC: lines in the output of y\nCheck failed: build, replay, audit\n",
+            "",
+            9000,
+            "failed",
+            None,
+        ),
+        (
+            1,
+            "Check failed: build, replay, audit\n",
+            "error: Lean exited with code 134\n",
+            9000,
+            "failed",
+            None,
+        ),
+        (
+            1,
+            '   "lake build" from scratch: exit 137\nCheck failed: build, replay, audit\n',
+            "",
+            9000,
+            "stopped",
+            "signal",
+        ),
+        (
+            1,
+            "   x: exit 137\nCheck failed: words, build\n",
+            "",
+            9000,
+            "failed",
+            None,
+        ),  # a words failure is ours to show
+        (124, "partial\n", "", 23400, "stopped", "timeout"),
+        (137, "partial\n", "", 23460, "stopped", "timeout"),
+    ],
+)
+def test_full_check_status(
+    tmp_path: Path, code: int, out: str, kept: str, seconds: int, status: str, cause: str | None
+) -> None:
+    rec = build_record(check_folder(tmp_path, code, out, kept, seconds), "flashprove", FORMAL)
+    assert rec["status"] == status
+    stop = rec.get("stop")
+    assert (stop.get("cause") if isinstance(stop, dict) else None) == cause
+
+
+@pytest.mark.parametrize(
+    ("code", "out"),
+    [
+        (3, "  - NOT RUN: the listing (not written)\nPassed so far, and not the full check\n"),
+        (1, "   TOO LITTLE MEMORY: the build\nCheck failed: build\n"),
+        (1, "check.py: no step was run, and nothing was built\n"),
+        (2, "check.py: --jobs must be a whole number. Nothing was checked.\n"),
+        (0, "Partial run passed (tree): only these steps were run\n"),
+    ],
+)
+def test_full_check_without_a_verdict_is_no_record(tmp_path: Path, code: int, out: str) -> None:
+    with pytest.raises(IProofsError):
+        build_record(check_folder(tmp_path, code, out), "flashprove", FORMAL)
+
+
+def test_full_check_audit_and_lean_disagreeing_is_refused(tmp_path: Path) -> None:
+    kept = f"info: x.lean:83:0: '{NAME}' depends on axioms: [propext]\n"
+    with pytest.raises(IProofsError, match="read the logs"):
+        build_record(check_folder(tmp_path, 0, AUDIT + PASSED + "\n", kept), "flashprove", FORMAL)
+
+
+def test_publisher_command_drops_our_wrapper() -> None:
+    targeted = [
+        "env",
+        "LEAN_ABORT_ON_PANIC=1",
+        "timeout",
+        "-k",
+        "60",
+        "25200",
+        "lake",
+        "build",
+        TARGET,
+    ]
+    assert publisher_command(targeted) == ["lake", "build", TARGET]
+    assert publisher_command(ARGV) == ["python3", "-B", "scripts/check.py", "--wide-jobs", "24"]

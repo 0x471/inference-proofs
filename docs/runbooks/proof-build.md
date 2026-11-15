@@ -29,14 +29,31 @@ hf jobs run --detach --flavor cpu-performance --timeout 8h --name iproofs-proof-
   "$IMG" bash /upload/$D/proof-build.sh
 ```
 
-Cap: 8 h on `cpu-performance` at 1.90 USD per hour, 15.20 USD.
+Cap: 8 h on `cpu-performance` at 1.90 USD per hour, 15.20 USD. The targeted build of 2026-11-15
+took 6,388 s there.
+
+The publisher's full check (`MODE=check`, lean/CHECKING.md step 5) builds the library from nothing,
+replays the kernel and audits the named theorems. Its heaviest files hold up to 49 GiB a process,
+and the publisher's whole run took 4 h 26 min on 84 cores and 960 GiB (CHECKING.md L83-L105), so it
+runs on `a100x8` (96 vCPU, 1,136 GB, 20.00 USD per hour; its GPUs stay idle), with the settings
+close to that run:
+
+```sh
+hf jobs run --detach --flavor a100x8 --timeout 7h --name iproofs-proof-check-flashprove \
+  -v hf://buckets/<namespace>/iproofs-dev-runs:/upload \
+  -e OUT=/upload/$D/out -e IMAGE=$IMG -e MODE=check -e BUILD_TIMEOUT_S=23400 \
+  -e LEAN_NUM_THREADS=64 -e WIDE_JOBS=24 "$IMG" bash /upload/$D/proof-build.sh
+```
+
+Cap: 7 h at 20.00 USD per hour, 140 USD. `SETUP_ONLY=1` stops a run after the publisher's check
+of its build files, for a dry run in local Docker (`--platform linux/amd64`).
 
 ## Record
 
 Copy `OUT` from the bucket, then, in the repository:
 
 ```sh
-iproofs proof-build record OUT --system flashprove --release v1.0
+iproofs proof-build record OUT --system flashprove --release v1.0 [--replace]
 iproofs release board v1.0
 iproofs validate --all
 ```
@@ -46,4 +63,7 @@ with the theorem's axioms line; `failed` when Lean gave up on its own (a panic, 
 `LEAN_ABORT_ON_PANIC=1` turns into an abort, a stack overflow or another abort), which sets the
 petal red; `stopped` at the build's own time limit or a SIGKILL or SIGTERM (out of memory among
 them), which leaves it hollow; `failed` otherwise. A job whose setup failed never started the
-build and gives no record. A stored record is never written over.
+build and gives no record, and so does a full check that reached no verdict on the library for
+a reason of its own (too little memory at a step's start, other Lake files, exit 2 or 3). With
+`--replace`, a build that reached a verdict, built or failed, replaces the stored record; a
+stopped build replaces none.

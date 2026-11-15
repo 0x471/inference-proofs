@@ -927,6 +927,22 @@
               "basis": "statement",
               "cause": null,
               "formal": {
+                "build": {
+                  "command": [
+                    "lake",
+                    "build",
+                    "Johnson.Goal.Skeleton.SoundOfVerifyAt"
+                  ],
+                  "exit_code": 0,
+                  "record": "results/v1.0/proof-build/flashprove/proof-build.json",
+                  "seconds": 6388.0,
+                  "started_at": "2026-11-15T21:09:43Z",
+                  "status": "built",
+                  "toolchain": {
+                    "name": "leanprover/lean4",
+                    "version": "v4.29.1"
+                  }
+                },
                 "ceiling": "amber_upper",
                 "conclusion": "model",
                 "input_code_unverified": true,

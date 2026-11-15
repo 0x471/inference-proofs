@@ -20,6 +20,7 @@ from pathlib import Path
 
 from iproofs.errors import ErrorKind, IProofsError
 from iproofs.fidelity import sign_flip_p, step_diffs
+from iproofs.proof_build import publisher_command, record_path
 from iproofs.serialize import load_yaml
 
 GREEN, AMBER, RED, HOLLOW = "green", "amber", "red", "hollow"
@@ -175,7 +176,7 @@ def load_properties(root: Path, system: str) -> dict[str, object] | None:
 
 def load_proof_build(root: Path, release: str, system: str) -> dict[str, object] | None:
     """The proof-build record of `system` (`proof-build/1`), None when none is stored."""
-    path = root / "results" / release / "proof-build" / system / "proof-build.json"
+    path = root / record_path(release, system)
     if not path.is_file():
         return None
     found = json.loads(path.read_text())
@@ -620,11 +621,28 @@ MC_THEOREM_NEED = ("a named machine-checked soundness theorem of part of the pro
                    "with its tool and toolchain pinned")  # fmt: skip
 
 
+def _build_tree(build: Mapping[str, object], path: str) -> dict[str, object]:
+    """The stored proof build as the board carries it (GL-5): where the record is, the toolchain,
+    the publisher's command without our wrapper, its start, seconds, exit code and status."""
+    used = _m(build.get("toolchain"))
+    argv = build.get("argv")
+    return {
+        "record": path,
+        "toolchain": {"name": str(used.get("name")), "version": str(used.get("version"))},
+        "command": publisher_command([str(a) for a in argv]) if isinstance(argv, list) else [],
+        "started_at": str(build.get("started_at")),
+        "seconds": build.get("seconds"),
+        "exit_code": build.get("exit_code"),
+        "status": str(build.get("status")),
+    }
+
+
 def machine_checked(  # noqa: PLR0911, PLR0912, PLR0915 (one return per line of the table)
     props: Mapping[str, object] | None,
     checks: Mapping[str, str],
     commit: str | None,
     build: Mapping[str, object] | None,
+    build_path: str | None = None,
 ) -> Petal:
     pid = "machine_checked"
     petals, nr = read(props, commit)
@@ -638,6 +656,8 @@ def machine_checked(  # noqa: PLR0911, PLR0912, PLR0915 (one return per line of 
     conclusion = v("conclusion") if stated in (GREEN, AMBER_UPPER) else _v(fm.get("conclusion"))
     top = ceiling(stated, conclusion)
     formal = _formal_tree(fm, stated, top)
+    if build is not None and build_path is not None:
+        formal["build"] = _build_tree(build, build_path)
     r = _v(fm.get("reach"))
     run, stated_for = _verifiers(props)
     if stated == RED:  # MC-2
@@ -928,13 +948,14 @@ def statement_petals(
     commit: str | None,
     coverage: Coverage,
     build: Mapping[str, object] | None,
+    build_path: str | None = None,
 ) -> dict[str, Petal]:
     """The four statement petals, each decided on its own (GL-7), none above Mostly met when it
     rests on our reading (GL-10)."""
     found = {
         "unforgeable": unforgeable(props, checks, commit, coverage),
         "weights_hidden": weights_hidden(props, checks, commit, coverage),
-        "machine_checked": machine_checked(props, checks, commit, build),
+        "machine_checked": machine_checked(props, checks, commit, build, build_path),
         "no_trusted_party": no_trusted_party(props, commit),
     }
     return {k: _with_sources(read_as(p), props) for k, p in found.items()}
