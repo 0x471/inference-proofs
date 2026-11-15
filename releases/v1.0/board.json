@@ -367,7 +367,7 @@
           }
         ],
         "slots": null,
-        "slots_cause": "the vLLM run takes no slot count and sends every prompt in one batch (FI-9)"
+        "slots_cause": "the vLLM run takes no slot count and sends every prompt in one generate call (FI-9)"
       },
       "id": "llama-4-maverick",
       "model": "Llama 4 Maverick 17B-128E Instruct",

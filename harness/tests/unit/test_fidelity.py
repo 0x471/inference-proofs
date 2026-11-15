@@ -423,7 +423,8 @@ def test_honest_q8_0_is_shown_above_t_upper_on_the_8b_rung() -> None:
 
 def test_run_slots_counts_every_part_and_no_vllm_run() -> None:
     """FM-5's guard: the highest llama.cpp slot count over the rung's run records; a vLLM record
-    gives no count, since its entrypoint sends every prompt in one batch whatever `slots` says.
+    gives no count, since its entrypoint sends every prompt in one generate call, whatever
+    `slots` says.
     The stored Maverick records say `slots: 1` for the vLLM run and 16 for its controls."""
     llama = {"engine": {"tool": "llama.cpp"}, "slots": 1}
     assert run_slots([llama]) == (1, None)

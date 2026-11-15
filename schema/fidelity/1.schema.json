@@ -542,7 +542,7 @@
       "type": "integer"
     },
     "slots_cause": {
-      "$comment": "FM-5 (amended 2026-11-15): why the rung's fidelity runs give no slot count, e.g. a vLLM run, which sends every prompt in one batch",
+      "$comment": "FM-5 (amended 2026-11-15): why the rung's fidelity runs give no slot count, e.g. a vLLM run, which sends every prompt in one generate call",
       "type": "string"
     },
     "steps": {

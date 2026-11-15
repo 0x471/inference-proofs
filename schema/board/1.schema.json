@@ -1279,7 +1279,7 @@
               }
             },
             "slots": {
-              "$comment": "FM-5 (amended 2026-11-15): the slot count of the rung's fidelity runs; null for a run part in vLLM, which sends every prompt in one batch",
+              "$comment": "FM-5 (amended 2026-11-15): the slot count of the rung's fidelity runs; null for a run part in vLLM, which sends every prompt in one generate call",
               "type": [
                 "integer",
                 "null"

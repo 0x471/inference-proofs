@@ -365,7 +365,9 @@ def step_tests(
     return out
 
 
-VLLM_SLOTS_CAUSE = "the vLLM run takes no slot count and sends every prompt in one batch (FI-9)"
+VLLM_SLOTS_CAUSE = (
+    "the vLLM run takes no slot count and sends every prompt in one generate call (FI-9)"
+)
 
 
 def run_slots(records: Sequence[Mapping[str, object]]) -> tuple[int | None, str | None]:
