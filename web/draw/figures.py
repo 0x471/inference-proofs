@@ -26,6 +26,7 @@ from .overview import (
     serving_words,
     split_html,
 )
+from .pages import STATEMENT_HEAD, statement_given
 from .words import FIGURE_HEAD, SEP, e
 
 FIGURES: dict = {}
@@ -503,3 +504,50 @@ def measured_baselines():
     lines = "".join(f'<div class="bl2"><p class="bm">{e(rung["model"])}</p>{serving_line(rung)}'
                     "</div>" for rung in S.V["rungs"])  # fmt: skip
     return f'<p class="fl">{e(release_words())}</p>{lines}'
+
+
+# what a relying party supplies to each system's verifier (deployment page): the Statement
+# block's rows a verifier does not check itself, by system (RFC-0018 SI-3, amended 2026-11-15)
+SUPPLY_HEAD = {"verifier": "The verifier, pinned", "commit_record": "The commitment, from a register",
+               "request": "The prompt, and the reply where it is given",
+               "decoding": "The decoding rule", "unchecked": "What no call checks"}  # fmt: skip
+
+
+@drawn(MEASURED, "supplies")
+def measured_supplies():
+    """Per system with a Statement block: the verifier it runs at its row's commit, then what
+    the claim card says of the commitment, the request, the decoding rule and what no call
+    checks, each item what the records show is given and the card's words, linked."""
+    found = [row for rung in S.V["rungs"] for row in rung["rows"] if row.get("statement")]
+    if not found:
+        return (
+            '<p class="none">No system has a claim card that says what its verifier is given.</p>'
+        )
+    heads = ["", *(name_of(row) for row in found)]
+
+    def cell(row, rid):
+        st = row["statement"]
+        if rid == "verifier":
+            at = f" at <code>{e(row['commit'][:7])}</code>" if row["commit"] else ""
+            pin = S.V["systems"][row["system"]].get("pin")
+            pr = f', <a href="{e(pin["url"])}">pull request #{pin["pull"]:,}</a>' if pin else ""
+            return f"<code>{e(st['program'])}</code>{at}{pr}"
+        r = next(x for x in st["rows"] if x["id"] == rid)
+        said = ('<span class="na">not stated</span>' if r["said"] is None else
+                "".join(f'<p class="stc">{e(q["text"])} <a href="{e(q["url"])}">source</a></p>'
+                        for q in r["said"]))  # fmt: skip
+        given = statement_given(row, st, rid)
+        return (f"<p>{given}</p>" if given else "") + said
+
+    ths = "".join(f'<th scope="col">{e(h)}</th>' for h in heads)
+    trs = "".join(
+        f'<tr><th scope="row">{e(SUPPLY_HEAD[rid])}</th>'
+        + "".join(f'<td data-l="{e(name_of(row))}">{cell(row, rid)}</td>' for row in found)
+        + "</tr>"
+        for rid in SUPPLY_HEAD
+    )
+    assert set(SUPPLY_HEAD) - {"verifier"} <= set(STATEMENT_HEAD)
+    return (
+        f'<p class="fl">{e(release_words())}</p><div class="tw"><table class="rt mt">'
+        f"<thead><tr>{ths}</tr></thead><tbody>{trs}</tbody></table></div>"
+    )

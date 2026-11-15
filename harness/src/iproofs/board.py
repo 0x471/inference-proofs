@@ -274,6 +274,7 @@ class SessionFigures:
     cause: str | None
     per_reply: float | None  # CO-1
     generation: float | None = None  # CO-3: the generation phase's GPU-seconds over N
+    commit: float | None = None  # CO-7: the `commit` call's GPU-seconds over N
 
     def tree(self) -> dict[str, object]:
         return {
@@ -308,7 +309,11 @@ def session_figures(s: Session, n: int, level: object) -> SessionFigures:
     )  # fmt: skip
     replies = sum(g.size for g in groups)
     generation = None if phase is None or gpus is None or not replies else phase * gpus / replies
-    return SessionFigures(s, gpus, tuple(g.size for g in groups), m, cause, per_reply, generation)
+    end = _event(s.run, "commit.end")
+    spent = (None if gpus is None or commit is None or end is None or end < commit or n <= 0
+             else (end - commit) / 1e9 * gpus / n)  # fmt: skip
+    return SessionFigures(s, gpus, tuple(g.size for g in groups), m, cause, per_reply, generation,
+                          spent)  # fmt: skip
 
 
 # ---------------------------------------------------------------- level inputs
@@ -563,6 +568,7 @@ def _row_tree(
     price: Input,
     fidelity_rows: Mapping[str, object],
     n: int,
+    tokens: int = 0,
 ) -> dict[str, object]:
     figures = row.figures
     proofs = [f"{f.session.path}/run.json#/proofs" for f in figures]
@@ -600,6 +606,22 @@ def _row_tree(
                             for f in figures], Unit.GPU_S_PER_REQUEST, Scope.WHOLE_WALL,
                            "D-L1-COMMIT-PROVING", [*events, *proofs, *marks], unsplit,
                            no_phase)  # fmt: skip
+    # CO-7 (amended 2026-11-15): the session cost per reply in its timed calls: the `commit`
+    # call, the generation phase where there is one, and the rest (proving, and the seconds
+    # between the calls); every row has the first and the last
+    commit_part = _stat([f.commit for f in figures], Unit.GPU_S_PER_REQUEST, Scope.COMMIT,
+                        "D-L1-COMMIT", events, NullReason.MISSING_INPUT)  # fmt: skip
+    rest = _stat([f.per_reply - f.commit - (f.generation or 0.0)
+                  if f.per_reply is not None and f.commit is not None
+                  and (f.generation is not None or not phased) else None for f in figures],
+                 Unit.GPU_S_PER_REQUEST, Scope.WHOLE_WALL, "D-L1-SESSION-PROVING",
+                 [*events, *proofs, *marks], NullReason.MISSING_INPUT)  # fmt: skip
+    # the generation phase per reply token: its GPU-seconds over N, over the request's reply
+    # tokens (the level's request.output_tokens)
+    per_token = _stat([f.generation / tokens if f.generation is not None and tokens else None
+                       for f in figures], Unit.GPU_S_PER_TOKEN, Scope.WHOLE_WALL,
+                      "D-L1-GENERATION-TOKEN", [*(marks or proofs), "levels/L1.yaml#/request/"
+                                                "output_tokens"], unsplit, no_phase)  # fmt: skip
     session_generation_in = (f"{index}/session_generation_gpu_seconds_per_reply",
                              session_generation)  # fmt: skip
     commit_proving_in = (f"{index}/session_commit_and_proving_gpu_seconds_per_reply",
@@ -636,6 +658,9 @@ def _row_tree(
         "session_gpu_seconds_per_reply": session,
         "session_generation_gpu_seconds_per_reply": session_generation,
         "session_commit_and_proving_gpu_seconds_per_reply": commit_proving,
+        "session_commit_gpu_seconds_per_reply": commit_part,
+        "session_proving_gpu_seconds_per_reply": rest,
+        "generation_gpu_seconds_per_reply_token": per_token,
         "session_generation_multiple": _ratio(
             "D-L1-MULTIPLE", Unit.RATIO, Scope.WHOLE_WALL, session_generation_in, baseline
         ),
@@ -700,6 +725,7 @@ def build_board(root: Path, release: str, level: object) -> dict[str, object]:
     alpha = field_of(field_of(level, "fidelity"), "alpha")  # F5: the step tests' alpha
     level_alpha = float(alpha) if isinstance(alpha, int | float) else None
     runs = [RunView.read(p) for p in release_run_dirs(root, release)]
+    reply_tokens = int_of(field_of(level, "request"), "output_tokens", 0)
     dates: set[str] = set()
     rungs_out, summaries = [], []
     rung_list: Sequence[object] = field_of(level, "rungs") or ()  # type: ignore[assignment]
@@ -765,7 +791,7 @@ def build_board(root: Path, release: str, level: object) -> dict[str, object]:
             "baseline": baseline_block,
             "fidelity": fidelity_block,
             "rows": [_row_tree(by_system[s.system], f"{base}/rows/{j}", p, baseline, price,
-                               fidelity_rows, n)
+                               fidelity_rows, n, reply_tokens)
                      for j, (s, p) in enumerate(ordered)],
         })  # fmt: skip
         teacher_forced = _teacher_forced(root, release, rung_id)

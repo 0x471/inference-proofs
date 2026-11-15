@@ -12,7 +12,7 @@ from typing import Any
 
 from iproofs.release import REASONS
 from iproofs.schema import SchemaRegistry
-from iproofs.site import inputs
+from iproofs.site import inputs, system
 from iproofs.site.inputs import REPOSITORY
 
 # RFC-0018 §The six checks, in the table's order (the entry gate; the glyph is the petals below)
@@ -74,6 +74,15 @@ def _system(sid: str, facts: Any, root: Path) -> dict[str, Any]:
         "repo": str(up["repo"]) if isinstance(up, dict) and up.get("repo") else None,
         # the claim card's links by field (`sources`), for the Stated security line's link
         "sources": {str(k): str(v) for k, v in sources.items()},
+        # SI-3 (amended 2026-11-15): a row that runs a change to the publisher's code
+        "pin": None if row is None or row.pin is None else
+        {"pull": row.pin.pull, "url": row.pin.url, "merged": row.pin.merged,
+         "by_builder": row.pin.by_builder, "upstream_commit": row.pin.upstream_commit,
+         "upstream_outcome": row.pin.upstream_outcome, "record": row.pin.record},
+        # CO-7 (amended 2026-11-15): how a generation phase of its own generates
+        "generation": None if row is None or row.generation is None else
+        {"words": row.generation.words, "quote": row.generation.quote,
+         "url": row.generation.url},
     }  # fmt: skip
 
 
@@ -168,6 +177,9 @@ def _checks(raw: dict[str, Any]) -> list[dict[str, Any]]:
 
 
 ROW_FIGURES = ("multiple", "session_multiple", "steady_gpu_seconds_per_reply",
+               # CO-7 (amended 2026-11-15): the session cost per reply in its timed calls
+               "session_commit_gpu_seconds_per_reply", "session_proving_gpu_seconds_per_reply",
+               "generation_gpu_seconds_per_reply_token",
                "steady_generation_gpu_seconds_per_reply", "steady_proving_gpu_seconds_per_reply",
                "generation_multiple", "proving_multiple",
                # CO-7 (amended 2026-11-13): the session cost per reply in two parts
@@ -233,6 +245,11 @@ def _baseline(raw: dict[str, Any] | None, at: str, board: str | None) -> dict[st
         "gpu_seconds_per_reply": _serving(figure(raw["gpu_seconds_per_reply"],
                                                  f"{at}/gpu_seconds_per_reply", board)),
         "usd_per_reply": _serving(figure(raw["usd_per_reply"], f"{at}/usd_per_reply", board)),
+        # CO-4: the rate at each concurrency of the ladder, the full-load rung among them
+        "ladder": [{"concurrency": c["concurrency"],
+                    "rate": _serving(figure(c["replies_per_gpu_second"],
+                                            f"{at}/ladder/{i}/replies_per_gpu_second", board))}
+                   for i, c in enumerate(raw.get("ladder") or [])],
     }  # fmt: skip
 
 
@@ -358,6 +375,17 @@ def site_view(root: Path, board: Path | None = None) -> dict[str, Any]:
                     "rows": [next(row for row in rung["rows"] if row["system"] == s)
                              for s in f["rows"]]}  # fmt: skip
     request = (doc or {}).get("request") or level["request"]
+    # SI-3 (amended 2026-11-15): what each row's page prints from the records beside the board
+    models = {k: {"precision_words": dict(v.precision_words or {})}
+              for k, v in facts.models.items()}  # fmt: skip
+    release_id = None if doc is None else str(doc["release"])
+    for rung in rungs:
+        if rung["baseline"] is not None:
+            rung["baseline"]["release"] = system.serving_release(root, rung["baseline"]["serving"])
+        for row in rung["rows"]:
+            row["statement"] = system.statement(root, release_id, row, request)
+            row["machine"] = system.machine(root, release_id, row, dict(facts.gpus))
+            row["precision"] = system.precision(root, row, models)
     engine = inputs.engine(root)
     return {
         "repository": REPOSITORY,
@@ -406,6 +434,7 @@ def site_view(root: Path, board: Path | None = None) -> dict[str, Any]:
             "group_gap_s": level["steady"]["group_gap_s"],
             "plateau": level["baseline"]["plateau"],
             "ladder_top": max(level["baseline"]["ladder"]),
+            "timed_batches": level["baseline"]["timed_batches"],
         },
         "frontier": frontier,
         "rungs": rungs,

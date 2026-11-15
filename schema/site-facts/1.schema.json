@@ -72,6 +72,29 @@
             "no_public_code"
           ]
         },
+        "generation": {
+          "$comment": "how the system generates its replies where it does so in a phase of its own (RFC-0018 AD-4), the cause line under Cost (CO-7, amended 2026-11-15)",
+          "additionalProperties": false,
+          "properties": {
+            "quote": {
+              "$ref": "#/$defs/text",
+              "description": "the publisher's words that state it, verbatim"
+            },
+            "url": {
+              "$ref": "#/$defs/url"
+            },
+            "words": {
+              "$ref": "#/$defs/text",
+              "description": "the engine and how it generates, in plain words"
+            }
+          },
+          "required": [
+            "words",
+            "quote",
+            "url"
+          ],
+          "type": "object"
+        },
         "kind_words": {
           "$ref": "#/$defs/text",
           "description": "a reference row's role, in plain words (RFC-0015)"
@@ -107,6 +130,50 @@
           "description": "the workload id of the system's one row on the overview, when it runs more than one (owner decision, RFC-0009 S6)",
           "pattern": "^[a-z0-9][a-z0-9-]*$",
           "type": "string"
+        },
+        "pin": {
+          "$comment": "where the row's version is not the publisher's own: the change it runs, printed in the band at depth 2 (RFC-0018 SI-3, amended 2026-11-15)",
+          "additionalProperties": false,
+          "properties": {
+            "by_builder": {
+              "description": "written by the people who build this site",
+              "type": "boolean"
+            },
+            "merged": {
+              "type": "boolean"
+            },
+            "pull": {
+              "description": "the pull request's number in the publisher's repository",
+              "minimum": 1,
+              "type": "integer"
+            },
+            "record": {
+              "description": "the record of that outcome, a path in the repository",
+              "pattern": "^results/[A-Za-z0-9/_.-]+$",
+              "type": "string"
+            },
+            "upstream_commit": {
+              "description": "the publisher's own commit the row would run without the change",
+              "pattern": "^[0-9a-f]{40}$",
+              "type": "string"
+            },
+            "upstream_outcome": {
+              "$ref": "#/$defs/text",
+              "description": "what the publisher's own commit did on the level's request, in plain words"
+            },
+            "url": {
+              "$ref": "#/$defs/url"
+            }
+          },
+          "required": [
+            "pull",
+            "url",
+            "merged",
+            "by_builder",
+            "upstream_commit",
+            "upstream_outcome"
+          ],
+          "type": "object"
         },
         "reason": {
           "description": "RFC-0018 SI-4: the one fixed reason a system has no row on the board",
@@ -261,6 +328,6 @@
     "models",
     "rows"
   ],
-  "title": "Display facts the site prints and no harness record holds: web/_data/facts.json (RFC-0009 §Site). Every value is text.",
+  "title": "Display facts the site prints and no harness record holds: web/_data/facts.json (RFC-0009 \u00a7Site). Every value is text.",
   "type": "object"
 }

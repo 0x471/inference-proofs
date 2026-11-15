@@ -253,6 +253,9 @@ html:has(.top.s-on) { overflow: hidden; }
 .facts > div { min-width: 0; padding-top: 12px; }
 .facts dt { font: var(--f-label); letter-spacing: var(--track); text-transform: uppercase; }
 .facts dd { margin: 6px 0 0; font: 600 13px/19px var(--mono); }
+/* RFC-0018 SI-3 (amended 2026-11-15): a row that runs a change to the publisher's code, one line */
+.facts > .f-pin { flex: 1 1 100%; }
+.facts .f-pin dd { font-weight: 400; max-width: 76ch; }
 .facts a { text-decoration-thickness: 1px; }
 /* a link on the band, in hand: a block of ground ink, the words in cobalt (as an index line) */
 .facts a:hover, .facts a:active, .facts a:focus-visible { background: var(--ground); color: var(--cobalt); text-decoration: none; box-shadow: 0 0 0 3px var(--ground); }
@@ -289,6 +292,7 @@ html:has(.top.s-on) { overflow: hidden; }
   .sysb .facts > .f-md { order: 2; margin-top: 10px; }
   .sysb .facts > .f-st { order: 3; margin-top: 3px; }
   .sysb .facts > .f-src { display: none; }
+  .sysb .facts > .f-pin { order: 4; margin-top: 10px; }
   .sysb .sbm { order: 4; display: flex; flex-wrap: wrap; align-items: flex-end; column-gap: 18px; row-gap: 8px; margin: 18px 0 20px; padding: 0; }
   .sysb .sbl { flex: 0 0 100%; margin-bottom: 0; }
   .sysb .sbm > .sub { display: none; }
@@ -884,6 +888,9 @@ html.js .scalepage .scl-panel { margin-top: 0; }
 .ckt td.bs { overflow-wrap: normal; }
 .ckt .rs { display: block; max-width: 70ch; }
 .qt { display: block; margin-top: 8px; max-width: 70ch; color: var(--muted); text-decoration-color: var(--rule); }
+/* the Statement block (SI-3, amended 2026-11-15): the claim card's words on a row, each linked */
+.stc { margin: 0; max-width: 70ch; }
+.stc + .stc { margin-top: 8px; }
 .qt:hover { color: var(--paper); }
 .ckt .bs { color: var(--muted); max-width: 22ch; }
 .hl { margin-top: 18px; color: var(--muted); }

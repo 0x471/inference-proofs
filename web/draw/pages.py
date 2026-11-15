@@ -77,6 +77,7 @@ from .words import (
     KNOW_LINES,
     KNOW_WHERE,
     KNOW_WORD,
+    LEVEL_STATEMENT_HEAD,
     M_COL,
     M_HEAD,
     M_NAME,
@@ -116,7 +117,6 @@ from .words import (
     SEP,
     STATE_WORD,
     STATED_SECURITY,
-    STATEMENT_HEAD,
     STATEMENT_WORD,
     STEP_WORD,
     TF_AGREE,
@@ -140,6 +140,7 @@ from .words import (
     petal_step,
     quoted,
     said_word,
+    range_words,
     sig,
 )
 
@@ -510,6 +511,65 @@ def glyph_html(row):
             f'class="sr">Petal, state, reason</caption><tbody>{"".join(trs)}</tbody></table></div>')  # fmt: skip
 
 
+# RFC-0018 SI-3 (amended 2026-11-15): the Statement block's rows, in the view's order
+STATEMENT_HEAD = {"commit_record": "From our commit record", "request": "From the request",
+                  "proof": "From the proof", "decoding": "Decoding rule",
+                  "unchecked": "Checked by no call", "architecture": "Architecture"}  # fmt: skip
+
+
+def statement_given(row, st, rid):  # noqa: PLR0911 (one return per row)
+    """What the verifier the row runs is given, for one row of the Statement block, from the
+    records: the files `commit` wrote (the manifests), the request's sizes, the proof's files
+    the verifier reads (`system.yaml`), the level's decoding rule; the architecture's word."""
+    req = S.V["request"]
+    if rid == "commit_record":
+        files = ", ".join(st["verifier_files"])
+        return ("the commitment" + (f" and the files <code>commit</code> wrote: <code>{e(files)}"
+                                    "</code>" if files else ""))  # fmt: skip
+    if rid == "request":
+        said = f"the prompt, {st['prompt_tokens']:,} token ids"
+        if st["reply"] == "record":
+            said += f", and the {st['output_tokens']:,}-token reply from our record"
+        return e(said)
+    if rid == "proof":
+        kinds = ", ".join(f"{k['count']:,} × {k['kind']}" if k["count"] > 1 else k["kind"]
+                          for k in st["proof_read"])  # fmt: skip
+        said = (f"{st['proof_files']:,} {'file' if st['proof_files'] == 1 else 'files'}: "
+                f"<code>{e(kinds)}</code>") if kinds else "its files"  # fmt: skip
+        if st["reply"] == "proof":
+            said += "; the reply is read from the proof, not given"
+        return said
+    if rid == "decoding":
+        return e(f"{req['decoding']}, at every reply position")
+    if rid == "architecture":
+        if st["architecture_visible"]:
+            return e(f"visible: {st['architecture_visible']}")
+        return e(SCOPE_VALUE_WORD["not_stated"])
+    return ""
+
+
+def statement_html(row):
+    """SI-3 (amended 2026-11-15): what the verifier the row runs is given, and from where (our
+    commit record, the request, the proof), the decoding rule, what no call checks and what of
+    the architecture a proof shows. Each row: what the records show is given, then the claim
+    card's words on it, each linked to the publisher's line, or "not stated". It sets no state."""
+    st = row.get("statement")
+    if not st:
+        return f'<p class="none">{e(SCOPE_VALUE_WORD["not_stated"])}</p>'
+    rows = []
+    for r in st["rows"]:
+        said = (f'<span class="na">{e(SCOPE_VALUE_WORD["not_stated"])}</span>' if r["said"] is None
+                else "".join(f'<p class="stc">{e(q["text"])} <a href="{e(q["url"])}" '
+                             f'title="{e(q["field"])}">source</a></p>' for q in r["said"]))  # fmt: skip
+        rows.append([e(STATEMENT_HEAD[r["id"]]), statement_given(row, st, r["id"]), said])
+    card = (f' <a href="{e(link(st["card"]))}" title="{e(st["card"])}">claim card</a>'
+            if st["card"] else "")  # fmt: skip
+    lead = (f'<p class="rb"><span class="k">Verifier</span> <span><code>{e(st["program"])}</code>; '
+            f"each row's right column is the{card}, which copies the publisher's documents at "
+            "the row's commit</span></p>")  # fmt: skip
+    return lead + stacked(["What", "Given", "Claim card"], rows)
+
+
 NOTE_SHORT = 48  # a check's note longer than this, in characters, is left to its records
 
 
@@ -568,7 +628,7 @@ def checks_html(row):
     return (f'<p class="rd">{e(CHECKS_LEAD)}</p>'
             '<table class="rt ckt cks"><thead><tr><th scope="col">Check</th><th scope="col">'
             f'State</th>{cause_th}<th scope="col">Evidence</th></tr></thead>'
-            f'<tbody>{"".join(trs)}</tbody></table>{statement_html(row)}')  # fmt: skip
+            f'<tbody>{"".join(trs)}</tbody></table>{level_statement_html(row)}')  # fmt: skip
 
 
 def trials_html(trials):
@@ -590,7 +650,7 @@ def trials_html(trials):
     return f'<p class="cn"><span class="k">{e(TRIALS_HEAD)}</span> {e(words)}</p>'
 
 
-def statement_html(row):
+def level_statement_html(row):
     """SI-4a: whether the publisher states Level 1's statement at the pin, with its quotes one
     click away; "read as", linked to what that means, when the fact is our reading."""
     st = row.get("level_statement")
@@ -604,7 +664,7 @@ def statement_html(row):
     quotes = (f'<details class="more"><summary>{e(counted_words(len(st["quotes"]), "quote"))}'
               f'</summary>{quote_links(st["quotes"])}</details>' if st["quotes"] else "")  # fmt: skip
     return (
-        f'<p class="rb"><span class="k">{e(STATEMENT_HEAD)}</span> <span>{said}</span></p>{quotes}'
+        f'<p class="rb"><span class="k">{e(LEVEL_STATEMENT_HEAD)}</span> <span>{said}</span></p>{quotes}'
     )
 
 
@@ -758,6 +818,8 @@ def cost_sub(f, n, head="", own=False):
     count = f["n"] if f["n"] is not None else n
     if own or count != n:
         said.append(f"n\u00a0=\u00a0{count}")
+    if spread := range_words(f):  # AGENTS.md rule 5: a mean prints its range
+        said.append(spread)
     return SEP.join(said)
 
 
@@ -818,11 +880,124 @@ def missing_html(missing):
 
 
 def gpus_words(row):
-    """The GPUs a row's counted sessions bound (SE-2, the sessions' `gpus`): "1 × H200"."""
+    """The GPUs a row's counted sessions bound (SE-2, the sessions' `gpus`): "1 × H200"; where
+    the rented machine held more, as its manifests record (SE-2: printed, not counted), "2 × H200
+    rented, 1 bound and priced"."""
     bound = {s.get("gpus") for s in row["sessions"]}
     if not bound or not all(bound):
         return "GPUs not recorded"
-    return f"{' or '.join(f'{g:,}' for g in sorted(bound))} × H200"
+    said = " or ".join(f"{g:,}" for g in sorted(bound))
+    seen = (row.get("machine") or {}).get("gpus_visible") or []
+    if seen and max(seen) > max(bound):
+        rented = " or ".join(f"{g:,}" for g in seen)
+        return f"{rented} × H200 rented, {said} bound and priced"
+    return f"{said} × H200"
+
+
+def words_or(values):
+    """A record's values in words: one, or each joined by "or" where the sessions differ."""
+    return " or ".join(str(v) for v in values)
+
+
+HOST_WORD = {"same_as_prover": "the prover's host"}  # a manifest's `verifier_host`, in words
+
+
+def verifying_html(row):
+    """The Verifying line (CO-6's verify time, amended 2026-11-15): the program the row's verify
+    time timed, on what (the verifier's CPUs and their model, the host, whether a GPU was
+    visible to it, from the counted sessions' manifests and traces), the range of the sessions'
+    means and n; then each of the publisher's verifiers no session timed."""
+    st, mc = row.get("statement"), row.get("machine")
+    f = row["figures"]["verify_seconds_per_reply"]
+    if not st or not has(f):
+        return ""
+    said = [f"<code>{e(st['program'])}</code>"]
+    if mc and mc["verifier_cpus"] and mc["cpu_model"]:
+        cpus = words_or(mc["verifier_cpus"])
+        host = words_or(HOST_WORD.get(h, h) for h in mc["verifier_host"])
+        on = f"on {cpus} CPUs of an {words_or(mc['cpu_model'])}" + (f", {host}" if host else "")
+        seen = mc["verify_gpu_visible"]  # from the verify traces
+        on += {(True,): ", its GPU visible", (False,): ", no GPU visible"}.get(
+            tuple(seen), ", a GPU visible in some sessions" if seen else ""
+        )
+        said.append(e(on))
+    spread = range_words(f)
+    count = f["n"] if f["n"] is not None else counted(row)
+    timed = (f"{spread}, the {count:,} sessions' means" if spread
+             else fig_words(f)) + f", n\u00a0=\u00a0{count:,}"  # fmt: skip
+    rel = (S.V["release"] or {}).get("id")
+    untimed = "".join(f'<span class="nw">\u00a0\u00b7 {e(u)}: not timed'
+                      + (f" in {e(rel)}" if rel else "") + "</span>"
+                      for u in st["untimed"])  # fmt: skip
+    return (f'<p class="rb"><span class="k">Verifying</span> <span>{" ".join(said)}; '
+            f"{e(timed)}{untimed}</span></p>")  # fmt: skip
+
+
+BASIS_BITS = {"computed": "computed from its files", "stated": "as the publisher states it",
+              "file_size": "from its file size"}  # fmt: skip
+
+
+def proved_html(row):
+    """The precision the row proves (its workload record), beside the release serving runs (the
+    Serving line above it): the copy, its words, its weight bits and how they were found, and
+    where the bits cover part of the weights, so."""
+    p = row.get("precision")
+    if not p:
+        return ""
+    said = (f'<a href="{e(link(p["record"]))}" title="{e(p["record"])}">{e(p["proved"])}</a>'
+            + (f" ({e(p['proved_words'])})" if p["proved_words"] else ""))  # fmt: skip
+    if isinstance(p["bits"], int | float):
+        n = f"{p['bits']:,}" if float(p["bits"]).is_integer() else sig(p["bits"], 3)
+        how = BASIS_BITS.get(p["bits_basis"], p["bits_basis"] or "")
+        if p["bits_source"]:
+            how = f'<a href="{e(p["bits_source"])}">{e(how)}</a>'
+        part = " for part of the weights" if p["bits_covers"] == "part" else ""
+        said += f", {e(n)} bits per weight{e(part)}, {how}"
+    return f'<p class="rb"><span class="k">Proved</span> <span>{said}</span></p>'
+
+
+def generation_html(row):
+    """CO-7 (amended 2026-11-15): where the system generates in a phase of its own, what
+    generates (the facts file, with the publisher's words linked) and that phase's GPU-seconds
+    per reply token, with its range and n."""
+    gen = S.V["systems"][row["system"]].get("generation")
+    f = row["figures"].get("generation_gpu_seconds_per_reply_token")
+    if not gen or not has(f):
+        return ""
+    quote = f'<a class="qt" href="{e(gen["url"])}">\u201c{e(gen["quote"])}\u201d</a>'
+    sub = SEP.join(w for w in (range_words(f), f"n\u00a0=\u00a0{f['n']}" if f["n"] else "") if w)
+    return (f'<p class="rb"><span class="k">Generation</span> <span>{e(gen["words"])} '
+            f"{quote}; {fig_html(f, sub=sub)}</span></p>")  # fmt: skip
+
+
+def size_html(row):
+    """What Proof size counts: every file a proof is released as, by kind, from the sessions'
+    manifests (a size is the bytes as written, JSON text where the files are JSON)."""
+    st = row.get("statement")
+    if not st or not st["proof_parts_count"] or not has(row["figures"]["proof_bytes_per_reply"]):
+        return ""
+    kinds = ", ".join(f"{k['count']:,} × {k['kind']}" if k["count"] > 1 else k["kind"]
+                      for k in st["proof_parts"])  # fmt: skip
+    n = st["proof_parts_count"]
+    return (f'<p class="rb"><span class="k">Proof size</span> <span>the bytes of the {n:,} '
+            f"{'file' if n == 1 else 'files'} a proof is released as, as written: "
+            f"<code>{e(kinds)}</code></span></p>")  # fmt: skip
+
+
+def ladder_html(rung):
+    """CO-4: the serving ladder, each concurrency's rate, the full-load rung marked; behind a
+    disclosure, under the Serving line."""
+    b = rung["baseline"] or {}
+    ladder = [c for c in b.get("ladder") or [] if c["rate"] is not None]
+    if not ladder:
+        return ""
+    rows = [[f"{c['concurrency']:,}" + (" (full load)" if c["concurrency"] == b["concurrency"]
+                                       else ""),
+             fig_html(c["rate"], sub=BARE)] for c in ladder]  # fmt: skip
+    return (
+        f'<details class="more"><summary>serving ladder, {len(ladder):,} concurrencies'
+        "</summary>" + stacked(["Concurrent requests", "Rate"], rows) + "</details>"
+    )
 
 
 def evidence_words(named):
@@ -835,6 +1010,10 @@ def evidence_words(named):
     if len(tiers) == 1:
         return next(iter(tiers))
     return "; ".join(f"{w}: {', '.join(low_first(k) for k in ks)}" for w, ks in tiers.items())
+
+
+# CO-7 (amended 2026-11-15): the session less its commit call and its generation phase
+PROVING_REST = "Proving GPU time per reply"
 
 
 def cost_html(row):
@@ -859,7 +1038,11 @@ def cost_html(row):
     gpu = [("Serving GPU time per reply", b.get("gpu_seconds_per_reply"), None, None),
            (M_HEAD, figs["steady_gpu_seconds_per_reply"], n, "steady_gpu_seconds_per_reply"),
            ("Session GPU time per reply", figs["session_gpu_seconds_per_reply"], n,
-            "session_gpu_seconds_per_reply")]  # fmt: skip
+            "session_gpu_seconds_per_reply"),
+           # CO-7 (amended 2026-11-15): the session in its timed calls
+           ("Commit GPU time per reply", figs.get("session_commit_gpu_seconds_per_reply"), n,
+            None),
+           (PROVING_REST, figs.get("session_proving_gpu_seconds_per_reply"), n, None)]  # fmt: skip
     # a GPU time with two parts is drawn (its head's title its full name), the others are cells
     drawn = [(k, f, key, M_NAME if k == M_HEAD else "") for k, f, _, key in gpu
              if has(f) and gpu_parts(figs, key)]  # fmt: skip
@@ -894,8 +1077,8 @@ def cost_html(row):
     m_title = f' title="{e(M_NAME)}"'
     cells = "".join(f"<div><dt{m_title if k == M_HEAD else ''}>{e(beside_unit(k))}</dt>"
                     f"<dd>{v}</dd></div>" for k, v in rows)  # fmt: skip
-    serving = (f'<p class="rb"><span class="k">Serving</span> <span>{e(serving_words(base))}</span></p>'
-               if line else "")  # fmt: skip
+    serving = (f'<p class="rb"><span class="k">Serving</span> <span>{e(serving_words(base))}</span>'
+               f"</p>{ladder_html(rung)}" if line else "")  # fmt: skip
     over = (f'<span class="nw">{e(gpus_words(row))},</span> '
             f'<span class="nw">{e(whole_line(row, n))}</span>')  # fmt: skip
     proving = f'<p class="rb"><span class="k">Proving</span> <span>{over}</span></p>' if n else ""
@@ -904,8 +1087,9 @@ def cost_html(row):
     evidence = (f'<p class="rb"><span class="k">Evidence</span> <span>{e(evidence_words(shown))}'
                 "</span></p>" if shown else "")  # fmt: skip
     missing.pop(NO_STEADY_WORD, None)  # the sessions table prints each session's none and why
-    return (f'{serving}{proving}{evidence}{cost_bars(row, drawn)}<dl class="parts">{cells}</dl>'
-            f"{missing_html(missing)}")  # fmt: skip
+    return (f"{serving}{proved_html(row)}{proving}{generation_html(row)}{verifying_html(row)}"
+            f"{size_html(row)}{evidence}{cost_bars(row, drawn)}"
+            f'<dl class="parts">{cells}</dl>{missing_html(missing)}')  # fmt: skip
 
 
 def p_html(p):
@@ -1203,6 +1387,21 @@ def share_html(row):
             f"{e(SHARE[2])}</button>")  # fmt: skip
 
 
+def pin_html(pin, name):
+    """A row that runs a change to the publisher's code, in one line (SI-3, amended 2026-11-15):
+    the pull request, whether upstream merged it, who wrote it, and what the publisher's own
+    commit did on the level's request, linked to its record."""
+    merged = "merged upstream" if pin["merged"] else "not merged upstream"
+    who = ", written by this project's builder" if pin["by_builder"] else ""
+    record = (f' (<a href="{e(link(pin["record"]))}" title="{e(pin["record"])}">record</a>)'
+              if pin.get("record") else "")  # fmt: skip
+    return (
+        f'Runs <a href="{e(pin["url"])}">pull request #{pin["pull"]:,}</a> to {e(name)}, '
+        f"{merged}{who}; at upstream <code>{e(pin['upstream_commit'][:7])}</code>, "
+        f"{e(pin['upstream_outcome'])}{record}."
+    )
+
+
 def system_page(row):
     """A system on a model (SI-3): the band (its name, sized by its length, never more than two
     lines; its one figure on the right, labelled for what it is; the facts under them, the
@@ -1214,11 +1413,18 @@ def system_page(row):
     facts = [("f-st", "Standing", standing_html(row, "")),
              ("f-md", "Model", f'<a href="/#{e(rung["id"])}">{nobreak(rung["model"])}</a>')]  # fmt: skip
     source = ""
-    if sysd["repo"]:  # the publisher's repository, at the commit the row runs
+    pin = sysd.get("pin")
+    if pin:  # a change to the publisher's code: the source is its pull request (SI-3)
+        source = (f'<a href="{e(pin["url"])}">{nobreak(sysd["repo"] or name)} '
+                  f'<span class="nw">#{pin["pull"]:,}</span></a>')  # fmt: skip
+        facts.append(("f-src", "Source", source))
+    elif sysd["repo"]:  # the publisher's repository, at the commit the row runs
         at = f"/tree/{e(row['commit'])}" if row["commit"] else ""
         source = (f'<a href="https://github.com/{e(sysd["repo"])}{at}">'
                   f'{nobreak(sysd["repo"])}</a>')  # fmt: skip
         facts.append(("f-src", "Source", source))
+    if pin:  # SI-3 (amended 2026-11-15): the version the row runs, at depth 2
+        facts.append(("f-pin", "Version", pin_html(pin, name)))
     share = share_html(row)
     size = next((i + 1 for i, k in enumerate(NAME_SIZES) if len(name) <= k), len(NAME_SIZES) + 1)
     # the figure's plain name, the figure, and under it, once, what was counted and n (CO-5)
@@ -1244,8 +1450,9 @@ def system_page(row):
     )
     # the share group at the strip's end on a wide screen
     share_strip = f'<div class="shr" role="group" aria-label="{e(SHARE[0])}">{share}</div>'
-    parts = (("figures", "Figures"), ("glyph", "Glyph"), ("checks", "Checks"), ("cost", "Cost"),
-             ("fidelity", "Fidelity"), ("sessions", "Sessions"))  # fmt: skip
+    parts = (("figures", "Figures"), ("glyph", "Glyph"), ("statement", "Statement"),
+             ("checks", "Checks"), ("cost", "Cost"), ("fidelity", "Fidelity"),
+             ("sessions", "Sessions"))  # fmt: skip
     body = f"""
 {header("system")}
 <main id="main" class="sys">
@@ -1254,6 +1461,7 @@ def system_page(row):
   <div class="wrap">
     {section("figures", "Figures", figures_html(row))}
     {section("glyph", "Glyph", glyph_html(row))}
+    {section("statement", "Statement", statement_html(row))}
     {section("checks", "Checks", checks_html(row))}
     {section("cost", "Cost", cost_html(row))}
     {section("fidelity", "Fidelity", fidelity_html(row))}

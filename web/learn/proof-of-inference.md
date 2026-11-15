@@ -11,6 +11,7 @@ The [[relying party]] (a customer, an auditor, a regulator or an inspectorate) j
 
 ## Outside the proof
 
+- What an operator proves in its own deployment. Our runs show what each system's own prover and verifier did on our request, with the commitment we recorded; they show nothing about the proofs an operator makes of its own traffic, which runs whatever code it chooses outside our tests. A relying party checks each proof itself ([what it supplies](/deployment#what-a-relying-party-supplies)).
 - When, or whether, the reply was served. A proof made later shows the operator holds a model that gives this reply, "not that it necessarily served it earlier" ([South and others, 2024](https://arxiv.org/html/2402.02675v2#A1.SS1)).
 - The model as released. The systems on the [ladder](/) prove a [[quantization|quantized]] copy ([why](/statement#integer-arithmetic)). No proof says how far its replies drift from the original's: we measure that, and the [Fidelity check](/checks#fidelity) stops a copy quantized far from the original.
 - A reply with tokens chosen at random. The ladder's proofs cover the [[greedy decoding|greedy]] reply.

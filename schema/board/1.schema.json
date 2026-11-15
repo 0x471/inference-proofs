@@ -1330,6 +1330,18 @@
           "$comment": "CO-7 (amended 2026-11-13): the session cost per reply less its generation part (commit, the prove call outside its generation phase and the seconds between the two calls), mean of the counted sessions, scope whole_wall; null when the system has no generation phase of its own",
           "$ref": "#/$defs/value"
         },
+        "session_commit_gpu_seconds_per_reply": {
+          "$comment": "CO-7 (amended 2026-11-15): the commit call's GPU-seconds (commit.start to commit.end) over N, mean of the counted sessions, scope commit",
+          "$ref": "#/$defs/value"
+        },
+        "session_proving_gpu_seconds_per_reply": {
+          "$comment": "CO-7 (amended 2026-11-15): the session cost per reply less its commit part and its generation part (zero with no generation phase of its own), mean of the counted sessions, scope whole_wall",
+          "$ref": "#/$defs/value"
+        },
+        "generation_gpu_seconds_per_reply_token": {
+          "$comment": "CO-7 (amended 2026-11-15): the generation phase's GPU-seconds per reply over the request's reply tokens, mean of the counted sessions; null when the system has no generation phase of its own",
+          "$ref": "#/$defs/value"
+        },
         "session_commit_and_proving_multiple": {
           "$comment": "CO-7 (amended 2026-11-13): the commit and proving part over the baseline's GPU-seconds per reply",
           "$ref": "#/$defs/value"

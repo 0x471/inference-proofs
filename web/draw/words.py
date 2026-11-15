@@ -127,7 +127,7 @@ TRIAL_WHAT = {("P1", None): "proved with one weight changed",
 TRIALS_HEAD = "What ran"
 # the Level 1 statement on a system page (RFC-0018 SI-4a): the label, and the line by whether
 # the publisher's documents state it at the pin
-STATEMENT_HEAD = "Statement"
+LEVEL_STATEMENT_HEAD = "Level 1 statement"  # SI-4a; the page's Statement section is SI-3's
 STATEMENT_WORD = {
     "stated": "the publisher states that an accept means the reply is the committed model's own "
     "greedy reply to the prompt",
@@ -765,6 +765,10 @@ def number(v, unit):  # noqa: PLR0911 (one return per stored unit)
         return sig(v), "USD/GPU-hour"
     if unit == "nat/token":
         return sig(v), "nats/token"
+    if unit == "gpu_s/token":  # CO-7 (amended 2026-11-15): generation per reply token
+        return sig(v), "GPU-s/reply token"
+    if unit == "request/gpu_s":  # CO-4: a rung of the serving ladder
+        return sig(v), "replies/GPU-s"
     raise KeyError(f"no words for the unit {unit!r}")
 
 
@@ -806,8 +810,21 @@ def labels(f, n=None, note=None):
     count = f["n"] if f["n"] is not None else n
     if count is not None:
         parts.append(f"n = {count}")
+    if spread := range_words(f):  # AGENTS.md rule 5: a mean carries its range
+        parts.append(f"range: {spread}")
     parts.append(f"record: {f['source']}")
     return "; ".join(parts)
+
+
+def range_words(f):
+    """A mean's range over its sessions, in the figure's unit ("17.66 to 18.07 s/reply"), where
+    the board stores one over more than one value; None otherwise."""
+    st = f.get("stats") or {}
+    if (st.get("n") or 0) < 2 or st.get("min") is None or st.get("max") is None:
+        return None
+    lo, unit = number(st["min"], f["unit"])
+    hi, _ = number(st["max"], f["unit"])
+    return f"{lo} to {hi}\u00a0{unit}"
 
 
 def sub_words(f, n=None):

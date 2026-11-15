@@ -111,3 +111,16 @@ sources:
   forbidden_flags.1: "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/README.md#L94-L102"
 reviewed_by: []
 forbidden_flags: ["--unsound-skip-", "--unsound-argmax-lax"]
+# RFC-0018 SI-3 (amended 2026-11-15): the system page's Statement block, each row the fields of this
+# card that say it. `boundary-grid` takes no claimed output, so the reply it checks is the proof's own
+# (the adapter's `verify`); the commitment's two files come from the harness record of `commit`.
+verifier_inputs:
+  program: "boundary-grid --verify"
+  reply: "proof"
+  commit_record: ["assumptions.1", "assumptions.2"]
+  request: ["assumptions.3"]
+  proof: ["assumptions.0", "coverage.tokens_covered"]
+  decoding: ["coverage.policy.detail"]
+  unchecked: "not stated"
+  architecture: ["assumptions.0"]
+  architecture_visible: "the shape and gadget parameters"
