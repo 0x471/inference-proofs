@@ -1,0 +1,74 @@
+"""Rebuild the L1 FlashProve session prompts for slots 1 to 3 with main's harness, check each set
+against the prompt-set digest its run's manifest records, then write each stored proof's lean-verify
+inputs: config/, ivk/, request.req, token.y, response.proof, ID.txt. The request file is the
+adapter's (systems/flashprove/entrypoint `request_words`): prompt, reply, filler 0 up to T,
+r = P - 1, e = P + R - 1; the token file is one word 0 (Level 1, y unused). The commitment ID comes
+from the run's manifest (the harness record), never from the proof files."""
+
+import json
+import shutil
+import struct
+import sys
+from pathlib import Path
+
+S = Path(sys.argv[1])  # scratchpad
+root = Path(sys.argv[2])  # main worktree
+sys.path.insert(0, str(root / "harness/src"))
+
+from iproofs.level import load_beacon, load_level  # noqa: E402
+from iproofs.provenance import prompt_set_digest  # noqa: E402
+from iproofs.schema import SchemaRegistry  # noqa: E402
+from iproofs.serialize import write_jsonl  # noqa: E402
+from iproofs.workloads import (  # noqa: E402
+    default_cache,
+    load_workload,
+    materialise_prompts,
+    tokenizer_file,
+)
+
+reg = SchemaRegistry.from_tree(root / "schema")
+wl = load_workload("l1-maverick-p512-o512", root=root, registry=reg)
+beacon = load_beacon(root, load_level(root, "L1", registry=reg), registry=reg)
+tok = tokenizer_file(root, wl, default_cache())
+by_slot: dict[int, list[list[int]]] = {}
+out = S / "lean-in"
+for k in ("s2", "s3", "c1", "c2", "c3"):
+    d = S / "in" / k
+    m = json.loads((d / "manifest.json").read_text())
+    r = json.loads((d / "run.json").read_text())
+    slot = int(m["session"]["slot"])
+    if slot not in by_slot:
+        by_slot[slot] = materialise_prompts(root, wl, tok.parent, beacon, slot=slot)
+    # A control session proves fewer requests (one): its set is the slot's first prompts.
+    jl = S / f"prompts-{k}.jsonl"
+    write_jsonl(jl, by_slot[slot][: len(r["proofs"])])
+    want = m["workload"]["prompt_set_digest"]
+    got = prompt_set_digest(jl)
+    if got != want:
+        raise SystemExit(f"{k}: slot {slot} prompt digest {got} != manifest {want}")
+    pid = (d / "proof_id").read_text().strip()
+    row = next(p for p in r["proofs"] if p["proof_id"] == pid)
+    prompt, reply = by_slot[slot][int(row["request_index"])], [int(t) for t in row["claimed_output"]]
+    lt = [ln for ln in (d / "verifier/policy.txt").read_text().splitlines() if ln.startswith("lt ")]
+    t = 1 << int(lt[0].split()[1])
+    p_, r_ = len(prompt), len(reply)
+    assert p_ >= 1 and r_ >= 1 and p_ + r_ <= t, (p_, r_, t)
+    words = [*prompt, *reply, *[0] * (t - p_ - r_), p_ - 1, p_ + r_ - 1]
+    o = out / k
+    shutil.rmtree(o, ignore_errors=True)
+    (o / "config").mkdir(parents=True)
+    (o / "ivk/leaf").mkdir(parents=True)
+    for n in ("policy.txt", "layout.txt", "KL.bin"):
+        shutil.copyfile(d / "verifier" / n, o / "config" / n)
+    shutil.copyfile(d / "verifier/key.bin", o / "ivk/key.bin")
+    shutil.copyfile(d / "verifier/0.bin", o / "ivk/leaf/0.bin")
+    (o / "request.req").write_bytes(struct.pack(f"<{len(words)}I", *words))
+    (o / "token.y").write_bytes(struct.pack("<I", 0))
+    shutil.copyfile(d / "proof/response.proof", o / "response.proof")
+    (o / "ID.txt").write_text(m["commitment"]["commitment_id"] + "\n")
+    (o / "source.json").write_text(json.dumps({
+        "run_id": m["run_id"], "bucket_job": k, "proof_id": pid, "slot": slot,
+        "request_index": row["request_index"], "cp_verify_verdict": row["verdict"],
+        "prompt_set_digest": got, "prompt_tokens": p_, "reply_tokens": r_, "T": t,
+        "r": p_ - 1, "e": p_ + r_ - 1}, indent=1) + "\n")
+    print(k, m["run_id"], pid, "slot", slot, "prompt digest ok", "request bytes", 4 * len(words))

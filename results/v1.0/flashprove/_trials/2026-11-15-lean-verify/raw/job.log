@@ -1,0 +1,29 @@
+2026-11-15T17:01:54Z machine: 32 CPUs, 258539872 kB, AMD EPYC 7R13 Processor
+2026-11-15T17:01:54Z step apt: start
+2026-11-15T17:02:13Z step apt: exit 0 in 19 s; last: Processing triggers for libc-bin (2.39-0ubuntu8.12) ...
+2026-11-15T17:02:13Z g++: g++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0; python3: Python 3.12.3
+2026-11-15T17:02:13Z step clone: start
+2026-11-15T17:02:21Z step clone: exit 0 in 8 s; last: 9e2bdd8ff5bf9c62f18263d7dac189b0400b260c
+2026-11-15T17:02:21Z step tree: start
+2026-11-15T17:04:15Z step tree: exit 0 in 114 s; last: Partial run passed (tree): only these steps were run
+2026-11-15T17:04:15Z step elan: start
+2026-11-15T17:04:15Z step elan: exit 0 in 0 s; last: info: downloading installer
+2026-11-15T17:04:15Z step lake_version: start
+2026-11-15T17:04:26Z step lake_version: exit 0 in 11 s; last: Lake version 5.0.0-src+f72c35b (Lean version 4.29.1)
+2026-11-15T17:04:26Z step cache_get: start
+2026-11-15T17:05:26Z step cache_get: exit 0 in 60 s; last: Already decompressed 8232 file(s)
+2026-11-15T17:05:26Z step build: start
+2026-11-15T17:30:26Z step build: exit 0 in 1500 s; last: 	Exit status: 0
+2026-11-15T17:30:27Z call s2: start
+2026-11-15T17:55:57Z call s2: exit 0 in 1529.9 s: VERDICT: ACCEPT (exact match)
+2026-11-15T17:55:59Z call s3: start
+2026-11-15T18:16:43Z call s3: exit 0 in 1244.4 s: VERDICT: ACCEPT (exact match)
+2026-11-15T18:16:45Z call c1: start
+2026-11-15T18:37:22Z call c1: exit 0 in 1237.3 s: VERDICT: ACCEPT (exact match)
+2026-11-15T18:37:24Z call c2: start
+2026-11-15T18:58:10Z call c2: exit 0 in 1246.4 s: VERDICT: ACCEPT (exact match)
+2026-11-15T18:58:11Z call c3: start
+2026-11-15T19:18:50Z call c3: exit 0 in 1238.3 s: VERDICT: ACCEPT (exact match)
+2026-11-15T19:18:50Z call s2-other-id: start
+2026-11-15T19:23:42Z call s2-other-id: exit 1 in 291.8 s: VERDICT: REJECT
+2026-11-15T19:23:42Z done

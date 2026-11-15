@@ -1,0 +1,134 @@
+{
+  "calls": [
+    {
+      "change": null,
+      "commitment": {
+        "commitment_id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "in_results": true,
+        "run_id": "2026-11-12-flashprove-l1-maverick-p512-o512-prover-h200-hosted-1",
+        "slot": 2
+      },
+      "exit_code": 0,
+      "last_lines": [
+        "VERDICT: ACCEPT (exact match)"
+      ],
+      "name": "s2",
+      "proof": {
+        "archive_digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "commitment_id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "in_results": true,
+        "proof_id": "req-1",
+        "run_id": "2026-11-12-flashprove-l1-maverick-p512-o512-prover-h200-hosted-1",
+        "slot": 2
+      },
+      "raw": [
+        "raw/calls/s2/stdout"
+      ],
+      "seconds": {
+        "grade": "measured",
+        "null_reason": null,
+        "scope": "verify",
+        "source": {
+          "kind": "adapter",
+          "ref": "raw/calls.tsv"
+        },
+        "tier": "reported",
+        "unit": "s",
+        "value": 1529.9
+      },
+      "verdict": "accept"
+    },
+    {
+      "change": {
+        "kind": "commitment_id",
+        "value": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "commitment": {
+        "commitment_id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "in_results": true,
+        "run_id": "2026-11-12-flashprove-l1-maverick-p512-o512-prover-h200-hosted-1",
+        "slot": 2
+      },
+      "exit_code": 1,
+      "last_lines": [
+        "VERDICT: REJECT"
+      ],
+      "name": "s2-other-id",
+      "proof": {
+        "archive_digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "commitment_id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "in_results": true,
+        "proof_id": "req-1",
+        "run_id": "2026-11-12-flashprove-l1-maverick-p512-o512-prover-h200-hosted-1",
+        "slot": 2
+      },
+      "raw": [],
+      "seconds": {
+        "grade": "measured",
+        "null_reason": null,
+        "scope": "verify",
+        "source": {
+          "kind": "adapter",
+          "ref": "raw/calls.tsv"
+        },
+        "tier": "reported",
+        "unit": "s",
+        "value": 291.8
+      },
+      "verdict": "reject"
+    }
+  ],
+  "gates": "Run",
+  "host": {
+    "cpu_model": "AMD EPYC 7R13 Processor",
+    "logical_cpus": 32,
+    "memory_bytes": 264744828928,
+    "provider": "Hugging Face Jobs"
+  },
+  "id": "2026-11-15-lean-verify",
+  "missing": [
+    "The calls ran from a job script outside the harness."
+  ],
+  "program": {
+    "name": "tools/lean-verify/lean_verify.sh",
+    "patched": false,
+    "role": "the Lean verifier; the row runs cp_verify",
+    "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/tools/lean-verify/lean_verify.sh"
+  },
+  "purpose": "A publisher's second verifier on one kept proof.",
+  "release": "v1.0",
+  "runner": {
+    "harness_commit": null,
+    "image": "docker.io/library/ubuntu@sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "script": "raw/job.sh",
+    "script_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+  },
+  "schema": "verifier-trial/1",
+  "started_at": "2026-11-15T17:01:54Z",
+  "steps": [
+    {
+      "exit_code": 0,
+      "name": "build",
+      "seconds": {
+        "grade": "measured",
+        "null_reason": null,
+        "scope": "setup",
+        "source": {
+          "kind": "adapter",
+          "ref": "raw/steps.tsv"
+        },
+        "tier": "reported",
+        "unit": "s",
+        "value": 1500
+      }
+    }
+  ],
+  "system": "flashprove",
+  "toolchain": {
+    "lean": "4.29.1"
+  },
+  "upstream": {
+    "commit": "9e2bdd8ff5bf9c62f18263d7dac189b0400b260c",
+    "repo": "anthropics/FlashProve"
+  }
+}

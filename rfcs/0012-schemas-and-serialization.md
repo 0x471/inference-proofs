@@ -62,6 +62,7 @@ All schemas use JSON Schema Draft 2020-12. Each lives at `schema/<name>/<major>.
 | `controls-part` | `schema/controls-part/1.schema.json` | generated JSON | `<run-dir>/controls-part-<seed>-<subset>.json`, a working file never in `results/` | RFC-0008 §Split suites |
 | `controls-seed` | `schema/controls-seed/1.schema.json` | generated JSON | `<run-dir>/controls-seed.json`, written once before the first part, never in `results/` | RFC-0008 §Split suites |
 | `perturbed-commitment` | `schema/perturbed-commitment/1.schema.json` | generated JSON | `results/<release>/<system>/_controls/<workload>/perturbed.json` | RFC-0008 |
+| `verifier-trial` | `schema/verifier-trial/1.schema.json` | generated JSON | `results/<release>/<system>/_trials/<trial id>/trial.json` | RFC-0008 §Verifier trials (amended 2026-11-15) |
 | `site-facts` | `schema/site-facts/1.schema.json` | authored JSON | `web/_data/facts.json` | RFC-0009 |
 | `criteria` | `schema/criteria/1.schema.json` | authored JSON | `web/_data/criteria.json` | RFC-0016 |
 
@@ -377,6 +378,8 @@ Amendment of 2026-11-13 (RFC-0018 §The glyph). No frozen release exists, and th
 - `properties/2`, a new major (`schema/properties/2.schema.json`): the facts each statement petal is computed from, each with its quotes, and no typed state, step or reason (RFC-0018 GL-1), with `bound.batch`, `bound.program` and `formal.toolchain`; `hiding.visible_listed` true requires a non-empty `hiding.visible`. `properties/1` stays in the tree unchanged;
 - `fidelity/1`, additive: optional `slots`, `steps` and, per row, `step_tests` (`$defs/step_test`), written by `iproofs fidelity score` (RFC-0018 §Faithful model);
 - `proof-build/1`, new: `results/<release>/proof-build/<system>/proof-build.json`, the record of one build of a publisher's machine-checked proof (RFC-0018 MC-4, MC-5), whose `toolchain.image` is a required sha256 digest; none is stored.
+
+Amendment of 2026-11-15 (RFC-0008 §Verifier trials): `verifier-trial/1`, new, `results/<release>/<system>/_trials/<trial id>/trial.json`, verify calls on stored proofs outside any session's suite; `gates` is the constant `nothing`, `program.patched` the constant `false`, and every time is a quantity. It changes no stored record.
 
 ## Testing Strategy
 

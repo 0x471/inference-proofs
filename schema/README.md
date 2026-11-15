@@ -52,6 +52,7 @@ Schemas in the RFC-0012 catalogue that have landed, with their Python model in `
 | `properties/1` | `systems/<name>/properties.yaml`, the statement petals of the glyph as typed states; replaced by `properties/2` (2026-11-13) | none (read as a tree) |
 | `properties/2` | `systems/<name>/properties.yaml`, the facts each statement petal is computed from, with their deciding quotes at the pin (RFC-0018 GL-1); `bound.batch`, `bound.program` and `formal.toolchain` added in place 2026-11-13 | none (read as a tree) |
 | `proof-build/1` | `results/<release>/proof-build/<system>/proof-build.json`, one build of the theorem a properties file names, under the toolchain it pins (same spelling) in a digested image, and the axioms it reports (RFC-0018 MC-4, MC-5) | none (read as a tree) |
+| `verifier-trial/1` | `results/<release>/<system>/_trials/<trial id>/trial.json`, verify calls on stored proofs outside any session's suite (a second verifier, the C3 null twin, C1 at every position); it gates nothing (RFC-0008 §Verifier trials, 2026-11-15) | none (read as a tree) |
 
 ## Examples rule
 
