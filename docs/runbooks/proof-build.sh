@@ -34,15 +34,16 @@ if [ "$(id -u)" = 0 ]; then  # once, as root: packages and an ordinary user (lea
       git curl ca-certificates python3 zstd >> "$OUT/apt.log" 2>&1 || stop_setup apt
   dpkg-query -W git curl ca-certificates python3 zstd > "$OUT/packages.txt" 2>&1
   useradd -m builder || stop_setup useradd
-  local_out=/home/builder/out
+  bhome=$(getent passwd builder | cut -d: -f6)
+  local_out=$bhome/out
   mkdir -p "$local_out" && cp "$OUT"/* "$local_out"/ && chown -R builder "$local_out"
-  cp "$0" /home/builder/proof-build.sh && chmod 755 /home/builder/proof-build.sh
+  cp "$0" "$bhome/proof-build.sh" && chmod 755 "$bhome/proof-build.sh"
   # The user writes below its home; root copies that folder into the bucket as it goes and at
   # the end (the mount need not be writable by the user's uid).
   ( while sleep 120; do cp -r "$local_out"/. "$OUT"/; done ) &
   copier=$!
   runuser -u builder -- env OUT="$local_out" IMAGE="$IMAGE" BUILD_TIMEOUT_S="$BUILD_TIMEOUT_S" \
-    HOME=/home/builder bash /home/builder/proof-build.sh
+    HOME="$bhome" bash "$bhome/proof-build.sh"
   echo "$?" > "$local_out/runner-exit.txt"
   kill "$copier" 2> /dev/null
   cp -r "$local_out"/. "$OUT"/

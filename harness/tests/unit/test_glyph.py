@@ -230,6 +230,16 @@ def test_mc4_build_failed_or_axioms_differ() -> None:
     assert got(mc(build(status="crashed"))) == lowered
 
 
+def test_mc4a_stopped_build_is_hollow() -> None:
+    stopped = {**build(status="stopped", axioms=(), exit_code=124),
+               "stop": {"cause": "timeout", "detail": "the build's own limit"}}  # fmt: skip
+    petal = mc(stopped)
+    assert got(petal) == (None, "proof_build_not_run", "statement", ())
+    assert (
+        petal.reason == "the recorded proof build stopped before a verdict (timeout, exit code 124)"
+    )
+
+
 def test_mc5_no_matching_build_is_hollow() -> None:
     hollow = (None, "proof_build_not_run", "statement", ())
     assert got(mc(None)) == hollow

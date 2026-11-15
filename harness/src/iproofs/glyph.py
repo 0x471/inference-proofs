@@ -670,6 +670,13 @@ def machine_checked(  # noqa: PLR0911, PLR0912, PLR0915 (one return per line of 
         status, code = recorded.get("status"), recorded.get("exit_code")
         repair = _next(None, ("a build of the named theorem that succeeds and reports only the "
                               "declared axioms", PUBLISHER))  # fmt: skip
+        if status == "stopped":  # MC-4a: a stop reached no verdict on the theorem
+            cause = _m(recorded.get("stop")).get("cause")
+            return Petal(pid, None, PROOF_BUILD_NOT_RUN, STATEMENT,
+                         f"the recorded proof build stopped before a verdict ({cause}, exit code "
+                         f"{code})", quotes, formal=formal, reading=v.noted, notes=v.notes,
+                         next_step=_next(None, ("our build of the named theorem, run to a "
+                                                "verdict", US)))  # fmt: skip
         if status != "built" or code != 0:  # MC-4
             return Petal(pid, RED, CHECK_FAILED, TEST,
                          f"the recorded proof build has status {status}, exit code {code}", quotes,

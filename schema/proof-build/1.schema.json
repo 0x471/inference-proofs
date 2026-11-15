@@ -29,9 +29,34 @@
           }
         }
       }
+    },
+    {
+      "$comment": "a stopped build reached no verdict on the theorem and says why (RFC-0018 MC-4a); only a stopped build carries a stop",
+      "else": {
+        "not": {
+          "required": [
+            "stop"
+          ]
+        }
+      },
+      "if": {
+        "properties": {
+          "status": {
+            "const": "stopped"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "required": [
+          "stop"
+        ]
+      }
     }
   ],
-  "description": "results/<release>/proof-build/<system>/proof-build.json: one build of the theorem a system's properties/2 file names, at the pin with the pinned toolchain, and the axioms the build reports. Machine-checked reads it: a failed build or an axiom not declared sets the petal red; no matching record keeps it hollow.",
+  "description": "results/<release>/proof-build/<system>/proof-build.json: one build of the theorem a system's properties/2 file names, at the pin with the pinned toolchain, and the axioms the build reports. Machine-checked reads it: a failed build or an axiom not declared sets the petal red; a stopped build, or no matching record, keeps it hollow.",
   "properties": {
     "argv": {
       "items": {
@@ -74,8 +99,30 @@
     "status": {
       "enum": [
         "built",
-        "failed"
+        "failed",
+        "stopped"
       ]
+    },
+    "stop": {
+      "$comment": "why a build reached no verdict (RFC-0018 MC-4a): timeout (the build's own time limit stopped it) or signal (the build, or a process it started, was killed by a signal, the kernel's out-of-memory kill among them, as its exit code or output shows). A job whose setup failed never started the build and writes no record",
+      "additionalProperties": false,
+      "properties": {
+        "cause": {
+          "enum": [
+            "timeout",
+            "signal"
+          ]
+        },
+        "detail": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "cause",
+        "detail"
+      ],
+      "type": "object"
     },
     "system": {
       "$ref": "../quantity/1.schema.json#/$defs/systemId"
@@ -157,6 +204,6 @@
     "last_lines",
     "axioms_reported"
   ],
-  "title": "Proof build of a publisher's machine-checked theorem (RFC-0018 MC-4, MC-5)",
+  "title": "Proof build of a publisher's machine-checked theorem (RFC-0018 MC-4, MC-4a, MC-5)",
   "type": "object"
 }
