@@ -72,7 +72,7 @@ The first three can be removed. The fourth cannot: two systems that prove differ
 
 ## What gets measured
 
-Each system runs at a full commit hash, with no setting its documentation does not name, inside a network-less container behind a five-subcommand [adapter contract](rfcs/0005-adapter-contract.md):
+Each system runs at a full commit hash, with no setting its documentation does not name, behind a five-subcommand [adapter contract](rfcs/0005-adapter-contract.md). The v1.0 runs are hosted: their manifests record the provider's network, and the verify trace records the files the verifier opens, not its connections.
 
 ```
 info → setup → commit → prove → verify

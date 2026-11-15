@@ -22,11 +22,12 @@ SASH_IMAGE=ghcr.io/ai-verification-observatory/sash@sha256:14defac4f5635bf2665b9
 ## Step 1: the session (`h200`)
 
 ```sh
-EXTRA=(-e IPROOFS_REQUIRE_SELFTEST=1)
+EXTRA=(-e IPROOFS_REQUIRE_SELFTEST=1 -e IPROOFS_RUNNER_SYSTEMS=sash)
 iproofs_job h200 28800 "$SASH_IMAGE" sash-l1-s2-again run sash l1-l31-8b-p512-o512:1:level=L1:session=2:keep-io
 EXTRA=()
 ```
 
+- `IPROOFS_RUNNER_SYSTEMS=sash` records `runner.affiliated_systems: ["sash"]` in the manifest (RFC-0014 §Manifest): the row runs a pull request this project's owner wrote. The v1.0 SASH manifests before it record `[]` (`systems/sash/README.md`).
 - With `IPROOFS_REQUIRE_SELFTEST=1` a failed self-test ends the job with exit 5, after the probe and the self-test and before the install, the weights and the run. Read `out/selftest.json` in its bucket folder, write the attempt in the spend log, and start the same command again: a new job gets a new host. Each stopped attempt bills the pull, clone, harness install, probe and self-test, about 10 to 20 minutes (an assumption), 0.83 to 1.67 USD at 5.00 USD per hour.
 - Estimate. The harness whole wall of the five stored Level 1 SASH sessions is 12,452 to 14,005 s (`whole_wall_seconds`, measured, tier reported, n = 5, profile `prover-h200-hosted`). Add 1,200 s for the pull, install, 16.1 GB of weights and self-test (the assumption of `hf-jobs.md` stage 2) and up to 3,600 s for the `keep-io` upload (19,556,169,519 B of proofs in `2026-11-13-...-hosted-2`, `proof_bytes_total`, measured, n = 1, plus `io/state`, size not recorded): 13,652 to 18,805 s, 3.8 to 5.2 hours of one H200. At the provider's 5.00 USD per hour that is 18.96 to 26.12 USD; in the benchmark's cost basis it is 3.8 to 5.2 GPU-hours at 5.345 USD per GPU-hour (`reference/v1.0.yaml#/costs/h200`, asserted).
 - Timeout 28,800 s (8 h): cap 40.00 USD. With `keep-io` the script keeps 3,600 s for the upload, so the run may use up to 24,600 s.

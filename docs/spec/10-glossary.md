@@ -8,7 +8,7 @@ The site's Learn glossary ([`web/learn/glossary.md`](../../web/learn/glossary.md
 
 ## Terms
 
-<a id="adapter"></a>**Adapter.** The directory `systems/<name>/` and the OCI image built from it that wraps one upstream prover, unchanged, behind the five subcommands of the adapter contract. An adapter translates; it never patches upstream source. [RFC-0005](../../rfcs/0005-adapter-contract.md).
+<a id="adapter"></a>**Adapter.** The directory `systems/<name>/` and the OCI image built from it that wraps one upstream prover at a public pin, behind the five subcommands of the adapter contract. An adapter translates; it never patches upstream source. A pin may be a pull request to the publisher's repository; Level 1's SASH pin is one, written by this project's owner (RFC-0018 SI-3). [RFC-0005](../../rfcs/0005-adapter-contract.md).
 
 <a id="adapter-contract"></a>**Adapter contract.** The versioned interface (`adapter/1`) between the harness and an adapter: subcommands `info`, `setup`, `commit`, `prove`, `verify`, each reading `/io/job.json` and writing `/io/out.json`. [RFC-0005](../../rfcs/0005-adapter-contract.md).
 

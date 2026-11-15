@@ -4,7 +4,7 @@ Instructions for coding agents (and humans) working in this repository. Read thi
 
 ## What this project is
 
-An open benchmark for provable inference. Level 1 ([RFC-0018](rfcs/0018-level-1-ladder.md), `levels/L1.yaml`) is a ladder of open-weights models. On each rung, every system we can run unpatched gets one fixed request, six checks we run ourselves and one figure: the cost of a proved reply as a multiple of serving it. Systems that pass the six checks are ranked by that figure inside their rung, never across rungs. It runs provers; it does not build or certify them.
+An open benchmark for provable inference. Level 1 ([RFC-0018](rfcs/0018-level-1-ladder.md), `levels/L1.yaml`) is a ladder of open-weights models. On each rung, every system we can run at a public pin, with no source change of ours, gets one fixed request (SASH's pin is a pull request this project's owner wrote, RFC-0018 SI-3), six checks we run ourselves and one figure: the cost of a proved reply as a multiple of serving it. Systems that pass the six checks are ranked by that figure inside their rung, never across rungs. It runs provers; it does not build or certify them.
 
 ## Sources of truth
 

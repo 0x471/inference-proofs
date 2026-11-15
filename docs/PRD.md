@@ -61,7 +61,7 @@ The model is Ethproofs, which made zkVM provers for Ethereum blocks comparable b
 
 ## 6. Scope of v0.1
 
-Two systems, run unchanged at pinned commits on one reference machine type:
+Two systems, run unchanged at pinned commits on one reference machine type (v0.1; Level 1 v1.0 runs SASH at a pull request, G6):
 
 1. **SASH zk-inference-prover**, on its native workload: Llama-3.1-8B W8A8, the headline shape (4,096 prompt positions plus 512 continuation positions) and one shorter shape.
 2. **FlashProve**, on its native workload: Llama 4 Maverick (public 4-bit conversion), 1,024-token windows, batch sizes 1 and 24.
