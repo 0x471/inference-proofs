@@ -80,3 +80,14 @@ def test_stored_c3_null_twin() -> None:
         "other_session_commitment"
     }
     assert problems(path, ROOT) == []
+
+
+def test_stored_c1_every_position() -> None:
+    """2026-11-15: slot 2's kept proof accepted with its claimed reply, then rejected with the
+    token changed at each of its 512 reply positions, one call per position."""
+    path = ROOT / "results/v1.0/flashprove/_trials/2026-11-15-c1-every-position/trial.json"
+    doc = json.loads(path.read_text())
+    s = summary(doc)
+    assert (s.honest, s.accepted, s.changed, s.changed_rejected) == (1, 1, 512, 512)
+    assert sorted(c["change"]["index"] for c in doc["calls"] if c["change"]) == list(range(512))
+    assert problems(path, ROOT) == []
