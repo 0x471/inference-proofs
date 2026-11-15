@@ -172,10 +172,19 @@ def machine(root: Path, release: str | None, row: dict[str, Any],
     }  # fmt: skip
 
 
-def precision(root: Path, row: dict[str, Any], serving: str | None,
-              models: dict[str, Any]) -> dict[str, Any] | None:  # fmt: skip
-    """The precision the row proves (its workload record) beside the release serving runs (the
-    rung's serving-model record, CO-4)."""
+def serving_release(root: Path, serving: str | None) -> dict[str, Any] | None:
+    """The publisher's release serving runs (the rung's serving-model record, CO-4)."""
+    sp = root / "workloads" / "serving" / f"{serving}.yaml"
+    if not serving or not sp.is_file():
+        return None
+    doc = inputs.read_yaml(sp)
+    return {"publisher": (doc.get("publisher") or {}).get("name"),
+            "precision": (doc.get("precision") or {}).get("name"),
+            "record": f"workloads/serving/{serving}.yaml"}  # fmt: skip
+
+
+def precision(root: Path, row: dict[str, Any], models: dict[str, Any]) -> dict[str, Any] | None:
+    """The precision the row proves, as its workload record states it."""
     path = root / "workloads" / f"{row['workload']}.yaml"
     if not path.is_file():
         return None
@@ -184,7 +193,7 @@ def precision(root: Path, row: dict[str, Any], serving: str | None,
     bits = p.get("weight_bits") or {}
     words = (models.get(str((wl.get("model") or {}).get("digest"))) or {}).get("precision_words")
     proved = str(p.get("proved"))
-    out: dict[str, Any] = {
+    return {
         "proved": proved,
         "proved_words": (words or {}).get(proved),
         "bits": bits.get("bits"),
@@ -192,12 +201,4 @@ def precision(root: Path, row: dict[str, Any], serving: str | None,
         "bits_covers": bits.get("covers"),
         "bits_source": bits.get("source"),
         "record": f"workloads/{row['workload']}.yaml",
-        "serving": None,
     }
-    sp = root / "workloads" / "serving" / f"{serving}.yaml"
-    if serving and sp.is_file():
-        doc = inputs.read_yaml(sp)
-        out["serving"] = {"publisher": (doc.get("publisher") or {}).get("name"),
-                          "precision": (doc.get("precision") or {}).get("name"),
-                          "record": f"workloads/serving/{serving}.yaml"}  # fmt: skip
-    return out

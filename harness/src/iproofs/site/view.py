@@ -356,11 +356,12 @@ def site_view(root: Path, board: Path | None = None) -> dict[str, Any]:
               for k, v in facts.models.items()}  # fmt: skip
     release_id = None if doc is None else str(doc["release"])
     for rung in rungs:
-        serving = (rung["baseline"] or {}).get("serving")
+        if rung["baseline"] is not None:
+            rung["baseline"]["release"] = system.serving_release(root, rung["baseline"]["serving"])
         for row in rung["rows"]:
             row["statement"] = system.statement(root, release_id, row, request)
             row["machine"] = system.machine(root, release_id, row, dict(facts.gpus))
-            row["precision"] = system.precision(root, row, serving, models)
+            row["precision"] = system.precision(root, row, models)
     engine = inputs.engine(root)
     return {
         "repository": REPOSITORY,

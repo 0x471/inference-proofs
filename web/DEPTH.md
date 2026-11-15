@@ -47,6 +47,9 @@ The shallowest depth where each kind of content may be printed, and its form the
 | serving, the figure every multiple is over | 1 | figure with its unit, in the model's head |
 | how the model was served (engine, GPUs, concurrency) | 3 | one line under Cost |
 | what the proving ran on (the GPUs the counted sessions bound, SE-2) | 3 | the Proving line under Cost, with the whole sessions |
+| a change to the publisher's code the row runs (a pull request, not merged upstream) | 2 | one line in the band, its record linked |
+| what the verifier is given (from our commit record, the request, the proof), the decoding rule, what no call checks | 3 | the Statement block, the claim card's words linked |
+| how the verify time was taken (the program, the verifier's CPUs, the host, a GPU visible), the proved precision, the serving ladder | 3 | one line each under Cost |
 | the evidence tier ("one runner, not reproduced") | 3 | one line under Cost (Evidence), once for the block; in every figure's title |
 | what was counted (scope: "whole sessions of N replies", steady, verify) | 2 | once, under the band's figure (a phone's band leaves it to the Cost block); at 3 once for the Cost block, and under a figure whose scope differs |
 | sample size (n) | 2 | once, beside the scope; at 3 beside the Cost block's scope, and under the system's own Fidelity figure (in replies) |

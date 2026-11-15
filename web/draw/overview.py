@@ -414,8 +414,17 @@ def baseline_html(rung):
 
 
 def serving_words(b):
+    """How the baseline was served (CO-4): the publisher's release, the engine, its GPUs and the
+    full-load concurrency, then what its figure is over: the timed batches there, one run."""
     gpus = f"{b['gpus']} × H200" if b["gpus"] else "GPUs not recorded"
-    return f"{engine_words()}, {gpus}, full load at {b['concurrency']:,} concurrent requests"
+    rel = b.get("release") or {}
+    head = (f"{rel['publisher']}'s {rel['precision']} release, "
+            if rel.get("publisher") and rel.get("precision") else "")  # fmt: skip
+    batches = S.V["constants"].get("timed_batches")
+    over = (f"{SEP}n\u00a0=\u00a0{batches:,} timed batches, 1 run"
+            if batches and b.get("run_id") else "")  # fmt: skip
+    return (f"{head}{engine_words()}, {gpus}, full load at {b['concurrency']:,} concurrent "
+            f"requests{over}")  # fmt: skip
 
 
 def rung_meta(rung):
