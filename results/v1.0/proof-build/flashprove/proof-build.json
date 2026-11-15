@@ -1,0 +1,59 @@
+{
+  "argv": [
+    "env",
+    "LEAN_ABORT_ON_PANIC=1",
+    "timeout",
+    "-k",
+    "60",
+    "25200",
+    "lake",
+    "build",
+    "Johnson.Goal.Skeleton.SoundOfVerifyAt"
+  ],
+  "axioms_reported": [
+    "propext",
+    "Classical.choice",
+    "Quot.sound"
+  ],
+  "exit_code": 0,
+  "last_lines": [
+    "info: Johnson/P5J/K09LastC.lean:234:0: 'P5J.layersLeftC_at' depends on axioms: [propext, Classical.choice, Quot.sound]",
+    "info: Johnson/P5J/K09LastC.lean:235:0: 'P5J.k9LeftC_of_last' depends on axioms: [propext, Classical.choice, Quot.sound]",
+    "info: Johnson/P5J/K09LastC.lean:236:0: 'P5J.k09_kind_of_lastC' depends on axioms: [propext, Classical.choice, Quot.sound]",
+    "ℹ [24301/24304] Built Johnson.P5J.K09EndC (23s)",
+    "info: Johnson/P5J/K09EndC.lean:277:0: 'P5J.sub_three' depends on axioms: [propext]",
+    "info: Johnson/P5J/K09EndC.lean:278:0: 'P5J.odd_of_att' depends on axioms: [propext, Quot.sound]",
+    "info: Johnson/P5J/K09EndC.lean:279:0: 'P5J.last_of_head' depends on axioms: [propext]",
+    "info: Johnson/P5J/K09EndC.lean:280:0: 'P5J.attLeftC_at' depends on axioms: [propext, Classical.choice, Quot.sound]",
+    "info: Johnson/P5J/K09EndC.lean:281:0: 'P5J.headLeftC_at' depends on axioms: [propext, Classical.choice, Quot.sound]",
+    "info: Johnson/P5J/K09EndC.lean:282:0: 'P5J.k9LastC_at_head' depends on axioms: [propext, Classical.choice, Quot.sound]",
+    "info: Johnson/P5J/K09EndC.lean:283:0: 'P5J.k09_kind_of_head' depends on axioms: [propext, Classical.choice, Quot.sound]",
+    "ℹ [24302/24304] Built Johnson.P5J.K09CondHead (12s)",
+    "info: Johnson/P5J/K09CondHead.lean:83:0: 'P5J.k09_cond_of_head' depends on axioms: [propext, Classical.choice, Quot.sound]",
+    "ℹ [24303/24304] Built Johnson.Goal.Skeleton.KindsLawsAtHead (35s)",
+    "info: Johnson/Goal/Skeleton/KindsLawsAtHead.lean:105:0: 'VerifierAndGoals.AtTheName.kindsLaws_at_head' depends on axioms: [propext, Classical.choice, Quot.sound]",
+    "info: Johnson/Goal/Skeleton/KindsLawsAtHead.lean:106:0: 'VerifierAndGoals.AtTheName.sound_of_rows_read_at' depends on axioms: [propext, Classical.choice, Quot.sound]",
+    "ℹ [24304/24304] Built Johnson.Goal.Skeleton.SoundOfVerifyAt (39s)",
+    "info: Johnson/Goal/Skeleton/SoundOfVerifyAt.lean:83:0: 'VerifierAndGoals.AtTheName.sound_of_verify_at' depends on axioms: [propext, Classical.choice, Quot.sound]",
+    "info: Johnson/Goal/Skeleton/SoundOfVerifyAt.lean:84:0: 'VerifierAndGoals.AtTheName.nearestSound_of_verify' depends on axioms: [propext, Classical.choice, Quot.sound]",
+    "Build completed successfully (24304 jobs)."
+  ],
+  "schema": "proof-build/1",
+  "seconds": 6388.0,
+  "started_at": "2026-11-15T21:09:43Z",
+  "status": "built",
+  "system": "flashprove",
+  "theorem": {
+    "name": "VerifierAndGoals.AtTheName.sound_of_verify_at",
+    "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/Johnson/Goal/Skeleton/SoundOfVerifyAt.lean#L69"
+  },
+  "toolchain": {
+    "image": "sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852",
+    "name": "leanprover/lean4",
+    "version": "v4.29.1"
+  },
+  "upstream": {
+    "commit": "9e2bdd8ff5bf9c62f18263d7dac189b0400b260c",
+    "repo": "anthropics/FlashProve"
+  }
+}
