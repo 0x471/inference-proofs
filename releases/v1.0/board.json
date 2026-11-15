@@ -399,6 +399,7 @@
                 {
                   "control": "P1",
                   "inputs": 1,
+                  "no_proof": 3,
                   "position": null,
                   "refused": 3,
                   "trials": 3
@@ -406,6 +407,7 @@
                 {
                   "control": "C3",
                   "inputs": 1,
+                  "no_proof": 0,
                   "position": null,
                   "refused": 3,
                   "trials": 3
@@ -433,6 +435,7 @@
                 {
                   "control": "C2",
                   "inputs": 3,
+                  "no_proof": 0,
                   "position": null,
                   "refused": 3,
                   "trials": 3
@@ -453,6 +456,7 @@
                 {
                   "control": "C1",
                   "inputs": 1,
+                  "no_proof": 0,
                   "position": "first",
                   "refused": 3,
                   "trials": 3
@@ -460,6 +464,7 @@
                 {
                   "control": "C1",
                   "inputs": 1,
+                  "no_proof": 0,
                   "position": "last",
                   "refused": 3,
                   "trials": 3
@@ -467,6 +472,7 @@
                 {
                   "control": "C1",
                   "inputs": 3,
+                  "no_proof": 0,
                   "position": "interior",
                   "refused": 3,
                   "trials": 3
@@ -543,6 +549,9 @@
               "cause": null,
               "id": "unforgeable",
               "lowered_by": [],
+              "notes": [
+                "classical adversaries only (THEOREM.md L394-L395); the files-fixed-before-the-hash condition is counted under conditions_shown"
+              ],
               "quotes": [
                 {
                   "text": "The Lean verifier accepts a proof of a false claim with probability at most about q/2^124 + 2^-101 after q hash queries (about 124 bits per query; not \"128 bits\")",
@@ -680,6 +689,9 @@
               ],
               "id": "weights_hidden",
               "lowered_by": [],
+              "notes": [
+                "the publisher expects the programs to hide the weights, but says the expectation does not reach a real model's weights or the files fitted to them; the row commits a real model's weights"
+              ],
               "quotes": [
                 {
                   "text": "Zero knowledge, Lean's form of weight hiding, is proved in Lean for the protocol, at [full size](terms.md) and at the exact-match policy, with fresh random masks.",
@@ -975,6 +987,10 @@
               },
               "id": "machine_checked",
               "lowered_by": [],
+              "notes": [
+                "the theorem covers the Lean protocol and states the model as an integer program (THEOREM.md L231-233); the C++ verifier the row runs is tested, not proved (what-is-proved.md L7-8), so the reach stops short of verifier_run; the model statement is the publisher's Lean integer model, and its tables and its reach at a given scale file are not proved (THEOREM.md L229-L231, L242-L243)",
+                "read 2026-11-15: the conclusion is about the publisher's integer model, a reference definition of the model's computation, at the weights the extractor reads; no theorem ties those weights to the ones cp_commit committed (THEOREM.md L227-L228), and at files other than the stored examples the theorem may hold only because verify rejects everything (L314-L315, under Unforgeable's conditions_shown); and the system in the soundness theorem's statement has a constant committer, which commits to nothing, so of that system none of it can be stated with any content (L700-L704): the theorem's model is the extractor's weights, not a committed model's"
+              ],
               "quotes": [
                 {
                   "text": "**Soundness** is proved, in Lean, for the verifier written in Lean",
@@ -1005,6 +1021,10 @@
                   "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L227-L228"
                 },
                 {
+                  "text": "the system in the statement of the soundness theorem on `verify` has a constant committer (a committer that returns one constant whatever the weights, and so commits to nothing; the committer of the six lines is another: the one that `compile` makes (`lean/Johnson/Face/Compiler.lean`), which encodes the weights and hashes the key) where its honest committer goes, so of that system itself none of it can be stated with any content",
+                  "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L700-L704"
+                },
+                {
                   "text": "The protocol's soundness is proved in Lean 4.",
                   "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/README.md#L26"
                 },
@@ -1026,7 +1046,7 @@
                 }
               ],
               "reading": true,
-              "reason": "no proof build of the named theorem is recorded yet; it is stated for the Lean verifier, not for cp_verify, which this row runs; once built: amber in part at most; statement not reviewed by an outside Lean reader",
+              "reason": "no proof build of the named theorem is recorded yet; it is stated for the Lean verifier, not for cp_verify, which this row runs; once built: amber in part at most, on our reading that its conclusion is about the model; statement not reviewed by an outside Lean reader",
               "state": "hollow",
               "step": null
             },
@@ -1035,6 +1055,9 @@
               "cause": null,
               "id": "no_trusted_party",
               "lowered_by": [],
+              "notes": [
+                "the publisher states soundness at every public setup of three public files, against any committer and prover, with the random-oracle model as its assumption; no sentence says in words that no setup produced a secret, so the petal is read as transparent and drawn amber in part at most (GL-10, amended 2026-11-15)"
+              ],
               "quotes": [
                 {
                   "text": "Six theorems are proved in Lean of one committer, prover and verifier, `compile (flashProve setup)`, at every public setup `setup` (`PublicSetup`: three public files, what the reader returns at them, and `FilesInUse`).",
@@ -2296,6 +2319,7 @@
                 {
                   "control": "P1",
                   "inputs": 1,
+                  "no_proof": 0,
                   "position": null,
                   "refused": 3,
                   "trials": 3
@@ -2303,6 +2327,7 @@
                 {
                   "control": "C3",
                   "inputs": 1,
+                  "no_proof": 0,
                   "position": null,
                   "refused": 3,
                   "trials": 3
@@ -2332,6 +2357,7 @@
                 {
                   "control": "C2",
                   "inputs": 3,
+                  "no_proof": 0,
                   "position": null,
                   "refused": 3,
                   "trials": 3
@@ -2352,6 +2378,7 @@
                 {
                   "control": "C1",
                   "inputs": 1,
+                  "no_proof": 0,
                   "position": "first",
                   "refused": 3,
                   "trials": 3
@@ -2359,6 +2386,7 @@
                 {
                   "control": "C1",
                   "inputs": 1,
+                  "no_proof": 0,
                   "position": "last",
                   "refused": 3,
                   "trials": 3
@@ -2366,6 +2394,7 @@
                 {
                   "control": "C1",
                   "inputs": 3,
+                  "no_proof": 0,
                   "position": "interior",
                   "refused": 3,
                   "trials": 3
@@ -2436,12 +2465,8 @@
               "lowered_by": [],
               "quotes": [
                 {
-                  "text": "so blowup 2 (log_blowup_factor = 1) at 100 conjectured bits means exactly",
-                  "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/src/util.rs#L11"
-                },
-                {
-                  "text": "stwo's own conjectured-soundness accounting is",
-                  "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/src/util.rs#L9"
+                  "text": "stwo's own conjectured-soundness accounting is security_bits = pow_bits + log_blowup_factor * n_queries so blowup 2 (log_blowup_factor = 1) at 100 conjectured bits means exactly 100 FRI queries and no grinding.",
+                  "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/src/util.rs#L9-L12"
                 },
                 {
                   "text": "A proof made by this prover is about one **segment**: one transformer layer",
@@ -2513,8 +2538,8 @@
                   "soundness": {
                     "quotes": [
                       {
-                        "text": "so blowup 2 (log_blowup_factor = 1) at 100 conjectured bits means exactly",
-                        "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/src/util.rs#L11"
+                        "text": "stwo's own conjectured-soundness accounting is security_bits = pow_bits + log_blowup_factor * n_queries so blowup 2 (log_blowup_factor = 1) at 100 conjectured bits means exactly 100 FRI queries and no grinding.",
+                        "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/src/util.rs#L9-L12"
                       }
                     ],
                     "text": "100 conjectured bits"
@@ -2598,21 +2623,32 @@
             },
             {
               "basis": "statement",
-              "cause": "not_stated",
+              "cause": null,
               "id": "no_trusted_party",
               "lowered_by": [],
+              "notes": [
+                "by the test FlashProve's row meets (GL-10, amended 2026-11-15): a petal is read as transparent when a sentence among its quotes says what soundness rests on and none of it is a setup that produced a secret. SASH states its soundness as stwo's conjectured accounting over the FRI parameters (util.rs L9-L12), and says the setup's two trees are a shape tree the verifier derives from the public parameters and a model tree compared with the published model commitment (prover/README.md L117-L119, docs/statement.md L127-L129). The Fixed statement it calls trusted by the verifier is those parameters and roots (compose.rs L7-L11). No sentence says in words that no setup produced a secret, so read as transparent and drawn amber in part at most, as FlashProve's is"
+              ],
               "quotes": [
                 {
-                  "text": "A STARK prover for the decode step of a quantized transformer",
-                  "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/README.md#L3"
+                  "text": "stwo's own conjectured-soundness accounting is security_bits = pow_bits + log_blowup_factor * n_queries so blowup 2 (log_blowup_factor = 1) at 100 conjectured bits means exactly 100 FRI queries and no grinding.",
+                  "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/src/util.rs#L9-L12"
+                },
+                {
+                  "text": "The preprocessed trace is two committed trees (a shape tree whose root the verifier derives from the public parameters, and a model tree whose root is compared with the published model commitment).",
+                  "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/README.md#L117-L119"
+                },
+                {
+                  "text": "They are committed as a tree of their own, and what says they are the columns the public parameters give is that the verifier **builds that tree itself** and compares its root with the root the statement declares.",
+                  "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/docs/statement.md#L127-L129"
                 },
                 {
                   "text": "`security` (the FRI parameters and the hash)",
                   "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/README.md#L324"
                 },
                 {
-                  "text": "`Fixed` — produced at setup, trusted by the verifier: the shape and gadget",
-                  "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/src/compose.rs#L7"
+                  "text": "`Fixed` — produced at setup, trusted by the verifier: the shape and gadget parameters that determine every column size and selector, the security config, the tree column sizes, and the **pinned preprocessed root** (every table, selector, weight and scale column lives in tree 0, and B4 §3 / B5 / B6 all showed a corrupted table is invisible to everything else).",
+                  "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/src/compose.rs#L7-L11"
                 },
                 {
                   "text": "The **verifier** (`verify_composed`) takes those two byte strings and the //! serialized proof, and nothing else",
@@ -2620,27 +2656,9 @@
                 }
               ],
               "reading": true,
-              "reason": "not stated in the publisher's documents read at the pinned commit",
-              "sources_read": [
-                {
-                  "path": "README.md",
-                  "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/README.md"
-                },
-                {
-                  "path": "prover/README.md",
-                  "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/README.md"
-                },
-                {
-                  "path": "docs/statement.md",
-                  "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/docs/statement.md"
-                },
-                {
-                  "path": "prover/src/compose.rs",
-                  "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/src/compose.rs"
-                }
-              ],
-              "state": "red",
-              "step": "red"
+              "reason": "read as resting on cryptographic assumptions alone, with no setup that produced a secret; no quote says so, so amber in part at most",
+              "state": "amber",
+              "step": "amber_upper"
             }
           ],
           "incomplete_sessions": [],
@@ -2664,12 +2682,16 @@
                 "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/docs/statement.md#L147-L149"
               },
               {
-                "text": "| 12 | each matmul's input times the pinned weights into its accumulator | bound |",
+                "text": "| # | edge | default | turned off by |",
+                "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/docs/statement.md#L19"
+              },
+              {
+                "text": "| 12 | each matmul's input times the pinned weights into its accumulator | bound | nothing: it is the Freivalds check itself |",
                 "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/docs/statement.md#L32"
               },
               {
-                "text": "it commits the weights, and the verifier compares it with the published manifest.",
-                "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/docs/statement.md#L136"
+                "text": "The other preprocessed tree is the model's, and its root is not derivable by anyone but the publisher: it commits the weights, and the verifier compares it with the published manifest.",
+                "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/docs/statement.md#L134-L136"
               }
             ],
             "read": true,

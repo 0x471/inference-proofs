@@ -1980,7 +1980,7 @@ ol.ls > li:before { counter-increment: n; content: counter(n); position: absolut
   .sgh .scard tr { padding: 6px 0; border-top: 1px solid var(--line); }
   .sgh .scard :is(th, td) { padding: 2px 0; white-space: normal; }
   .sgh .scard td.sb { min-width: 0; }
-  .sgh .scard td::before { content: attr(data-h) ": "; color: var(--muted); }
+  .sgh .scard td:before { content: attr(data-h) ": "; color: var(--muted); }
 }
 
 /* a system's page keeps to a phone's width: the Cost block's clauses and the fidelity tests' summary and
