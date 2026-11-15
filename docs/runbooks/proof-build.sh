@@ -46,14 +46,11 @@ if [ "$(id -u)" = 0 ]; then  # once, as root: packages and an ordinary user (lea
   dpkg-query -W git curl ca-certificates python3 zstd > "$OUT/packages.txt" 2>&1
   useradd -m builder || stop_setup useradd
   bhome=$(getent passwd builder | cut -d: -f6)
-  # check.py's scratch copy: on the largest local file system that is not the container's
-  # overlay (its replay ran ten times slower on one, CHECKING.md), else below the user's home.
+  # check.py's scratch copy, below the user's home. On HF Jobs the only writable disk is the
+  # container's overlay (its replay ran ten times slower on one, CHECKING.md, a cost in time, not
+  # in result); the file systems are listed in df.txt.
   df -hT > "$OUT/df.txt" 2>&1
-  scratch=$(df --output=avail,fstype,target 2> /dev/null | tail -n +2 |
-    awk '$2 !~ /^(overlay|tmpfs|devtmpfs|fuse|squashfs)/ && $3 !~ /^\/(upload|proc|sys|dev)/' |
-    sort -n | tail -n 1 | awk '{print $3}')
-  scratch=${scratch:+$scratch/iproofs-scratch}
-  scratch=${scratch:-$bhome/scratch}
+  scratch=$bhome/scratch
   mkdir -p "$scratch" && chown builder "$scratch" && chmod 700 "$scratch" || stop_setup scratch
   log "scratch: $scratch"
   local_out=$bhome/out
