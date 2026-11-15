@@ -35,7 +35,7 @@ def test_summary_hand_case() -> None:
 
 def test_stored_lean_trial() -> None:
     """2026-11-15: five kept proofs accepted by the Lean verifier, two of them from counted
-    sessions (slots 2 and 3; slot 1's proof was not kept), 1,237.3 to 1,529.9 s, and the call
+    sessions (slots 2 and 3; slot 1's counted proof was not among the inputs), 1,237.3 to 1,529.9 s, and the call
     with a commitment ID no session recorded rejected."""
     board = json.loads((ROOT / "releases/v1.0/board.json").read_text())
     (row,) = [r for g in board["rungs"] for r in g["rows"] if r["system"] == "flashprove"]

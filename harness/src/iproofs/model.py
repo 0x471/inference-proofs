@@ -950,6 +950,7 @@ TREES = frozenset(
         "target/1",
         "teacher-forced/1",
         "teacher-forced-run/1",
+        "verifier-trial/1",
         "verify-trace/1",
     }
 )

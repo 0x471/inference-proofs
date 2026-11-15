@@ -349,6 +349,7 @@
     "The calls ran from a job script outside the harness: no harness commit, no RFC-0006 machine record, no self-test; times are the script's wall clock (source kind adapter, never an input to a derived figure).",
     "The apt packages, the elan installer and the Lean package cache (lake exe cache get, from public servers) are not pinned by content hash; the upstream commit, the image and the Lean toolchain are.",
     "The proof bytes and verifier files are not in this repository: raw/inputs/<call>/digests.txt holds their sha256, and raw/inputs.py.txt (the script, kept as text) how the request and ID files were made from the harness record.",
+    "Slot 1's counted proof (the 2026-11-11 session, archive/req-0.tar in its digests.txt) was not among the trial's inputs, so 2 of the 3 counted sessions are covered.",
     "Calls c1 and c2 verify proofs of two control sessions whose run directories are not in results/; their manifests' sha256 are recorded.",
     "The install and build logs (apt.log, build.log) are kept outside this repository, since their package version strings match its IP-address scan; raw/kept-outside.txt holds their sha256 and sizes.",
     "Only an early reject was tried (a commitment ID no session recorded); no call changed a reply token."
@@ -359,7 +360,7 @@
     "role": "runs verify, the Lean verifier that sound_of_verify_at is about; the row's verify step runs cp_verify",
     "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/tools/lean-verify/lean_verify.sh"
   },
-  "purpose": "FlashProve's Lean verifier, the program its soundness theorem is about, run unpatched on every Level 1 FlashProve proof whose bytes were kept, then once with a commitment ID no session recorded. The row runs cp_verify, not this program.",
+  "purpose": "FlashProve's Lean verifier, the program its soundness theorem is about, run unpatched on five kept Level 1 FlashProve proofs (counted slots 2 and 3, three slot-1 control sessions), then once with a commitment ID no session recorded. The row runs cp_verify, not this program.",
   "release": "v1.0",
   "runner": {
     "harness_commit": null,
