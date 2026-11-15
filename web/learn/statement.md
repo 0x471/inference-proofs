@@ -36,7 +36,7 @@ A proof covers only the positions it checks, and in FlashProve "[a reply stopped
 
 SASH binds the seams between segments: "[The residual stream leaving a segment and the keys and values a block writes are committed as their own trees, and `boundary-grid` compares each such root with the root the consuming segment committed for its input.](https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/docs/statement.md?plain=1#L138-L141)"
 
-Fourteen of the [sixteen edges](https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/docs/statement.md?plain=1#L19-L36) SASH lists can be turned off by an `--unsound-skip-` switch. The [Run check](/checks#run) fails if a counted session used one.
+Fourteen of the [sixteen edges](https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/docs/statement.md?plain=1#L19-L36) SASH lists can be turned off by an `--unsound-skip-` switch. Our adapter refuses to pass one outside a control job, and the [Run check](/checks#run) fails if one of our counted sessions used one, as its recorded commands show. A switch made by a prover we did not run is another matter: the proof's own Fixed statement carries the switches, the pinned verifier is expected to accept a proof made with one and report the skip, and our verdict does not yet refuse such a proof. Whether SASH's verifier, called as the row calls it, refuses a proof made with one is not yet run.
 
 ## The error bound
 

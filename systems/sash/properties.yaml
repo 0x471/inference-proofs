@@ -128,6 +128,10 @@ verifier_inputs:
   commit_record: ["assumptions.1", "assumptions.2"]
   request: ["assumptions.3"]
   proof: ["assumptions.0", "coverage.tokens_covered"]
+  # the Fixed statement carries the gadget switches (compose.rs L7-L8, "trusted by the verifier");
+  # controls.yaml registers the switched provers with `expected: ["accepted"]`, and the adapter's
+  # verdict reads the exit status, not `provenance.unsound_skips` (entrypoint verify)
+  proof_caveat: "the proof's Fixed statement carries the gadget switches, so a proof made with an --unsound-skip- switch is expected to be accepted with the skip reported, and our verdict does not yet refuse one; no such proof has been run"
   decoding: ["coverage.policy.detail"]
   unchecked: "not stated"
   architecture: ["assumptions.0"]

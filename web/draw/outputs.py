@@ -55,6 +55,7 @@ from .words import (
     PETAL_QUESTION,
     architecture,
     e,
+    release_tail,
 )
 
 # ------------------------------------------------------------------ search
@@ -343,7 +344,7 @@ def system_card(pid):
     if row["position"] is not None:  # OR-4: no count where nothing else ran on the model
         why = ONLY_RUN if only_run(row) else f"position {row['position']} of {rung['systems_run']}"
     rel = S.V["release"]
-    when = f"Release {rel['id']}" + (f", {rel['date']}" if rel["date"] else "") if rel else ""
+    when = f"Release {release_tail(rel)}" if rel else ""
     weight = 600 if row["position"] is not None else 400
     css = f"""
 .top{{position:absolute;left:0;top:0;width:{CARD_W}px;height:72px;padding:0 64px;display:flex;align-items:center;box-shadow:inset 0 -1px 0 {LINE}}}

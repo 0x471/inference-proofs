@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any
 
 from iproofs.model import card_path
+from iproofs.provenance import file_digest
 from iproofs.schema import parse_tree
 from iproofs.site import inputs
 from iproofs.trials import summary
@@ -119,10 +120,22 @@ def statement(root: Path, release: str | None, row: dict[str, Any],
     read = parts
     if isinstance(reads, dict) and isinstance(reads.get("read"), list):
         read = [p for p in parts if p in reads["read"]]
+    # an erratum to the card (web/_data/errata.json `cards`), printed while the card is the one
+    # it corrects: the runs record the card's digest, so the card itself is not edited
+    fix = (inputs.errata(root).get("cards") or {}).get(row["system"])
+    if not (isinstance(fix, dict) and path is not None
+            and file_digest(path) == fix.get("card_digest")):  # fmt: skip
+        fix = None
     return {
+        "erratum": fix,
+        "notion": list(
+            ((inputs.read_yaml(props) if props.is_file() else {}).get("notion") or {}).get("quotes")
+            or []
+        ),  # the publisher's name for its soundness notion
         "program": str(vi["program"]),
         "untimed": [str(u) for u in vi.get("untimed") or []],
         "reply": str(vi["reply"]),
+        "proof_caveat": vi.get("proof_caveat"),
         "architecture_visible": vi.get("architecture_visible"),
         "rows": rows,
         "card": f"systems/{row['system']}/{path.name}" if path else None,

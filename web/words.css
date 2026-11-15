@@ -1972,3 +1972,13 @@ ol.ls > li:before { counter-increment: n; content: counter(n); position: absolut
   /* focus drawn by a fill or an inset edge elsewhere takes a line here */
   .lost a:focus-visible { outline: 2px solid Highlight; outline-offset: -2px; }
 }
+
+/* the scope card on a phone (MC-6): one block per property, each cell under its column's head */
+@media (max-width: 560px) {
+  .sgh .scard, .sgh .scard tbody, .sgh .scard tr, .sgh .scard :is(th, td) { display: block; }
+  .sgh .scard thead { display: none; }
+  .sgh .scard tr { padding: 6px 0; border-top: 1px solid var(--line); }
+  .sgh .scard :is(th, td) { padding: 2px 0; white-space: normal; }
+  .sgh .scard td.sb { min-width: 0; }
+  .sgh .scard td::before { content: attr(data-h) ": "; color: var(--muted); }
+}

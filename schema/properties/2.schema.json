@@ -1163,6 +1163,11 @@
         "proof": {
           "$ref": "#/$defs/cardRefs"
         },
+        "proof_caveat": {
+          "$comment": "RFC-0018 SI-3 (amended 2026-11-15): our line on what the proof carries that no verdict of ours refuses yet, printed on the From the proof row; it sets no state",
+          "minLength": 1,
+          "type": "string"
+        },
         "reply": {
           "enum": [
             "record",
@@ -1226,6 +1231,19 @@
       "required": [
         "run",
         "stated"
+      ],
+      "type": "object"
+    },
+    "notion": {
+      "$comment": "the publisher's own name for its soundness notion, as quotes at the pin, printed on the system page's Stated security line; it sets no state (RFC-0018 SI-3, amended 2026-11-15)",
+      "additionalProperties": false,
+      "properties": {
+        "quotes": {
+          "$ref": "#/$defs/quotes"
+        }
+      },
+      "required": [
+        "quotes"
       ],
       "type": "object"
     }

@@ -29,6 +29,12 @@ verifiers:
     quotes:
       - {text: "The Lean verifier accepts a proof of a false claim with probability at most about q/2^124 + 2^-101 after q hash queries (about 124 bits per query; not \"128 bits\")", url: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/what-is-proved.md#L46-L47"}
       - {text: "Neither figure, 124 bits per query or 128 bits per round, is claimed for the C++ programs.", url: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/what-is-proved.md#L70"}
+# the publisher's name for its soundness notion, printed on the Stated security line (SI-3, amended
+# 2026-11-15); it sets no state
+notion:
+  quotes:
+    - {text: "`Sound` is index-binding knowledge soundness, in its witness-free case, as defined in `lean/ZKCP/Defs.lean` (`HasIndexBinding`; the terms: [TERMS.md](TERMS.md)), for a claim (a prompt with an output that is said to be the model's)", url: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L352-L354"}
+    - {text: "This is binding for the language, not knowledge soundness: the theorem does not show that the prover knows the weights or ran the model.", url: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/LIMITS.md#L1155-L1157"}
 petals:
   unforgeable:
     sources_read: ["README.md", "guide/what-is-proved.md", "lean/THEOREM.md", "guide/known-limits.md"]

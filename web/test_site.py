@@ -113,7 +113,7 @@ def test_order_and_positions_are_the_boards(board_site: Any) -> None:
     got = [(sid, int(m[1]) if (m := re.search(r'class="pn">(\d+)<', cell)) else None)
            for sid, cell in printed]  # fmt: skip
     assert got == want
-    # OR-6: the rung marked as the largest model proved is the board's frontier, and no other
+    # OR-6: the rung marked as the largest model with a passed row is the board's frontier, and no other
     marked = [sid for sid, sec in re.findall(r'<section class="rung" id="([^"]+)"(.*?)</section>',
                                              index, re.S) if 'class="rf"' in sec]  # fmt: skip
     front = board_site.board["frontier"]

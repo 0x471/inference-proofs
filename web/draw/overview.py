@@ -1,5 +1,5 @@
 """The overview (`index.html`): the ladder (RFC-0018 SI-1). The title, then one section per
-model, largest first, the frontier's marked as the largest model proved: its head (model,
+model, largest first, the frontier's marked as the largest model with a passed row: its head (model,
 publisher, architecture, the serving baseline) and its rows in the board's order (OR-5), then
 the systems not run (SI-4). Rows sort
 only by the order rule: no column head re-sorts them. Also the figure cells the system pages use.
@@ -61,8 +61,9 @@ NOT_TESTED = (
 BINDING_GAP = (
     "The checks run the publisher's own prover honestly and try changes it should refuse. A hash "
     "of the commitment, prompt and reply, computed from the weights the prover loads, would hold "
-    "all six. Level 1 keeps such a system off the ladder on its publisher's recorded statement "
-    "that an accept is the committed model's own greedy reply, not by a test."
+    "all six. Level 1 keeps such a system from a position, not from the ladder: it would still "
+    "read passed. What keeps it from a position is its publisher's recorded statement that an "
+    "accept is the committed model's own greedy reply, or our reading of one, not a test."
 )
 ROW_GLYPH = 3  # the row glyph's unit in px: its arms carry their names (159 by 87 px)
 
@@ -538,7 +539,7 @@ def board_words():
         _, f, key = lead_figure(row)
         fig = fig_html(f, counted(row), sub=BARE, note=whole_note(row, key)) if has(f) else None
         name = f'<a href="{e(href(row))}">{e(name_of(row))}</a>'
-        what = (f"a reply proved by {name} costs {fig} as much as serving it" if fig
+        what = (f"a reply {name} proves with its verifier costs {fig} as much as serving it" if fig
                 else f"{name} passed")  # fmt: skip
     else:
         what = f"{len(rows)} systems passed"

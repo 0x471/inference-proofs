@@ -33,6 +33,8 @@ RFC-0005 §Verdict normalisation, over the exit codes and last lines of [verifie
 | 2 (wrong call or unreadable file), 3 (`PART PASSED`), 4 (`PLAN ONLY`), 14 (`NOT-A-VERIFICATION`), 15 (no output) | `invalid_call` | |
 | any other exit code, a signal, 0 with another last line, or 1 with a last line that is not `NO: <name>` | none: `verify` exits non-zero | |
 
+The pinned image (`sha256:12611db7…`, `system.yaml`) was built from adapter commit `aa5f31f`, before this map (2026-11-15): there, exit 1 is a reject whatever its last line. No stored verdict differs, since no record holds a `NO: internal-` line or an exit 1 without a `NO: ` line. A FlashProve run or control job at the pinned image uses the older map; the map above runs once the image is rebuilt from this adapter and repinned, with the new adapter commit recorded (RFC-0014 B7).
+
 Under the published configuration the policy is exact match ([examples/maverick/README.md#L287-L289](https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/examples/maverick/README.md#L287-L289)), so an accepted proof here ends `YES`. The adapter applies this map only, not the rest of upstream's acceptance rule (the proof-of-work line and the `result-v1` fields, [verifier/docs/output.md#L121-L131](https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/verifier/docs/output.md#L121-L131)); the raw output stays in the step's log.
 
 ## Commitment files

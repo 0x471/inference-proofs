@@ -56,6 +56,7 @@ from .words import (
     AS_READ,
     BASIS_READING,
     BASIS_WORD,
+    CARD_ERRATUM,
     CAUSE_WORD,
     CHECK_CAUSE_LEAD,
     CHECK_CAUSE_WORD,
@@ -112,6 +113,7 @@ from .words import (
     NO_STEADY_WORD,
     NOT_RUN_LEAD,
     NOT_RUN_RULE,
+    NOTION_HEAD,
     NULL_WORD,
     OF_WHICH,
     ORDER_RULE,
@@ -133,12 +135,17 @@ from .words import (
     REASON_LINK,
     RECORD_WORD,
     SCOPE_BOUND_HEAD,
+    SCOPE_CARD_HEAD,
     SCOPE_COL_WORD,
     SCOPE_LINES,
     SCOPE_ROW_WORD,
     SCOPE_SHORT,
     SCOPE_VALUE_WORD,
     SCOPE_WORD,
+    SE3A_NONE,
+    SE3A_ROW,
+    SE3B_NONE,
+    SE3B_ROW,
     SEP,
     STATE_WORD,
     STATED_SECURITY,
@@ -154,6 +161,7 @@ from .words import (
     TF_KL_TITLE,
     TF_SUB,
     TF_TEST,
+    TF_TESTS_ON,
     TIER_WORD,
     TRIAL_NO_PROOF,
     TRIAL_REFUSED,
@@ -340,30 +348,33 @@ def scope_card_html(formal):
     if formal is None:
         return ""
 
-    def cell(c):
+    # each cell carries its column's head (`data-h`): a phone stacks the card, one block a row
+    def cell(c, col):
         word = e(SCOPE_VALUE_WORD[c["value"]])
         if c["quotes"]:
             word = f'<a class="sv" href="{e(c["quotes"][0]["url"])}">{word}</a>'
-        return f'<td class="{e(c["value"])}">{word}</td>'
+        return f'<td class="{e(c["value"])}" data-h="{e(SCOPE_COL_WORD[col])}">{word}</td>'
 
     def bound(r):
         b = (formal.get("scope_bounds") or {}).get(r)
+        h = f' data-h="{e(SCOPE_BOUND_HEAD)}"'
         if not b:
-            return f'<td class="not_stated">{e(SCOPE_VALUE_WORD["not_stated"])}</td>'
+            return f'<td class="not_stated"{h}>{e(SCOPE_VALUE_WORD["not_stated"])}</td>'
         text = quoted(b["text"])
         if b["quotes"]:
             text = f'<a class="sv" href="{e(b["quotes"][0]["url"])}">{text}</a>'
-        return f'<td class="sb">{text}</td>'
+        return f'<td class="sb"{h}>{text}</td>'
 
     card = formal["scope_card"]
     heads = f'<th scope="col">{e(SCOPE_BOUND_HEAD)}</th>' + "".join(
         f'<th scope="col">{e(w)}</th>' for w in SCOPE_COL_WORD.values())  # fmt: skip
     body = "".join(
         f'<tr><th scope="row">{e(SCOPE_ROW_WORD[r])}</th>{bound(r)}'
-        + "".join(cell(card[r][c]) for c in SCOPE_COL_WORD) + "</tr>"
+        + "".join(cell(card[r][c], c) for c in SCOPE_COL_WORD) + "</tr>"
         for r in SCOPE_ROW_WORD
     )  # fmt: skip
-    return (f'<table class="scard"><caption class="sr">Scope card</caption>'
+    return (f'<p class="pvh">{e(SCOPE_CARD_HEAD)}</p>'
+            f'<table class="scard"><caption class="sr">Scope card</caption>'
             f'<thead><tr><td><span class="sr">What</span></td>{heads}</tr></thead>'
             f"<tbody>{body}</tbody></table>")  # fmt: skip
 
@@ -396,6 +407,9 @@ def scope_head_html(row):
             src if src.startswith("https://") else None)  # fmt: skip
         words = quoted(sec["words"])
         words = f'<a href="{e(url)}">{words}</a>' if url else words
+        notion = (row.get("statement") or {}).get("notion") or []
+        if notion:  # the publisher's own name for the notion, verbatim (SI-3)
+            words += f" {e(NOTION_HEAD)}: " + quote_links(notion)
         security = f"<div><dt>{e(STATED_SECURITY)}</dt><dd>{words}</dd></div>"
     facts = "".join(f"<div><dt>{e(k)}</dt><dd>{e(v)}</dd></div>" for k, v in lines)
     formal = petal["machine_checked"]["formal"]
@@ -577,6 +591,8 @@ def statement_given(row, st, rid):  # noqa: PLR0911 (one return per row)
                 f"<code>{e(kinds)}</code>") if kinds else "its files"  # fmt: skip
         if st["reply"] == "proof":
             said += "; the reply is read from the proof, not given"
+        if st.get("proof_caveat"):
+            said += f"; {e(st['proof_caveat'])}"
         return said
     if rid == "decoding":
         return e(f"{req['decoding']}, at every reply position")
@@ -603,9 +619,16 @@ def statement_html(row):
         rows.append([e(STATEMENT_HEAD[r["id"]]), statement_given(row, st, r["id"]), said])
     card = (f' <a href="{e(link(st["card"]))}" title="{e(st["card"])}">claim card</a>'
             if st["card"] else "")  # fmt: skip
+    fix = st.get("erratum")
+    erratum = ""
+    if fix:  # the card is kept byte for byte (the runs record its digest): said beside its link
+        fields = " and ".join(f"<code>{e(f)}</code>" for f in fix["fields"])
+        q = fix["level_1"]
+        erratum = (f'<p class="cn">{CARD_ERRATUM.format(fields=fields, says=e(fix["says"]))} '
+                   f'<a class="qt" href="{e(q["url"])}">\u201c{e(q["quote"])}\u201d</a></p>')  # fmt: skip
     lead = (f'<p class="rb"><span class="k">Verifier</span> <span><code>{e(st["program"])}</code>; '
             f"each row's right column is the{card}, which copies the publisher's documents at "
-            "the row's commit</span></p>")  # fmt: skip
+            f"the row's commit</span></p>{erratum}")  # fmt: skip
     return lead + stacked(["What", "Given", "Claim card"], rows)
 
 
@@ -1309,7 +1332,7 @@ def tests_html(row, tf, mine):
         lines.append(f"<div><dt{at}>{e(name)}</dt><dd>{kept(*words.split(' · '))}</dd></div>")
     if not lines:
         return ""
-    said = counted_words(2 * len(lines), "test")
+    said = f"{counted_words(2 * len(lines), 'test')} {TF_TESTS_ON}"  # the measure, visible
     return (f'<details class="more fts"><summary>{e(said)}<span class="sr">, '
             f'{e(FIGURE_HEAD["fidelity"])}</span></summary><dl>{"".join(lines)}</dl></details>')  # fmt: skip
 
@@ -1822,8 +1845,8 @@ def build_checks():
            f"{know_html()}")  # fmt: skip
     parts = (("checks", "Six checks"), ("figures", "Figures"), ("order", "Order"),
              ("glyph", "Glyph"), ("not-run", "Not run"))  # fmt: skip
-    # the order rule; "largest model proved" (OR-6) is an address the ladder's mark can link
-    order = rules(ORDER_RULE, ids=("unranked", "largest model proved"), at="ORDER_RULE")
+    # the order rule; "largest model with a passed row" (OR-6) is an address the ladder's mark can link
+    order = rules(ORDER_RULE, ids=("unranked", "largest model with a passed row"), at="ORDER_RULE")
     key = (f'<p class="rd">{linked(summary, ("summary", ""))}</p>'
            f'<div class="cwrap"><div class="gbig">{glyph}</div><div class="clist">{petals}'
            f"</div></div>{after_key}")  # fmt: skip
@@ -1872,6 +1895,19 @@ def build_mandate():
     credit = S.V["credit"]
     names = {k: f'<a href="{e(credit[k]["url"])}">{e(credit[k]["name"])}</a>'
              for k in ("lead", "builder")}  # fmt: skip
+
+    # SE-3a and SE-3b in words, from the board's rows (a count typed here would go stale)
+    def by_row(key, one, none, noun):
+        said = []
+        for r in S.ROWS:
+            n = len(r.get(key) or ())
+            if n:
+                said.append(one.format(n="one" if n == 1 else f"{n:,}", name=name_of(r),
+                                       **{noun: noun if n == 1 else f"{noun}s"}))  # fmt: skip
+        return "; ".join(said) or none
+
+    names["se3a"] = e(by_row("replaced", SE3A_ROW, SE3A_NONE, "slot"))
+    names["se3b"] = e(by_row("ineligible", SE3B_ROW, SE3B_NONE, "session"))
 
     def words_html(words):
         return e(words).format_map(names) if "{" in words else e(words)

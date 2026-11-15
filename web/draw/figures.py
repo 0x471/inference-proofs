@@ -27,7 +27,7 @@ from .overview import (
     split_html,
 )
 from .pages import STATEMENT_HEAD, statement_given
-from .words import FIGURE_HEAD, SEP, e
+from .words import FIGURE_HEAD, SEP, e, release_tail
 
 FIGURES: dict = {}
 EXPLORERS: dict = {}
@@ -422,7 +422,7 @@ def release_words():
     rel = S.V["release"]
     if not rel:
         return "No board yet"
-    return f"From the board, release {rel['id']}" + (f", {rel['date']}" if rel["date"] else "")
+    return f"From the board, release {release_tail(rel)}"
 
 
 def rows_words(found):

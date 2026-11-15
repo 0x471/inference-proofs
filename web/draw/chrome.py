@@ -24,6 +24,7 @@ from .words import (
     WHOLE_SESSIONS,
     e,
     petal_step,
+    release_tail,
     shown,
 )
 
@@ -233,7 +234,7 @@ def footer():
     if rel is not None:
         board = rel["board"]
         where = link(board) if board.startswith("releases/") else None
-        tail = rel["id"] + (f", {rel['date']}" if rel["date"] else "")
+        tail = release_tail(rel)
         parts.append(f'<a class="nw" href="{e(where)}"><span class="fk">Release</span> '
                      f'<span class="fv">{e(tail)}</span></a>' if where
                      else f'<span class="nw">Release {e(tail)}</span><code>{e(board)}</code>')  # fmt: skip

@@ -86,8 +86,9 @@ CHECK_MORE = {
     ),
     "fidelity": (
         ("score", "For one reply, the number of leading tokens equal to the original's reply to "
-         "the same prompt, 0 to {reply_tokens}. The original is the model publisher's own "
-         "weights: {reference}."),
+         "the same prompt, 0 to {reply_tokens}. The original is a Hub copy of the model "
+         "publisher's release, at the publisher's precision, named with its commit on each "
+         "system page: {reference}."),
         ("bar", "Among the damaged controls that every honest control scores above, the one with "
          "the highest mean score. The honest controls are the original's second run and its Q8_0 "
          "and Q4_K_M copies. A system's page lists the damaged ones. With none, the model has no "
@@ -243,14 +244,21 @@ SCOPE_ROW_WORD = {"soundness": "Soundness", "zero_knowledge": "Zero knowledge",
                   "completeness": "Completeness"}  # fmt: skip
 SCOPE_COL_WORD = {"protocol": "Protocol", "verifier_run": "Verifier we run",
                   "prover_run": "Prover we run"}  # fmt: skip
-SCOPE_VALUE_WORD = {"machine_checked": "machine-checked", "paper": "on paper", "tested": "tested",
+# "tested" is the publisher's word for its own tests ("tested, not proved"), never ours: our runs are
+# the Completeness line above the card
+SCOPE_VALUE_WORD = {"machine_checked": "machine-checked", "paper": "on paper",
+                    "tested": "tested by the publisher, not proved",
                     "not_stated": "not stated", "does_not_apply": "does not apply"}  # fmt: skip
 # the scope card's bound column head, and the three lines over the card (MC-6, amended
 # 2026-11-15): what the publisher states and what we test, for the row
 SCOPE_BOUND_HEAD = "Bound, as stated"
+# beside the claim card's link, while web/_data/errata.json corrects the card ({fields}, {says})
+CARD_ERRATUM = "Erratum: the card's {fields} describe {says}. At Level 1:"
+SCOPE_CARD_HEAD = "Scope card, as the publisher states it; it sets no state"
 SCOPE_LINES = {"stated": "stated by the publisher", "not_stated": "not stated by the publisher",
                "tested": "tested by us on honest runs"}  # fmt: skip
 STATED_SECURITY = "Stated security"
+NOTION_HEAD = "Its notion, as the publisher names it"
 # Weights hidden: what kind of value a proof leaves visible (only fitted_to_weights sets a step)
 VISIBLE_TAG_WORD = {"statement_io": "the statement's input or output", "shape": "shape",
                     "side_channel": "side channel",
@@ -503,7 +511,7 @@ ORDER_RULE = (
     # OR-2; no floor: Non-Goals (printed as stated), Alternatives (a security floor, rejected)
     ("unranked", "A system that passed is ranked only if its publisher states, at the pinned "
      "commit, that an accept means the reply is the committed model's own greedy reply to the "
-     "prompt, and the level file records a numeric security level that its publisher states "
+     "prompt, or is read as stating it (marked read as, with its quotes), and the level file records a numeric security level that its publisher states "
      "there, for at least one verifier it ships. Otherwise it is listed as passed, unranked, with "
      "the reason. Level 1 sets no minimum level."),
     ("above", "One system is placed above another when both have a multiple, its mean multiple is "
@@ -515,7 +523,7 @@ ORDER_RULE = (
     ("below", "Under the ranked systems: passed and unranked, then not passed, each group in "
      "alphabetical order. A system that has not passed prints its checks and figures and has no "
      "position."),
-    ("largest model proved", "The largest model, by total parameters, with at least one system "
+    ("largest model with a passed row", "The largest model, by total parameters, with at least one system "
      "that passed and whose publisher states that an accept is the model's own reply."),
     ("glyph", "The glyph never moves a position."),
     ("models", "Nothing is ranked across models."),
@@ -526,7 +534,7 @@ ORDER_RULE = (
 KNOW_HEAD = "What we test and what we read"
 KNOW_COLS = ("What", "Where", "How we know it")
 KNOW_WORD = {"test": "we test it", "read": "we read it from the publisher's documents",
-             "neither": "neither: no check tests it and no row reads it"}  # fmt: skip
+             "neither": "no check tests it; the petal prints what the publisher states"}  # fmt: skip
 KNOW_LINES = (
     ("completeness: the publisher's prover, run honestly, gives accepted proofs", ("run",),
      "test"),
@@ -542,8 +550,8 @@ KNOW_LINES = (
     ("setup", ("no_trusted_party",), "read"),
     ("the stated security level", ("unranked",), "read"),
     ("that an accept is the committed model's own greedy reply", ("unranked",), "read"),
-    ("soundness against a cheating prover", (), "neither"),
-    ("zero knowledge of the programs the row runs", (), "neither"),
+    ("soundness against a cheating prover", ("unforgeable",), "neither"),
+    ("zero knowledge of the programs the row runs", ("weights_hidden",), "neither"),
 )  # fmt: skip
 KNOW_WHERE = {"figures": "Figures", "unranked": "Order"}  # the two that are no check or petal
 # the checks page in one sentence: its description and its search entry
@@ -569,7 +577,7 @@ SCALE_NOT_RUN = "no system run yet"
 # the start of the scale page's description and search line, before its figures' names
 SCALE_LEAD = "Every system run, on a log axis"
 # beside the size tab of the frontier's rung on the ladder (OR-6: the largest with a passed row)
-FRONTIER_WORD = "Largest model proved"
+FRONTIER_WORD = "Largest model with a passed row"
 # ------------------------------------------------------------------ the mandate page
 # The headline, then who runs it, its ties, what we do, what we do not do, how to check us and how
 # a row is changed, with the dated corrections: each line
@@ -604,11 +612,15 @@ MANDATE = (
          "4f41667 of pull request #36 to SASH, written by this project's owner and not merged "
          "upstream; a SASH maintainer has since added commits to it. At upstream's own commit, "
          "eb95bfa, SASH refused one of the level's prompts."),
-        ("After the freeze", ("CH-1a", "SE-3a"),
-         (f"{RFC_18}#the-six-checks", f"{RFC_18}#sessions-and-what-is-recorded"), "Two rules "
-         "added to RFC-0018 after the level was frozen decided rows. Under CH-1a, FlashProve's "
-         "Model check held on its prover answering \u201cfailed\u201d. Under SE-3a, two SASH "
-         "slots went to later sessions."),
+        # {se3a} and {se3b}: the board's replaced and ineligible sessions, in words (pages.py)
+        ("After the freeze", ("CH-1a", "SE-3a", "SE-3b", "SI-4a"),
+         (f"{RFC_18}#the-six-checks", f"{RFC_18}#sessions-and-what-is-recorded",
+          f"{RFC_18}#sessions-and-what-is-recorded", f"{RFC_18}#site"), "Four rules added to "
+         "RFC-0018 after the level was frozen bear on rows. Under CH-1a, FlashProve's Model check "
+         "held on its prover answering \u201cfailed\u201d. Under SE-3a, {se3a}. Under SE-3b, "
+         "{se3b}. Under SI-4a, a passed row takes a position only on its publisher's recorded "
+         "statement that an accept is the committed model's own greedy reply, or on our reading "
+         "of one; LV-1 reserves such a rule for a new level."),
     )),
     ("What we do", (
         ("Pinned commit", "rule 1", "AGENTS.md#hard-rules", "Each system runs at one pinned "
@@ -666,8 +678,19 @@ MANDATE = (
 )  # fmt: skip
 # the corrections the mandate lists in the section MANDATE_CORRECTIONS_IN names, newest first:
 # (date, words). A correction is added here when it is made; none is removed.
+# the board's replaced (SE-3a) and ineligible (SE-3b) sessions in the mandate's words, one
+# clause per row that has any; with none, the empty case
+SE3A_ROW = "{n} {name} {slot} went to a later session"
+SE3A_NONE = "no slot went to a later session"
+SE3B_ROW = "{n} {name} {session} ran on a host whose self-test failed and no longer counts"
+SE3B_NONE = "no session was dropped"
 MANDATE_CORRECTIONS_IN = "Changes and corrections"
 MANDATE_CORRECTIONS = (
+    ("2026-11-15", "SASH's No third party trusted is read by the same test as FlashProve's: from "
+     "red, not stated, to amber in part, read as. Both rest on our reading of the publisher's "
+     "sentences, printed with the petal."),
+    ("2026-11-15", "The mandate said two SASH slots went to later sessions. One did; slot 2's "
+     "replacement ran on a host whose self-test failed and no longer counts."),
     ("2026-11-15", "A SASH session that failed the machine self-test no longer counts "
      "(RFC-0014); SASH's row reads not passed yet until a replacement session runs."),
     ("2026-11-15", "A state that rests on our reading of a publisher's documents, not on a "
@@ -818,12 +841,15 @@ LIM_ENGINES = "Engines: {parts}."
 LIM_PART = {None: "the original and the controls run with it", "controls": "the quantized controls"}
 LIM_VLLM = "{part} in vLLM, every prompt sent in one call"
 LIM_LLAMA = "{part} in llama.cpp, {slots} at a time"
-LIM_GREEN = (" Close to the original needs one request at a time for green, so it cannot be "
-             "green on this model.")  # fmt: skip
+LIM_GREEN = (" Close to the original needs a fidelity run of one request at a time for green, "
+             "so it cannot be green until the original is run that way on this model.")  # fmt: skip
 LIM_PROMPTS = ("Prompts: {tokens}-token windows of {texts} texts from {hosts} ({licences}), with "
                "no chat template.")  # fmt: skip
 TF_AGREE = "Fidelity: share of positions where the top token is the reply token, mean"
 TF_KL = "KL to the original, on its reply"
+# the summary of FI-11's tests: they are on top-token agreement and set nothing (the matched
+# leading tokens set the check and the petal)
+TF_TESTS_ON = "on top-token agreement; they set no state"
 # the two teacher-forced columns by name: the lead and FI-13's label say which columns they are about
 TF_BOTH = f"Fidelity and {TF_KL}"
 # the KL head's title (FI-12: the tokens both lists hold, every other token one outcome)
@@ -873,6 +899,12 @@ def number(v, unit):  # noqa: PLR0911 (one return per stored unit)
     if unit == "request/gpu_s":  # CO-4: a rung of the serving ladder
         return sig(v), "replies/GPU-s"
     raise KeyError(f"no words for the unit {unit!r}")
+
+
+def release_tail(rel):
+    """A release in words, "v1.0, runs to 2026-11-13": the board's date is its newest run date,
+    not a date the release was made on, so it says what it is."""
+    return rel["id"] + (f", runs to {rel['date']}" if rel["date"] else "")
 
 
 def shown(v, unit):
