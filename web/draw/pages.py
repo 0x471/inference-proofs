@@ -679,9 +679,8 @@ def level_statement_html(row):
         said = e(STATEMENT_WORD["stated" if st["stated"] else "not"])
     quotes = (f'<details class="more"><summary>{e(counted_words(len(st["quotes"]), "quote"))}'
               f'</summary>{quote_links(st["quotes"])}</details>' if st["quotes"] else "")  # fmt: skip
-    return (
-        f'<p class="rb"><span class="k">{e(LEVEL_STATEMENT_HEAD)}</span> <span>{said}</span></p>{quotes}'
-    )
+    head = f'<span class="k">{e(LEVEL_STATEMENT_HEAD)}</span>'
+    return f'<p class="rb">{head} <span>{said}</span></p>{quotes}'
 
 
 def plain(v, unit, record, said="", missing="none"):
