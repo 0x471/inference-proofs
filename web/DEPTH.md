@@ -93,6 +93,7 @@ Then, before printing it: does a head, a unit, the glyph or another block of the
 ## Exceptions, each deliberate
 
 - **The two parts of the multiple are on the ladder**, a depth above where the test puts them. Where a system generates its reply in a phase of its own, most of its multiple can be generation, not proving, and the headline read alone is taken for the cost of proving (RFC-0018 CO-7, Decision Q15). The parts change how the headline reads, so they travel with it.
+- **The overview opens with a lead and two lines** (RFC-0018 SI-1, amended 2026-11-15), a depth above where definitions go. A reader at the surface knows nothing of the method, so the band says what a proof of inference is and what the ladder lists, and, from the board, on how many models a system passed and the frontier row's figure. Under it, "passed" is said to mean that our six checks held and that no check tries to forge a proof, and, while no model has two systems run, that none has. Without them "passed" and a lone position read as a verdict.
 - **A share card carries the release and its date.** A card outlives the page it was made from; the date says which figures it shows.
 
 ## Known gaps

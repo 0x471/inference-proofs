@@ -184,7 +184,8 @@ def test_scale_positions_are_the_boards(board_site: Any) -> None:
                 dim,
                 row["system"],
             )
-            steady = row["multiple"]["value"] is not None
+            # CO-5 (amended 2026-11-15): the whole sessions' scope wherever the row has it
+            steady = row["session_multiple"]["value"] is None
             runs = [s["m" if steady else "session"] for s in row["sessions"]]
             if dim == "multiple":
                 b = base["gpu_seconds_per_reply"]["value"]
@@ -207,15 +208,17 @@ def test_scale_positions_are_the_boards(board_site: Any) -> None:
     for dim in ("multiple", "cost", "check-time", "proof-size"):
         assert seen[dim] == [r["system"] for r in rows(board)], dim
     # hand-computed: the multiple from 1× to 1,000× (sessions up to 612 / 1.408 = 434.6×), the
-    # cost from 10^-4 (serving 0.000894 USD) to 1 USD; FlashProve's 68.31× and 0.06110 USD
+    # cost from 10^-4 (serving 0.000894 USD) to 1 USD; FlashProve at its whole sessions' scope,
+    # 49.83 / 0.6024 = 82.72× (log10 / 3 = 63.92 %) and 0.07399 USD ((log10 + 4) / 4 = 71.73 %),
+    # not its steady 68.31× and 0.06110 USD
     assert [(lo, hi) for lo, hi, _ in lanes] == [
         ("0", "3"),
         ("-4", "0"),
         ("0", "2"),
         ("0", "2"),
     ]
-    assert re.search(r'id="scale-multiple-flashprove">.*?class="mk" x="61.15%"', text, re.S)
-    assert re.search(r'id="scale-cost-flashprove">.*?class="mk" x="69.65%"', text, re.S)
+    assert re.search(r'id="scale-multiple-flashprove">.*?class="mk" x="63.92%"', text, re.S)
+    assert re.search(r'id="scale-cost-flashprove">.*?class="mk" x="71.73%"', text, re.S)
 
 
 def test_session_parts_print_beside_the_whole_sessions_figure(board_site: Any) -> None:
@@ -240,3 +243,48 @@ def test_completeness_count_is_the_boards(board_site: Any) -> None:
         n = sum(sum(s["groups"]) for s in row["sessions"])
         page = html.unescape(text[f"{row['system']}.html"])
         assert f"tested by us on honest runs ({n:,}\u00a0of\u00a0{n:,})" in page, row["system"]
+
+
+def test_surface_figures_are_whole_sessions(board_site: Any) -> None:
+    """RFC-0018 CO-5 and SI-1 (amended 2026-11-15): the ladder, a system's band and its card
+    print each row's multiple and cost at the whole sessions' scope wherever the row has one, so
+    a rung never mixes two scopes; the steady figures stay below, under Cost. In the example
+    board FlashProve has both: its ladder row names session_multiple and session_usd_per_reply,
+    never multiple or steady_usd_per_reply."""
+    out = board_site.out
+    index = html.unescape((out / "index.html").read_text())
+    tr = re.search(r'<tr class="row" id="row-flashprove">(.*?)</tr>', index, re.S)
+    assert tr
+    at = "/rungs/0/rows/0/"
+    pages_ = {"index.html": tr[1]}
+    for page in ("flashprove.html", "og/flashprove.html"):
+        text = html.unescape((out / page).read_text())
+        pages_[page] = text.split('class="figs"')[0]  # the band (all of a card)
+    for page, text in pages_.items():
+        pointers = set(re.findall(r"record: [^#]+#(/[^;\"]+)", text))
+        assert f"{at}session_multiple" in pointers, page
+        assert f"{at}session_usd_per_reply" in pointers or page == "flashprove.html", page
+        assert f"{at}multiple" not in pointers, page
+        assert f"{at}steady_usd_per_reply" not in pointers, page
+
+
+def test_a_lone_system_is_not_drawn_as_ranked(board_site: Any) -> None:
+    """RFC-0018 OR-4 (amended 2026-11-15): a ranked row that is the only system run on its model
+    is an outline square that says so, never a filled "1 of 1", on the ladder and its card; the
+    ladder says no two systems share a model while none does, and not once one does."""
+    out, build = board_site.out, board_site.build
+    index = (out / "index.html").read_text()
+    assert all(r["systems_run"] == 1 for r in board_site.board["rungs"])  # the example board
+    assert 'class="pos p1"' not in index
+    assert ">of 1<" not in index
+    assert 'class="pos solo"><span class="pn">1</span>' in index
+    assert "position 1 of 1" not in (out / "og/flashprove.html").read_text()
+    assert build.ALONE_WORDS in index
+    one, two = {"rows": [{}], "systems_run": 1}, {"rows": [{}, {}], "systems_run": 2}
+    assert build.alone([one, {"rows": [], "systems_run": 0}])
+    assert not build.alone([one, two])
+    assert not build.alone([{"rows": [], "systems_run": 0}])
+    row, lone, shared = {"position": 1}, {"systems_run": 1}, {"systems_run": 2}
+    assert "only system run" in build.position_html(row, lone)
+    assert 'class="pos p1"' in build.position_html(row, shared)
+    assert ">of 2<" in build.position_html(row, shared)

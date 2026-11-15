@@ -8,6 +8,7 @@ only by the order rule: no column head re-sorts them. Also the figure cells the 
 from . import state as S
 from .chrome import (
     CHECKS_PAGE,
+    ONLY_RUN,
     counted,
     footer,
     has,
@@ -63,8 +64,6 @@ BINDING_GAP = (
     "that an accept is the committed model's own greedy reply, not by a test."
 )
 ROW_GLYPH = 3  # the row glyph's unit in px: its arms carry their names (159 by 87 px)
-# a phone's row glyph, px a unit, no names (62.5 by 77.5 px): whole device pixels at 2x
-PHONE_GLYPH = 2.5
 
 
 def states(row):
@@ -289,10 +288,15 @@ def check_word(row, page=None):
 def position_html(row, rung):
     """A row's position as a square, position 1 solid paper, the others an outline; the count run
     under it. A row with no position keeps the square, a dash in it and no count (the dash is
-    drawn, not read out: a screen reader reads "no position"), so every row starts alike."""
+    drawn, not read out: a screen reader reads "no position"), so every row starts alike. The
+    only system run on its model (OR-4, amended 2026-11-15) holds position 1 against nothing: its
+    square is an outline and says so in place of a count."""
     if row["position"] is None:
         return ('<span class="pos p0"><span class="pn" aria-hidden="true">\u2013</span>'
                 '<span class="sr">no position</span></span>')  # fmt: skip
+    if rung["systems_run"] == 1:
+        return (f'<span class="pos solo"><span class="pn">{row["position"]}</span>'
+                f'<span class="of">{e(ONLY_RUN)}</span></span>')  # fmt: skip
     lead = " p1" if row["position"] == 1 else ""
     return (f'<span class="pos{lead}"><span class="pn">{row["position"]}</span>'
             f'<span class="of">of {rung["systems_run"]}</span></span>')  # fmt: skip
@@ -363,9 +367,8 @@ def linked_fig(html, f, to):
 
 
 def row_html(row, rung):
+    # one glyph at every width, its petals named (a phone sets it under the name, words.css)
     glyph = glyph_svg(ROW_GLYPH, states(row), names=[PETAL_NAME[p["id"]] for p in row["glyph"]])
-    # the same petals with no names, drawn in place of the first on a phone (words.css shows one)
-    glyph += glyph_svg(PHONE_GLYPH, states(row), cls="pie-svg gsh")
     cost, verify = row_cost(row), row["figures"]["verify_seconds_per_reply"]
     # each figure leads to its section of the system's page: the multiple, the cost and the
     # verify time to Cost, where their scope and n are printed (Fidelity's word links its own)
@@ -482,13 +485,82 @@ def rung_html(rung):
             f"{head}{body}</section>")  # fmt: skip
 
 
+# the overview's lead (SI-1, amended 2026-11-15): what a proof of inference is, for a reader with
+# no context, then what the ladder below holds; the third sentence is the board's (`board_words`)
+PROOF_WORDS = ("A proof of inference lets anyone check that a reply is the one a committed model "
+               "returns for a prompt.")  # fmt: skip
+LADDER_WORDS = ("Below, each model lists the systems run on it, whether they passed, and the cost "
+                "of a proved reply as a multiple of serving that model.")  # fmt: skip
+# what "passed" means, under the band on every build (SI-1, amended 2026-11-15)
+PASSED_WORDS = ("Passed", " means our ", "six checks", " held; no check tries to ", "forge a proof",
+                ".")  # fmt: skip
+# while no model has two systems run on it (SI-1, amended 2026-11-15): no row was ranked against
+# another, and the line goes by itself once one model has two
+ALONE_WORDS = "No two systems have yet been measured on the same model."
+
+
 def band_html():
-    """The band: the title on one line, and nothing else. The frontier (OR-6) is not named here:
-    its rung, in the ladder under the band, is marked as the largest model proved (`rung_html`),
-    and its rows say who passed there, at what multiple and how many systems ran."""
+    """The band: the title on one line, and under it the lead (`lead_html`). The frontier (OR-6)
+    is not named in the title: its rung, in the ladder under the band, is marked as the largest
+    model proved (`rung_html`), and its rows say who passed there and at what multiple."""
     run = any(r["rows"] for r in S.V["rungs"])
     title = "Proved inference, by model size" if run else "No system has run yet."
-    return f'<h1 class="band-h">{e(title)}</h1>'
+    return f'<h1 class="band-h">{e(title)}</h1>{lead_html(run)}'
+
+
+def lead_html(run):
+    """At most three sentences under the title, for a reader with no context: what a proof of
+    inference is, what the ladder holds and, from the board, on how many models a system passed
+    and, on the largest of them, its figure (`board_words`). No figure of one model is set beside
+    another model's."""
+    said = [PROOF_WORDS] + ([LADDER_WORDS, board_words()] if run else [])
+    return f'<p class="lede">{" ".join(said)}</p>'
+
+
+def board_words():
+    """On how many of the models a system passed, and on the largest such model (OR-6's
+    frontier) its size and the figure of its one row there, with its unit and its labels in its
+    title; with more than one row there, their count instead. Words escaped, the figure html."""
+    rungs = S.V["rungs"]
+    passed = sum(1 for r in rungs if any(row["passed"] for row in r["rows"]))
+    front = S.V["frontier"]
+    rung = next((r for r in rungs if front and r["id"] == front["rung"]), None)
+    if rung is None or not passed:
+        return e(f"No system has passed on any of the {len(rungs)} models yet.")
+    where = f"{nobreak(rung['model'])} ({e(params(rung['parameters_total']))} parameters)"
+    rows = front["rows"]
+    if len(rows) == 1:
+        row = rows[0]
+        _, f, key = lead_figure(row)
+        fig = fig_html(f, counted(row), sub=BARE, note=whole_note(row, key)) if has(f) else None
+        name = f'<a href="{e(href(row))}">{e(name_of(row))}</a>'
+        what = (f"a reply proved by {name} costs {fig} as much as serving it" if fig
+                else f"{name} passed")  # fmt: skip
+    else:
+        what = f"{len(rows)} systems passed"
+    head = e(f"A system passed on {passed} of the {len(rungs)} models")
+    if passed == 1:
+        return f"{head}: {where}, where {what}."
+    return f"{head}; on the largest, {where}, {what}."
+
+
+def head_html():
+    """The lines between the band and the ladder: what "passed" means (always), and, while no
+    model has two systems run on it, that none has (`alone`)."""
+    if not any(r["rows"] for r in S.V["rungs"]):
+        return ""
+    a, b, c, d, f, g = PASSED_WORDS
+    lines = [f'<p><a class="df" href="{CHECKS_PAGE}#passed">{e(a)}</a>{e(b)}'
+             f'<a href="{CHECKS_PAGE}">{e(c)}</a>{e(d)}'
+             f'<a href="{CHECKS_PAGE}#not-tested">{e(f)}</a>{e(g)}</p>']  # fmt: skip
+    if alone(S.V["rungs"]):
+        lines.append(f'<p class="lal">{e(ALONE_WORDS)}</p>')
+    return f'<div class="lhd">{"".join(lines)}</div>'
+
+
+def alone(rungs):
+    """Whether no model has two or more systems run on it, while at least one has a row."""
+    return any(r["rows"] for r in rungs) and all(r["systems_run"] < 2 for r in rungs)
 
 
 def not_run_html():
@@ -516,7 +588,7 @@ def build_index():
 {header("home")}
 <main id="main" class="home">
   <section class="mast"><div class="mast-in">{band_html()}</div></section>
-  <div class="wrap ladder">{rungs}</div>
+  <div class="wrap ladder">{head_html()}{rungs}</div>
   <div class="wrap">{not_run_html()}</div>
 </main>
 {footer()}"""
@@ -524,10 +596,11 @@ def build_index():
 
 
 def home_words():
-    """The home page in a sentence (its description and share text): what the systems prove, the
+    """The home page in a sentence (its description and share text): what a proof states, the
     largest model one proved on (OR-6; left out while there is none), and what each row holds."""
     front = S.V["frontier"]
     rung = next((r for r in S.V["rungs"] if front and r["id"] == front["rung"]), None)
     size = f" up to {params(rung['parameters_total'])} parameters" if rung else ""
-    return (f"Systems that prove which model wrote a reply, on open-weights models{size}: six "
-            "checks each, and the cost of a proved reply as a multiple of serving it.")  # fmt: skip
+    return (f"Proofs that a reply is the one a committed model returns for a prompt, from systems "
+            f"run on open-weights models{size}: six checks each, and the cost of a proved reply as "
+            "a multiple of serving it.")  # fmt: skip

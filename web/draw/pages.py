@@ -17,7 +17,6 @@ from .chrome import (
     card_current,
     cards_record,
     counted,
-    fig_words,
     footer,
     has,
     header,
@@ -27,7 +26,7 @@ from .chrome import (
     pnav,
     row_cost,
     rung_of,
-    standing,
+    share_words,
 )
 from .hexagon import glyph_svg
 from .overview import (
@@ -133,6 +132,7 @@ from .words import (
     TRIALS_HEAD,
     VISIBLE_OTHERS,
     VISIBLE_TAG_WORD,
+    architecture,
     beside_unit,
     e,
     kl_head,
@@ -1411,7 +1411,8 @@ def system_page(row):
     sysd = S.V["systems"][row["system"]]
     name = name_of(row)
     facts = [("f-st", "Standing", standing_html(row, "")),
-             ("f-md", "Model", f'<a href="/#{e(rung["id"])}">{nobreak(rung["model"])}</a>')]  # fmt: skip
+             ("f-md", "Model", f'<a href="/#{e(rung["id"])}">{nobreak(rung["model"])}</a>'
+              f'<span class="msz">{e(architecture(rung["parameters_total"], rung.get("parameters_active")))}</span>')]  # fmt: skip
     source = ""
     pin = sysd.get("pin")
     if pin:  # a change to the publisher's code: the source is its pull request (SI-3)
@@ -1429,7 +1430,7 @@ def system_page(row):
     size = next((i + 1 for i, k in enumerate(NAME_SIZES) if len(name) <= k), len(NAME_SIZES) + 1)
     # the figure's plain name, the figure, and under it, once, what was counted and n (CO-5)
     label, lead = FIGURE_HEAD["multiple"], band_figure(row)
-    _, lead_f, lkey = lead_figure(row)
+    _, _, lkey = lead_figure(row)
     lead += split_html(row, lkey, bar=False, bare=True)
     unranked = "" if row["position"] is not None else " unr"
     band_ = (
@@ -1470,9 +1471,9 @@ def system_page(row):
   </div>
 </main>
 {footer()}"""
-    # depth 0: where the system stands and its one figure, with its unit (as the card's alt says);
-    # what was counted is a step down, under the band's figure
-    desc = f"{name} on {rung['model']}, {standing(row)}. {FIGURE_HEAD['multiple']}: {fig_words(lead_f)}."
+    # depth 0: where the system stands and its one figure with its parts, each with its unit (as
+    # the card's alt says); what was counted is a step down, under the band's figure
+    desc = share_words(row)
     return page(name, desc, body, "system syspage", row["page"], row["page"])
 
 
