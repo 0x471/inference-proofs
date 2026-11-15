@@ -94,9 +94,10 @@ def setup(view, out):
     assert set(S.PAGE).isdisjoint({"index", "checks", "mandate", "scale", "404", *learn}), (
         "a row's page is a site page"
     )
-    # a Learn page must not take the address of a site page, of a redirect or of a system
-    taken = {"index", "checks", "mandate", "scale", "404", "system", "criteria", "reference", "release",
-             "targets", *S.PAGE, *view["planned"]}  # fmt: skip
+    # a Learn page must not take the address of a site page, of a redirect (an address gone, which
+    # its redirect would hide) or of a system
+    taken = {"index", "checks", "mandate", "scale", "404", "system",
+             *(a.lstrip("/") for a in draw.outputs.GONE), *S.PAGE, *view["planned"]}  # fmt: skip
     clash = sorted(set(learn) & taken) + sorted({s for s in learn if learn.count(s) > 1})
     if clash:
         raise RuntimeError(

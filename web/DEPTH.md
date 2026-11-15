@@ -19,12 +19,12 @@ So a line is placed by one question: how deep is the reader who needs it? What a
 
 Two things sit beside the depths, not in them:
 
-- **Learn** is a way in for a reader who wants the subject explained. It is not a step between the ladder and a system. Its pages follow their own order (a policy track, an engineering track), and a figure there is printed with its labels, since the page is read alone.
+- **Learn** is a way in for a reader who wants the subject explained. It is not a step between the ladder and a system. Its pages follow their own order (a policy track, a track for prover teams and engineers), and a figure there is printed with its labels, since the page is read alone.
 - **The footer** is the same on every page. It holds names only (the level, the release with its date, the licence, who builds the site), each a link: the level to the mandate's line on it, the release to its board file, the licence to its text in the repository. It carries no date of a rule and no hash.
 
 ## Three laws
 
-1. **Down, never out.** Content moves to its depth; it is not removed. Each depth links to the next: a ladder row to its system's page, a word to its definition, a state to its evidence, an evidence line to its record.
+1. **Down, never out.** Content moves to its depth; it is not removed. Each depth links to the next: a ladder row to its system's page, a ladder figure to its section there (the multiple, the cost and the verify time to Cost, Fidelity to Fidelity), a word to its definition, a state to its evidence, an evidence line to its record.
 2. **A bad result never moves down.** "Failed", "undecided", "not passed yet", "not measured", "not run" stay at the surface, in words, beside the system they concern. Only the explanation of the result moves down.
 3. **A hover title is a shaft, not a home.** A figure's title carries its labels (scope, n, grade, tier, record) at any depth. It is never the only place they are: a phone and a keyboard have no hover, so the same labels are printed in visible text one step down.
 
@@ -42,10 +42,12 @@ The shallowest depth where each kind of content may be printed, and its form the
 | cost, verify time | 0 | figure with its unit |
 | proof size | 1 (Scale), 2 | figure with its unit |
 | a unit | wherever its figure is | beside the figure, always |
-| fidelity | 1 | the check's state, one word ("held") |
+| fidelity | 1 | the Fidelity figure (the share of reply positions where the top token is the reply token, FI-10's mean as a percentage, SI-9) with the Q8_0 and Q4_K_M percentages under it; the check's state in its title |
 | the fidelity metrics (matched leading tokens, the bar, p, the controls, KL) | 3 | the Fidelity table; in the surface word's title above that |
 | serving, the figure every multiple is over | 1 | figure with its unit, in the model's head |
 | how the model was served (engine, GPUs, concurrency) | 3 | one line under Cost |
+| what the proving ran on (the GPUs the counted sessions bound, SE-2) | 3 | the Proving line under Cost, with the whole sessions |
+| the evidence tier ("one runner, not reproduced") | 3 | one line under Cost (Evidence), once for the block; in every figure's title |
 | what was counted (scope: "whole sessions of N replies", steady, verify) | 2 | once, under the band's figure (a phone's band leaves it to the Cost block); at 3 once for the Cost block, and under a figure whose scope differs |
 | sample size (n) | 2 | once, beside the scope; at 3 beside the Cost block's scope, and under the system's own Fidelity figure (in replies) |
 | pass thresholds, petal steps | 3 as the bar's row; 4 as rules | |
@@ -92,5 +94,4 @@ Then, before printing it: does a head, a unit, the glyph or another block of the
 
 Places that do not yet follow the map, found by reading the built pages on 2026-11-13. Fix them as the pages are next touched.
 
-- A ladder figure's head links to its definition (depth 4) and the figure itself links nowhere; the figure should lead to its section of the system's page (depth 3).
 - The "Systems not run" reasons on the ladder ("no configuration at the request", "a different statement") use the method's words. RFC-0018 SI-4 fixes the list and its place, so moving it needs that rule amended.

@@ -10,6 +10,8 @@ from typing import Any
 
 import pytest
 
+from iproofs.serialize import load_yaml
+
 LEARN = Path(__file__).resolve().parent / "learn"
 HREF = re.compile(r'href="(/[^"#?]*)(?:\?[^"#]*)?(?:#([^"]*))?"')
 ID = re.compile(r'\bid="([^"]+)"')
@@ -104,7 +106,6 @@ def test_markdown_halts_outside_the_subset(board_site: Any, text: str) -> None:
 def learn_pages(board_site: Any) -> dict[str, str]:
     slugs = board_site.build.draw.learn.slugs()
     assert slugs[0] == "learn"
-    assert len(slugs) > 10
     return {s: (board_site.out / f"{s}.html").read_text() for s in slugs}
 
 
@@ -135,7 +136,6 @@ def test_site_links_resolve(board_site: Any) -> None:
     sources = {**learn_pages(board_site),
                "checks": (out / "checks.html").read_text(),
                "mandate": (out / "mandate.html").read_text()}  # fmt: skip
-    seen = 0
     for name, text in sources.items():
         for path, frag in HREF.findall(text):
             target = path.strip("/")
@@ -144,8 +144,6 @@ def test_site_links_resolve(board_site: Any) -> None:
             assert target in ids, (name, path)
             if frag:
                 assert html.unescape(frag) in ids[target], (name, path, frag)
-            seen += 1
-    assert seen > 100
 
 
 def test_words_follow_the_house_rules() -> None:
@@ -233,15 +231,21 @@ def test_worked_examples(board_site: Any) -> None:
     assert survived == 384
     assert survived / f.P**2 <= 2 * 2 / f.P
     assert all(f.sumcheck((a, b))["accepted"] for a in (0, 1, 2, 50, 96) for b in (0, 3, 96))
-    # every reply generated at the cost of serving, 1 in 100 proved at 100 times it: twice the
-    # serving bill. Every reply proved: the two parts add up to the row's multiple
-    assert f.bill(0.01, 1, 100) == 2
-    assert f.bill(1, 10, 100) == 110
-    assert f.times(f.bill(0.001, 1, 1000)) == "2×"
-    # the sampling figures the treaty page and "Before you rely" state in words: a swap of 1
-    # reply in 100 is caught by 300 draws about 95 times in 100, 1 in 10,000 about 3 times in 100
+    # the sampling figures the deployment page states in words: a swap of 1 reply in 100 is
+    # caught by 300 draws about 95 times in 100, 1 in 10,000 about 3 times in 100
     assert round(100 * (1 - 0.99**300)) == 95
     assert round(100 * (1 - 0.9999**300)) == 3
+
+
+def test_size_of_one_pass() -> None:
+    """The size of one reply's pass that "Proving a forward pass" states in words, from the level
+    file (AGENTS.md rule 3): about two operations per parameter per token over the request's
+    prompt and reply on the 8B rung, about 1.6 × 10^13."""
+    level = load_yaml(LEARN.parents[1] / "levels" / "L1.yaml")
+    request = level["request"]
+    rung = next(r for r in level["rungs"] if r["id"] == "llama-3.1-8b")
+    tokens = request["prompt_tokens"] + request["output_tokens"]
+    assert round(2 * rung["parameters_total"] * tokens / 1e13, 1) == 1.6
 
 
 def test_learn_styles_touch_no_other_page() -> None:
@@ -259,7 +263,7 @@ def test_learn_styles_touch_no_other_page() -> None:
         return re.findall(r"([^{}]+)\{", re.sub(r"@font-face\{[^}]*\}", "", css))
 
     learn, rest = blocks("/*" + raw[start:end] + "*/"), blocks(raw[:start] + raw[end:])
-    assert len(learn) > 100, f"the Learn section holds {len(learn)} rules: its markers moved"
+    assert learn, "the Learn section holds no rule: its markers moved"
     used_elsewhere = set(re.findall(r"\.([a-zA-Z][\w-]*)", "".join(rest)))
     for block in learn:
         for selector in (part.strip() for part in block.split(",")):

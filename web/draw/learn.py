@@ -335,6 +335,14 @@ def defs():
     return {tid: (name, first) for name, tid, first in glossary_entries()}
 
 
+def sections(entry):
+    """The words of a page's sections, one per `## Title`, as its strip labels them: what search
+    finds the page by (outputs.py)."""
+    ctx = context(entry, terms(), defs())
+    markdown(text_of(entry), ctx)
+    return [words for _, words in ctx.get("heads", [])]
+
+
 def band(kicker, title, summary, under=""):
     """A Learn page's band: where it stands (on a track's page, the glossary at the line's right
     end), its title and summary (none when the text opens with it), then `under` (the track's
@@ -359,16 +367,18 @@ def steps(track, here):
 
 
 def next_track(track):
-    """The track a track's last page leads to: the first other one, or none with one track."""
-    return next((t for t in tracks() if t is not track), None)
+    """The track a track's last page leads to: the one after it, or none after the last."""
+    order = tracks()
+    k = next(i for i, t in enumerate(order) if t is track)
+    return order[k + 1] if k + 1 < len(order) else None
 
 
 def neighbours(track, k):
     """The page before this one and the page after it, each (address, label, title): after a
-    track's last page the first page of the next track (or the glossary, with one track); before
-    a track's first page the page whose Next led there (the last page of the track before it, or
-    the hub), so Next then Previous returns to the page left. Previous and Next at both ends: the
-    band of the page reached names its track."""
+    track's last page the first page of the next track, and after the last track's the glossary;
+    before a track's first page the page whose Next led there (the last page of the track before
+    it), and before the first track's the hub, so Next then Previous returns to the page left.
+    Previous and Next at both ends: the band of the page reached names its track."""
     pages = track["pages"]
     if k:
         before = (f"/{pages[k - 1]['slug']}", "Previous", pages[k - 1]["title"])
@@ -463,7 +473,7 @@ def build_glossary():
         sections += (f'<section class="gll" id="{lid}" aria-labelledby="h-{lid}">'
                      f'<h2 class="glh" id="h-{lid}">{e(letter)}</h2>'
                      f'<div class="glt">{"".join(rows)}</div></section>')  # fmt: skip
-    kicker = f'<span><a href="{LEARN_PAGE}">Learn</a> · both tracks</span>'
+    kicker = f'<span><a href="{LEARN_PAGE}">Learn</a></span>'
     body = f"""
 {header("learn", under=True)}
 <main id="main" class="sys">
@@ -477,14 +487,19 @@ def build_glossary():
     return page(entry["title"], entry["summary"], body, "system learnpage", entry["slug"], "home")
 
 
+def count(n, word):
+    return f"{n} {word}{'' if n == 1 else 's'}"
+
+
 def build_hub():
-    """The hub: the two tracks as two cells on the band's edge, each over its pages in reading
-    order; then every term of the glossary."""
+    """The hub: the two tracks as two cells on the band's edge (a track's reader line in its
+    cell, none when it has none), each over its pages in reading order; then the glossary's
+    count of terms and every term."""
     lv = S.V["learn"]
     ways = "".join(
         f'<a class="lway" href="#{e(t["id"])}"><span class="lwn">{e(t["name"])}</span>'
-        f'<span class="lwr">{e(t["reader"])}</span>'
-        f'<span class="lwc">{len(t["pages"])} pages</span></a>'
+        + (f'<span class="lwr">{e(t["reader"])}</span>' if t["reader"].strip() else "")
+        + f'<span class="lwc">{count(len(t["pages"]), "page")}</span></a>'
         for t in tracks()
     )
 
@@ -497,14 +512,15 @@ def build_hub():
         )
         return (f'<section class="ltk" id="{e(t["id"])}" aria-labelledby="h-{e(t["id"])}">'
                 f'<h2 class="trh" id="h-{e(t["id"])}">{e(t["name"])}</h2>'
-                f'<p class="trr">{e(t["reader"])}</p><ol class="hl2">{rows}</ol></section>')  # fmt: skip
+                f'<ol class="hl2">{rows}</ol></section>')  # fmt: skip
 
     g = glossary()
+    found = glossary_entries()
     names = "".join(f'<li><a href="/{g["slug"]}#{tid}" data-g="{e(name)}" data-d="{e(first)}">'
-                    f"{e(name)}</a></li>" for name, tid, first in glossary_entries())  # fmt: skip
+                    f"{e(name)}</a></li>" for name, tid, first in found)  # fmt: skip
     both = (f'<section class="lgl" id="terms" aria-labelledby="h-terms"><h2 class="trh lgh" '
             f'id="h-terms"><a href="/{g["slug"]}">{e(g["title"])}</a></h2>'
-            f'<p class="hs">{e(g["summary"])}</p><ul class="lgt">{names}</ul></section>')  # fmt: skip
+            f'<p class="hs">{count(len(found), "term")}</p><ul class="lgt">{names}</ul></section>')  # fmt: skip
     body = f"""
 {header("learn")}
 <main id="main">

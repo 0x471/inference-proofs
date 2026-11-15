@@ -47,44 +47,55 @@ from .overview import (
     split_html,
     standing_html,
     states,
+    whole_line,
     whole_note,
 )
 from .plots import fid_svg, hbar
 from .words import (
+    AS_READ,
     BASIS_READING,
     BASIS_WORD,
     CAUSE_WORD,
+    CHECK_CAUSE_LEAD,
     CHECK_CAUSE_WORD,
     CHECK_FAILED,
     CHECK_HELD,
+    CHECK_MORE,
     CHECK_NAME,
     CHECKS_DESC,
     CONTROL_NAME,
+    DOCS_READ,
+    FIGURE_ANCHOR,
     FIGURE_HEAD,
     FIGURE_NAME,
     FIGURE_RULE,
     FULL_LOAD_WORD,
-    HOLLOW_RULE,
     M_COL,
+    M_HEAD,
     M_NAME,
     MANDATE,
     MANDATE_BELIEF,
+    MANDATE_DESC,
     MANDATE_LEVEL,
     MANDATE_LEVEL_IN,
+    MANDATE_LEVEL_LINK,
     MANDATE_MEMBERS_IN,
-    MANDATE_WHAT,
     NO_STEADY_WORD,
     NULL_WORD,
     OF_WHICH,
     ORDER_RULE,
     P_ABOVE,
     PART_WORD,
+    PETAL_CAUSE_DRAW,
     PETAL_CAUSE_RULE,
     PETAL_CHECKS,
+    PETAL_MORE,
     PETAL_NAME,
+    PETAL_QUESTION,
     PETAL_RULE,
     PREFIX,
     READING_RULE,
+    REASON_LINK,
     RECORD_WORD,
     SCOPE_COL_WORD,
     SCOPE_ROW_WORD,
@@ -95,26 +106,27 @@ from .words import (
     STATE_WORD,
     STEP_WORD,
     TF_AGREE,
+    TF_BOTH,
     TF_FAILED,
     TF_KL,
     TF_KL_SUB,
+    TF_KL_TITLE,
     TF_LEAD,
     TF_SUB,
     TF_TEST,
+    TIER_WORD,
+    VISIBLE_OTHERS,
     VISIBLE_TAG_WORD,
-    WHOLE_SESSIONS,
     beside_unit,
     e,
     kl_head,
     number,
-    params,
     quoted,
     sig,
 )
 
 GLYPH = 6  # the checks page's key glyph, px per unit (318 by 174 px)
 GPU_S = "gpu_s/request"  # a session's values: GPU-seconds per reply (RFC-0018 CO-1, CO-3)
-PROOF_SIZE = "Proof size per reply"
 
 
 def section(sid, title, body):
@@ -294,29 +306,48 @@ def silent(formal):
     )
 
 
+FITTED = "fitted_to_weights"  # the one kind of visible value that sets Weights hidden's step
+
+
 def visible_html(visible):
     """Weights hidden: what the publisher lists as visible to a proof's reader, each item linked
-    to its quote, with its kind (only a value fitted to the weights sets the step)."""
+    to its quote, in two groups: those fitted to the weights (the only kind that sets the step,
+    WH-5, WH-6), then the others, each with its kind. The second group's head says "others", not
+    "not fitted": an item is untagged when its quote does not say it is fitted, which does not
+    show that it is not (AGENTS.md rule 9)."""
     if not visible:
         return ""
-    items = "".join(f'<li><a href="{e(v["quotes"][0]["url"])}">{e(v["item"])}</a> '
-                    f'<span class="vt">{e(VISIBLE_TAG_WORD[v["tag"]])}</span></li>'
-                    for v in visible)  # fmt: skip
-    return f'<p class="pvh">Visible, as listed</p><ul class="pvis">{items}</ul>'
+
+    def items(vs, tagged):
+        return "".join(f'<li><a href="{e(v["quotes"][0]["url"])}">{e(v["item"])}</a>'
+                       + (f' <span class="vt">{e(VISIBLE_TAG_WORD[v["tag"]])}</span>' if tagged
+                          else "") + "</li>" for v in vs)  # fmt: skip
+
+    fitted = [v for v in visible if v["tag"] == FITTED]
+    other = [v for v in visible if v["tag"] != FITTED]
+    groups = ((f"{len(fitted):,} {VISIBLE_TAG_WORD[FITTED]}", fitted, False),
+              (f"{len(other):,} {VISIBLE_OTHERS}" if fitted else "", other, True))  # fmt: skip
+    return '<p class="pvh">Visible, as listed</p>' + "".join(
+        (f'<p class="pvg">{e(head)}</p>' if head else "")
+        + f'<ul class="pvis">{items(vs, tagged)}</ul>'
+        for head, vs, tagged in groups
+        if vs
+    )
 
 
-def basis_html(p, docs=""):
-    """What a petal rests on (the From cell): our tests, linked to the Fidelity section that
-    holds them; the publisher's documents, the documents read after them (`docs`); or, when a
-    fact the decision read carries a note, those documents as we read them, linked to what that
-    means."""
+def basis_html(p):
+    """What a petal rests on, its label first: from our tests, linked to the Fidelity section
+    that holds them; from the publisher's documents, and, when a fact the decision read carries a
+    note, "as we read them", linked to what that means (GL-5)."""
     if p["basis"] == "test":
-        return f'<a class="df" href="#fidelity">{e(BASIS_WORD["test"])}</a>'
-    said = e(BASIS_WORD[p["basis"]]) + (f": {docs}" if docs else "")
-    if p["basis"] == "statement" and p["reading"]:
-        ours = BASIS_READING[1]
-        return f'{said}{"; " if docs else ", "}<a class="df" href="{CHECKS_PAGE}#reading">{e(ours)}</a>'
-    return said
+        said = f'<a class="df" href="#fidelity">{e(BASIS_WORD["test"])}</a>'
+    elif p["basis"] == "statement" and p["reading"]:
+        read = f'<a class="df" href="{CHECKS_PAGE}#reading">{e(AS_READ)}</a>'
+        said = f"{e(BASIS_WORD['statement'])}, {read}"
+    else:
+        said = e(BASIS_WORD[p["basis"]])
+    # the label and its words in two spans: in a petal's row a second line hangs under the words
+    return f'<span class="k">From</span> <span>{said}</span>'
 
 
 def counted_words(k, one):
@@ -325,26 +356,34 @@ def counted_words(k, one):
 
 
 def petal_more(p):
-    """What a petal holds beyond its reason, one click away: a native disclosure whose summary
-    names it by count (the quotes, Machine-checked's scope card, Weights hidden's visible list),
-    opening onto them and what the petal rests on (SI-3). A petal with none of them prints only
-    what it rests on."""
-    said = [counted_words(len(p["quotes"]), "quote")] if p["quotes"] else []
+    """What a petal holds beyond its reason: first, in the row, what it rests on (a silent red's
+    reason already names the publisher's documents, so it prints this line only when a fact is our
+    reading); then, one click away, a native disclosure whose summary names by count what it
+    holds (the documents read, the quotes, Machine-checked's scope card, Weights hidden's visible
+    list), opening onto them (SI-3, GL-1)."""
+    basis = basis_html(p) if not p["sources"] or p["reading"] else ""
+    # our tests: said in the row; the publisher's documents: once, at the disclosure's foot, so
+    # the same qualifier is not printed under every petal
+    foot = f'<p class="pfrom">{basis}</p>' if basis and p["basis"] != "test" else ""
+    row = f'<span class="bs">{basis}</span>' if basis and p["basis"] == "test" else ""
+    # a silent red: the documents read, counted first (GL-1), then its quotes
+    said = [counted_words(len(p["sources"]), "document") + " read"] if p["sources"] else []
+    if p["quotes"]:
+        said.append(counted_words(len(p["quotes"]), "quote"))
     if p["formal"] is not None and not silent(p["formal"]):
         said.append("scope card")
     if p["visible"]:
         said.append(counted_words(len(p["visible"]), "visible value"))
-    if p["sources"] and not said:
-        said.append(counted_words(len(p["sources"]), "document") + " read")
     if not said:
-        return f'<span class="bs"><span class="k">From</span> {basis_html(p)}</span>'
+        return f'<span class="bs">{basis}</span>' if basis else ""
     # a silent red: the documents read, each linked at the pin (GL-1)
     docs = ", ".join(f'<a href="{e(d["url"])}">{e(d["path"])}</a>' for d in p["sources"])
+    docs = f'<p class="pfrom"><span class="k">{e(DOCS_READ)}</span> {docs}</p>' if docs else ""
     body = (quote_links(p["quotes"]) + scope_card_html(p["formal"]) + visible_html(p["visible"])
-            + f'<p class="pfrom"><span class="k">From</span> {basis_html(p, docs)}</p>')  # fmt: skip
+            + docs + foot)  # fmt: skip
     said = " · ".join(f'<span class="nw">{e(w)}</span>' for w in said)
     owner = f'<span class="sr">, {e(PETAL_NAME[p["id"]])}</span>'
-    return f'<details class="more"><summary>{said}{owner}</summary>{body}</details>'
+    return f'{row}<details class="more"><summary>{said}{owner}</summary>{body}</details>'
 
 
 def glyph_html(row):
@@ -444,9 +483,33 @@ def plain(v, unit, record, said="", missing="none"):
             f'<span class="u">{e(u)}</span></span>')  # fmt: skip
 
 
+def steady_cell(s, at, said):
+    """A session's steady state in one cell (CO-3): its m, or "none" with the cause under it."""
+    cell = plain(s["m"], GPU_S, f"{at}/m", said)
+    if not s["steady"]:
+        cell += f'<span class="sub">{e(s["cause"] or "no")}</span>'
+    return cell
+
+
+RULE_ID = re.compile(r"\b[A-Z]{2}-\d+[a-z]?\b")  # a rule's id in words ("SE-3a")
+
+
+def whole_ids(text):
+    """Escaped words with each rule id kept on one line (a line never breaks at its hyphen)."""
+    return RULE_ID.sub(lambda m: f'<span class="nw">{m[0]}</span>', text)
+
+
+def replaced_why(s):
+    """A replaced session's reason (SE-3a) without its closing clause, where that clause names
+    only what the row's Slot and Replaced by cells print ("; slot 1 counts <its run>")."""
+    tail = f"; slot {s['slot']} counts {s['replaced_by']}"
+    return s["cause"].removesuffix(tail)
+
+
 def sessions_html(row):
-    """SE-3: each counted session (slot, run, m, session cost per reply, steady state or why
-    not), then every incomplete session with its exit code and last line (AGENTS.md rule 5)."""
+    """SE-3: each counted session (slot, run, m or why there is none, session cost per reply),
+    then every incomplete session with its exit code and last line (AGENTS.md rule 5), then each
+    replaced session (SE-3a), its reason said once over the table where the sessions share it."""
     rec = row["record"]
     gen = any(s.get("generation_gpu_seconds_per_reply") is not None for s in row["sessions"])
     # release groups: a column where the sessions differ, else said once over the table
@@ -459,16 +522,15 @@ def sessions_html(row):
         return [  # whole session (and of m, where the session has one)
             str(s["slot"]),
             run_link(row, s["run_id"]),
-            plain(s["m"], GPU_S, f"{at}/m", steady),
+            steady_cell(s, at, steady),
             plain(s["session"], GPU_S, f"{at}/session", whole),
             *([plain(g, GPU_S, f"{at}/generation_gpu_seconds_per_reply", whole)] if gen else []),
-            "yes" if s["steady"] else e(s["cause"] or "no"),
             *([f"{len(s['groups']):,}"] if len(groups) > 1 else []),
         ]
 
     of_gen = f"{OF_WHICH} {PART_WORD['generation']}".capitalize()
     heads = ["Slot", "Run", M_COL, "Session", *([of_gen] if gen else []),
-             "Steady state", *(["Release groups"] if len(groups) > 1 else [])]  # fmt: skip
+             *(["Release groups"] if len(groups) > 1 else [])]  # fmt: skip
     once = (f'<p class="rb"><span class="k">Release groups</span> {next(iter(groups)):,} in each '
             "session</p>" if len(groups) == 1 else "")  # fmt: skip
     out = (once + stacked(heads, [cells(k, s) for k, s in enumerate(row["sessions"])],
@@ -490,23 +552,28 @@ def sessions_html(row):
             ["Slot", "Run", "Exit code", "Step", "Cause", "Last line"], rows
         )
     if row.get("replaced"):  # SE-3a: listed with why, in no figure and no check
+        whys = [replaced_why(s) for s in row["replaced"]]
+        once = len(set(whys)) == 1
         rows = [
             [
                 str(s["slot"]) if s["slot"] is not None else "",
                 run_link(row, s["run_id"]),
                 run_link(row, s["replaced_by"]),
-                e(s["cause"]),
+                *([] if once else [e(why)]),
             ]
-            for s in row["replaced"]
+            for s, why in zip(row["replaced"], whys, strict=True)
         ]
-        out += '<h3 class="sub-h">Replaced sessions</h3>' + stacked(
-            ["Slot", "Run", "Replaced by", "Why"], rows
+        lead = (
+            f'<p class="rb"><span class="k">Why</span> <span>{whole_ids(e(whys[0]))}</span></p>'
+            if once
+            else ""
+        )
+        out += (
+            '<h3 class="sub-h">Replaced sessions</h3>'
+            + lead
+            + stacked(["Slot", "Run", "Replaced by", *([] if once else ["Why"])], rows)
         )
     return out
-
-
-def of_which(word):
-    return f"{OF_WHICH} {PART_WORD[word]}"
 
 
 def kept(*pieces):
@@ -529,17 +596,20 @@ GPU_PARTS = {
 }  # fmt: skip
 
 
-def cost_sub(f, n, head=""):
+def cost_sub(f, n, head="", own=False):
     """The line under a Cost figure, where the block's Proving line says the whole sessions and
     their n once (`n`, the counted sessions): nothing for a figure that shares both, else what
     differs (a steady or a verify scope, another n), a scope its `head` already names left out
-    ("Verify time" over no "verify"). None (the figure's own line) with no n."""
+    ("Verify time" over no "verify"). A figure the Proving line does not cover (`own`: verify
+    time, proof size) prints its n even where it is the block's. None (the figure's own line)
+    with no n."""
     if n is None or not has(f):
         return None
     short = SCOPE_SHORT[f["scope"]]
     said = [short] if short not in ("", "session") and short not in head.lower() else []
-    if f["n"] is not None and f["n"] != n:
-        said.append(f"n\u00a0=\u00a0{f['n']}")
+    count = f["n"] if f["n"] is not None else n
+    if own or count != n:
+        said.append(f"n\u00a0=\u00a0{count}")
     return SEP.join(said)
 
 
@@ -551,43 +621,36 @@ def serving_fig(f, line=True):
     return fig_html({**f, "scope": "serving"}, sub=BARE if line else FULL_LOAD_WORD)
 
 
-def cost_bars(row):
-    """CO-1 to CO-3 drawn: serving, the steady m and the whole session, each in GPU time per
-    reply on one scale, this row's own (one model); m and the session each in two parts where the
-    system generates in a phase of its own (CO-7). Each line: its name, its bar, its labelled
-    figure and its parts' figures; a figure the board holds no value for draws no line
-    (`cost_html` names it)."""
+def gpu_parts(figs, key):
+    """A GPU time's two parts (CO-7) as (part word, figure), where the board holds both; else
+    None."""
+    parts = [(w, figs.get(k)) for w, k in GPU_PARTS.get(key, ())]
+    return parts if parts and all(has(p) for _, p in parts) else None
+
+
+def cost_bars(row, drawn):
+    """CO-7 drawn: a GPU time per reply that splits in two (the steady m or the whole session,
+    where the system generates in a phase of its own) as one bar of its two parts, on one scale,
+    this row's own (one model). Each line: its name, its bar, its labelled figure and its parts'
+    figures. A GPU time with no parts is a figure of the sheet under the bars (`cost_html`): a
+    bar of one part says no more than its figure. `drawn`: (name, figure, key, title)."""
     figs, n = row["figures"], counted(row)
-    b = (rung_of(row)["baseline"] or {}).get("gpu_seconds_per_reply")
-    m, s = figs["steady_gpu_seconds_per_reply"], figs["session_gpu_seconds_per_reply"]
-    present = [f["value"] for f in (b, m, s) if has(f)]
-    if not present:
+    if not drawn:
         return ""
-    top = max(present)
+    top = max(f["value"] for _, f, _, _ in drawn)
     lines = []
-
-    def line(cls, name, f, fig, ink="bs", key=None):
-        if not has(f):
-            return
-        parts = [(w, figs.get(k)) for w, k in GPU_PARTS.get(key, ())]
-        split = parts and all(has(p) for _, p in parts)
-        segs = [(p["value"], c) for (_, p), c in zip(parts, ("bp", "bg"), strict=True)] if split \
-            else [(f["value"], ink)]  # fmt: skip
-        cps = ""
-        if split:
-            cps = "".join(f'<span class="cpt {c}"><span class="cpl">{e(of_which(w))}</span>'
-                          f"{fig_html(p, n, sub=cost_sub(p, n))}</span>"
-                          for (w, p), c in zip(parts, ("pp", "pg"), strict=True))  # fmt: skip
-            cps = f'<span class="cps">{cps}</span>'
+    for name, f, key, title in drawn:
+        parts = gpu_parts(figs, key)
+        segs = [(p["value"], c) for (_, p), c in zip(parts, ("bp", "bg"), strict=True)]
+        # each part under its whole, by its name alone (CO-7)
+        cps = "".join(f'<span class="cpt {c}"><span class="cpl">{e(PART_WORD[w])}</span>'
+                      f"{fig_html(p, n, sub=cost_sub(p, n))}</span>"
+                      for (w, p), c in zip(parts, ("pp", "pg"), strict=True))  # fmt: skip
         bar = hbar(segs, top, h=14, cls="hb")
-        lines.append(f'<div class="cl {cls}"><span class="cln">{e(name)}</span>{bar}'
-                     f'<span class="clf">{fig}</span>{cps}</div>')  # fmt: skip
-
-    line("srv", "Serving GPU time", b, serving_fig(b))
-    line("std", beside_unit(M_NAME), m, fig_html(m, n, sub=cost_sub(m, n)),
-         key="steady_gpu_seconds_per_reply")  # fmt: skip
-    line("ses", "Session GPU time", s, fig_html(s, n, sub=cost_sub(s, n)), "bc",
-         "session_gpu_seconds_per_reply")  # fmt: skip
+        named = f' title="{e(title)}"' if title else ""
+        fig = fig_html(f, n, sub=cost_sub(f, n, name))
+        lines.append(f'<div class="cl"><span class="cln"{named}>{e(beside_unit(name))}</span>{bar}'
+                     f'<span class="clf">{fig}</span><span class="cps">{cps}</span></div>')  # fmt: skip
     return f'<div class="cbars">{"".join(lines)}</div>'
 
 
@@ -606,34 +669,64 @@ def missing_html(missing):
     )  # fmt: skip
 
 
+def gpus_words(row):
+    """The GPUs a row's counted sessions bound (SE-2, the sessions' `gpus`): "1 × H200"."""
+    bound = {s.get("gpus") for s in row["sessions"]}
+    if not bound or not all(bound):
+        return "GPUs not recorded"
+    return f"{' or '.join(f'{g:,}' for g in sorted(bound))} × H200"
+
+
+def evidence_words(named):
+    """The evidence tier of a block's figures in words (TIER_WORD, AGENTS.md rule 2), once for the
+    block where they share one; else each tier with the figures that carry it. `named`: (name,
+    figure) pairs, each figure present."""
+    tiers: dict[str, list[str]] = {}
+    for k, f in named:
+        tiers.setdefault(TIER_WORD[f["tier"]], []).append(beside_unit(k))
+    if len(tiers) == 1:
+        return next(iter(tiers))
+    return "; ".join(f"{w}: {', '.join(low_first(k) for k in ks)}" for w, ks in tiers.items())
+
+
 def cost_html(row):
     """The cost parts (CO-1 to CO-5), each figure as the board stores it (the figures block above
-    prints three of them alone): how the model was served, and once what the proving figures
-    are over (the whole sessions, n), a figure that differs saying so under it (`cost_sub`); the
-    GPU times drawn on one scale (`cost_bars`), then a sheet of the other figures, check time
-    and proof size per reply among them; then, once, each figure the board holds no value for
-    with the board's reason (a steady figure on a row with no steady state: NO_STEADY_WORD)."""
+    prints the cost alone): how the model was served; once what the proving figures are over (the
+    GPUs the counted sessions bound, SE-2, and the whole sessions, n), a figure that differs
+    saying so under it (`cost_sub`); once the evidence of the block's figures (the tier, which
+    their titles also carry: DEPTH law 3). Then a GPU time with two parts drawn as a bar
+    (`cost_bars`), a sheet of the other figures, and, once, each figure the board holds no value
+    for with the board's reason (a steady figure on a row with no steady state: NO_STEADY_WORD).
+    Verify time and proof size close the sheet, each with its own scope and n under it (SI-8): the
+    Proving line names the proving's GPUs and sessions, not theirs."""
     rung = rung_of(row)
     figs, b, n = row["figures"], rung["baseline"] or {}, counted(row)
-    whole = WHOLE_SESSIONS.format(n=rung["requests_per_session"])
     price = S.V["price"]
     _, _, key = lead_figure(row)
-    steady_multiple = f"Steady {FIGURE_NAME['multiple'].lower()}"
-    other = ((f"{FIGURE_NAME['multiple']}, {whole}", figs["session_multiple"], n)
-             if key == "multiple" else (steady_multiple, figs["multiple"], n))  # fmt: skip
-    drawn = [("Serving GPU time per reply", b.get("gpu_seconds_per_reply"), None),
-             (M_NAME, figs["steady_gpu_seconds_per_reply"], n),
-             ("Session GPU time per reply", figs["session_gpu_seconds_per_reply"], n)]  # fmt: skip
-    sheet = [other, ("Steady cost per reply", figs["steady_usd_per_reply"], n),
+    # the multiple the band does not print: a steady row's session one, beside the session cost
+    # (CO-5's label is the band's, for a row's one figure; this one's scope is in its title)
+    other = ((f"Session {FIGURE_NAME['multiple'].lower()}", figs["session_multiple"], n)
+             if key == "multiple" else (f"Steady {FIGURE_NAME['multiple'].lower()}",
+                                        figs["multiple"], n))  # fmt: skip
+    gpu = [("Serving GPU time per reply", b.get("gpu_seconds_per_reply"), None, None),
+           (M_HEAD, figs["steady_gpu_seconds_per_reply"], n, "steady_gpu_seconds_per_reply"),
+           ("Session GPU time per reply", figs["session_gpu_seconds_per_reply"], n,
+            "session_gpu_seconds_per_reply")]  # fmt: skip
+    # a GPU time with two parts is drawn (its head's title its full name), the others are cells
+    drawn = [(k, f, key, M_NAME if k == M_HEAD else "") for k, f, _, key in gpu
+             if has(f) and gpu_parts(figs, key)]  # fmt: skip
+    sheet = [*((k, f, count) for k, f, count, key in gpu if not any(f is d[1] for d in drawn)),
+             other, ("Steady cost per reply", figs["steady_usd_per_reply"], n),
              ("Session cost per reply", figs["session_usd_per_reply"], n),
              ("Serving cost per reply", b.get("usd_per_reply"), None),
              (FIGURE_NAME["check-time"], figs["verify_seconds_per_reply"], n),
-             (PROOF_SIZE, figs["proof_bytes_per_reply"], n)]  # fmt: skip
+             (FIGURE_NAME["proof-size"], figs["proof_bytes_per_reply"], n)]  # fmt: skip
+    own = (figs["verify_seconds_per_reply"], figs["proof_bytes_per_reply"])  # their scope and n
     no_steady = not has(figs["multiple"]) and figs["multiple"]["null_reason"] == "not_applicable"
     steady_figs = (figs["multiple"], figs["steady_gpu_seconds_per_reply"],
                    figs["steady_usd_per_reply"])  # fmt: skip
     missing: dict[str, list[str]] = {}
-    for k, f, _ in (*drawn, *sheet):
+    for k, f, _ in sheet:
         if has(f):
             continue
         why = ("not recorded" if not f else NO_STEADY_WORD
@@ -642,19 +735,28 @@ def cost_html(row):
     base = rung["baseline"]
     line = bool(base) and has(base["gpu_seconds_per_reply"])
     rows = [(k, serving_fig(f, line) if count is None and k.startswith("Serving")
-             else fig_html(f, count, sub=cost_sub(f, n, k))) for k, f, count in sheet if has(f)]  # fmt: skip
+             else fig_html(f, count, sub=cost_sub(f, n, k, any(f is o for o in own))))
+            for k, f, count in sheet if has(f)]  # fmt: skip
     if price and has(price["usd_per_gpu_hour"]):  # the head says what, the unit per what
-        rows.append(("H200 price", fig_html(price["usd_per_gpu_hour"], sub=price["date"],
+        when = f"as of {price['date']}" if price["date"] else None
+        rows.append(("H200 price", fig_html(price["usd_per_gpu_hour"], sub=when,
                                             note=f"basis: {price['basis']}")))  # fmt: skip
     else:
         missing.setdefault("not recorded", []).append("Price of one H200 GPU-hour")
-    cells = "".join(f"<div><dt>{e(beside_unit(k))}</dt><dd>{v}</dd></div>" for k, v in rows)
+    m_title = f' title="{e(M_NAME)}"'
+    cells = "".join(f"<div><dt{m_title if k == M_HEAD else ''}>{e(beside_unit(k))}</dt>"
+                    f"<dd>{v}</dd></div>" for k, v in rows)  # fmt: skip
     serving = (f'<p class="rb"><span class="k">Serving</span> <span>{e(serving_words(base))}</span></p>'
                if line else "")  # fmt: skip
-    over = kept(e(whole), f"n\u00a0=\u00a0{n}")
+    over = (f'<span class="nw">{e(gpus_words(row))},</span> '
+            f'<span class="nw">{e(whole_line(row, n))}</span>')  # fmt: skip
     proving = f'<p class="rb"><span class="k">Proving</span> <span>{over}</span></p>' if n else ""
+    # the tier of every figure the block prints (the price is the reference file's, not a run's)
+    shown = [(k, f) for k, f, _, _ in drawn] + [(k, f) for k, f, _ in sheet if has(f)]
+    evidence = (f'<p class="rb"><span class="k">Evidence</span> <span>{e(evidence_words(shown))}'
+                "</span></p>" if shown else "")  # fmt: skip
     missing.pop(NO_STEADY_WORD, None)  # the sessions table prints each session's none and why
-    return (f'{serving}{proving}{cost_bars(row)}<dl class="parts">{cells}</dl>'
+    return (f'{serving}{proving}{evidence}{cost_bars(row, drawn)}<dl class="parts">{cells}</dl>'
             f"{missing_html(missing)}")  # fmt: skip
 
 
@@ -674,6 +776,22 @@ QUANT = re.compile(r"q\d")  # a quantized copy's id ("q8_0", "q4_k_m")
 RULE_AT = re.compile(r"\s*\((?:RFC-\d+ )?[A-Z]{2}-\d+[a-z]?\)$")  # a note's closing rule id
 
 
+def control_name(cid):
+    """A control's name as a row prints it: a quantized copy by its id in capitals, as the glyph's
+    reason and the checks page say it; another by its words (CONTROL_NAME). Returns (name, title:
+    the id where the name is not it)."""
+    if cid in CONTROL_NAME:
+        return CONTROL_NAME[cid], cid
+    return (cid.upper() if QUANT.match(cid) else cid), ""
+
+
+def control_th(cid):
+    """A control's row head, its id in the title where its name is not the id."""
+    name, title = control_name(cid)
+    at = f' title="{e(title)}"' if title else ""
+    return f'<th scope="row"{at}>{e(name)}</th>'
+
+
 def kl_why(row):
     """Why the row's KL is not measured, in visible words (its note without the state that opens
     it and the rule id that closes it, which stay in the title), and the note whole."""
@@ -689,80 +807,6 @@ def kl_cell(row):
     why, note = kl_why(row)
     return (f'<span class="na" title="{e(note or "not measured")}">not measured</span>'
             + (f'<span class="sub">{e(why)}</span>' if why else ""))  # fmt: skip
-
-
-def fidelity_html(row):
-    """FI-5, FI-6, FI-7: the row's mean matched prefix and KL beside the model's controls, each
-    drawn on a track from no matched token to the whole reply, the bar marked; the system's own
-    replies a paper row, its p values under its prefix."""
-    fid = rung_of(row)["fidelity"]
-    mine = row["fidelity"]
-    bar = (fid or {}).get("bar")
-    whole = S.V["request"]["output_tokens"]
-    edge = bar["mean_prefix"] if bar is not None else None
-    kl_h = kl_head(rung_of(row)["reference_dtype"])
-    # KL is a column only where a row of the rung has it; otherwise one line says so
-    any_kl = (has((mine or {}).get("kl"))
-              or any(has(c["kl"]) for c in (fid or {}).get("controls") or []))  # fmt: skip
-    heads = ("Replies", "Kind", PREFIX, *((kl_h,) if any_kl else ()))
-
-    def tds(kind, track, prefix, kl):
-        return (f'<td data-l="Kind">{kind}</td>'
-                f'<td class="trk" aria-hidden="true">{fid_svg(track[0], edge, whole, track[1])}</td>'
-                f'<td data-l="{e(heads[2])}">{prefix}</td>'
-                + (f'<td data-l="{e(kl_h)}">{kl}</td>' if any_kl else ""))  # fmt: skip
-
-    out = []
-    if mine is not None:
-        prefix = plain(mine["mean_prefix"], "tokens", row["record"] + "/fidelity/mean_prefix",
-                       f"n = {mine['n']:,} replies")  # fmt: skip
-        # n in replies, where the Cost's n counts sessions
-        said = [e(f"n\u00a0=\u00a0{mine['n']:,} replies")]
-        if mine["p_above_bar"] is not None:
-            said.append(e(P_ABOVE.format(p="\0")).replace("\0", p_html(mine["p_above_bar"])))
-        sub = kept(*said)
-        out.append(f'<tr class="me"><th scope="row">{e(name_of(row))}</th>'
-                   + tds("this system", (mine["mean_prefix"], "me"),
-                         f'{prefix}<span class="sub">{sub}</span>', kl_cell(row))
-                   + "</tr>")  # fmt: skip
-
-    def at(i):
-        return f"{fid['record']}/controls/{i}/mean_prefix"
-
-    for i, c in enumerate((fid or {}).get("controls") or []):
-        is_bar = bar is not None and bar["control"] == c["id"]
-        kind = c["kind"] + (", the bar" if is_bar else "")
-        failed = c["status"] == "failed"
-        if failed:
-            kind += ", failed to run"
-        none = "not run" if failed else "not measured"
-        kl = fig_html(c["kl"]) if has(c["kl"]) else f'<span class="na">{none}</span>'
-        # a quantized copy by its name in capitals, as the glyph's reason and the checks page say it
-        name = CONTROL_NAME.get(c["id"]) or (c["id"].upper() if QUANT.match(c["id"]) else c["id"])
-        out.append(
-            f'<tr class="{"bar" if is_bar else ""}"><th scope="row">{e(name)}</th>'
-            + tds(
-                e(kind),
-                (c["mean_prefix"], "bar" if is_bar else c["kind"]),
-                plain(c["mean_prefix"], "tokens", at(i), missing=none),
-                kl,
-            )
-            + "</tr>"
-        )
-    if not out:
-        return '<p class="none">Not run yet.</p>'
-    lead = ""
-    if fid is not None and bar is None:
-        lead = f'<p class="flead">No bar: {e(fid["cause"] or "no damaged copy qualified")}</p>'
-    if not any_kl:  # why, in words: a title alone is no home (DEPTH law 3)
-        why, note = kl_why(row) if mine is not None else ("", "")
-        lead += (f'<p class="flead">{e(kl_h)}: <span class="na" title="{e(note or "not measured")}">'
-                 f"not measured</span>{f' ({e(why)})' if why else ''}</p>")  # fmt: skip
-    ths = (f'<th scope="col">{e(heads[0])}</th><th scope="col">{e(heads[1])}</th>'
-           f'<th scope="col" class="trk" aria-hidden="true"></th>'
-           + "".join(f'<th scope="col">{e(h)}</th>' for h in heads[2:]))  # fmt: skip
-    return (f'{lead}<table class="rt stk fid"><thead><tr>{ths}</tr></thead>'
-            f'<tbody>{"".join(out)}</tbody></table>{teacher_forced_html(row)}')  # fmt: skip
 
 
 def tf_kl_html(entry, block_n):
@@ -781,82 +825,205 @@ def tf_kl_html(entry, block_n):
             f'<span class="u">{e(unit)}</span></span>{sub}')  # fmt: skip
 
 
-def teacher_forced_html(row):
-    """SI-9 (FI-10 to FI-13): under the Fidelity table, the row's teacher-forced agreement and
-    KL beside the model's controls, with its label, whose computation it is and its records.
-    Figures only: nothing here sets a state. Nothing is printed while no pass is scored."""
-    tf = rung_of(row).get("teacher_forced")
-    if tf is None:
+def agree_html(entry, tf, sub):
+    """FI-10's agreement for one row of the table: the percentage of the positions (SI-9), its
+    labels in its title, and `sub` (the median, failed prompts) under it; "not run" with the
+    cause in its title where the pass did not run."""
+    if entry is None or entry["status"] != "ok":
+        why = (entry or {}).get("cause") or "not run"
+        return f'<span class="na" title="{e(why)}">not run</span>'
+    said = f"mean {sig(entry['mean'])} of {tf['positions']:,} positions; n = {entry['n']:,} prompts"
+    return (f'<span class="fig" title="{e(said)}; record: {e(tf["path"])}">'
+            f'<span class="n">{e(pct(entry["percent"]))}</span><span class="u">%</span></span>'
+            + "".join(f'<span class="sub">{e(line)}</span>' for line in sub if line))  # fmt: skip
+
+
+def median_words(entry, tf):
+    """The median in the mean's unit, a percentage of the positions."""
+    if entry is None or entry["status"] != "ok":
         return ""
-    mine = tf["rows"].get(row["system"])
-    whole, top_k = tf["positions"], tf["top_k"]
+    return TF_SUB.format(median=f"{pct(entry['median'] / tf['positions'] * 100)}\u202f%")
 
-    def cells(kind, entry, kind_class, sub):
-        if entry["status"] != "ok":
-            why = entry["cause"] or "not run"
-            agree = f'<span class="na" title="{e(why)}">not run</span>'
-        else:
-            said = (f"mean {sig(entry['mean'])} of {whole:,} positions; "
-                    f"n = {entry['n']:,} prompts")  # fmt: skip
-            agree = (f'<span class="fig" title="{e(said)}; record: {e(tf["path"])}">'
-                     f'<span class="n">{e(pct(entry["percent"]))}</span>'
-                     f'<span class="u">%</span></span>') + "".join(
-                f'<span class="sub">{e(line)}</span>' for line in sub if line
-            )  # fmt: skip
-        track = fid_svg(entry["mean"], None, whole, kind_class)
-        return (f'<td data-l="Kind">{e(kind)}</td>'
-                f'<td class="trk" aria-hidden="true">{track}</td>'
-                f'<td data-l="{e(TF_AGREE)}">{agree}</td>'
-                f'<td data-l="{e(TF_KL)}">{tf_kl_html(entry, tf["n"])}</td>')  # fmt: skip
 
-    def sub_of(entry):  # the median in the mean's unit, a percentage of the positions
-        return TF_SUB.format(median=f"{pct(entry['median'] / whole * 100)}\u202f%")
-
-    out = []
-    lead = f'<p class="flead">{e(TF_LEAD.format(positions=whole, n=tf["n"], k=top_k))}</p>'
-    tests = {}
-    if mine is not None:
-        sub = [sub_of(mine) if mine["status"] == "ok" else ""]
-        if mine["failed"]:
-            causes = sorted({f["cause"] for f in mine["failed"]})
-            failed = TF_FAILED.format(k=len(mine["failed"]), n=mine["n"])
-            sub.append(failed + ": " + "; ".join(causes))
-        out.append(f'<tr class="me"><th scope="row">{e(name_of(row))}</th>'
-                   + cells("this system", mine, "me", sub) + "</tr>")  # fmt: skip
-        tests = {(t["a"], t["b"]): t["p"] for t in mine["tests"]}
-        records = [p for p in (mine["run"], tf["path"]) if p]
-        lead += (f'<p class="flead">{e(name_of(row))}: {e(mine["label"])}. What ran: '
-                 f'{e(mine["computed_by"])}. {''.join(evidence_links(records))}</p>')  # fmt: skip
+def tests_html(row, tf, mine):
+    """FI-11's tests, printed and not gating (SI-9): one native disclosure under the table, its
+    summary their count, each control's two p values on a line (the row above it, below it), each
+    half kept whole (`kept`): a line too long breaks between the two."""
+    if mine is None:
+        return ""
+    tests = {(t["a"], t["b"]): t["p"] for t in mine["tests"]}
+    lines = []
     for c in tf["controls"]:
-        sub = [sub_of(c) if c["status"] == "ok" else ""]
         above, below = tests.get((row["system"], c["id"])), tests.get((c["id"], row["system"]))
-        if above is not None and below is not None:
-            sub.append(TF_TEST.format(name=name_of(row), above=sig(above, 2),
-                                      below=sig(below, 2)))  # fmt: skip
-        name = CONTROL_NAME.get(c["id"]) or (c["id"].upper() if QUANT.match(c["id"]) else c["id"])
-        out.append(f'<tr><th scope="row">{e(name)}</th>'
-                   + cells(c["kind"], c, c["kind"], sub) + "</tr>")  # fmt: skip
-    ths = ('<th scope="col">Replies</th><th scope="col">Kind</th>'
-           '<th scope="col" class="trk" aria-hidden="true"></th>'
-           f'<th scope="col">{e(TF_AGREE)}</th><th scope="col">{e(TF_KL)}</th>')  # fmt: skip
+        if above is None or below is None:
+            continue
+        name, title = control_name(c["id"])
+        at = f' title="{e(title)}"' if title else ""
+        words = (e(TF_TEST.format(name=name_of(row), above="\0", below="\1"))
+                 .replace("\0", p_html(above)).replace("\1", p_html(below)))  # fmt: skip
+        lines.append(f"<div><dt{at}>{e(name)}</dt><dd>{kept(*words.split(' · '))}</dd></div>")
+    if not lines:
+        return ""
+    said = counted_words(2 * len(lines), "test")
+    return (f'<details class="more fts"><summary>{e(said)}<span class="sr">, '
+            f'{e(FIGURE_HEAD["fidelity"])}</span></summary><dl>{"".join(lines)}</dl></details>')  # fmt: skip
+
+
+NOT_RUN = '<span class="na">not run</span>'
+
+
+def fid_tr(cls, th, kind, cells, heads, tf, entry, ink):
+    """A row of the Fidelity table: its head, kind, the track of its teacher-forced mean (with a
+    teacher-forced pass; `ink` its tick's class), then one cell per figure column, in `heads`'
+    order."""
+    track = ""
+    if tf:
+        mean = entry["mean"] if entry is not None and entry["status"] == "ok" else None
+        track = (
+            f'<td class="trk" aria-hidden="true">{fid_svg(mean, None, tf["positions"], ink)}</td>'
+        )
+    tds = "".join(f'<td data-l="{e(h)}">{c}</td>' for h, c in zip(heads[2:], cells, strict=True))
+    at = f' class="{cls}"' if cls else ""
+    return f'<tr{at}>{th}<td data-l="Kind">{kind}</td>{track}{tds}</tr>'
+
+
+def own_rows(row, tf, any_kl, heads):
+    """The system's own replies: its Fidelity (median and failed prompts under it), its mean
+    matched prefix (n in replies, where the Cost's n counts sessions, and p above the bar under
+    it), its teacher-forced KL; then FI-13's label word for word, what ran and the records in a row
+    of their own under it, on the same paper."""
+    mine = row["fidelity"]
+    tf_mine = tf["rows"].get(row["system"]) if tf else None
+    if mine is None and tf_mine is None:
+        return ""
+    cells = []
+    if tf:
+        sub = [median_words(tf_mine, tf)]
+        if tf_mine is not None and tf_mine["failed"]:
+            causes = sorted({f["cause"] for f in tf_mine["failed"]})
+            sub.append(TF_FAILED.format(k=len(tf_mine["failed"]), n=tf_mine["n"]) + ": "
+                       + "; ".join(causes))  # fmt: skip
+        cells.append(agree_html(tf_mine, tf, sub))
+    if mine is not None:
+        prefix = plain(mine["mean_prefix"], "tokens", row["record"] + "/fidelity/mean_prefix",
+                       f"n = {mine['n']:,} replies")  # fmt: skip
+        said = [e(f"n\u00a0=\u00a0{mine['n']:,} replies")]
+        if mine["p_above_bar"] is not None:
+            said.append(e(P_ABOVE.format(p="\0")).replace("\0", p_html(mine["p_above_bar"])))
+        cells.append(f'{prefix}<span class="sub">{kept(*said)}</span>')
+    else:
+        cells.append(NOT_RUN)
+    if tf:
+        cells.append(tf_kl_html(tf_mine, tf["n"]) if tf_mine is not None else NOT_RUN)
+    if any_kl:
+        cells.append(kl_cell(row))
+    out = fid_tr("me", f'<th scope="row">{e(name_of(row))}</th>', "this system", cells, heads, tf,
+                 tf_mine, "me")  # fmt: skip
+    if tf_mine is not None:  # FI-13: whose computation, what ran, the records; the columns it
+        # labels named, since the row it sits under holds the leading tokens (FI-3) too
+        records = [p for p in (tf_mine["run"], tf["path"]) if p]
+        whose = f"{name_of(row)}'s {TF_BOTH}"
+        label = (f'<p>{e(whose)}: {e(tf_mine["label"])}. What ran: '
+                 f'{e(tf_mine["computed_by"])}.</p>{"".join(evidence_links(records))}')  # fmt: skip
+        out += f'<tr class="me ml"><td colspan="{len(heads) + 1}">{label}</td></tr>'
+    return out
+
+
+def control_rows(fid, tf, any_kl, heads):
+    """The model's controls, FI-3's in their order, then any only the teacher-forced pass has:
+    each one's Fidelity (its median under it), its mean matched prefix, its teacher-forced KL; the
+    bar's row ruled. A control that failed to run reads not run, its kind says so."""
+    bar = (fid or {}).get("bar")
+    fcs = {c["id"]: (i, c) for i, c in enumerate((fid or {}).get("controls") or [])}
+    tcs = {c["id"]: c for c in (tf or {}).get("controls") or []}
+    out = []
+    for cid in [*fcs, *(k for k in tcs if k not in fcs)]:
+        i, c = fcs.get(cid, (None, None))
+        t = tcs.get(cid)
+        is_bar = bar is not None and bar["control"] == cid
+        failed = c is not None and c["status"] == "failed"
+        kind = (
+            (c or t)["kind"]
+            + (", the bar" if is_bar else "")
+            + (", failed to run" if failed else "")
+        )
+        none = f'<span class="na">{"not run" if failed or c is None else "not measured"}</span>'
+        cells = [agree_html(t, tf, [median_words(t, tf)])] if tf else []
+        cells.append(plain(c["mean_prefix"], "tokens", f"{fid['record']}/controls/{i}/mean_prefix",
+                           missing="not run" if failed else "not measured")
+                     if c is not None else none)  # fmt: skip
+        if tf:
+            cells.append(tf_kl_html(t, tf["n"]) if t is not None else NOT_RUN)
+        if any_kl:
+            kl = (c or {}).get("kl")
+            cells.append(fig_html(kl) if has(kl) else none)
+        out.append(fid_tr("bar" if is_bar else "", control_th(cid), e(kind), cells, heads, tf, t,
+                          (c or t)["kind"]))  # fmt: skip
+    return "".join(out)
+
+
+def fidelity_html(row):
+    """SI-9 and FI-3 to FI-7 in one table: the system's own replies (a paper row) and each of the
+    model's controls, with Fidelity (FI-10's agreement, as a percentage of the reply's positions,
+    its median under it) drawn on a track of the positions, the mean matched prefix the check reads
+    (FI-3; the system's n and p above the bar under it, the bar's row ruled), and the KL of the
+    teacher-forced pass (FI-12). Under the system's row, in a row of its own, FI-13's label word for
+    word, what ran and the records. The tests (FI-11) one click away under the table. KL to the
+    original weights (FI-7) is a column where a system or a control of the model has the figure;
+    where none does, one line at the section's head says why the row's is not measured (law 2)."""
+    rung = rung_of(row)
+    fid, tf = rung["fidelity"], rung.get("teacher_forced")
+    kl_h = kl_head(rung["reference_dtype"])
+    # KL to the original weights is printed for each control (FI-7): a column wherever a system or
+    # a control of the model has the figure
+    any_kl = any(has((r.get("fidelity") or {}).get("kl")) for r in rung["rows"]) or any(
+        has(c.get("kl")) for c in (fid or {}).get("controls") or []
+    )
+    heads = ["Replies", "Kind", *([TF_AGREE] if tf else []), PREFIX, *([TF_KL] if tf else []),
+             *([kl_h] if any_kl else [])]  # fmt: skip
+    body = own_rows(row, tf, any_kl, heads) + control_rows(fid, tf, any_kl, heads)
+    if not body:
+        return '<p class="none">Not run yet.</p>'
+    lead = ""
+    if fid is not None and fid.get("bar") is None:
+        lead = f'<p class="flead">No bar: {e(fid["cause"] or "no damaged copy qualified")}</p>'
+    if not any_kl and row["fidelity"] is not None:  # why, in words: no title alone (DEPTH law 3)
+        why, note = kl_why(row)
+        lead += (f'<p class="flead">{e(kl_h)}: <span class="na" title="{e(note or "not measured")}">'
+                 f"not measured</span>{f' ({e(why)})' if why else ''}</p>")  # fmt: skip
+    if tf:  # it names the columns it is about: the leading tokens' sets the check's state
+        lead += f'<p class="flead">{e(TF_LEAD.format(both=TF_BOTH, n=tf["n"]))}</p>'
+    ths = (f'<th scope="col">{e(heads[0])}</th><th scope="col">{e(heads[1])}</th>'
+           + ('<th scope="col" class="trk" aria-hidden="true"></th>' if tf else "")
+           + "".join(f'<th scope="col"{tf_title(h, tf)}>{e(h)}</th>' for h in heads[2:]))  # fmt: skip
+    tests = tests_html(row, tf, tf["rows"].get(row["system"])) if tf else ""
     return (f'{lead}<table class="rt stk fid"><thead><tr>{ths}</tr></thead>'
-            f'<tbody>{"".join(out)}</tbody></table>')  # fmt: skip
+            f"<tbody>{body}</tbody></table>{tests}")  # fmt: skip
+
+
+def tf_title(head, tf):
+    """A column head's title (the teacher-forced KL's says what it compares, FI-12) and, for the
+    Fidelity column, its class (words.css sets its width)."""
+    if tf and head == TF_KL:
+        return f' title="{e(TF_KL_TITLE.format(k=tf["top_k"]))}"'
+    return ' class="fag"' if head == TF_AGREE else ""
 
 
 def figures_html(row):
     """The row's other figures (the band prints its one figure) as one ruled row of cells, each
-    figure with its unit and no more: cost per reply at the multiple's own scope, verify time
-    and proof size per reply, then fidelity, the replies' mean matched prefix. Each one's scope
-    and n stand under Cost; the bar, the controls and KL under Fidelity."""
+    figure with its unit and no more (SI-8): cost per reply at the multiple's own scope, verify
+    time and proof size per reply, then Fidelity. Each one's scope and n stand under Cost (and in
+    its title); the bar, the controls and KL under Fidelity."""
     figs, n = row["figures"], counted(row)
     cost = row_cost(row)  # its title names the whole sessions where it is theirs, and n (law 3)
     note = whole_note(row, "session_multiple") if cost is figs["session_usd_per_reply"] else None
     cells = [(defined(FIGURE_HEAD["cost"], "cost"), fig_html(cost, n, sub=BARE, note=note)),
              (defined(FIGURE_HEAD["check-time"], "check-time"),
-              fig_html(figs["verify_seconds_per_reply"], sub=BARE)),
+              fig_html(figs["verify_seconds_per_reply"], n, sub=BARE)),
              (defined(FIGURE_HEAD["proof-size"], "proof-size"),
-              fig_html(figs["proof_bytes_per_reply"], sub=BARE)),
-             (defined(FIGURE_HEAD["fidelity"], "fidelity"), fidelity_word(row, ""))]  # fmt: skip
+              fig_html(figs["proof_bytes_per_reply"], n, sub=BARE)),
+             (defined(FIGURE_HEAD["fidelity"], FIGURE_ANCHOR["fidelity"]),
+              fidelity_word(row, ""))]  # fmt: skip
     return '<dl class="figs">' + "".join(f"<div><dt>{k}</dt><dd>{v}</dd></div>"
                                          for k, v in cells) + "</dl>"  # fmt: skip
 
@@ -868,8 +1035,7 @@ def band_figure(row):
     if key != "session_multiple":
         return multiple_html(row, parts=False)
     count = f["n"] if f["n"] is not None else counted(row)
-    sub = f"{whole_note(row, key)}{SEP}n\u00a0=\u00a0{count}"
-    return fig_html(f, count, sub=sub, note=whole_note(row, key))
+    return fig_html(f, count, sub=whole_line(row, count), note=whole_note(row, key))
 
 
 NAME_SIZES = (6, 12, 20)  # a system's name on its band: one size per length up to these
@@ -910,7 +1076,7 @@ def system_page(row):
     # the figure's plain name, the figure, and under it, once, what was counted and n (CO-5)
     label, lead = FIGURE_HEAD["multiple"], band_figure(row)
     _, lead_f, lkey = lead_figure(row)
-    lead += split_html(row, lkey, bar=False, of_which=True, bare=True)
+    lead += split_html(row, lkey, bar=False, bare=True)
     unranked = "" if row["position"] is not None else " unr"
     band_ = (
         f'<section class="mast mast-sys sysb" aria-labelledby="h-name"><div class="mast-in">'
@@ -929,8 +1095,7 @@ def system_page(row):
         + f'<div class="fshr"><dt>{e(SHARE[0])}</dt><dd>{share}</dd></div></dl>'
     )
     # the share group at the strip's end on a wide screen
-    share_strip = (f'<div class="shr" role="group" aria-label="{e(SHARE[0])}">'
-                   f'<span class="shl" aria-hidden="true">{e(SHARE[0])}</span>{share}</div>')  # fmt: skip
+    share_strip = f'<div class="shr" role="group" aria-label="{e(SHARE[0])}">{share}</div>'
     parts = (("figures", "Figures"), ("glyph", "Glyph"), ("checks", "Checks"), ("cost", "Cost"),
              ("fidelity", "Fidelity"), ("sessions", "Sessions"))  # fmt: skip
     body = f"""
@@ -959,16 +1124,38 @@ def build_system(pid):
     return system_page(S.PAGE[pid])
 
 
-def rules(lines, ids=()):
-    """Labelled lines as one list: (label, words) pairs, the level's constants filled in. A label
-    in `ids` is an address of its own."""
+def linked(text, key):
+    """A rule's words escaped, the phrase REASON_LINK names for `key` linked to where Learn gives
+    the rule's reason; any other words escaped alone."""
+    if key not in REASON_LINK:
+        return e(text)
+    phrase, address = REASON_LINK[key]
+    head, found, tail = text.partition(phrase)
+    if not found:
+        raise RuntimeError(f"no {phrase!r} in the words of {key}")
+    return f'{e(head)}<a href="{e(address)}">{e(phrase)}</a>{e(tail)}'
 
-    def at(k):
-        return f' id="{k}"' if k in ids else ""
 
-    return '<dl class="cs">' + "".join(
-        f"<div{at(k)}><dt>{e(k)}</dt><dd>{e(filled(v))}</dd></div>" for k, v in lines
-    ) + "</dl>"  # fmt: skip
+def rule_lines(lines, ids=(), at=""):
+    """Labelled lines: (label, words) pairs, the level's constants filled in; a line with no label
+    is its block's own. A label in `ids` is an address of its own, its spaces as hyphens. `at`
+    names the lines' constant in REASON_LINK: the phrase it names links to the rule's reason (the
+    label, where the label is the phrase)."""
+
+    def line(k, v):
+        key = (at, k)
+        to_label = key in REASON_LINK and REASON_LINK[key][0] == k
+        dt = linked(k, key) if to_label else e(k)
+        dd = e(filled(v)) if to_label else linked(filled(v), key)
+        place = f' id="{e(k.replace(" ", "-"))}"' if k in ids else ""
+        return f"<div{place}><dt>{dt}</dt><dd>{dd}</dd></div>"
+
+    return "".join(line(k, v) for k, v in lines)
+
+
+def rules(lines, ids=(), at=""):
+    """`rule_lines` as one list."""
+    return f'<dl class="cs">{rule_lines(lines, ids, at)}</dl>'
 
 
 def title_band(title, cls="ttl"):
@@ -978,76 +1165,111 @@ def title_band(title, cls="ttl"):
             f"{e(title)}</h1></div></div>")  # fmt: skip
 
 
+def cause_rule(text):
+    """A petal cause's rule (PETAL_CAUSE_RULE) with its opening words ("Red (open outline)",
+    "Hollow, Faithful model only") drawn as the chip a system page prints for such a petal, those
+    words kept for a screen reader; what follows the state ("Faithful model only") in words."""
+    head, _, rest = text.partition(": ")
+    state_words, _, only = head.partition(", ")
+    state, form = PETAL_CAUSE_DRAW[state_words]
+    drawn = chip(state, STEP_WORD["red" if state == "red" else None], form)
+    lead = f"{e(only)}: " if only else ""
+    return (f'<span aria-hidden="true">{drawn}</span><span class="sr">{e(state_words)}'
+            f'{", " if only else ": "}</span>{lead}{e(rest)}')  # fmt: skip
+
+
 def build_checks():
-    """The five petals (RFC-0018 §The glyph) as the key beside their rules, the six checks as the
-    entry gate (§The six checks) with what is not tested, the undecided causes, the figures (§Cost,
-    FI-7), then the order rule. The page opens on the glyph, as a system page does."""
+    """The rules behind a row: the request and the six checks as the entry gate (RFC-0018 §The six
+    checks) with what is not tested, then the undecided causes; the figures (§Cost, FI-7, SI-9);
+    the order rule (§Order); last the five petals (§The glyph), the key beside their rules, then
+    why a petal is red or undecided, and what "our reading" means."""
     ids = list(S.V["petals"])
     names = [PETAL_NAME[p] for p in ids]
     glyph = glyph_svg(GLYPH, ["key"] * len(names), names=names, cls="pie-svg big",
                       hrefs=[f"#{p}" for p in ids])  # fmt: skip
-    # the four decided steps, each as the chip a system page prints (STEP_WORD), beside its rule
+    # the four decided steps, each as the chip a system page prints (STEP_WORD), beside its rule,
+    # under the petal's question and over its terms
     keys = (("green", "", "green"), ("amber", "", "amber_upper"), ("amber", "cut", "amber_lower"),
             ("red", "", "red"))  # fmt: skip
     petals = "".join(
         f'<div class="chk" id="{p}"><h3 class="cn2">{e(PETAL_NAME[p])}</h3><dl class="cs">'
+        + rule_lines((("", PETAL_QUESTION[p]),))
         + "".join(f"<div><dt>{chip(state, STEP_WORD[step], form)}</dt><dd>{e(rule)}</dd></div>"
                   for (state, form, step), rule in zip(keys, PETAL_RULE[p], strict=True))
+        + rule_lines(PETAL_MORE.get(p, ()))
         + "</dl></div>"
         for p in ids
     )  # fmt: skip
-    checks = "".join(
+    # the six checks: on a wide screen one table (words.css), its heads over the held and failed
+    # lines (their own terms then left to a screen reader); a block each on a narrow one
+    checks = '<div class="ckh" aria-hidden="true"><span>Check</span><span>Held when</span>' + \
+        "<span>Failed when</span></div>" + "".join(
         f'<div class="chk" id="{c}"><h3 class="cn2">{e(CHECK_NAME[c])}</h3>'
-        + rules((("held", CHECK_HELD[c]), ("failed", CHECK_FAILED[c])))
+        + rules((("held", CHECK_HELD[c]), ("failed", CHECK_FAILED[c]), *CHECK_MORE.get(c, ())),
+                at="CHECK_MORE")
         + "</div>"
         for c in S.V["checks"]
     )  # fmt: skip
     figures = "".join(
         f'<div class="chk" id="{f}"><h3 class="cn2">{e(FIGURE_NAME[f])}</h3>'
-        f"{rules(FIGURE_RULE[f])}</div>"
+        f"{rules(FIGURE_RULE[f], at='FIGURE_RULE')}</div>"
         for f in FIGURE_RULE
     )
+    # the request's one home on the site (SI-8), and what passed means
     gate = (
-        "The six checks are empirical tests we run on every system, on the same request "
-        f"({request_words()}). A system passes on a model only when all six checks hold there."
+        f"Every system we can run unpatched gets one request: {request_words()}. An end token does "
+        "not stop the reply. A system has passed on a model when all six checks held there."
     )
-    # what the petals summarise, at the head of their rules (the red rules say which failed check
-    # makes each petal red)
+    # what the glyph is and what its petals rest on, at the head of their rules (§The glyph, GL-1,
+    # GL-2, GL-8, FM-2, MC-5, §Reading the tables)
     summary = (
-        "The five petals of the glyph summarise what kind of proof the system produces: four "
-        "report what the publisher's documentation states at the pinned commit, and Faithful "
-        "model reports how closely the proved replies match the original weights in our fidelity "
-        "suite. A passing check never raises a petal above what the publisher states."
+        "The glyph shows how close a row is to a perfect prover. Petals are never added up. Four "
+        "petals are read from the publisher's documents at the pinned commit. Faithful model is "
+        "measured by our fidelity run, and is undecided whenever the Fidelity check is. A failed "
+        "check turns red the petals whose claim it contradicts, an undecided check lowers none, "
+        "and a held check raises none. On any doubt the lower step wins."
     )
-    # why a petal is red or hollow: one address per cause, which a system page's State cell links
+    # why a petal is red or hollow: one address per cause, which a system page's State cell links,
+    # in a block after the key's (a block inside it would be read as a sixth petal: words.js pairs
+    # the key's arms with `.cwrap .chk`); then what "our reading" means (#reading, which a system
+    # page's From cell links)
     petal_causes = "".join(
-        f'<div id="cause-{e(k)}"><dt>{e(CAUSE_WORD[k])}</dt><dd>{e(v)}</dd></div>'
+        f'<div id="cause-{e(k)}"><dt>{e(CAUSE_WORD[k])}</dt><dd>{cause_rule(v)}</dd></div>'
         for k, v in PETAL_CAUSE_RULE.items()
-    )  # fmt: skip
-    # a cause's words are inline on a system page; here each is a sentence of its own
+    )
+    after_key = (
+        '<div class="clist"><div class="chk"><h3 class="cn2">Red and undecided petals</h3>'
+        f'<dl class="cs">{petal_causes}</dl></div>'
+        f'<div class="chk" id="reading"><h3 class="cn2">{e(BASIS_READING[1].capitalize())}</h3>'
+        f'<dl class="cs">{rule_lines((("", READING_RULE),))}</dl></div></div>'
+    )
+    # why a check is undecided, the six checks' last block (#undecided, which a system page's
+    # cause links): a cause's words are inline on a system page; here each is a sentence
     causes = "".join(f'<div id="cause-{e(k.replace(" ", "-"))}"><dt>{e(k)}</dt>'
                      f"<dd>{e(v[0].upper() + v[1:])}.</dd></div>"
                      for k, v in CHECK_CAUSE_WORD.items())  # fmt: skip
+    undecided = (f'<div class="chk" id="undecided"><h3 class="cn2">Undecided checks</h3>'
+                 f'<dl class="cs">{rule_lines((("", CHECK_CAUSE_LEAD),))}{causes}</dl></div>')  # fmt: skip
     passed = (f'<p class="rd" id="passed">{e(gate)}</p>'
-              f'<p class="rd" id="not-tested">{e(NOT_TESTED)}</p>')  # fmt: skip
-    parts = (("glyph", "Glyph"), ("checks", "The six checks"), ("undecided", "Undecided"),
-             ("figures", "Figures"), ("order", "Order"))  # fmt: skip
-    key = (f'<div class="cwrap"><div class="gbig">{glyph}</div><div class="clist">{petals}'
-           f'<p class="rd hl">{e(summary)}</p>'
-           f'<p class="rd hl">{e(HOLLOW_RULE)}</p><dl class="cs pcause">{petal_causes}</dl>'
-           f'<p class="rd hl" id="reading">{e(READING_RULE)}</p>'
-           "</div></div>")  # fmt: skip
+              f'<p class="rd" id="not-tested">{linked(NOT_TESTED, ("NOT_TESTED", ""))}</p>')  # fmt: skip
+    six = f'{passed}<div class="clist six">{checks}</div><div class="clist">{undecided}</div>'
+    parts = (("checks", "Six checks"), ("figures", "Figures"), ("order", "Order"),
+             ("glyph", "Glyph"))  # fmt: skip
+    # the order rule; "largest model proved" (OR-6) is an address the ladder's mark can link
+    order = rules(ORDER_RULE, ids=("unranked", "largest model proved"), at="ORDER_RULE")
+    key = (f'<p class="rd">{linked(summary, ("summary", ""))}</p>'
+           f'<div class="cwrap"><div class="gbig">{glyph}</div><div class="clist">{petals}'
+           f"</div></div>{after_key}")  # fmt: skip
     body = f"""
 {header("checks")}
 <main id="main" class="sys">
   {title_band("Checks")}
   {pnav("Checks", parts)}
   <div class="wrap">
-    {section("glyph", "Glyph", key)}
-    {section("checks", "The six checks", f'{passed}<div class="clist">{checks}</div>')}
-    {section("undecided", "Undecided", f'<dl class="cs">{causes}</dl>')}
+    {section("checks", "The six checks", six)}
     {section("figures", "Figures", f'<div class="clist">{figures}</div>')}
-    {section("order", "Order", rules(ORDER_RULE, ids=("unranked",)))}
+    {section("order", "Order", order)}
+    {section("glyph", "Glyph", key)}
   </div>
 </main>
 {footer()}"""
@@ -1055,31 +1277,53 @@ def build_checks():
 
 
 def build_mandate():
-    """The mandate: the belief as the headline, what the site is for, then what we do, what we
-    do not do, who runs it (with the members, once any has agreed) and how to check us (the level
-    and its file among them: the footer's level cell leads there). A line
-    bound by a rule links its label to the file that holds it, the rule named in the title."""
+    """The mandate: the belief as the headline, then who runs it (with the members, once any has
+    agreed), what we do, what we do not do and how to check us (the level and its file among
+    them: the footer's level cell leads there). A line bound by a rule prints the rule under its
+    label, the document and the rule's id as the link's words, the link to the section of the
+    file that holds it (DEPTH law 3: a phone and a keyboard see it). The names in a line are the
+    facts file's (`credit`), linked as the footer links them."""
 
     def label(text, name, path):
         if not path:
             return e(text)
-        return (f'<a href="{e(link(path))}" title="{e(path.rsplit("/", 1)[-1])}, {e(name)}">'
-                f"{e(text)}</a>")  # fmt: skip
+        names, paths = (name, path) if isinstance(path, tuple) else ((name,), (path,))
+        file = paths[0].split("#", 1)[0]
+        rfc = re.match(r"rfcs/(\d{4})-", file)
+        doc = f"RFC-{rfc[1]}" if rfc else file.rsplit("/", 1)[-1]
+        if len(paths) == 1:
+            return (f'{e(text)}<a class="rl" href="{e(link(path))}" title="{e(path)}">'
+                    f"{e(doc)}, {e(name)}</a>")  # fmt: skip
+        # rules of one file in two sections: the document once, each rule's id a link to its own
+        ids = ", ".join(f'<a href="{e(link(p))}" title="{e(p)}">{e(n)}</a>'
+                        for n, p in zip(names, paths, strict=True))  # fmt: skip
+        return f'{e(text)}<span class="rl">{e(doc)}, {ids}</span>'
 
-    members = S.V["credit"]["members"]
+    credit = S.V["credit"]
+    names = {k: f'<a href="{e(credit[k]["url"])}">{e(credit[k]["name"])}</a>'
+             for k in ("lead", "builder")}  # fmt: skip
+
+    def words_html(words):
+        return e(words).format_map(names) if "{" in words else e(words)
+
+    members = credit["members"]
     # the members' names in display type, a ruled row; nothing while none has agreed
     row = ('<div class="mbr"><dt>Members</dt><dd><ul class="mbl">' + "".join(
         f'<li><a href="{e(m["url"])}">{e(m["name"])}</a></li>' for m in members)
         + "</ul></dd></div>") if members else ""  # fmt: skip
     lv = S.V["level"]
-    # the level, linked to the level file (its digest in the title); its state opens the line
+    # the level, its file's path under it as the link, as a bound line's rule is (its digest in
+    # the title); its state opens the line
     state = f"Frozen {lv['frozen']}." if lv["frozen"] else "Draft."
-    level = (f'<div id="{LEVEL_ANCHOR}"><dt><a href="{e(link(lv["path"]))}" '
-             f'title="{e(lv["digest"])}">{e(lv["name"])}</a></dt>'
-             f"<dd>{e(state)} {e(MANDATE_LEVEL)}</dd></div>")  # fmt: skip
+    # the rules added since the freeze that decided rows: named, with their links, on /method
+    phrase, href = MANDATE_LEVEL_LINK
+    history = e(MANDATE_LEVEL).replace(e(phrase), f'<a href="{e(href)}">{e(phrase)}</a>', 1)
+    level = (f'<div id="{LEVEL_ANCHOR}"><dt>{e(lv["name"])}<a class="rl" href="{e(link(lv["path"]))}" '
+             f'title="{e(lv["digest"])}">{e(lv["path"])}</a></dt>'
+             f"<dd>{e(state)} {history}</dd></div>")  # fmt: skip
     blocks = "".join(
         section(title.lower().replace(" ", "-"), title, '<dl class="cs">' + "".join(
-            f"<div><dt>{label(text, name, path)}</dt><dd>{e(words)}</dd></div>"
+            f"<div><dt>{label(text, name, path)}</dt><dd>{words_html(words)}</dd></div>"
             for text, name, path, words in lines)
             + (row if title == MANDATE_MEMBERS_IN else "")
             + (level if title == MANDATE_LEVEL_IN else "") + "</dl>")
@@ -1092,36 +1336,27 @@ def build_mandate():
   {title_band(MANDATE_BELIEF, cls="ttl creed")}
   {pnav("Mandate", parts)}
   <div class="wrap">
-    <p class="rd lead">{e(MANDATE_WHAT)}</p>
     {blocks}
   </div>
 </main>
 {footer()}"""
-    return page("Mandate", MANDATE_BELIEF, body, "system mandatepage", MANDATE_PAGE.strip("/"),
+    return page("Mandate", MANDATE_DESC, body, "system mandatepage", MANDATE_PAGE.strip("/"),
                 "home")  # fmt: skip
 
 
 def build_404():
-    """Not found: the models of the ladder, largest first, each leading to its section, and the
-    systems with a page, each with its glyph and model; the header and footer link the rest."""
-    models = "".join(
-        f'<li><a href="/#{e(r["id"])}"><span class="lp">{e(params(r["parameters_total"]))}</span>'
-        f'<span class="ln">{nobreak(r["model"])}</span></a></li>'
-        for r in S.V["rungs"]
-    )
+    """Not found: the systems with a page, each with its glyph and model; the header and footer
+    link the rest (the ladder holds the models)."""
     systems = "".join(
         f'<li><a href="{e(href(r))}">{glyph_svg(2, states(r))}'
         f'<span class="ln">{e(name_of(r))}</span><span class="lp">{nobreak(rung_of(r)["model"])}</span>'
         "</a></li>"
         for r in S.ROWS
     )
-    lists = "".join(
-        f'<section class="blk" aria-labelledby="h-{k}"><h2 class="sect" id="h-{k}">{t}</h2>'
-        f'<ul class="lost{c}">{items}</ul></section>'
-        for k, t, c, items in (("models", "Models", "", models),
-                               ("systems", "Systems", " lsys", systems))
-        if items
-    )  # fmt: skip
+    lists = (
+        '<section class="blk" aria-labelledby="h-systems">'
+        f'<h2 class="sect" id="h-systems">Systems</h2><ul class="lost lsys">{systems}</ul></section>'
+    ) if systems else ""  # fmt: skip
     body = f"""
 {header(None)}
 <main id="main" class="sys">

@@ -174,7 +174,7 @@ def search_box(here):
     return (
         '<div class="search" role="search">'
         f'<button type="button" class="sopen" aria-label="Search" aria-expanded="false">{SEARCH_MARK}</button>'
-        f'<label class="sr" for="q">Search systems, models, checks and pages</label>'
+        '<label class="sr" for="q">Search</label>'
         f'<span class="sfield">{SEARCH_MARK}'
         '<input id="q" type="text" autocomplete="off" autocorrect="off" autocapitalize="none" '
         'enterkeyhint="go" spellcheck="false" placeholder=" " '
@@ -226,8 +226,10 @@ def footer():
     def org(o):
         return f'<a href="{e(o["url"])}">{e(o["name"])}</a>'
 
+    # the level's name under its term on every screen ("Rules", as "Release" names the release)
     level = f'<span class="fv">{e(S.V["level"]["name"])}</span>'
-    parts = [f'<a href="{MANDATE_PAGE}#{LEVEL_ANCHOR}">{named("level")}{level}</a>']
+    parts = [f'<a href="{MANDATE_PAGE}#{LEVEL_ANCHOR}"><span class="fk">{e(FOOT_NAME["level"])}'
+             f"</span> {level}</a>"]  # fmt: skip
     if rel is not None:
         board = rel["board"]
         where = link(board) if board.startswith("releases/") else None

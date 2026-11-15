@@ -1,249 +1,239 @@
-Benchmark-specific terms (level, rung, check, multiple) follow the normative definitions in the [specification glossary](repo:docs/spec/10-glossary.md).
-
 ### Adapter
 
-The thin wrapper through which our harness runs a prover or verifier. It translates the benchmark's standard invocation into the system's own CLI commands without modifying the underlying tool.
+The wrapper through which the harness runs a system's commands, in a container built at the system's pinned commit. It [changes nothing upstream](/mandate#what-we-do).
 
-On this site: one container image per system, built at a pinned upstream commit hash with no source patches and no undocumented flags.
+### AIR
+
+An algebraic intermediate representation: a computation as a table of values (the trace) with polynomial constraints between rows. STARK provers such as [Winterfell](https://github.com/meta/winterfell/blob/2f78ee9bf667a561bdfcdfa68668d0f9b18b8315/README.md?plain=1#L59) take a computation in this form.
 
 ### Attestation
 
-A signed statement from a piece of hardware or an organisation declaring that a specific condition holds, such as a server processor reporting the hash of the software binary it booted. An attestation is only as trustworthy as the party or hardware signing it.
-
-We use *attested* strictly for signed hardware or institutional reports, never for a mathematical proof. See [Three ways to check](/three-ways).
+A report, signed by hardware or an organisation, that a condition holds. In policy writing, an attestation is a formal declaration that a standard is met.
 
 ### Bound
 
-Locked into the statement that a verifier checks, so that changing the value causes verification to fail. If the prompt is bound, a proof generated for one prompt will be rejected if verified against another.
-
-A system's claim card lists everything its proofs bind: the weights to the public commitment, the prompt and reply to the proof, and each layer's output to the next layer's input. Anything left unbound can be changed by a dishonest prover without failing verification.
+Said of a link in the computation that the verifier's acceptance constrains, such as the weights to their commitment. A [[claim card]] records what is bound as the publisher states it, or reads "not stated". As a noun, a bound is a stated limit, such as on the probability that a false proof is accepted.
 
 ### Check
 
-One of the six empirical tests a system must pass in our harness before it receives a ranked position on a model: Run, Model, Prompt, Reply, Verify without weights, and Fidelity. Every check finishes as held, failed, or undecided, and an undecided check always states its cause.
-
-The [checks page](/checks) defines each check; each system's page reports its outcomes, and [How we compare](/method) explains how they work.
+One of the six tests of Level 1: Run, Model, Prompt, Reply, Verify without weights, Fidelity. Each ends held, failed or [undecided](/checks#undecided), and an undecided check names its cause: system limit, not run, not resolved or not reproduced.
 
 ### Claim card
 
-The structured record, for one system in one configuration, of what its accepted proofs establish: the mathematical statement proved, the stated security level and assumptions, what is bound, and what a dishonest prover could still alter.
-
-Every entry is quoted and linked from the system's own documentation at the pinned commit, or marked "not stated" where the documentation is silent.
+The record of what one system's accepted proofs establish in one configuration, as its publisher states it. Each field is copied from the publisher's documents at the pinned commit and linked, or reads "not stated" ([RFC-0002](repo:rfcs/0002-claim-card.md)).
 
 ### Commitment
 
-A compact cryptographic digest computed from a model's weights that locks them to a single fixed copy. Publishing the commitment does not reveal the weights themselves, though whether it leaks subtle statistical information depends on the commitment scheme. Once published, every future proof is verified against that same commitment. By itself, a commitment does not monitor what the operator actually runs on its servers.
+A value computed from data, such as a model's weights, that fixes them for later proofs without publishing them. The verifier takes it from [the harness's record](/statement#the-committed-weights), never from files sent with a proof. In policy writing, a commitment is a pledge.
 
-More precisely: the output produced by a system's commit step. A commitment scheme is binding (nobody can feasibly find two different weight sets that produce the same commitment) and, in zero-knowledge systems, hiding (the commitment reveals nothing about the weights beyond public dimensions). In our harness, the verifier always receives the commitment recorded during our own commit step, never a file supplied alongside the proof.
+### Completeness
+
+The property that a verifier accepts every proof an honest prover makes of a true statement. In safeguards writing, a complete declaration leaves nothing out.
+
+### Conjectured
+
+Said of a soundness bound that rests on an unproved conjecture. On the [Unforgeable](/checks#unforgeable) petal, a conjectured bound reaches amber in lesser part at most.
 
 ### Control
 
-A deliberate perturbation of the weights, prompt, or reply passed to a verifier to confirm that the change is rejected. Flipping one weight, one prompt token, or one reply token must cause a working verifier to refuse the proof.
+An input changed on purpose (a negative control), from which a working system gives no accepted proof. A trial counts only if its honest twin, the trial unchanged, is accepted. The fidelity run's controls are runs beside the original, honest or [damaged](/checks#fidelity).
 
-Also called a negative control. Every control trial is verified alongside its untouched [[honest twin]].
+### Exact match
+
+An acceptance policy under which each checked token must be the committed model's top token. A policy with a [tolerance](/statement#checked-tokens) also accepts other tokens.
+
+### Fiat-Shamir
+
+A transform that makes an interactive proof non-interactive by hashing the statement and transcript into each challenge.
 
 ### Fidelity
 
-How closely the quantized or integer model that a system proves matches the original model released by its publisher. Provers convert models into finite-field or integer arithmetic to make proving feasible, and the fidelity check measures how much the model's outputs shifted as a result.
-
-On this site, Fidelity is the share of reply positions where the system's top token is the original model's, fed the original model's reply. It is printed as a percentage beside the model's 8-bit and 4-bit copies and sets no state. The Fidelity check is separate: a gate that compares a system's own greedy replies against the original weights' replies, benchmarked against deliberately degraded copies of the model.
-
-A second measure is printed beside it on each system's page and gates nothing: the system's own code is fed the original's reply token by token, and we count the positions where its top token is the original's. A proof covers only the model's own reply, so that count is computed by the system's own code, not by the proved computation.
+How closely the copy a system proves follows the model its publisher released. The Fidelity figure is the share of reply positions where the system's top token is the original's, with the system fed the prompt and then the original's reply (teacher forcing). It sets no state and is labelled "computed by the system's own code on the reference reply, not by the proved computation". The [Fidelity check](/checks#fidelity) and the Faithful model petal score a proved reply by its leading tokens matching the original's.
 
 ### Field
 
-A finite set of numbers where addition, subtraction, multiplication, and division are all exact and wrap around a prime modulus. Cryptographic proof systems operate over finite fields rather than floating-point numbers because their algebraic checks require exact arithmetic with no rounding drift.
+A finite set of numbers, such as the integers modulo a prime, with exact addition, multiplication and division. Proof systems compute in one because their [random checks](/forward-pass#testing-a-product-at-random) need a product of two nonzero numbers never to be 0.
 
-The size of the field determines how unlikely a random check is to miss a forged step.
+### FRI
+
+A protocol that shows committed values lie close to a Reed-Solomon codeword, the evaluations of a low-degree polynomial. Its authors [built it](https://eccc.weizmann.ac.il/report/2017/134/) for proof systems that "require only public randomness for their setup".
 
 ### Glyph
 
-The five-petal summary figure drawn beside every row on the ladder. Each petal represents one of five verification properties a system can hold: Unforgeable, Weights hidden, Faithful model, Machine-checked, and No third party trusted.
-
-A petal is drawn green (held in full), amber (in part), amber with its arm's end cut off (in lesser part), solid red with its name struck (not held, or a check failed), as a red outline (the publisher's documentation is silent) or as a grey outline (undecided). Four petals are derived from documented facts at the pinned commit and can be lowered if a check fails; Faithful model is set by our fidelity test. The glyph never changes a system's rank, and its five petals are never combined into a single score.
+A five-petal figure of how close a system is to a perfect prover. Its [petals](/checks#glyph), all green for such a prover, are Unforgeable, Weights hidden, Faithful model, Machine-checked and No third party trusted. Nothing adds them up, and the glyph never changes a system's position.
 
 ### Greedy decoding
 
-Selecting the single highest-scoring token at every generation step rather than sampling randomly. Under exact arithmetic and a deterministic tie-breaking rule, greedy decoding guarantees that the same model on the same prompt always produces the exact same token sequence, allowing a verifier to check the reply token for token. Standard floating-point execution on GPUs does not guarantee that determinism across runs.
+Choosing the highest-scoring token at every step. With exact arithmetic and a fixed rule for ties, the same model and prompt always give the same reply.
 
-### Honest twin
+### Harness
 
-The unmodified proof verified right alongside a tampered control proof in the same batch. If the verifier fails to accept the honest twin, the entire control trial is void, ensuring that a broken environment or crashing verifier is never mistaken for a successful refusal.
+The benchmark's software (the Python package iproofs), which runs each adapter in a container and times it from outside.
 
 ### Inference
 
-Running a trained model forward on an input to produce an output. For a language model, inference means turning a prompt into a reply one token at a time.
+Running a trained model forward on an input to produce an output. A language model writes its reply one token at a time.
+
+### KL divergence
+
+A measure of how far one probability distribution lies from another (Kullback-Leibler divergence). [KL to the original weights](/checks#kl) is printed and gates nothing.
 
 ### Ladder
 
-The [front page](/) of this benchmark: one section per open-weights model, listing the systems tested on that model and what each cost. Each model section is a [[rung]].
+The home page: one table per open-weights model, largest first, with one row per system run on it. Systems are [ranked](/checks#order) inside a model, never across models.
 
 ### Level
 
-A frozen edition of the benchmark specification fixing the models, the request shape, the six checks, the ordering rule, and all numerical constants. Once frozen, a level is meant to stay unchanged so that substantive rule changes wait for the next level. [How we compare](/method) documents where Level 1 departed from that rule.
-
-Level 1 is specified in [RFC-0018](repo:rfcs/0018-level-1-ladder.md).
+A frozen definition of the benchmark in one file: the models, request, checks, order rule and constants. The glyph's rules are not part of it, and changing them needs no [new level](repo:rfcs/0018-level-1-ladder.md#the-glyph).
 
 ### Lookup argument
 
-A cryptographic protocol for proving that every entry in a long list of witness values exists in a fixed public reference table, at a cost far lower than checking each entry individually. Inference provers rely on lookup arguments for operations that cannot be expressed cleanly as low-degree polynomials, such as GELU or SiLU activations, softmax exponentials, reciprocal square roots, and bit-width rounding.
+A proof that every value in a long list appears in a fixed public table. Provers use it for the [steps of a model](/forward-pass#lookups) that need more than additions and multiplications.
+
+### Machine-checked
+
+Said of a proof checked by a proof assistant's kernel, such as Lean's. What it takes on trust, such as the kernel and its axioms, is its trusted base. The [Machine-checked](/checks#machine_checked) petal grades how much such a proof of soundness covers, up to the verifier the row runs.
+
+### Mixture of experts
+
+A model that runs only part of its weights for each token. Llama 4 Maverick runs about 17 billion of its 400 billion parameters.
 
 ### Multilinear extension
 
-The unique polynomial that matches a multi-dimensional array of numbers at every corner of the boolean hypercube and is linear in each variable separately. Extending a weight matrix or activation tensor into a multilinear polynomial lets a verifier check a claim about the entire table by evaluating the polynomial at a single random point.
+The one polynomial, linear in each variable, that takes a table's values on the corners of the boolean hypercube.
 
 ### Multiple
 
-The GPU cost of a proved reply expressed as a ratio of the GPU cost of serving the same reply without a proof on the same model. It is the single figure used to order passing systems within a rung, printed on the ladder as Cost vs serving.
-
-Specifically: steady-state GPU-seconds per additional proved reply (including generation) divided by full-load serving GPU-seconds per reply on the same hardware. A system with no steady state is given its whole sessions' GPU time per reply over the same baseline instead, labelled whole sessions. See [Where the cost goes](/cost).
+The ranked figure: steady GPU-seconds per further proved reply over the serving baseline's GPU-seconds per reply at full load. The ladder prints it as Cost vs serving, with generation counted. A row with no steady state has [none](/checks#multiple) and prints its whole sessions' cost over serving.
 
 ### Operator
 
-The party that hosts the model and serves requests, whether a commercial API provider, an AI lab, or the operator of a declared sovereign compute cluster. In a proof of inference, the operator runs the [[prover]].
+The party that serves a model and makes its proofs, such as a lab or an API provider. [RFC-0018](repo:rfcs/0018-level-1-ladder.md) also uses the word for the team that runs this benchmark.
 
 ### Passed
 
-A system's status on a specific model rung once all six benchmark checks are held. Systems pass on a rung; models themselves do not pass or fail.
+Said of a system on a model when all six [checks](/checks#passed) held there.
 
-### Petal
+### Pinned commit
 
-One of the five arms of the [[glyph]], corresponding to a single verification property that a system can hold in full, in part, in lesser part, or not at all.
+The full commit hash at which a system is built, run and quoted. It is unrelated to a [[commitment]], which fixes a model's weights.
 
 ### Polynomial commitment
 
-A cryptographic [[commitment]] to a polynomial that allows the prover to later reveal the polynomial's value at a random point chosen by the verifier, accompanied by a short proof that the revealed value is consistent with the initial commitment. Polynomial commitments allow a verifier to check algebraic claims about billions of model weights without ever downloading the weights.
+A commitment to a polynomial that the prover opens at any point the verifier picks, with a [short proof](/forward-pass). It lets a verifier check claims about a model's weights without holding them.
 
 ### Position
 
-A system's numerical rank among the systems that passed all six checks on a single model rung, defined as one plus the number of systems placed strictly above it. Only a passing system whose publisher states a security level in bits receives a position.
-
-### Prompt
-
-The input tokens sent to a language model in a request.
+A ranked system's place in its model's table: 1 plus the number of systems placed above it. A system [has one](/checks#order) only if it passed and its publisher states a numeric security level at the pinned commit, for at least one verifier it ships.
 
 ### Proof of inference
 
-A cryptographic proof file (or bundle of files) that allows a verifier program to confirm that a specific reply is the output of a committed model on a specific prompt, without re-running the model. When the proof system is zero-knowledge, verification also reveals nothing about the model's weights beyond what the statement makes public.
-
-In our harness: the set of proof files verified by a single verifier call for one request. An accepted proof establishes the system's documented [[statement]] under its stated cryptographic assumptions.
+Files that let a verifier check that a reply is what a committed model produces for a prompt. In policy writing, a proof is evidence strong enough to support a conclusion.
 
 ### Proved
 
-Established by the acceptance of a [[soundness|sound]] verifier under stated mathematical assumptions. A proof of inference proves that a reply matches what the committed model produces on a prompt; it does not prove which weights ran on the server in real time, nor does it prove that a model is safe, and we never use the word in that loose sense.
+Said of a statement that a [[soundness|sound]] verifier's acceptance establishes, under the claim card's stated assumptions.
 
 ### Prover
 
-The program that generates a cryptographic proof, and by extension the operator running it. The prover holds the secret model weights, records the intermediate activations, and performs the heavy computational work that makes verification cheap for the [[verifier]].
+The program that makes a proof, and by extension whoever runs it. It holds the [[witness]].
 
 ### Publisher
 
-The team or organisation that releases a proof system and its documentation, or that releases an open-weights model. Wherever both appear in the same context, our pages specify whether we mean the system publisher or the model publisher.
+The organisation that releases a proof system and its documents, or a model and its weights. The model as its publisher released it is the original.
+
+### Q8_0 and Q4_K_M
+
+Two copies of the original model quantized by llama.cpp, two of the fidelity run's three honest controls. The ladder prints their [[fidelity]] under each system's.
 
 ### Quantization
 
-Representing a model's weights and activations with lower-precision integers (such as 8-bit or 4-bit integers) instead of 16-bit or 32-bit floating-point numbers. Quantization reduces memory traffic and makes finite-field proving practical, at the cost of shifting the model's token predictions slightly or substantially. Every inference prover on this board proves a quantized or integer-converted copy of the model.
+Storing a model's weights, and often its activations, as low-precision integers in place of floating point. Each system on the ladder proves a [quantized copy](/statement#integer-arithmetic) of the original, whose replies can differ from the original's.
 
 ### Random oracle
 
-An idealised mathematical model of a cryptographic hash function in which every distinct input produces a uniformly random output. Many non-interactive proof systems prove their soundness in the random oracle model before instantiating the oracle with a concrete hash function like SHA-256 or Poseidon.
+An ideal hash function that gives every new input a fresh, uniformly random output. [[Fiat-Shamir]] proofs are usually proved sound with the hash taken as one.
 
 ### Recomputation
 
-Verifying a claimed output by executing the computation a second time and comparing the results. Recomputation requires full access to the model weights, enough hardware to run them, and deterministic arithmetic so two honest runs agree.
-
-Re-running only a randomly chosen subset of requests or layers is called *sampled* recomputation and provides a statistical guarantee. See [Three ways to check](/three-ways).
+Checking a claimed output by [running the computation again](/deployment) and comparing. It needs the weights, hardware to run them, and arithmetic that two honest runs agree on or a tolerance between them.
 
 ### Relying party
 
-Whoever acts on the result of verification: an API customer, an external auditor, a regulator, or an international treaty inspectorate. The relying party runs the [[verifier]] itself (or delegates verification to someone it trusts) and needs to understand both what an accepted proof guarantees and what it leaves unchecked.
-
-### Reply
-
-The sequence of output tokens generated by a model in response to a prompt.
+Whoever acts on a verifier's verdict, such as a customer, an auditor, a regulator or an inspectorate. It runs the [[verifier]] or trusts someone who does, and judges what a verdict is worth.
 
 ### Request
 
-A single prompt paired with the reply presented to the verifier. Across Level 1, every system receives the same request shape: a 512-token prompt and a 512-token greedy reply, with all 512 reply tokens verified.
+One prompt and the reply checked for it: at Level 1, 512 prompt tokens and a [512-token greedy reply](/checks#passed).
 
 ### Residual
 
-What a dishonest prover could still manipulate or substitute while still producing a proof that the verifier accepts. Every claim card explicitly lists the system's residual gaps because no statement covers the entire physical world.
-
-### Row
-
-One system's entry on one model [[rung]] of the [[ladder]], showing its check standing, its five-petal glyph, and its cost and verification figures.
-
-### Rung
-
-One open-weights model in a benchmark level, paired with its full-load serving baseline. Systems are compared and ranked strictly inside a single rung, never across different rungs.
+What a dishonest prover can still do while its proofs are accepted. FlashProve's [[claim card]] quotes its publisher's known limits, and SASH's reads "not stated".
 
 ### Sampled
 
-Derived from checking a randomly selected fraction of the work, such as auditing a random subset of replies or checking random positions inside a trace. A sampled check provides a statistical guarantee: it bounds how much systematic cheating can go undetected over time, without certifying any single uninspected reply.
+Said of a guarantee that comes from checking [a random part of the work](/deployment), such as some replies. It is statistical, not cryptographic, and certifies no reply left unchecked.
 
 ### Security level
 
-A quantitative measure, expressed in bits, of how much computation a dishonest prover would need to make a verifier accept a false statement. At a 100-bit security level, a single forgery attempt succeeds with probability at most 1 in 2^100, requiring roughly 2^100 operations to forge a proof.
-
-Each publisher states its security level as either mathematically proven or conjectured, and either for an abstract protocol on paper or for the concrete implementation that runs. Level 1 records what the publisher states at the pinned commit and does not recompute or test the bound.
+A measure, in bits, of how hard it is to get a false proof accepted. At 100 bits, one attempt succeeds with probability at most 1 in 2^100. A stated level's basis is proved, [[conjectured]] or not said, and Level 1 prints the level as stated.
 
 ### Serving baseline
 
-The GPU cost of answering the benchmark request without a proof, measured using the model publisher's released weights on a standard serving engine at full load. It is the denominator of the cost [[multiple]].
+The GPU-seconds per reply that serving the request takes with no proof, on the model publisher's own release. It is measured at [full load](/checks#multiple).
 
 ### Session
 
-One complete benchmark run of a system starting from a cold state: committing to the model weights, then generating and proving a fixed sequence of requests. A ranked position requires three sessions.
+One cold-start run of a system on a model: setup, commit, then proofs for one slot's requests. Three complete sessions [count](/checks#run), one per slot (a fixed share of the prompts).
+
+### SNARK and STARK
+
+Two names for proof systems: SNARKs (succinct non-interactive arguments of knowledge) and STARKs. A STARK is typically built from hash functions, with no trusted setup. Neither name means that the proof hides anything ([[zero knowledge]]).
 
 ### Soundness
 
-The property that a verifier rejects false statements. A proof system is computationally sound if no prover with feasible computing resources can make the verifier accept a false claim except with negligible probability.
-
-Soundness is a mathematical property established by proof under explicit cryptographic assumptions; empirical testing can refute soundness by finding a bug, but cannot establish it. See [[security level]].
+The property that a verifier refuses proofs of false statements, except with a probability the [[security level]] bounds. It rests on a security proof under stated assumptions. A test can refute it but never establish it.
 
 ### Statement
 
-The exact proposition that an accepted proof certifies. For an inference prover, the statement takes the form: *the model fixed by this commitment, run on this prompt under this decoding rule, produces this reply.* What a proof is worth in practice depends on every detail its statement binds and every detail it leaves out.
+The proposition that an accepted proof establishes. For [an inference prover](/statement): *the model fixed by this commitment, run on this prompt under this decoding rule, produces this reply*.
 
-See [The statement](/statement).
+### Steady state
+
+A session's state when enough release groups follow the first, each at an even time per reply. A release group is a burst of proofs released together. A row is [steady](/checks#multiple) when its three sessions are.
 
 ### Sumcheck
 
-An interactive proof protocol (later made non-interactive via Fiat-Shamir) that lets a prover convince a verifier of the sum of a polynomial over exponentially many inputs while the verifier performs only logarithmic work and evaluates the polynomial at a single random point. It is the workhorse behind most tensor and linear-algebra provers.
-
-See [Proving a forward pass](/forward-pass).
+A protocol that convinces a verifier of a polynomial's sum over exponentially many points with one random evaluation. The verifier's work is [one round per variable](/forward-pass).
 
 ### Token
 
-The basic unit of text processed by a language model: a word, sub-word fragment, or character represented as an integer ID from the model's vocabulary.
+The unit of text a model reads and writes, a word or part of one, stored as an integer.
 
 ### Trusted execution environment
 
-A hardware enclave inside a CPU or GPU designed to isolate running code and memory from the machine's owner and operating system, while signing cryptographic reports of the binary loaded inside it. Commonly abbreviated TEE. Its security is an [[attestation]] guarantee that depends on the chip manufacturer's keys and on physical protection of the hardware against bus-probing attacks.
+A hardware enclave (TEE) in a processor that isolates code and memory from the machine's owner. It signs a report of what it loaded, an [[attestation]] that rests on the chip maker's keys and an untampered chip.
 
 ### Trusted setup
 
-A one-time ceremony required by some polynomial commitment schemes to generate public parameters from secret random numbers that must subsequently be destroyed ("toxic waste"). Anyone who retains or reconstructs those secret numbers can forge proofs undetected. Proof systems that require no trusted setup are called transparent.
+A one-time step that makes public parameters from a secret whose holder could forge proofs, as in KZG commitments. A system is [transparent](/checks#no_trusted_party) when soundness rests on cryptographic assumptions alone and no setup produced a secret.
 
 ### Verification
 
-Confirming a claim against evidence that holds up even when the party making the claim has an incentive to cheat. Across this site we distinguish four uses of the word: checking a claim in general, verifying treaty or regulatory compliance, formal mathematical verification of software, and running a cryptographic [[verifier]] program. See [Why verify](/why-verify).
+Checking a claim against evidence that holds even if the claimant has a reason to cheat. The word also names judging compliance with a law or a treaty, and proving software correct against a specification. On the ladder it means running a [[verifier]], whose verdict alone never settles compliance.
 
 ### Verifier
 
-The lightweight program that inspects a cryptographic proof and outputs accept or refuse. It takes as input the weight commitment, the public model configuration, the prompt, the reply, and the proof bytes. It never needs the secret model weights, and for every system run on this benchmark it runs on an ordinary CPU with no GPU attached.
+The program that checks a proof against the commitment and the prompt, and accepts or refuses. It is given the reply or reads it from the proof. In policy writing, the verifier is the inspectorate or the auditor, here called the [[relying party]].
 
 ### Weights
 
-The learned numerical parameters that define a trained neural network, numbering in the billions for modern language models. They are the proprietary asset an operator may wish to keep confidential, and the data that a cryptographic [[commitment]] locks down.
+The learned numbers a model is made of, about 8 billion in Llama 3.1 8B. For a closed model they are its owner's trade secret.
 
 ### Witness
 
-All the private inputs and intermediate values that the prover knows and uses to construct a proof, which the verifier does not see directly. In a proof of inference, the witness comprises the model weights together with the layer-by-layer activations of the forward pass.
+Everything the prover uses to build a proof and the verifier does not see. In a proof of inference: the weights and every layer's activations.
 
 ### Zero knowledge
 
-The cryptographic property that a proof reveals nothing whatsoever beyond the truth of the statement being proved. When a proof of inference is zero-knowledge, a verifier learns that the reply came from the committed model on the given prompt, and learns nothing else about the secret weights.
-
-Anything included in the public statement remains visible to the verifier, including the model's architecture dimensions, the prompt, and the reply. Zero knowledge is completely separate from [[soundness]], and must hold for the actual code and transcript emitted by the prover, not merely for an idealised protocol on paper.
+The property that a proof shows nothing beyond the truth of its statement. What the statement makes public stays visible: the model's sizes, the prompt, the reply. The [Weights hidden](/checks#weights_hidden) petal asks it of the programs that run, not only of the protocol.

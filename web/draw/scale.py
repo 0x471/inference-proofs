@@ -325,11 +325,15 @@ def build_scale():
     body = f"""
 {header("scale")}
 <main id="main" class="sys">
-  {title_band("Scale").replace("</h1>", f'</h1><p class="lt-s">{e(SCALE_LEAD)}.</p>', 1)}
+  {title_band("Scale")}
   {pnav("Scale", [(d, n) for d, n, _ in DIMS])}
   <div class="wrap">{panels}</div>
 </main>
 {footer()}"""
-    names = [n.lower() for _, n, _ in DIMS]
-    desc = f"{SCALE_LEAD}: {', '.join(names[:-1])} and {names[-1]}."
-    return page("Scale", desc, body, "system scalepage", SCALE_PAGE.strip("/"), "home")
+    return page("Scale", scale_words(), body, "system scalepage", SCALE_PAGE.strip("/"), "home")
+
+
+def scale_words():
+    """The scale page in a line (its description and its search line): its figures' names in
+    lower case."""
+    return f"{SCALE_LEAD}: {', '.join(n.lower() for _, n, _ in DIMS)}."

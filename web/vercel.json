@@ -75,6 +75,21 @@
       "source": "/system.html"
     },
     {
+      "destination": "/statement",
+      "permanent": false,
+      "source": "/architectures"
+    },
+    {
+      "destination": "/proof-of-inference",
+      "permanent": false,
+      "source": "/before-you-rely"
+    },
+    {
+      "destination": "/method",
+      "permanent": false,
+      "source": "/cost"
+    },
+    {
       "destination": "/checks",
       "permanent": false,
       "source": "/criteria"
@@ -83,6 +98,16 @@
       "destination": "/",
       "permanent": false,
       "source": "/deepprove"
+    },
+    {
+      "destination": "/forward-pass",
+      "permanent": false,
+      "source": "/inference"
+    },
+    {
+      "destination": "/forward-pass",
+      "permanent": false,
+      "source": "/proof-systems"
     },
     {
       "destination": "/",
@@ -98,6 +123,21 @@
       "destination": "/",
       "permanent": false,
       "source": "/targets"
+    },
+    {
+      "destination": "/deployment",
+      "permanent": false,
+      "source": "/three-ways"
+    },
+    {
+      "destination": "/deployment",
+      "permanent": false,
+      "source": "/treaty"
+    },
+    {
+      "destination": "/proof-of-inference",
+      "permanent": false,
+      "source": "/why-verify"
     },
     {
       "destination": "/og/icon-32.png",
