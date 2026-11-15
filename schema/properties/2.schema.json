@@ -174,6 +174,28 @@
         "tag"
       ],
       "type": "object"
+    },
+    "form_item": {
+      "$comment": "a form of the stated property, printed as the publisher's words with its link; sets no step (RFC-0018 WH, amended 2026-11-15). `item` is a substring of its first quote, checked offline",
+      "additionalProperties": false,
+      "properties": {
+        "item": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "quotes": {
+          "items": {
+            "$ref": "#/$defs/quote"
+          },
+          "minItems": 1,
+          "type": "array"
+        }
+      },
+      "required": [
+        "item",
+        "quotes"
+      ],
+      "type": "object"
     }
   },
   "$id": "https://inference-proofs.org/schema/properties/2.schema.json",
@@ -280,6 +302,19 @@
                         },
                         "verifier_run": {
                           "$ref": "#/$defs/scope_cell"
+                        },
+                        "bound": {
+                          "$comment": "the publisher's bound for this property, verbatim, a substring of one of its quotes; null when none is stated. Printed, sets no state",
+                          "$ref": "#/$defs/fact",
+                          "properties": {
+                            "value": {
+                              "minLength": 1,
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            }
+                          }
                         }
                       },
                       "required": [
@@ -300,6 +335,19 @@
                         },
                         "verifier_run": {
                           "$ref": "#/$defs/scope_cell"
+                        },
+                        "bound": {
+                          "$comment": "the publisher's bound for this property, verbatim, a substring of one of its quotes; null when none is stated. Printed, sets no state",
+                          "$ref": "#/$defs/fact",
+                          "properties": {
+                            "value": {
+                              "minLength": 1,
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            }
+                          }
                         }
                       },
                       "required": [
@@ -320,6 +368,19 @@
                         },
                         "verifier_run": {
                           "$ref": "#/$defs/scope_cell"
+                        },
+                        "bound": {
+                          "$comment": "the publisher's bound for this property, verbatim, a substring of one of its quotes; null when none is stated. Printed, sets no state",
+                          "$ref": "#/$defs/fact",
+                          "properties": {
+                            "value": {
+                              "minLength": 1,
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            }
+                          }
                         }
                       },
                       "required": [
@@ -408,6 +469,19 @@
                         "type": "string"
                       },
                       "type": "array"
+                    }
+                  }
+                },
+                "conclusion": {
+                  "$comment": "MC-7 (amended 2026-11-15): what the named theorem's conclusion is about: `model` (a reference definition of the model's computation), `other` (anything else, for example a hash) or `not_stated`. A step above amber in lesser part needs `model`",
+                  "$ref": "#/$defs/fact",
+                  "properties": {
+                    "value": {
+                      "enum": [
+                        "model",
+                        "other",
+                        "not_stated"
+                      ]
                     }
                   }
                 }
@@ -906,6 +980,62 @@
                       "type": "boolean"
                     }
                   }
+                },
+                "zk_kind": {
+                  "$comment": "the form of the proved zero knowledge after Fiat-Shamir, in the publisher's words: statistical, computational or perfect; printed, sets no step",
+                  "$ref": "#/$defs/fact",
+                  "properties": {
+                    "value": {
+                      "enum": [
+                        "statistical",
+                        "computational",
+                        "perfect",
+                        "not_said"
+                      ]
+                    }
+                  }
+                },
+                "zk_model": {
+                  "$comment": "the model the proved zero knowledge is stated in: the random-oracle model or the standard model; printed, sets no step",
+                  "$ref": "#/$defs/fact",
+                  "properties": {
+                    "value": {
+                      "enum": [
+                        "random_oracle",
+                        "standard",
+                        "not_said"
+                      ]
+                    }
+                  }
+                },
+                "zk_unit": {
+                  "$comment": "what one proved zero-knowledge statement covers: one request a proof, or a batch; read with the workload's batch size into the reason, sets no step",
+                  "$ref": "#/$defs/fact",
+                  "properties": {
+                    "value": {
+                      "enum": [
+                        "request",
+                        "batch",
+                        "not_said"
+                      ]
+                    }
+                  }
+                },
+                "forms": {
+                  "$comment": "each form of the proved zero knowledge, the publisher's words with their link; printed, sets no step",
+                  "items": {
+                    "$ref": "#/$defs/form_item"
+                  },
+                  "type": "array"
+                },
+                "visible_at_least": {
+                  "$comment": "true when the publisher says its list of visible values is a lower bound (\"at least\"); the count is printed with those words",
+                  "$ref": "#/$defs/fact",
+                  "properties": {
+                    "value": {
+                      "type": "boolean"
+                    }
+                  }
                 }
               },
               "required": [
@@ -961,6 +1091,40 @@
       "required": [
         "repo",
         "commit"
+      ],
+      "type": "object"
+    },
+    "verifiers": {
+      "$comment": "the verifier program the row runs (`run`) and the verifier the publisher's bound and machine-checked theorem are stated for (`stated`, null when the documents name none), each named as the publisher names it; read into the reasons of Unforgeable and Machine-checked (RFC-0018 GL-5, amended 2026-11-15)",
+      "additionalProperties": false,
+      "properties": {
+        "run": {
+          "$comment": "the verifier program the row runs, as the publisher names it",
+          "$ref": "#/$defs/fact",
+          "properties": {
+            "value": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        },
+        "stated": {
+          "$comment": "the verifier the bound and the theorem are stated for; null when none is named",
+          "$ref": "#/$defs/fact",
+          "properties": {
+            "value": {
+              "minLength": 1,
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        }
+      },
+      "required": [
+        "run",
+        "stated"
       ],
       "type": "object"
     }

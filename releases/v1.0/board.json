@@ -517,13 +517,78 @@
                 }
               ],
               "reading": true,
-              "reason": "the bound is stated for a batch checked together, not for a reply checked alone (the row proves 24 replies a batch)",
+              "reason": "at most q/2^124 + 2^-101 per proof, stated for the Lean verifier; none stated for cp_verify, which this row runs; stated for proofs checked together, not for our separate checks of 24-reply batches; its conditions not shown to hold for the row's files",
               "state": "amber",
               "step": "amber_lower"
             },
             {
               "basis": "statement",
               "cause": null,
+              "forms": [
+                {
+                  "item": "For the interactive protocol (IOP) it is honest-verifier zero knowledge.",
+                  "quotes": [
+                    {
+                      "text": "For the interactive protocol (IOP) it is honest-verifier zero knowledge.",
+                      "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/weight-hiding.md#L3"
+                    }
+                  ]
+                },
+                {
+                  "item": "For the compiled (non-interactive) prover and the Lean verifier that is proved sound, in the random-oracle model, it holds against any verifier within 2^64 hash queries and 688,127 replies",
+                  "quotes": [
+                    {
+                      "text": "For the compiled (non-interactive) prover and the Lean verifier that is proved sound, in the random-oracle model, it holds against any verifier within 2^64 hash queries and 688,127 replies",
+                      "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/weight-hiding.md#L3"
+                    }
+                  ]
+                },
+                {
+                  "item": "up to a statistical distance below 2^-154",
+                  "quotes": [
+                    {
+                      "text": "all that such a verifier sees can be simulated from the public files, the requests and one bit per request (served or refused: a request is refused if it is ill-formed, if the model has no result on it, or if its result is other tokens), up to a statistical distance below 2^-154",
+                      "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/weight-hiding.md#L3"
+                    }
+                  ]
+                },
+                {
+                  "item": "They are for one commitment and one request to a proof",
+                  "quotes": [
+                    {
+                      "text": "They are for one commitment and one request to a proof",
+                      "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/weight-hiding.md#L5"
+                    }
+                  ]
+                },
+                {
+                  "item": "batches, which are what the programs serve, are not covered",
+                  "quotes": [
+                    {
+                      "text": "batches, which are what the programs serve, are not covered",
+                      "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/weight-hiding.md#L5"
+                    }
+                  ]
+                },
+                {
+                  "item": "with the programs' seed (ChaCha20) hiding can be computational at best",
+                  "quotes": [
+                    {
+                      "text": "What Lean proves is statistical, with the hash as a random oracle and for truly random masks; with the programs' seed (ChaCha20) hiding can be computational at best.",
+                      "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/weight-hiding.md#L25"
+                    }
+                  ]
+                },
+                {
+                  "item": "The honest prover in these theorems is a Lean definition, not the CUDA prover.",
+                  "quotes": [
+                    {
+                      "text": "The honest prover in these theorems is a Lean definition, not the CUDA prover.",
+                      "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/weight-hiding.md#L3"
+                    }
+                  ]
+                }
+              ],
               "id": "weights_hidden",
               "lowered_by": [],
               "quotes": [
@@ -553,7 +618,7 @@
                 }
               ],
               "reading": true,
-              "reason": "zero knowledge proved for the protocol only, not stated for its programs, and 3 visible values fitted to the weights",
+              "reason": "zero knowledge (statistical, random-oracle model) proved for the protocol only, one request a proof; not for the row's 24-reply batches; not stated for the programs the row runs; 3 listed values depend on the weights",
               "state": "amber",
               "step": "amber_upper",
               "visible": [
@@ -679,7 +744,8 @@
                   ],
                   "tag": "fitted_to_weights"
                 }
-              ]
+              ],
+              "visible_at_least": true
             },
             {
               "basis": "test",
@@ -687,7 +753,7 @@
               "id": "faithful_model",
               "lowered_by": [],
               "quotes": [],
-              "reason": "not shown above the Q8_0 and Q4_K_M midpoint, 48.00 leading tokens",
+              "reason": "29.7 leading reply tokens match the 16-bit original, on average; the 8-bit copy 65.7, the 4-bit copy 30.3; not shown above their midpoint, 48.0",
               "state": "amber",
               "step": "amber_lower"
             },
@@ -695,8 +761,39 @@
               "basis": "statement",
               "cause": "proof_build_not_run",
               "formal": {
+                "ceiling": "amber_upper",
+                "conclusion": "model",
                 "input_code_unverified": true,
                 "reach": "protocol_and_statement",
+                "scope_bounds": {
+                  "completeness": {
+                    "quotes": [
+                      {
+                        "text": "at every request that can be served (`CanServe`) and whose output tokens are the model's, the honest proof is rejected with probability at most 2^-40.",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L15-L17"
+                      }
+                    ],
+                    "text": "rejected with probability at most 2^-40"
+                  },
+                  "soundness": {
+                    "quotes": [
+                      {
+                        "text": "a cheating committer and prover with q hash queries between them get the verifier to accept output tokens that are not the model's, at the weights that one extractor reads from the commitment and the committer's hash queries, with probability at most about q/2^124 + 2^-101.",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L7-L10"
+                      }
+                    ],
+                    "text": "q/2^124 + 2^-101"
+                  },
+                  "zero_knowledge": {
+                    "quotes": [
+                      {
+                        "text": "there is a bound that stays at or below 2^-154 within 2^64 hash queries and 688,127 replies, and zero knowledge holds within this bound on the requests that can be served and whose output tokens are the model's",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L20-L22"
+                      }
+                    ],
+                    "text": "at or below 2^-154 within 2^64 hash queries and 688,127 replies"
+                  }
+                },
                 "scope_card": {
                   "completeness": {
                     "protocol": {
@@ -738,13 +835,8 @@
                       "value": "machine_checked"
                     },
                     "prover_run": {
-                      "quotes": [
-                        {
-                          "text": "The C++ verifier and the CUDA prover are written to follow the same protocol and are tested against it, not themselves proved.",
-                          "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/what-is-proved.md#L7-L8"
-                        }
-                      ],
-                      "value": "tested"
+                      "quotes": [],
+                      "value": "does_not_apply"
                     },
                     "verifier_run": {
                       "quotes": [
@@ -777,7 +869,7 @@
                     },
                     "verifier_run": {
                       "quotes": [],
-                      "value": "not_stated"
+                      "value": "does_not_apply"
                     }
                   }
                 },
@@ -820,6 +912,10 @@
                   "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/what-is-proved.md#L83"
                 },
                 {
+                  "text": "\"The model\" means the extracted weights, which no theorem says are the ones `cp_commit` put in",
+                  "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L227-L228"
+                },
+                {
                   "text": "The protocol's soundness is proved in Lean 4.",
                   "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/README.md#L26"
                 },
@@ -841,7 +937,7 @@
                 }
               ],
               "reading": true,
-              "reason": "no proof build of the named theorem is recorded yet",
+              "reason": "no proof build of the named theorem is recorded yet; it is stated for the Lean verifier, not for cp_verify, which this row runs; once built: amber in part at most; statement not reviewed by an outside Lean reader",
               "state": "hollow",
               "step": null
             },
@@ -881,9 +977,9 @@
                 }
               ],
               "reading": true,
-              "reason": "read as resting on cryptographic assumptions alone; no quote says no setup produced a secret",
-              "state": "green",
-              "step": "green"
+              "reason": "read as resting on cryptographic assumptions alone, with no setup that produced a secret; no quote says so, so amber in part at most",
+              "state": "amber",
+              "step": "amber_upper"
             }
           ],
           "incomplete_sessions": [],
@@ -2085,7 +2181,7 @@
                   "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/src/util.rs#L26"
                 }
               ],
-              "reason": "the stated bound is conjectured, not proved",
+              "reason": "100 conjectured bits per part of a proof; not stated for boundary-grid --verify, the verifier this row runs; conjectured, not proved; not said which provers it holds against; not per reply; its conditions not shown to hold for the row's files",
               "state": "amber",
               "step": "amber_lower"
             },
@@ -2129,7 +2225,7 @@
               "id": "faithful_model",
               "lowered_by": [],
               "quotes": [],
-              "reason": "not shown above the Q8_0 and Q4_K_M midpoint, 55.67 leading tokens",
+              "reason": "31.0 leading reply tokens match the 16-bit original, on average; the 8-bit copy 106, the 4-bit copy 5.27; not shown above their midpoint, 55.7",
               "state": "amber",
               "step": "amber_lower"
             },
@@ -2137,8 +2233,23 @@
               "basis": "statement",
               "cause": "not_stated",
               "formal": {
+                "ceiling": "red",
+                "conclusion": "not_stated",
                 "input_code_unverified": null,
                 "reach": "not_stated",
+                "scope_bounds": {
+                  "completeness": null,
+                  "soundness": {
+                    "quotes": [
+                      {
+                        "text": "so blowup 2 (log_blowup_factor = 1) at 100 conjectured bits means exactly",
+                        "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/src/util.rs#L11"
+                      }
+                    ],
+                    "text": "100 conjectured bits"
+                  },
+                  "zero_knowledge": null
+                },
                 "scope_card": {
                   "completeness": {
                     "protocol": {
@@ -2161,7 +2272,7 @@
                     },
                     "prover_run": {
                       "quotes": [],
-                      "value": "not_stated"
+                      "value": "does_not_apply"
                     },
                     "verifier_run": {
                       "quotes": [],
@@ -2179,7 +2290,7 @@
                     },
                     "verifier_run": {
                       "quotes": [],
-                      "value": "not_stated"
+                      "value": "does_not_apply"
                     }
                   }
                 },
@@ -2220,6 +2331,18 @@
               "id": "no_trusted_party",
               "lowered_by": [],
               "quotes": [
+                {
+                  "text": "A STARK prover for the decode step of a quantized transformer",
+                  "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/README.md#L3"
+                },
+                {
+                  "text": "`security` (the FRI parameters and the hash)",
+                  "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/README.md#L324"
+                },
+                {
+                  "text": "`Fixed` — produced at setup, trusted by the verifier: the shape and gadget",
+                  "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/src/compose.rs#L7"
+                },
                 {
                   "text": "The **verifier** (`verify_composed`) takes those two byte strings and the //! serialized proof, and nothing else",
                   "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/src/compose.rs#L15-L16"
