@@ -455,6 +455,8 @@ html.js .row { cursor: pointer; }
 .fw:hover { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; }
 .fw.undecided { color: var(--muted); }
 a.fig.fp { color: inherit; text-decoration: none; }
+/* on a wide ladder the two copies' Fidelity stand one per line, so the line never runs past the table */
+@media (min-width: 561px) { .lad a.fig.fp + .sub .sep { display: block; height: 0; overflow: hidden; } }
 /* a ladder figure, linked to its section of the system's page: in its own inks, underlined when pointed at */
 a.flk { display: inline-flex; color: inherit; text-decoration: none; }
 a.flk:hover .n { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; }
