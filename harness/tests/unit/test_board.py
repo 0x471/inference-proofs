@@ -227,7 +227,8 @@ def test_formula_ids_are_registered() -> None:
     from iproofs.derive import FORMULAS  # noqa: PLC0415
 
     assert {"D-L1-SESSION", "D-L1-STEADY", "D-L1-BASELINE", "D-L1-MULTIPLE",
-            "D-L1-USD", "D-L1-GENERATION", "D-L1-COMMIT-PROVING"} <= set(FORMULAS)  # fmt: skip
+            "D-L1-USD", "D-L1-GENERATION", "D-L1-COMMIT-PROVING", "D-L1-COMMIT",
+            "D-L1-SESSION-PROVING", "D-L1-GENERATION-TOKEN"} <= set(FORMULAS)  # fmt: skip
 
 
 def test_freeze_refuses_another_level_digest(tree: Tree) -> None:
@@ -334,6 +335,33 @@ def test_board_session_split_without_steady_state(
     assert math.isclose(r["session_commit_and_proving_multiple"]["value"], 88.0)
     multiples = (r["session_generation_multiple"], r["session_commit_and_proving_multiple"])
     assert {q["scope"] for q in (generation, rest, *multiples)} == {"whole_wall"}
+
+
+def test_board_session_in_its_calls(tree: Tree) -> None:
+    """CO-7 (amended 2026-11-15): commit from 0 to 30 s, a generation phase from 40 to 90 s,
+    five replies released at 100 to 140 s, on two GPUs. Session 140 x 2 / 5 = 56 GPU-s per
+    reply: commit 30 x 2 / 5 = 12, generation 50 x 2 / 5 = 20, the rest 56 - 12 - 20 = 24.
+    The level's reply is 512 tokens, so generation is 20 / 512 = 0.0390625 GPU-s per token."""
+    three_sessions(tree, gpus=2, generation=(40.0, 90.0), commit_end=30.0)
+    (r,) = build_board(tree.root, RELEASE, tree.level)["rungs"][1]["rows"]  # type: ignore[index]
+    assert math.isclose(r["session_gpu_seconds_per_reply"]["value"], 56.0)
+    commit = r["session_commit_gpu_seconds_per_reply"]
+    assert (commit["scope"], commit["stats"]["n"]) == ("commit", 3)
+    assert math.isclose(commit["value"], 12.0)
+    assert math.isclose(r["session_generation_gpu_seconds_per_reply"]["value"], 20.0)
+    assert math.isclose(r["session_proving_gpu_seconds_per_reply"]["value"], 24.0)
+    assert math.isclose(r["generation_gpu_seconds_per_reply_token"]["value"], 20.0 / 512)
+
+
+def test_board_session_in_its_calls_without_a_phase(tree: Tree) -> None:
+    """With no generation phase, the rest is the session less commit: 28 - 10 x 1 / 5 = 26;
+    no per-token generation figure."""
+    three_sessions(tree, commit_end=10.0)
+    (r,) = build_board(tree.root, RELEASE, tree.level)["rungs"][1]["rows"]  # type: ignore[index]
+    assert math.isclose(r["session_commit_gpu_seconds_per_reply"]["value"], 2.0)
+    assert math.isclose(r["session_proving_gpu_seconds_per_reply"]["value"], 26.0)
+    per_token = r["generation_gpu_seconds_per_reply_token"]
+    assert (per_token["value"], per_token["null_reason"]) == (None, "not_applicable")
 
 
 def test_board_session_split_needs_a_generation_phase(tree: Tree) -> None:

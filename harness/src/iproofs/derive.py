@@ -543,6 +543,13 @@ FORMULAS = {
     "GPU-seconds / N",
     "D-L1-COMMIT-PROVING": "CO-7: mean over counted sessions of the session cost per reply "
     "(CO-1) - the generation phase's GPU-seconds / N",
+    "D-L1-COMMIT": "CO-7 (amended 2026-11-15): mean over counted sessions of (commit.end - "
+    "commit.start) * gpus / N",
+    "D-L1-SESSION-PROVING": "CO-7 (amended 2026-11-15): mean over counted sessions of the session "
+    "cost per reply (CO-1) - the commit part - the generation phase's GPU-seconds / N (0 with "
+    "no phase of its own)",
+    "D-L1-GENERATION-TOKEN": "CO-7 (amended 2026-11-15): mean over counted sessions of the "
+    "generation phase's GPU-seconds / N / the request's reply tokens",
     "D-L1-MULTIPLE": "CO-5: row GPU-seconds per reply / baseline GPU-seconds per reply",
     "D-L1-USD": "GPU-seconds per reply * price per GPU-hour / 3600",
 }

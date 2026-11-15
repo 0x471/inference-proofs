@@ -432,6 +432,33 @@
             "p_above_bar": 4.9999750001249995e-06,
             "p_below_bar": 1.0
           },
+          "generation_gpu_seconds_per_reply_token": {
+            "grade": "derived",
+            "null_reason": null,
+            "scope": "whole_wall",
+            "source": {
+              "inputs": [
+                "results/v1.0/flashprove/2026-11-11-flashprove-l1-maverick-p512-o512-prover-h200-hosted-1/run.json#/marks",
+                "results/v1.0/flashprove/2026-11-12-flashprove-l1-maverick-p512-o512-prover-h200-hosted-1/run.json#/marks",
+                "results/v1.0/flashprove/2026-11-12-flashprove-l1-maverick-p512-o512-prover-h200-hosted-2/run.json#/marks",
+                "levels/L1.yaml#/request/output_tokens"
+              ],
+              "kind": "derivation",
+              "ref": "derive:D-L1-GENERATION-TOKEN@0.1.0.dev0"
+            },
+            "stats": {
+              "max": 0.45452224376769207,
+              "mean": 0.44916972537278643,
+              "median": 0.44724210178440754,
+              "min": 0.44574483056625974,
+              "n": 3,
+              "n_failed": 0,
+              "stdev": 0.004695481354560543
+            },
+            "tier": "reported",
+            "unit": "gpu_s/token",
+            "value": 0.44916972537278643
+          },
           "generation_multiple": {
             "grade": "derived",
             "null_reason": "not_applicable",
@@ -1002,6 +1029,32 @@
             "unit": "ratio",
             "value": 118.17703538686106
           },
+          "session_commit_gpu_seconds_per_reply": {
+            "grade": "derived",
+            "null_reason": null,
+            "scope": "commit",
+            "source": {
+              "inputs": [
+                "results/v1.0/flashprove/2026-11-11-flashprove-l1-maverick-p512-o512-prover-h200-hosted-1/run.json#/events",
+                "results/v1.0/flashprove/2026-11-12-flashprove-l1-maverick-p512-o512-prover-h200-hosted-1/run.json#/events",
+                "results/v1.0/flashprove/2026-11-12-flashprove-l1-maverick-p512-o512-prover-h200-hosted-2/run.json#/events"
+              ],
+              "kind": "derivation",
+              "ref": "derive:D-L1-COMMIT@0.1.0.dev0"
+            },
+            "stats": {
+              "max": 15.43781791145,
+              "mean": 14.760935544444445,
+              "median": 14.480061335925,
+              "min": 14.364927385958334,
+              "n": 3,
+              "n_failed": 0,
+              "stdev": 0.5890171989687691
+            },
+            "tier": "reported",
+            "unit": "gpu_s/request",
+            "value": 14.760935544444445
+          },
           "session_generation_gpu_seconds_per_reply": {
             "grade": "derived",
             "null_reason": null,
@@ -1088,6 +1141,38 @@
             "tier": "reported",
             "unit": "ratio",
             "value": 1316.9805257687096
+          },
+          "session_proving_gpu_seconds_per_reply": {
+            "grade": "derived",
+            "null_reason": null,
+            "scope": "whole_wall",
+            "source": {
+              "inputs": [
+                "results/v1.0/flashprove/2026-11-11-flashprove-l1-maverick-p512-o512-prover-h200-hosted-1/run.json#/events",
+                "results/v1.0/flashprove/2026-11-12-flashprove-l1-maverick-p512-o512-prover-h200-hosted-1/run.json#/events",
+                "results/v1.0/flashprove/2026-11-12-flashprove-l1-maverick-p512-o512-prover-h200-hosted-2/run.json#/events",
+                "results/v1.0/flashprove/2026-11-11-flashprove-l1-maverick-p512-o512-prover-h200-hosted-1/run.json#/proofs",
+                "results/v1.0/flashprove/2026-11-12-flashprove-l1-maverick-p512-o512-prover-h200-hosted-1/run.json#/proofs",
+                "results/v1.0/flashprove/2026-11-12-flashprove-l1-maverick-p512-o512-prover-h200-hosted-2/run.json#/proofs",
+                "results/v1.0/flashprove/2026-11-11-flashprove-l1-maverick-p512-o512-prover-h200-hosted-1/run.json#/marks",
+                "results/v1.0/flashprove/2026-11-12-flashprove-l1-maverick-p512-o512-prover-h200-hosted-1/run.json#/marks",
+                "results/v1.0/flashprove/2026-11-12-flashprove-l1-maverick-p512-o512-prover-h200-hosted-2/run.json#/marks"
+              ],
+              "kind": "derivation",
+              "ref": "derive:D-L1-SESSION-PROVING@0.1.0.dev0"
+            },
+            "stats": {
+              "max": 7.950011234666675,
+              "mean": 7.909795765111113,
+              "median": 7.923592080208323,
+              "min": 7.855783980458341,
+              "n": 3,
+              "n_failed": 0,
+              "stdev": 0.048605016115691645
+            },
+            "tier": "reported",
+            "unit": "gpu_s/request",
+            "value": 7.909795765111113
           },
           "session_usd_per_reply": {
             "grade": "derived",
@@ -2045,6 +2130,25 @@
             "p_above_bar": 0.0001220703125,
             "p_below_bar": 1.0
           },
+          "generation_gpu_seconds_per_reply_token": {
+            "grade": "derived",
+            "note": "no generation phase of its own: generation, if any, is inside the proving interval",
+            "null_reason": "not_applicable",
+            "scope": "whole_wall",
+            "source": {
+              "inputs": [
+                "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1/run.json#/proofs",
+                "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2/run.json#/proofs",
+                "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-3/run.json#/proofs",
+                "levels/L1.yaml#/request/output_tokens"
+              ],
+              "kind": "derivation",
+              "ref": "derive:D-L1-GENERATION-TOKEN@0.1.0.dev0"
+            },
+            "tier": "reported",
+            "unit": "gpu_s/token",
+            "value": null
+          },
           "generation_multiple": {
             "grade": "derived",
             "null_reason": "not_applicable",
@@ -2367,6 +2471,32 @@
             "unit": "ratio",
             "value": null
           },
+          "session_commit_gpu_seconds_per_reply": {
+            "grade": "derived",
+            "null_reason": null,
+            "scope": "commit",
+            "source": {
+              "inputs": [
+                "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1/run.json#/events",
+                "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2/run.json#/events",
+                "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-3/run.json#/events"
+              ],
+              "kind": "derivation",
+              "ref": "derive:D-L1-COMMIT@0.1.0.dev0"
+            },
+            "stats": {
+              "max": 350.1419628048,
+              "mean": 345.70661632813335,
+              "median": 349.9542500862,
+              "min": 337.0236360934,
+              "n": 3,
+              "n_failed": 0,
+              "stdev": 7.520267171700638
+            },
+            "tier": "reported",
+            "unit": "gpu_s/request",
+            "value": 345.70661632813335
+          },
           "session_generation_gpu_seconds_per_reply": {
             "grade": "derived",
             "note": "no generation phase of its own: generation, if any, is inside the proving interval",
@@ -2445,6 +2575,35 @@
             "tier": "reported",
             "unit": "ratio",
             "value": 64302.09886587567
+          },
+          "session_proving_gpu_seconds_per_reply": {
+            "grade": "derived",
+            "null_reason": null,
+            "scope": "whole_wall",
+            "source": {
+              "inputs": [
+                "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1/run.json#/events",
+                "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2/run.json#/events",
+                "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-3/run.json#/events",
+                "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1/run.json#/proofs",
+                "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2/run.json#/proofs",
+                "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-3/run.json#/proofs"
+              ],
+              "kind": "derivation",
+              "ref": "derive:D-L1-SESSION-PROVING@0.1.0.dev0"
+            },
+            "stats": {
+              "max": 2450.9470094922,
+              "mean": 2426.4527079744,
+              "median": 2447.5138852554,
+              "min": 2380.8972291756,
+              "n": 3,
+              "n_failed": 0,
+              "stdev": 39.48952800360197
+            },
+            "tier": "reported",
+            "unit": "gpu_s/request",
+            "value": 2426.4527079744
           },
           "session_usd_per_reply": {
             "grade": "derived",

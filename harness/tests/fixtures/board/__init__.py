@@ -155,6 +155,7 @@ def session(  # noqa: PLR0913 (one keyword per recorded field a test varies)
     digest: str | None = None,
     day: int = 1,
     generation: tuple[float, float] | None = None,
+    commit_end: float | None = None,
 ) -> Path:
     """One session's run directory; `groups` lists (release second, replies) per group,
     requests numbered in release order, 1 ms apart inside a group."""
@@ -171,7 +172,9 @@ def session(  # noqa: PLR0913 (one keyword per recorded field a test varies)
                          "inputs": [f"{run_id}#/metrics/verify_seconds_total"]}}  # fmt: skip
     run = {"schema": "run/1", "run_id": run_id, "system": system, "control": False,
            "status": "failed" if failure else "completed", "failure": failure,
-           "events": [{"event": "commit.start", "mono_ns": int(commit_start * NS)}],
+           "events": [{"event": "commit.start", "mono_ns": int(commit_start * NS)},
+                      *([] if commit_end is None else
+                        [{"event": "commit.end", "mono_ns": int(commit_end * NS)}])],
            "proofs": [] if failure else proofs,
            "metrics": {"verify_seconds_per_request": metric}}  # fmt: skip
     if generation is not None:
