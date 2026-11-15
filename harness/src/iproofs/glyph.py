@@ -764,7 +764,7 @@ def no_trusted_party(  # noqa: PLR0911 (one return per line of the table)
         return decided(AMBER_UPPER, None, "soundness rests on an open setup ceremony whose "
                        "secret stays unknown if one participant was honest")  # fmt: skip
     if rests_noted:  # NT-6, N1, GL-10: no quote says it in words, so amber in part at most
-        return decided(AMBER_UPPER, None, "read as resting on cryptographic assumptions alone, "
+        return decided(AMBER_UPPER, None, "resting on cryptographic assumptions alone, "
                        "with no setup that produced a secret; no quote says so, so amber in part "
                        "at most")  # fmt: skip
     return decided(GREEN, None, "stated to rest on cryptographic assumptions alone, with no "

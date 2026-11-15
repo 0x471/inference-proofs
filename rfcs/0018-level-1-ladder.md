@@ -307,7 +307,7 @@ Facts (`trust`):
 - NT-3. `rests_on` is `single_party_setup`, `hardware_key` or `trusted_key`: red, `stated`.
 - NT-4. `rests_on` is `fixed_parties`, or `publicly_checkable` is false: amber in lesser part.
 - NT-5. `rests_on` is `open_ceremony`: amber in part.
-- NT-6. Otherwise (`transparent`, and publicly checkable or not said): green, with no note on `rests_on`; the reason reads "stated to rest on cryptographic assumptions alone, with no setup that produced a secret". With a note on `rests_on`, amber in part (GL-10, amended 2026-11-15; green until then), the reason "read as resting on cryptographic assumptions alone, with no setup that produced a secret; no quote says so, so amber in part at most" (amended 2026-11-13, GL-5).
+- NT-6. Otherwise (`transparent`, and publicly checkable or not said): green, with no note on `rests_on`; the reason reads "stated to rest on cryptographic assumptions alone, with no setup that produced a secret". With a note on `rests_on`, amber in part (GL-10, amended 2026-11-15; green until then), the reason "resting on cryptographic assumptions alone, with no setup that produced a secret; no quote says so, so amber in part at most", after the step's "read as" (amended 2026-11-13, GL-5).
 
 No reason says that the publisher states something its quotes do not say. No check lowers this petal. Which model a commitment names is not graded here (Q12, RFC-0016 ST-6).
 

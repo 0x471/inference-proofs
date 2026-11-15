@@ -1089,7 +1089,7 @@
                 }
               ],
               "reading": true,
-              "reason": "read as resting on cryptographic assumptions alone, with no setup that produced a secret; no quote says so, so amber in part at most",
+              "reason": "resting on cryptographic assumptions alone, with no setup that produced a secret; no quote says so, so amber in part at most",
               "state": "amber",
               "step": "amber_upper"
             }
@@ -2656,7 +2656,7 @@
                 }
               ],
               "reading": true,
-              "reason": "read as resting on cryptographic assumptions alone, with no setup that produced a secret; no quote says so, so amber in part at most",
+              "reason": "resting on cryptographic assumptions alone, with no setup that produced a secret; no quote says so, so amber in part at most",
               "state": "amber",
               "step": "amber_upper"
             }
