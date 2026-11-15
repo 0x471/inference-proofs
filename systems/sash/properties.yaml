@@ -114,3 +114,17 @@ petals:
       publicly_checkable:
         value: true
         quotes: [{text: "The **verifier** (`verify_composed`) takes those two byte strings and the //! serialized proof, and nothing else", url: "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/src/compose.rs#L15-L16"}]
+# RFC-0018 SI-3 (amended 2026-11-15): the system page's Statement block, each row the fields of the
+# claim card that say it (kept here: an edit to claim.yaml would change the digest the v1.0 runs
+# record, RFC-0014 §Eligibility). `boundary-grid` takes no claimed output, so the reply it checks is the proof's own
+# (the adapter's `verify`); the commitment's two files come from the harness record of `commit`.
+verifier_inputs:
+  program: "boundary-grid --verify"
+  reply: "proof"
+  commit_record: ["assumptions.1", "assumptions.2"]
+  request: ["assumptions.3"]
+  proof: ["assumptions.0", "coverage.tokens_covered"]
+  decoding: ["coverage.policy.detail"]
+  unchecked: "not stated"
+  architecture: ["assumptions.0"]
+  architecture_visible: "the shape and gadget parameters"

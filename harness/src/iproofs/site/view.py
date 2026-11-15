@@ -78,7 +78,7 @@ def _system(sid: str, facts: Any, root: Path) -> dict[str, Any]:
         # SI-3 (amended 2026-11-15): a row that runs a change to the publisher's code
         "pin": None if row is None or row.pin is None else
         {"pull": row.pin.pull, "url": row.pin.url, "merged": row.pin.merged,
-         "by_builder": row.pin.by_builder, "upstream_commit": row.pin.upstream_commit,
+         "by_owner": row.pin.by_owner, "upstream_commit": row.pin.upstream_commit,
          "upstream_outcome": row.pin.upstream_outcome, "record": row.pin.record},
         # CO-7 (amended 2026-11-15): how a generation phase of its own generates
         "generation": None if row is None or row.generation is None else

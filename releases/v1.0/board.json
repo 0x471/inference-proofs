@@ -2401,7 +2401,7 @@
             "source": {
               "inputs": [
                 "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1/run.json#/proofs",
-                "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2/run.json#/proofs",
+                "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2/run.json#/proofs",
                 "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-3/run.json#/proofs",
                 "levels/L1.yaml#/request/output_tokens"
               ],
@@ -2800,24 +2800,24 @@
             "source": {
               "inputs": [
                 "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1/run.json#/events",
-                "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2/run.json#/events",
+                "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2/run.json#/events",
                 "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-3/run.json#/events"
               ],
               "kind": "derivation",
               "ref": "derive:D-L1-COMMIT@0.1.0.dev0"
             },
             "stats": {
-              "max": 350.1419628048,
-              "mean": 345.70661632813335,
-              "median": 349.9542500862,
-              "min": 337.0236360934,
+              "max": 349.9542500862,
+              "mean": 338.77946686399997,
+              "median": 337.0236360934,
+              "min": 329.3605144124,
               "n": 3,
               "n_failed": 0,
-              "stdev": 7.520267171700638
+              "stdev": 10.408539451903174
             },
             "tier": "reported",
             "unit": "gpu_s/request",
-            "value": 345.70661632813335
+            "value": 338.77946686399997
           },
           "session_generation_gpu_seconds_per_reply": {
             "grade": "derived",
@@ -2905,10 +2905,10 @@
             "source": {
               "inputs": [
                 "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1/run.json#/events",
-                "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2/run.json#/events",
+                "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2/run.json#/events",
                 "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-3/run.json#/events",
                 "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1/run.json#/proofs",
-                "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2/run.json#/proofs",
+                "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2/run.json#/proofs",
                 "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-3/run.json#/proofs"
               ],
               "kind": "derivation",
@@ -2916,16 +2916,16 @@
             },
             "stats": {
               "max": 2450.9470094922,
-              "mean": 2426.4527079744,
-              "median": 2447.5138852554,
+              "mean": 2409.3074937306665,
+              "median": 2396.0782425242,
               "min": 2380.8972291756,
               "n": 3,
               "n_failed": 0,
-              "stdev": 39.48952800360197
+              "stdev": 36.8510888063545
             },
             "tier": "reported",
             "unit": "gpu_s/request",
-            "value": 2426.4527079744
+            "value": 2409.3074937306665
           },
           "session_usd_per_reply": {
             "grade": "derived",

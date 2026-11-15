@@ -92,13 +92,15 @@ def _manifests(root: Path, release: str, row: dict[str, Any]) -> list[tuple[Path
 
 def statement(root: Path, release: str | None, row: dict[str, Any],
               request: dict[str, Any]) -> dict[str, Any] | None:  # fmt: skip
-    """The Statement block of a row, or None when its claim card has no `verifier_inputs`."""
+    """The Statement block of a row, or None when its properties file has no `verifier_inputs`
+    (each row names fields of the claim card, which holds the text and its sources)."""
     path = card_path(root, row["system"], str(row["configuration"]))
     card = inputs.read_yaml(path) if path is not None else {}
-    vi = card.get("verifier_inputs")
+    props = root / "systems" / row["system"] / "properties.yaml"
+    vi = (inputs.read_yaml(props) if props.is_file() else {}).get("verifier_inputs")
     if not isinstance(vi, dict):
         return None
-    where = f"systems/{row['system']}/{path.name if path else 'claim.yaml'} verifier_inputs"
+    where = f"systems/{row['system']}/properties.yaml verifier_inputs"
     rows = [{"id": k, "said": card_refs(card, vi[k], f"{where}.{k}")} for k in STATEMENT_ROWS]
     files: list[str] = []
     parts: list[str] = []

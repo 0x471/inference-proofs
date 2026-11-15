@@ -1,5 +1,21 @@
 {
   "$defs": {
+    "cardRefs": {
+      "$comment": "fields of the system's claim card by their path (`assumptions.0`, `coverage.policy.detail`), whose text and source the page prints; \"not stated\" where the card says nothing on it",
+      "anyOf": [
+        {
+          "const": "not stated"
+        },
+        {
+          "items": {
+            "pattern": "^[a-z_]+(\\.[a-z_0-9]+)*$",
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array"
+        }
+      ]
+    },
     "fact": {
       "$comment": "one fact the glyph is computed from: its value and the publisher's deciding passages",
       "additionalProperties": false,
@@ -63,6 +79,28 @@
       },
       "required": [
         "value",
+        "quotes"
+      ],
+      "type": "object"
+    },
+    "form_item": {
+      "$comment": "a form of the stated property, printed as the publisher's words with its link; sets no step (RFC-0018 WH, amended 2026-11-15). `item` is a substring of its first quote, checked offline",
+      "additionalProperties": false,
+      "properties": {
+        "item": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "quotes": {
+          "items": {
+            "$ref": "#/$defs/quote"
+          },
+          "minItems": 1,
+          "type": "array"
+        }
+      },
+      "required": [
+        "item",
         "quotes"
       ],
       "type": "object"
@@ -172,28 +210,6 @@
         "item",
         "quotes",
         "tag"
-      ],
-      "type": "object"
-    },
-    "form_item": {
-      "$comment": "a form of the stated property, printed as the publisher's words with its link; sets no step (RFC-0018 WH, amended 2026-11-15). `item` is a substring of its first quote, checked offline",
-      "additionalProperties": false,
-      "properties": {
-        "item": {
-          "minLength": 1,
-          "type": "string"
-        },
-        "quotes": {
-          "items": {
-            "$ref": "#/$defs/quote"
-          },
-          "minItems": 1,
-          "type": "array"
-        }
-      },
-      "required": [
-        "item",
-        "quotes"
       ],
       "type": "object"
     }
@@ -1119,6 +1135,63 @@
       "required": [
         "repo",
         "commit"
+      ],
+      "type": "object"
+    },
+    "verifier_inputs": {
+      "$comment": "RFC-0018 SI-3 (amended 2026-11-15): the system page's Statement block. Each row names the fields of the claim card that say it; the page prints their text, linked to their source, or \"not stated\". `program` is the verifier this configuration runs and times; `untimed` names the publisher's other verifiers, which no session times; `reply` says where that verifier takes the reply from: the harness record (the adapter passes the claimed reply) or the proof itself. It lives here, not in the claim card, because the v1.0 runs record the card's digest (RFC-0014 §Eligibility)",
+      "additionalProperties": false,
+      "properties": {
+        "architecture": {
+          "$ref": "#/$defs/cardRefs"
+        },
+        "architecture_visible": {
+          "$comment": "what of the architecture a proof's reader sees, in the card's words; set when `architecture` names fields",
+          "minLength": 1,
+          "type": "string"
+        },
+        "commit_record": {
+          "$ref": "#/$defs/cardRefs"
+        },
+        "decoding": {
+          "$ref": "#/$defs/cardRefs"
+        },
+        "program": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "proof": {
+          "$ref": "#/$defs/cardRefs"
+        },
+        "reply": {
+          "enum": [
+            "record",
+            "proof"
+          ]
+        },
+        "request": {
+          "$ref": "#/$defs/cardRefs"
+        },
+        "unchecked": {
+          "$ref": "#/$defs/cardRefs"
+        },
+        "untimed": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "program",
+        "reply",
+        "commit_record",
+        "request",
+        "proof",
+        "decoding",
+        "unchecked",
+        "architecture"
       ],
       "type": "object"
     },

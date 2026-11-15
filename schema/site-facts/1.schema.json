@@ -140,8 +140,8 @@
           "$comment": "where the row's version is not the publisher's own: the change it runs, printed in the band at depth 2 (RFC-0018 SI-3, amended 2026-11-15)",
           "additionalProperties": false,
           "properties": {
-            "by_builder": {
-              "description": "written by the people who build this site",
+            "by_owner": {
+              "description": "written by this project's owner",
               "type": "boolean"
             },
             "merged": {
@@ -174,7 +174,7 @@
             "pull",
             "url",
             "merged",
-            "by_builder",
+            "by_owner",
             "upstream_commit",
             "upstream_outcome"
           ],

@@ -1,21 +1,5 @@
 {
   "$defs": {
-    "cardRefs": {
-      "$comment": "fields of this card by their path (`assumptions.0`, `coverage.policy.detail`), whose text and source the page prints; \"not stated\" where the card says nothing on it",
-      "anyOf": [
-        {
-          "const": "not stated"
-        },
-        {
-          "items": {
-            "pattern": "^[a-z_]+(\\.[a-z_0-9]+)*$",
-            "type": "string"
-          },
-          "minItems": 1,
-          "type": "array"
-        }
-      ]
-    },
     "edge": {
       "additionalProperties": false,
       "properties": {
@@ -392,63 +376,6 @@
       ],
       "type": "object"
     },
-    "verifier_inputs": {
-      "$comment": "RFC-0018 SI-3 (amended 2026-11-15): the system page's Statement block. Each row names the fields of this card that say it; the page prints their text, linked to their source, or \"not stated\". `program` is the verifier this configuration runs and times; `untimed` names the publisher's other verifiers, which no session times; `reply` says where that verifier takes the reply from: the harness record (the adapter passes the claimed reply) or the proof itself",
-      "additionalProperties": false,
-      "properties": {
-        "architecture": {
-          "$ref": "#/$defs/cardRefs"
-        },
-        "architecture_visible": {
-          "$comment": "what of the architecture a proof's reader sees, in the card's words; set when `architecture` names fields",
-          "minLength": 1,
-          "type": "string"
-        },
-        "commit_record": {
-          "$ref": "#/$defs/cardRefs"
-        },
-        "decoding": {
-          "$ref": "#/$defs/cardRefs"
-        },
-        "program": {
-          "minLength": 1,
-          "type": "string"
-        },
-        "proof": {
-          "$ref": "#/$defs/cardRefs"
-        },
-        "reply": {
-          "enum": [
-            "record",
-            "proof"
-          ]
-        },
-        "request": {
-          "$ref": "#/$defs/cardRefs"
-        },
-        "unchecked": {
-          "$ref": "#/$defs/cardRefs"
-        },
-        "untimed": {
-          "items": {
-            "minLength": 1,
-            "type": "string"
-          },
-          "type": "array"
-        }
-      },
-      "required": [
-        "program",
-        "reply",
-        "commit_record",
-        "request",
-        "proof",
-        "decoding",
-        "unchecked",
-        "architecture"
-      ],
-      "type": "object"
-    },
     "zero_knowledge": {
       "additionalProperties": false,
       "properties": {
@@ -507,6 +434,6 @@
     "sources",
     "reviewed_by"
   ],
-  "title": "Claim card: systems/<name>/claim.yaml or systems/<name>/claims/<configuration>.yaml (RFC-0002 \u00a7Fields)",
+  "title": "Claim card: systems/<name>/claim.yaml or systems/<name>/claims/<configuration>.yaml (RFC-0002 §Fields)",
   "type": "object"
 }

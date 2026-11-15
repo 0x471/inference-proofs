@@ -210,3 +210,18 @@ petals:
       publicly_checkable:
         value: true
         quotes: [{text: "Anyone can check the proof on an ordinary CPU in seconds with `cp_verify`, without the weights.", url: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/README.md#L15-L16"}]
+# RFC-0018 SI-3 (amended 2026-11-15): the system page's Statement block, each row the fields of the
+# claim card that say it (kept here: an edit to claim.yaml would change the digest the v1.0 runs
+# record, RFC-0014 §Eligibility). `cp_verify` checks a token file the adapter writes from the claimed reply, which
+# the harness takes from its own record; the Lean verifier is not run or timed by any session.
+verifier_inputs:
+  program: "cp_verify"
+  untimed: ["Lean verifier"]
+  reply: "record"
+  commit_record: ["assumptions.0", "binding.statement"]
+  request: ["residual.2"]
+  proof: ["residual.5"]
+  decoding: ["coverage.policy.detail"]
+  unchecked: ["assumptions.1"]
+  architecture: ["zero_knowledge.not_hidden"]
+  architecture_visible: "the architecture and every size"

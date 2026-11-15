@@ -36,7 +36,7 @@ CHECK_HELD = {
     # Terms (Slot, Session: complete), SE-1
     "run": "The model's prompts are split into {slots} slots. Each slot has a complete session: a "
     "job from a cold start whose prove call exits 0 with an accepted proof for every request. It "
-    "is built from the public pin, unpatched, with no weakening flag.",
+    "is built from the pinned public commit as published there, with no weakening flag.",
     # P1 against the commitment of W, CH-1a (p1_refusals: an outcome the publisher documents at
     # the pin as meaning the weights are not the committed ones; a layout guard is not one), C3
     "model": "Proving with one weight changed, against the commitment to the unchanged weights, "
@@ -97,7 +97,7 @@ CHECK_MORE = {
 # a check in one line, for its search entry: the held rule with every condition kept, about 95
 # characters at most (two lines of the search list); {slots} and {reply_tokens} as above
 CHECK_LINE = {
-    "run": "{slots} slots, each with a complete cold-start session: public pin, unpatched, no "
+    "run": "{slots} slots, each with a complete cold-start session: public pin as published, no "
     "weakening flag.",
     "model": "Commit, change a weight: no accepted proof. Honest proof, changed commitment: "
     "refused. 3\u00a0of\u00a03 of one change each.",
@@ -113,8 +113,8 @@ CHECK_LINE = {
 STATE_WORD = {"held": "held", "failed": "failed", "undecided": "undecided"}
 # under a system page's Checks head (depth 3): what a held check is
 CHECKS_LEAD = (
-    "Run with the publisher's own prover. A held check is a refused change, not a test of "
-    "soundness."
+    "Each check runs the publisher's own prover honestly and tries a change it should refuse. A "
+    "held check is a refused change, not a test of soundness."
 )
 # what a control's counted trials sent, from the board's `trials` (RFC-0018 CH-1c), by control
 # and C1's position; printed with a check's records

@@ -8,15 +8,14 @@
 schema: "claim/1"
 system: "flashprove"
 configuration: "exact-match-cp-verify"
-card_version: 2  # 2 (2026-11-15): the relation and tokens_covered describe the Level 1 request, a whole reply
+card_version: 1
 upstream: {repo: "anthropics/FlashProve", commit: "9e2bdd8ff5bf9c62f18263d7dac189b0400b260c"}
 claim_class: "next-token/exact-match/committed-weights"
 relation: >-
   Under exact match, a `YES` from `cp_verify` "is meant to show that each checked token is the
-  committed integer model's top choice at its position, up to the error bound". Upstream: "To
-  check a whole reply of R tokens (its end token included) after a prompt of P tokens, set r =
-  P - 1 and e = P + R - 1." The adapter sends that range for a Level 1 request (P = R = 512), so
-  every reply token is a checked token.
+  committed integer model's top choice at its position, up to the error bound". With the range
+  r = T - 1, e = T that the adapter sends, the one checked token is the next token after the
+  T-token window, which the proof covers.
 # The Lean theorem (lean/THEOREM.md) is stated for the Lean verifier `verify`; upstream states no
 # formal statement for `cp_verify` ("no theorem says that they run the protocol the Lean verifier
 # checks", guide/what-is-proved.md#L272-L274).
@@ -41,10 +40,6 @@ security:
       "The random-oracle model for the hash, with a second, fixed hash function, built on
       BLAKE2b's compression function, assumed independent of it" (stated for the Lean verifier)
     adversary: "classical"
-  # Not stated in words at the pin. The glyph's No third party trusted reads the Lean theorems,
-  # stated at every public setup of three public files, as transparent: marked "read as" with its
-  # quotes and drawn amber in part at most (properties.yaml, RFC-0018 GL-10). The card copies
-  # only what is stated, so the two agree under AGENTS.md rule 9.
   setup: "not_stated"
 zero_knowledge:
   claimed: true
@@ -98,10 +93,8 @@ coverage:
   phase: "prefill"
   unit: "request"
   tokens_covered: >-
-    Every reply token. "For each position t from r to e - 1, the proof is about token t + 1, given
-    tokens 0 to t"; with r = P - 1 and e = P + R - 1 those are the R reply tokens, 512 of 512 at
-    Level 1, where the prompt and the reply fill the T = 1,024-token window. One proof file
-    covers one request.
+    The window's T = 1,024 positions: upstream's rate counts "a batch's requests times T tokens",
+    and one proof file covers one request, here its next token.
   operations: >-
     "Model is Llama 4 Maverick's text transformer in integer arithmetic: integer weights,
     fixed-point activations with fitted power-of-two scales, and lookup tables for the non-linear
@@ -157,7 +150,7 @@ availability: "research"
 forbidden_flags: ["-public-weights", "-keep-for-the-audit"]
 sources:
   relation: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/how-it-works.md#L57-L59"
-  relation.range: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/docs/verifying.md#L119-L123"
+  relation.range: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/docs/service.md#L84"
   security.notion: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/what-is-proved.md#L3-L8"
   security.notion.formal_name: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L352-L359"
   security.notion.not_knowledge_soundness: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/LIMITS.md#L1155-L1157"
@@ -175,7 +168,7 @@ sources:
   assumptions.4: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/what-is-proved.md#L66-L68"
   assumptions.5: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/what-is-proved.md#L272-L277"
   assumptions.6: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/docs/what-is-not-hidden.md#L29-L34"
-  coverage: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/docs/verifying.md#L119-L123"
+  coverage: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/driver/README.md#L55"
   coverage.phase: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/README.md#L20-L22"
   coverage.unit: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/docs/service.md#L84-L86"
   coverage.operations: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/docs/model.md#L3-L10"
@@ -191,17 +184,3 @@ sources:
   availability: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/README.md#L3"
   forbidden_flags: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/docs/operators-duties.md#L198-L204"
 reviewed_by: []
-# RFC-0018 SI-3 (amended 2026-11-15): the system page's Statement block, each row the fields of this
-# card that say it. `cp_verify` checks a token file the adapter writes from the claimed reply, which
-# the harness takes from its own record; the Lean verifier is not run or timed by any session.
-verifier_inputs:
-  program: "cp_verify"
-  untimed: ["Lean verifier"]
-  reply: "record"
-  commit_record: ["assumptions.0", "binding.statement"]
-  request: ["residual.2"]
-  proof: ["residual.5"]
-  decoding: ["coverage.policy.detail"]
-  unchecked: ["assumptions.1"]
-  architecture: ["zero_knowledge.not_hidden"]
-  architecture_visible: "the architecture and every size"

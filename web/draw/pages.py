@@ -1497,7 +1497,7 @@ def pin_html(pin, name):
     the pull request, whether upstream merged it, who wrote it, and what the publisher's own
     commit did on the level's request, linked to its record."""
     merged = "merged upstream" if pin["merged"] else "not merged upstream"
-    who = ", written by this project's builder" if pin["by_builder"] else ""
+    who = ", written by this project's owner" if pin["by_owner"] else ""
     record = (f' (<a href="{e(link(pin["record"]))}" title="{e(pin["record"])}">record</a>)'
               if pin.get("record") else "")  # fmt: skip
     return (
@@ -1722,7 +1722,7 @@ def build_checks():
     )
     # the request's one home on the site (SI-8), and what passed means
     gate = (
-        f"Every system we can run unpatched gets one request: {request_words()}. An end token does "
+        f"Every system we can run at a public pin gets one request: {request_words()}. An end token does "
         "not stop the reply. A system has passed on a model when all six checks held there."
     )
     # what the glyph is and what its petals rest on, at the head of their rules (§The glyph, GL-1,

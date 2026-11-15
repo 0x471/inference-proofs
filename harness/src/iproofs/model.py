@@ -240,23 +240,6 @@ class Review(Document):
 
 
 @dataclasses.dataclass(frozen=True, slots=True, kw_only=True)
-class VerifierInputs(Document):
-    """RFC-0018 SI-3 (amended 2026-11-15): the Statement block, each row the card's own fields
-    by path, or "not stated"."""
-
-    program: str
-    reply: str  # "record" or "proof"
-    commit_record: tuple[str, ...] | str
-    request: tuple[str, ...] | str
-    proof: tuple[str, ...] | str
-    decoding: tuple[str, ...] | str
-    unchecked: tuple[str, ...] | str
-    architecture: tuple[str, ...] | str
-    untimed: tuple[str, ...] | None = None
-    architecture_visible: str | None = None
-
-
-@dataclasses.dataclass(frozen=True, slots=True, kw_only=True)
 class ClaimCard(Document):
     schema: str
     system: str
@@ -278,7 +261,6 @@ class ClaimCard(Document):
     assumptions_not_stated: bool | None = None
     quality_gap: tuple[QualityGap, ...] | None = None
     forbidden_flags: tuple[str, ...] | None = None
-    verifier_inputs: VerifierInputs | None = None
 
 
 @dataclasses.dataclass(frozen=True, slots=True, kw_only=True)
@@ -826,7 +808,7 @@ class PinFacts(Document):
     pull: int
     url: str
     merged: bool
-    by_builder: bool
+    by_owner: bool
     upstream_commit: str
     upstream_outcome: str
     record: str | None = None
@@ -1027,7 +1009,6 @@ MODELS: dict[tuple[str, str], type[Any]] = {
     ("claim/1", "#/$defs/edge"): BindingEdge,
     ("claim/1", "#/properties/quality_gap/items"): QualityGap,
     ("claim/1", "#/properties/reviewed_by/items"): Review,
-    ("claim/1", "#/properties/verifier_inputs"): VerifierInputs,
     ("workload/1", "#"): Workload,
     ("workload/1", "#/properties/model"): ModelSpec,
     ("workload/1", "#/properties/model/properties/source"): ModelSource,

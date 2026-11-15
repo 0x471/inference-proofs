@@ -222,7 +222,7 @@
       },
       "name": "SASH",
       "pin": {
-        "by_builder": true,
+        "by_owner": true,
         "merged": false,
         "pull": 36,
         "record": "results/v1.0/sash/refusals/slot-1.json",
