@@ -184,6 +184,34 @@
     "configuration": {
       "$ref": "../quantity/1.schema.json#/$defs/configurationId"
     },
+    "level_statement": {
+      "$comment": "RFC-0018 SI-4a (2026-11-15): whether the publisher states, at the pin, that an accept means the reply is the committed model's own computation, decoded greedily, on the prompt the verifier is given. A row whose file does not state it takes no position. A `note` marks the value as the reader's reading of several sentences, not one sentence that says it.",
+      "additionalProperties": false,
+      "properties": {
+        "accept_is_model_reply": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/fact"
+            },
+            {
+              "properties": {
+                "value": {
+                  "type": "boolean"
+                }
+              }
+            }
+          ]
+        },
+        "sources_read": {
+          "$ref": "#/$defs/sources_read"
+        }
+      },
+      "required": [
+        "sources_read",
+        "accept_is_model_reply"
+      ],
+      "type": "object"
+    },
     "petals": {
       "additionalProperties": false,
       "properties": {

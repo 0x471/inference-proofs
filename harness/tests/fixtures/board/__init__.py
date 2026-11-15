@@ -55,6 +55,7 @@ class Tree:
             path.parent.mkdir(parents=True)
             path.write_text(yaml.safe_dump({"forbidden_flags": ["--unsound-skip-"]}))
             self.claim_card(system)
+            self.properties(system, properties2(system=system))
         self.level: dict[str, object] = yaml.safe_load((root / "levels/L1.yaml").read_text())
         self.digest = file_digest(root / "levels/L1.yaml")
 
@@ -78,6 +79,18 @@ class Tree:
                     "card_version": 1}  # fmt: skip
             path.write_text(yaml.safe_dump(card))
         return file_digest(path)
+
+    def properties(self, system: str, doc: dict[str, object] | None) -> None:
+        """`systems/<system>/properties.yaml`: `doc` with the Level 1 statement (SI-4a) unless
+        it holds its own; None removes the file."""
+        path = self.root / "systems" / system / "properties.yaml"
+        if doc is None:
+            path.unlink(missing_ok=True)
+            return
+        upstream = doc.get("upstream")
+        commit = upstream.get("commit") if isinstance(upstream, dict) else PIN
+        doc = {"level_statement": level_statement(commit=str(commit)), **doc}
+        path.write_text(json.dumps(doc))
 
     def run_dir(self, system: str, run_id: str) -> Path:
         return self.root / "results" / RELEASE / system / run_id
@@ -300,6 +313,14 @@ def _group(
         given = isinstance(v, dict) and "value" in v  # already a fact
         out[k] = v if k in _PLAIN or given else fact(v, commit=commit)
     return out
+
+
+def level_statement(value: bool = True, commit: str = PIN) -> dict[str, object]:
+    """An invented SI-4a fact: the publisher states that an accept is the committed model's own
+    greedy reply to the prompt (`value` false: the file says it does not)."""
+    text = "An accepted proof shows each reply token is the committed model's greedy choice."
+    return {"sources_read": ["README.md"],
+            "accept_is_model_reply": {"value": value, "quotes": [quote(text, commit)]}}  # fmt: skip
 
 
 def properties2(

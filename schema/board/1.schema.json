@@ -949,6 +949,57 @@
           },
           "type": "array"
         },
+        "level_statement": {
+          "$comment": "RFC-0018 SI-4a: the publisher's statement, recorded at the pin in the properties file, that an accept means the reply is the committed model's own computation, decoded greedily, on the prompt. A passed row without it takes no position.",
+          "additionalProperties": false,
+          "properties": {
+            "quotes": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "text": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "url": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "text",
+                  "url"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "read": {
+              "type": "boolean"
+            },
+            "reading": {
+              "type": "boolean"
+            },
+            "sources_read": {
+              "items": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "stated": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "read",
+            "stated",
+            "reading",
+            "quotes",
+            "sources_read"
+          ],
+          "type": "object"
+        },
         "multiple": {
           "$comment": "CO-5: mean steady m over the baseline's GPU-seconds per reply; null (not_applicable) when the row has no steady state",
           "$ref": "#/$defs/value"

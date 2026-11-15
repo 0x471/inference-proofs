@@ -888,6 +888,24 @@
           ],
           "incomplete_sessions": [],
           "ineligible_sessions": [],
+          "level_statement": {
+            "quotes": [
+              {
+                "text": "Under exact match, a `YES` [is meant to show](../docs/limits.md#what-a-yes-covers) that each checked token is the committed integer model's top choice at its position",
+                "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/how-it-works.md#L57-L58"
+              },
+              {
+                "text": "For a prompt of P tokens and a reply of R, r = P − 1 and e = P + R − 1.",
+                "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/how-it-works.md#L49"
+              }
+            ],
+            "read": true,
+            "reading": false,
+            "sources_read": [
+              "guide/how-it-works.md"
+            ],
+            "stated": true
+          },
           "multiple": {
             "grade": "derived",
             "null_reason": "not_applicable",
@@ -2259,6 +2277,35 @@
               "slot": 2
             }
           ],
+          "level_statement": {
+            "quotes": [
+              {
+                "text": "Exit status 0 only when every implied link ran and chained on its own /// axis, every tag sits where its statement says it sits, every position's id /// is the prompt's or the previous position's proved argmax",
+                "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/src/boundary.rs#L1120-L1122"
+              },
+              {
+                "text": "the argmax binds the token a head segment emits to the **lowest-indexed** maximum of the logits it computed, which is the rule the model itself decodes by.",
+                "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/docs/statement.md#L147-L149"
+              },
+              {
+                "text": "| 12 | each matmul's input times the pinned weights into its accumulator | bound |",
+                "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/docs/statement.md#L32"
+              },
+              {
+                "text": "it commits the weights, and the verifier compares it with the published manifest.",
+                "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/docs/statement.md#L136"
+              }
+            ],
+            "read": true,
+            "reading": true,
+            "sources_read": [
+              "prover/src/boundary.rs",
+              "docs/statement.md",
+              "README.md",
+              "prover/README.md"
+            ],
+            "stated": true
+          },
           "multiple": {
             "grade": "derived",
             "null_reason": "not_applicable",
