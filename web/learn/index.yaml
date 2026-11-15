@@ -3,86 +3,43 @@
 # web/draw/learn.py reads. A slug is the page's address on the site.
 title: Learn
 lead: >-
-  What a proof of inference actually proves, where its guarantees stop, and how we test and
-  compare the systems that build these proofs.
+  A proof of inference lets anyone check, without the model's weights, that a reply is what a
+  model, committed in advance, produces for its prompt.
 tracks:
   - id: policy
     name: For policy readers
-    reader: >-
-      Written for analysts, advisers, regulators, and auditors who need to evaluate whether a
-      claim about an AI deployment holds up. No background in cryptography required.
+    reader: No cryptography needed.
     pages:
-      - slug: why-verify
-        title: Why verify
-        summary: >-
-          What it means to verify a claim about an AI model, why doing so is difficult in
-          practice, and which slice of the problem this benchmark addresses.
       - slug: proof-of-inference
-        title: What a proof of inference is
+        title: What a proof shows
         summary: >-
-          A cryptographic receipt that lets anyone check that a committed model gave a specific
-          reply to a prompt, without re-running the model or seeing its weights.
-      - slug: three-ways
-        title: Three ways to check
+          A proof shows a reply is the committed model's greedy reply to its prompt, not whose
+          model it is or that the reply was served.
+      - slug: deployment
+        title: Deployments and treaties
         summary: >-
-          Re-run the computation, trust the hardware enclave, or check a mathematical proof:
-          what each approach asks you to trust, and what it costs.
-      - slug: treaty
-        title: A treaty, stage by stage
-        summary: >-
-          How proofs of inference would fit into an agreement between two states that refuse to
-          share their model weights, walking through what exists today and what does not.
-      - slug: before-you-rely
-        title: Before you rely on a proof
-        summary: >-
-          Nine practical questions to ask before relying on any inference proof system, and
-          where to find the answers on this site.
+          Proving costs a large multiple of serving, and checking needs no weights or trusted
+          chip. A treaty could prove replies sampled from a trusted record.
   - id: engineering
-    name: For engineers
-    reader: >-
-      Written for engineers building, running, or auditing these systems: machine learning
-      engineers new to cryptographic proofs, and cryptographers new to LLM inference.
+    name: For prover teams and engineers
+    reader: ""
     pages:
-      - slug: statement
-        title: The statement
-        summary: >-
-          The exact mathematical relation a proof establishes, which copy of the model it
-          covers, and how two published provers state their own guarantees.
-      - slug: inference
-        title: Inference, for cryptographers
-        summary: >-
-          What a language model actually computes during a forward pass, how production serving
-          works, and why standard floating-point inference is awkward to prove.
-      - slug: proof-systems
-        title: Proof systems, for ML engineers
-        summary: >-
-          How a short random spot-check over polynomials can replace re-running trillions of
-          operations: the core building blocks behind the provers on this ladder.
-      - slug: forward-pass
-        title: Proving a forward pass
-        summary: >-
-          How a transformer layer is translated into constraints a verifier can check: matrix
-          multiplications via sumcheck, non-linearities via lookup tables, and weights via
-          polynomial commitments.
-      - slug: architectures
-        title: Design families
-        summary: >-
-          How different provers represent the computation and commit to the weights, alongside
-          non-cryptographic alternatives: what each design makes cheap, what it makes expensive,
-          and what it has to trust.
-      - slug: cost
-        title: Where the cost goes
-        summary: >-
-          Why proving a reply costs a large multiple of serving it normally, where the GPU time
-          is spent, and how we compute the cost multiple on this benchmark.
       - slug: method
         title: How we compare
         summary: >-
-          One fixed request per model, six empirical checks, a five-petal glyph, and one cost
-          ratio: the rules of our benchmark and the reasoning behind each choice.
+          Every system gets the same request. Those passing the six checks, with a stated
+          security level, are ranked by cost vs serving inside one model.
+      - slug: statement
+        title: The statement
+        summary: >-
+          The systems on the ladder prove a committed, quantized copy's greedy reply. They differ
+          in what one proof covers and what their error bound covers.
+      - slug: forward-pass
+        title: Proving a forward pass
+        summary: >-
+          The verifier tests the prover's committed values at random points. Matrix products with
+          the committed weights are the cheap part to prove.
 glossary:
   slug: glossary
   title: Glossary
-  summary: >-
-    Plain-English definitions of the terms used across this site, with their exact technical
-    meaning where the two differ.
+  summary: The ladder's words and the field's.

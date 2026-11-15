@@ -27,16 +27,17 @@ from .words import (
     FIDELITY_CHECK_TITLE,
     FIDELITY_FIG_TITLE,
     FIDELITY_TITLE,
+    FIGURE_ANCHOR,
     FIGURE_HEAD,
     FRONTIER_WORD,
     FULL_LOAD_WORD,
     NULL_WORD,
-    OF_WHICH,
     PETAL_NAME,
     REFERENCE_WORD,
     SCALE_NOT_RUN,
     SEP,
     STATE_WORD,
+    STEADY_STATE,
     STEP_WORD,
     WHOLE_SESSIONS,
     architecture,
@@ -44,16 +45,15 @@ from .words import (
     labels,
     number,
     params,
+    session_count,
     sig,
     sub_words,
 )
 
-# what the checks do not test (the checks page)
+# what the checks do not test (the checks page, #not-tested; RFC-0018 Non-Goals)
 NOT_TESTED = (
-    "These six checks run each system's own prover and verifier from the outside. They do not "
-    "attempt to cryptographically forge a proof or extract hidden weights: mathematical "
-    "soundness and weight secrecy are reported from the publisher's documentation, not proved "
-    "by our test suite."
+    "No check attempts a forged proof. Soundness and weight secrecy are not tested: the glyph "
+    "reports what the publisher's documents state about them."
 )
 ROW_GLYPH = 3  # the row glyph's unit in px: its arms carry their names (159 by 87 px)
 # a phone's row glyph, px a unit, no names (62.5 by 77.5 px): whole device pixels at 2x
@@ -151,6 +151,21 @@ def scope_note(row, f):
     return WHOLE_SESSIONS.format(n=rung_of(row)["requests_per_session"])
 
 
+def whole_line(row, count):
+    """What a figure of the whole sessions counted, as the line under it says it: their number,
+    then CO-5's label whole ("3 whole sessions of 120 replies")."""
+    label = WHOLE_SESSIONS.format(n=rung_of(row)["requests_per_session"])
+    if count is None:
+        return label
+    return f"{label}{SEP}{session_count(count)}" if count == 1 else f"{count:,} {label}"
+
+
+def steady_line(count):
+    """What a steady figure counted, as the line under it says it (CO-3): "steady state · 3
+    sessions"."""
+    return SEP.join([STEADY_STATE, *([session_count(count)] if count is not None else [])])
+
+
 def serving_missing(b, why="no full load recorded"):
     """A model's serving figure where the board holds none: "not run yet" with no serving run,
     "not measured" with one; the stored cause in its title."""
@@ -159,25 +174,32 @@ def serving_missing(b, why="no full load recorded"):
     return f'<span class="na" title="{e(cause)}">{word}</span>'
 
 
-def multiple_html(row, parts=True, bare=False):
+def to_section(html, to):
+    """A figure linked to its section of the system's page (`to`, its address), on the ladder:
+    the row leads to the page, a figure to where it was taken (DEPTH law 1). None: as it is."""
+    return f'<a class="flk" href="{e(to)}">{html}</a>' if to else html
+
+
+def multiple_html(row, parts=True, bare=False, to=None):
     """CO-5: the multiple; with no steady state, the session cost over serving, labelled as whole
     sessions. With `parts`, its two parts under it (CO-7, `split_html`). `bare` (the ladder, the
-    Scale page): the figures alone, no line of scope and n under any."""
+    Scale page): the figures alone, no line of scope and n under any; `to` (the ladder): the
+    figure and its parts each linked there."""
     _, f, key = lead_figure(row)
-    split = split_html(row, key, bare=bare) if parts else ""
+    split = split_html(row, key, bare=bare, to=to) if parts else ""
     if bare:
-        return fig_html(f, counted(row), sub=BARE, note=whole_note(row, key)) + (
-            split if has(f) else ""
-        )
+        fig = fig_html(f, counted(row), sub=BARE, note=whole_note(row, key))
+        return (to_section(fig, to) if has(f) else fig) + (split if has(f) else "")
     if key == "session_multiple":
-        n = rung_of(row)["requests_per_session"]
         count = f["n"] if f["n"] is not None else counted(row)
-        sub = f"{WHOLE_SESSIONS.format(n=n)}{SEP}n\u00a0=\u00a0{count}"
-        return fig_html(f, counted(row), sub=sub) + split
-    return fig_html(f, counted(row)) + (split if has(f) else "")
+        return fig_html(f, counted(row), sub=whole_line(row, count)) + split
+    if not has(f):
+        return fig_html(f, counted(row))
+    count = f["n"] if f["n"] is not None else counted(row)
+    return fig_html(f, counted(row), sub=steady_line(count)) + split
 
 
-def split_html(row, key, bar=True, of_which=False, bare=False):
+def split_html(row, key, bar=True, bare=False, to=None):
     """CO-7: under a multiple (`key`: the steady one or the whole sessions'), its two parts, each
     a figure with its scope and n (`bare`: the figure alone, where the whole above them says both
     once), after a bar of their shares, where the system generates in a phase of its own; nothing
@@ -195,12 +217,9 @@ def split_html(row, key, bar=True, of_which=False, bare=False):
                f'<rect class="bp" width="{share:.2f}" height="4"/>'
                f'<rect class="bg" x="{share:.2f}" width="{100 - share:.2f}" height="4"/>{nib}</svg>')  # fmt: skip
     n = counted(row)
-    # with no bar, the words tie each part to its whole (in a span: a phone's band sets the parts
-    # right beside their whole and leaves the words out)
-    pre = f'<span class="ow">{e(OF_WHICH)} </span>' if of_which else ""
     line, note = (BARE, whole_note(row, key)) if bare else (None, None)
-    out = "".join(f'<span class="part {c}"><span class="pl">{pre}{e(w)}</span>'
-                  f"{fig_html(f, n, sub=line, note=note)}</span>"
+    out = "".join(f'<span class="part {c}"><span class="pl">{e(w)}</span>'
+                  f"{to_section(fig_html(f, n, sub=line, note=note), to)}</span>"
                   for c, w, f in (("pp", w1, f1), ("pg", w2, f2)))  # fmt: skip
     return f'<span class="split">{svg}{out}</span>'
 
@@ -211,7 +230,7 @@ def pct(v):
 
 
 def fidelity_against(rung):
-    """The rung's 8-bit and 4-bit copies' Fidelity in one line ("Q8_0 98.4 % · Q4_K_M 90.6 %"),
+    """The rung's Q8_0 and Q4_K_M copies' Fidelity in one line ("Q8_0 98.4 % · Q4_K_M 90.6 %"),
     each that ran; "" where none did."""
     tf = rung.get("teacher_forced") or {}
     by = {c["id"]: c for c in tf.get("controls") or []}
@@ -326,19 +345,35 @@ FIGURES = ("multiple", "cost", "check-time", "fidelity")  # the figure columns, 
 
 def heads():
     """The figure columns' heads (`FIGURE_HEAD`: no word its unit says), each linked to its
-    definition on the checks page."""
-    return [defined(FIGURE_HEAD[f], f) for f in FIGURES]
+    definition on the checks page (Fidelity to the figure's, not the check's: FIGURE_ANCHOR)."""
+    return [defined(FIGURE_HEAD[f], FIGURE_ANCHOR.get(f, f)) for f in FIGURES]
+
+
+def linked_fig(html, f, to):
+    """A ladder figure linked to its section (`to_section`); a missing one ("none" and why) as it
+    is."""
+    return to_section(html, to) if has(f) else html
 
 
 def row_html(row, rung):
     glyph = glyph_svg(ROW_GLYPH, states(row), names=[PETAL_NAME[p["id"]] for p in row["glyph"]])
     # the same petals with no names, drawn in place of the first on a phone (words.css shows one)
     glyph += glyph_svg(PHONE_GLYPH, states(row), cls="pie-svg gsh")
-    cost = row_cost(row)
+    cost, verify = row_cost(row), row["figures"]["verify_seconds_per_reply"]
+    # each figure leads to its section of the system's page: the multiple, the cost and the
+    # verify time to Cost, where their scope and n are printed (Fidelity's word links its own)
+    at = href(row)
     cells = (
-        ("cm", multiple_html(row, bare=True)),
-        ("cc", fig_html(cost, counted(row), sub=BARE, note=scope_note(row, cost))),
-        ("ct", fig_html(row["figures"]["verify_seconds_per_reply"], counted(row), sub=BARE)),
+        ("cm", multiple_html(row, bare=True, to=f"{at}#cost")),
+        (
+            "cc",
+            linked_fig(
+                fig_html(cost, counted(row), sub=BARE, note=scope_note(row, cost)),
+                cost,
+                f"{at}#cost",
+            ),
+        ),
+        ("ct", linked_fig(fig_html(verify, counted(row), sub=BARE), verify, f"{at}#cost")),
         ("ck", fidelity_word(row)),
     )
     figs = "".join(f'<td class="{c}"><span class="lbl">{h}</span>{html}</td>'
@@ -469,6 +504,14 @@ def build_index():
   <div class="wrap">{not_run_html()}</div>
 </main>
 {footer()}"""
-    models = ", ".join(r["model"] for r in S.V["rungs"])
-    desc = f"Provers on {models}: six checks each, and what a proved reply costs against serving."
-    return page("Inference proofs", desc, body, "home", "", "home")
+    return page("Inference proofs", home_words(), body, "home", "", "home")
+
+
+def home_words():
+    """The home page in a sentence (its description and share text): what the systems prove, the
+    largest model one proved on (OR-6; left out while there is none), and what each row holds."""
+    front = S.V["frontier"]
+    rung = next((r for r in S.V["rungs"] if front and r["id"] == front["rung"]), None)
+    size = f" up to {params(rung['parameters_total'])} parameters" if rung else ""
+    return (f"Systems that prove which model wrote a reply, on open-weights models{size}: six "
+            "checks each, and the cost of a proved reply as a multiple of serving it.")  # fmt: skip

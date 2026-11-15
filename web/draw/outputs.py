@@ -29,7 +29,7 @@ from .chrome import (
 )
 from .hexagon import glyph_svg
 from .inks import COBALT, GROUND, LINE, MUTED, PAPER, ratio
-from .learn import glossary, glossary_entries
+from .learn import glossary, glossary_entries, sections
 from .mark import lockup_svg, mark_svg, stacked_svg, tile_svg
 from .overview import (
     BARE,
@@ -40,18 +40,17 @@ from .overview import (
     name_of,
     states,
 )
-from .scale import DIMS
+from .scale import scale_words
 from .words import (
-    CHECK_HELD,
+    CHECK_LINE,
     CHECK_NAME,
     CHECKS_DESC,
     FIGURE_HEAD,
+    FIGURE_LINE,
     FIGURE_NAME,
-    FIGURE_RULE,
-    MANDATE_BELIEF,
-    OF_WHICH,
+    MANDATE_DESC,
     PETAL_NAME,
-    PETAL_RULE,
+    PETAL_QUESTION,
     architecture,
     e,
 )
@@ -72,13 +71,9 @@ TIER = {"system": 0, "model": 1, "petal": 2, "check": 3, "figure": 4, "page": 4,
 GROUP = {"system": "Systems", "model": "Models", "petal": "Glyph", "check": "Checks",
          "figure": "Figures", "page": "Pages", "learn": "Learn", "term": "Glossary",
          "notrun": "Not run"}  # fmt: skip
-
-
-def scale_words():
-    """The Scale page in a line: its figures' names in lower case, as words of a sentence."""
-    names = [n.lower() for _, n, _ in DIMS]
-    return (f"Every system on one log scale, model by model: {', '.join(names[:-1])} and "
-            f"{names[-1]}.")  # fmt: skip
+# the words a Learn page is found by besides its title, summary, track and sections' heads: the
+# words a reader types for what a page holds without naming it so
+LEARN_TERMS = {"deployment": "treaty between states enclave sampling"}
 
 
 def search_entries():
@@ -109,12 +104,14 @@ def search_entries():
             "",
             rung["id"],
         )
+    # a petal, a check, a figure in one line each (the checks page's: the petal's question, the
+    # check's held rule, what the figure is), a pointer to its rule
     for pid in S.V["petals"]:
-        add("petal", PETAL_NAME[pid], f"{CHECKS_PAGE}#{pid}", PETAL_RULE[pid][0], "")
+        add("petal", PETAL_NAME[pid], f"{CHECKS_PAGE}#{pid}", PETAL_QUESTION[pid], "")
     for c in S.V["checks"]:
-        add("check", CHECK_NAME[c], f"{CHECKS_PAGE}#{c}", filled(CHECK_HELD[c]), "")
-    for f, lines in FIGURE_RULE.items():
-        add("figure", FIGURE_NAME[f], f"{CHECKS_PAGE}#{f}", filled(lines[0][1]), "")
+        add("check", CHECK_NAME[c], f"{CHECKS_PAGE}#{c}", filled(CHECK_LINE[c]), "")
+    for f, line in FIGURE_LINE.items():
+        add("figure", FIGURE_NAME[f], f"{CHECKS_PAGE}#{f}", filled(line), "")
     add(
         "page",
         "Checks",
@@ -135,15 +132,16 @@ def search_entries():
         "page",
         "Mandate",
         MANDATE_PAGE,
-        MANDATE_BELIEF,
+        MANDATE_DESC,
         PAGE_MARK,
-        "mandate about who operator conflicts",
+        "mandate about who runs",
     )
     if lv := S.V.get("learn"):
         add("learn", lv["title"], LEARN_PAGE, lv["lead"], PAGE_MARK, "learn explain guide intro")
         for t in lv["tracks"]:
             for p in t["pages"]:
-                add("learn", p["title"], f"/{p['slug']}", p["summary"], "", t["name"])
+                found = [t["name"], *sections(p), LEARN_TERMS.get(p["slug"], "")]
+                add("learn", p["title"], f"/{p['slug']}", p["summary"], "", " ".join(found))
         g = glossary()
         add("learn", g["title"], f"/{g['slug']}", g["summary"], "", "terms words definitions")
         for name, tid, first in glossary_entries():
@@ -154,6 +152,25 @@ def search_entries():
 
 
 # ------------------------------------------------------------------ vercel.json, from the build
+# Addresses the site no longer serves, each with the page that took its place: pages of the
+# earlier site, then the Learn pages merged into others. A Learn page may not take one of these
+# addresses (build.py, `setup`): its redirect would hide it.
+GONE = {
+    "/criteria": CHECKS_PAGE,
+    "/reference": "/",
+    "/release": "/",
+    "/targets": "/",
+    "/why-verify": "/proof-of-inference",
+    "/before-you-rely": "/proof-of-inference",
+    "/three-ways": "/deployment",
+    "/treaty": "/deployment",
+    "/inference": "/forward-pass",
+    "/proof-systems": "/forward-pass",
+    "/architectures": "/statement",
+    "/cost": "/method",
+}
+
+
 # Headers, redirects and cache rules depend on the build's own output (the inline script's hash,
 # the pages written), so the build writes the whole file. Canonical JSON (iproofs fmt).
 def vercel_json():
@@ -174,8 +191,8 @@ def vercel_json():
     )
     forever = [{"key": "Cache-Control", "value": "public, max-age=31536000, immutable"}]
     first = href(S.ROWS[0]) if S.ROWS else "/"
-    # pages of the earlier site, and the systems of the level with no page in this build
-    gone = {"/criteria": CHECKS_PAGE, "/reference": "/", "/release": "/", "/targets": "/"}
+    # the addresses gone (GONE), and the systems of the level with no page in this build
+    gone = dict(GONE)
     for sid in S.V["planned"]:
         if sid not in S.PAGE:
             gone[f"/{sid}"] = "/"
@@ -316,8 +333,8 @@ def system_card(pid):
     label, lead = lead_fig(row, bare=True)
     n = counted(row)
     _, f, key = lead_figure(row)
-    if parts := parts_of(row, key):  # CO-7: the two parts beside the figure
-        pts = "".join(f'<span class="pt"><span class="pw">{e(OF_WHICH)} {e(w)}</span>'
+    if parts := parts_of(row, key):  # CO-7: the two parts beside the figure, by their names alone
+        pts = "".join(f'<span class="pt"><span class="pw">{e(w)}</span>'
                       f'{fig_html(p, n, sub=BARE)}</span>' for w, p in parts)  # fmt: skip
         lead = fig_html(f, n, sub=BARE) + f'<span class="pts">{pts}</span>'
     head, _, why = standing(row).partition(": ")

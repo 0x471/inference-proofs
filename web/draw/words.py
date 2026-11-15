@@ -29,45 +29,85 @@ def quoted(text):
 # ------------------------------------------------------------------ the six checks (RFC-0018)
 CHECK_NAME = {"run": "Run", "model": "Model", "prompt": "Prompt", "reply": "Reply",
               "no_weight_file": "Verify without weights", "fidelity": "Fidelity"}  # fmt: skip
-# {slots}, {attempts} and {reply_tokens} are the level file's constants (`overview.filled`)
+# Each check's rule, RFC-0018's table ("Held when", "Failed when") in short, as a condition in the
+# present tense. {slots}, {attempts}, {reply_tokens} and {reference} are the level file's
+# constants (`overview.filled`); 3 of 3 and 0.05 (fidelity.alpha) are typed as the level's.
 CHECK_HELD = {
-    "run": "Across all {slots} sessions (each on its own prompt set), the system "
-    "returned an accepted proof for every request, running the published code at its pinned "
-    "commit without patches or proof-weakening flags.",
-    "model": "When we modified a single model weight and generated a proof, the verifier "
-    "rejected it; when we took an honest proof and swapped the weight commitment in the "
-    "verifier's statement, the verifier rejected that too (3\u00a0of\u00a03\u00a0trials each).",
-    "prompt": "When we changed a single prompt token in the statement given to the verifier, the "
-    "verifier rejected the proof in 3\u00a0of\u00a03\u00a0trials.",
-    "reply": "Every accepted proof covers all {reply_tokens} reply tokens, and when we altered "
-    "the first token, the last token, or a randomly chosen interior token in the verifier's "
-    "statement, the verifier rejected the proof in 3\u00a0of\u00a03\u00a0trials each.",
-    "no_weight_file": "Every counted verification ran on a CPU machine with no GPU attached and "
-    "no model weight file on disk, and our trace of every file the verifier opened confirmed it "
-    "never read a weight file.",
-    "fidelity": "On our fidelity prompt suite, the system's proved replies matched the "
-    "publisher's unquantised reference weights for more leading tokens than our calibration bar "
-    "did. That bar is the highest-scoring intentionally damaged copy of the model (chosen from "
-    "damaged copies that every honest quantisation still outperforms). Passing this check is a "
-    "floor against broken weights; the Faithful model petal grades how close the replies "
-    "actually are.",
+    # Terms (Slot, Session: complete), SE-1
+    "run": "The model's prompts are split into {slots} slots. Each slot has a complete session: a "
+    "job from a cold start whose prove call exits 0 with an accepted proof for every request. It "
+    "is built from the public pin, unpatched, with no weakening flag.",
+    # P1 against the commitment of W, CH-1a (p1_refusals: an outcome the publisher documents at
+    # the pin as meaning the weights are not the committed ones; a layout guard is not one), C3
+    "model": "Proving with one weight changed, against the commitment to the unchanged weights, "
+    "gives no accepted proof in 3\u00a0of\u00a03 trials. A prove call that makes no proof counts "
+    "only when its publisher documents, at the pinned commit, that this outcome means the weights "
+    "are not the committed ones. An honest proof checked against the changed weights' commitment "
+    "is refused in 3\u00a0of\u00a03 trials.",
+    "prompt": "With one prompt token changed, at a position set by a seed, the verifier refuses "
+    "the proof in 3\u00a0of\u00a03 trials.",
+    "reply": "Every accepted proof covers all {reply_tokens} reply tokens. With one reply token "
+    "changed, the verifier refuses the proof at the first position, at the last, and at one "
+    "interior position set by a seed: 3\u00a0of\u00a03 trials each.",
+    # the table's (a) to (c), CH-4a (the re-verify counts in the run's image, when it accepts)
+    "no_weight_file": "Every counted verdict comes from a verify call with no GPU visible and no "
+    "file of the model on its filesystem, and the trace of the files it opened names none. A "
+    "verdict reached with a GPU visible counts when the same proof, verified again in the run's "
+    "image on a host with no GPU, is accepted under these conditions.",
+    "fidelity": "The replies the counted sessions proved score above the bar, by a paired "
+    "one-sided sign-flip test at p\u00a0<\u00a00.05.",
 }
-# after the colon, what an accepted trial is: the verifier accepted a false statement (RFC-0018
-# §The glyph)
+# CH-8: an accepted trial is failed only once the system's own command accepts the same input
 CHECK_FAILED = {
-    "run": "At least one prompt set failed to finish within {attempts} attempts, the system's "
-    "own code rejected the request, or a counted session ran with a flag that weakens the proof.",
-    "model": "The verifier accepted a tampered trial: it accepted a proof for weights other than "
-    "the committed model.",
-    "prompt": "The verifier accepted a tampered trial: it accepted a proof for a prompt other "
-    "than the one that was proved.",
-    "reply": "A proof covered fewer reply tokens than requested, or the verifier accepted a "
-    "tampered trial with an altered reply token.",
-    "no_weight_file": "The file-access trace showed the verifier opening a model weight file, or "
-    "a verify call required one on disk.",
-    "fidelity": "The calibration bar scored above the system's replies: the proved replies "
-    "matched the publisher's original weights for fewer leading tokens than an intentionally "
-    "damaged copy of the model.",
+    "run": "A slot has {attempts} incomplete runs, or a recorded refusal by the system's own code "
+    "with a reason about its inputs, or a counted session used a weakening flag.",
+    "model": "A trial was accepted, and the system's own command, run outside our adapter, "
+    "accepted the same changed input.",
+    "prompt": "A trial was accepted, and the system's own command, run outside our adapter, "
+    "accepted the same changed input.",
+    "reply": "A proof covered fewer than {reply_tokens} reply tokens, or a trial was accepted and "
+    "the system's own command, run outside our adapter, accepted the same changed input.",
+    "no_weight_file": "The trace names a file of the model, or a verify call needed one.",
+    "fidelity": "The bar scores above the replies, by the same test. With neither shown, the "
+    "check is undecided (not resolved).",
+}
+# a check's lines after held and failed: Run's cap (SE-4: 40 and 120 USD are the level file's
+# sessions.cap_usd and the Maverick rung's cap_usd, typed as the level's; the view carries
+# neither) and which session counts (SE-3, SE-3a); Fidelity's score and bar (FI-1 to FI-6)
+CHECK_MORE = {
+    "run": (
+        ("cap", "A session that reaches the spending cap, 120\u00a0USD on Llama 4 Maverick and "
+         "40\u00a0USD on the others, stops and is incomplete."),
+        ("counted", "A slot counts its first complete session by start time, never one chosen for "
+         "its figures. A session that missed Verify without weights only for a visible GPU, and "
+         "was never verified again, gives its slot to the next complete session of the same "
+         "image and adapter commit that meets the check."),
+    ),
+    "fidelity": (
+        ("score", "For one reply, the number of leading tokens equal to the original's reply to "
+         "the same prompt, 0 to {reply_tokens}. The original is the model publisher's own "
+         "weights: {reference}."),
+        ("bar", "Among the damaged controls that every honest control scores above, the one with "
+         "the highest mean score. The honest controls are the original's second run and its Q8_0 "
+         "and Q4_K_M copies. A system's page lists the damaged ones. With none, the model has no "
+         "bar and the check is undecided (not resolved) on every row."),
+    ),
+}  # fmt: skip
+# a check in one line, for its search entry: the held rule with every condition kept, about 95
+# characters at most (two lines of the search list); {slots} and {reply_tokens} as above
+CHECK_LINE = {
+    "run": "{slots} slots, each with a complete cold-start session: public pin, unpatched, no "
+    "weakening flag.",
+    "model": "Commit, change a weight: no accepted proof. Honest proof, changed commitment: "
+    "refused. 3\u00a0of\u00a03 each.",
+    "prompt": "One prompt token changed, at a seeded position: the verifier refuses, "
+    "3\u00a0of\u00a03 trials.",
+    "reply": "All {reply_tokens} reply tokens covered. First, last, seeded interior token changed: "
+    "refused, 3\u00a0of\u00a03 each.",
+    "no_weight_file": "Verdicts, or an accepted second verify, with no GPU visible and no model "
+    "file present or opened.",
+    "fidelity": "The counted sessions' proved replies score above the bar: paired sign-flip test, "
+    "p\u00a0<\u00a00.05.",
 }
 STATE_WORD = {"held": "held", "failed": "failed", "undecided": "undecided"}
 
@@ -81,141 +121,167 @@ STEP_WORD = {"green": "green · in full", "amber_upper": "amber · in part",
              None: "undecided"}  # fmt: skip
 # why a petal is red or hollow (GL-1, GL-3); the checks page defines each at #cause-<id>
 CAUSE_WORD = {"not_stated": "not stated", "stated": "stated, short of amber",
-              "check_failed": "our check failed", "not_read": "not read yet",
-              "not_decided": "our check undecided",
-              "proof_build_not_run": "no proof build yet"}  # fmt: skip
-# each cause in a line, on the checks page (#cause-<id>)
+              "check_failed": "a check or proof build failed", "not_read": "not read yet",
+              "not_decided": "our Fidelity check undecided or not recorded",
+              "proof_build_not_run": "no matching proof build"}  # fmt: skip
+# each cause in a line, on the checks page (#cause-<id>), opened by how it is drawn: the checks page
+# draws that opening as the chip a system page prints for the petal (PETAL_CAUSE_DRAW), the words
+# kept for a screen reader
 PETAL_CAUSE_RULE = {
-    "not_stated": "Red (open outline): the publisher's documentation at the pinned commit does "
-    "not address this property. Its name is not struck through.",
-    "stated": "Red (filled): the publisher's documentation states that this property does not "
-    "hold, or states parameters that fall below the minimum threshold for amber.",
-    "check_failed": "Red (filled): one of our own verification checks failed, or our clean "
-    "build of the publisher's formal proof failed or reported axioms different from those "
-    "declared. The petal's row names which check failed.",
-    "not_read": "Hollow: we have not yet finished reading and recording the publisher's "
-    "documentation for the commit this row runs.",
-    "not_decided": "Hollow: this petal depends on a benchmark measurement whose check is still "
-    "undecided or has not been recorded yet.",
-    "proof_build_not_run": "Hollow: the publisher documents a formal proof that would qualify "
-    "for amber or green on Machine-checked, but we have not yet recorded a clean build of that "
-    "theorem at the pinned commit and toolchain.",
+    "not_stated": "Red (open outline): the publisher's documents read at the pinned commit are "
+    "silent on the property. Silence is red, never undecided.",
+    "stated": "Red (filled): the publisher states that the property does not hold, or what it "
+    "states does not reach amber.",
+    "check_failed": "Red (filled): a check failed, or the matching build of the publisher's "
+    "machine-checked proof failed or reported axioms other than the declared ones.",
+    "not_read": "Hollow: our record of the publisher's documents is missing, in another form or "
+    "read at a commit other than the one the row runs, or the row has no recorded commit. Not "
+    "read is not silent: it is undecided, never red.",
+    "not_decided": "Hollow, Faithful model only: the Fidelity check is undecided, or the row has "
+    "no fidelity record or no scores.",
+    "proof_build_not_run": "Hollow, Machine-checked only: the publisher states a machine-checked "
+    "proof, and no build of the named theorem is recorded at the pinned commit with the "
+    "publisher's toolchain. None can match where the publisher names no toolchain.",
 }
+# how a cause's opening words are drawn: (state, form) of the chip, its word the step's (STEP_WORD)
+PETAL_CAUSE_DRAW = {"Red (open outline)": ("red", "open"), "Red (filled)": ("red", ""),
+                    "Hollow": ("hollow", "")}  # fmt: skip
 BASIS_WORD = {"statement": "the publisher's documents", "test": "our tests"}
 # the From cell of a petal decided on the publisher's documents when a fact it read carries a note
-# (the board petal's `reading`), and what that means, on the checks page (#reading)
+# (the board petal's `reading`), and what that means, on the checks page (#reading, a block of its
+# own after the causes, headed by BASIS_READING[1]; GL-1, GL-5)
 BASIS_READING = ("the publisher's documents", "our reading")
+# a system page's From line (GL-1, GL-5): the label over a silent red's documents read, and the
+# words, linked to #reading, that say a fact behind the step is our reading
+DOCS_READ, AS_READ = "Documents read", "as we read them"
 READING_RULE = (
-    "Our reading: the step rests on our interpretation of a passage in the publisher's "
-    "documentation rather than an explicit sentence stating the fact directly. We print the "
-    "publisher's quotes beside our reading."
+    "At least one fact behind the petal's step is our reading, not the publisher's words. The "
+    "publisher's quotes are printed with the petal."
 )
 # Machine-checked's scope card: what is machine-checked, for which program (printed, sets no state)
 SCOPE_ROW_WORD = {"soundness": "Soundness", "zero_knowledge": "Zero knowledge",
                   "completeness": "Completeness"}  # fmt: skip
-SCOPE_COL_WORD = {"protocol": "Protocol", "verifier_run": "Verifier run",
-                  "prover_run": "Prover run"}  # fmt: skip
+SCOPE_COL_WORD = {"protocol": "Protocol", "verifier_run": "Verifier we run",
+                  "prover_run": "Prover we run"}  # fmt: skip
 SCOPE_VALUE_WORD = {"machine_checked": "machine-checked", "paper": "on paper", "tested": "tested",
                     "not_stated": "not stated"}  # fmt: skip
 # Weights hidden: what kind of value a proof leaves visible (only fitted_to_weights sets a step)
 VISIBLE_TAG_WORD = {"statement_io": "the statement's input or output", "shape": "shape",
                     "side_channel": "side channel",
                     "fitted_to_weights": "fitted to the weights"}  # fmt: skip
+# the head of the visible values not tagged fitted, after those that are: "8 others" (an untagged
+# item's quote does not say it is fitted; that does not show it is not, AGENTS.md rule 9)
+VISIBLE_OTHERS = "others"
+# each petal's question, RFC-0018's petal table ("rung" said "model"): its first line on the checks
+# page, and its search line
+PETAL_QUESTION = {
+    "unforgeable": "The bound the publisher states on a false reply being accepted: whether it is "
+    "proved, and whether it covers what the row runs.",
+    "weights_hidden": "What the publisher states and proves about a proof showing nothing of the "
+    "weights' values.",
+    "faithful_model": "How close the proved replies stay to the model publisher's own release, "
+    "against the model's controls.",
+    "machine_checked": "How far a machine-checked proof of soundness reaches toward the verifier "
+    "the row runs.",
+    "no_trusted_party": "What soundness rests on besides cryptographic assumptions.",
+}
 # what each step means for each petal, RFC-0018's tables in short: (green, amber in part, amber
-# in lesser part, red)
+# in lesser part, red). The first line that matches decides (§Reading the tables); 128, 100 and 80
+# are RFC-0018's cut points, 0.05 the level's fidelity.alpha
 PETAL_RULE = {
     "unforgeable": (
-        "The publisher states a proved soundness bound against any prover (arbitrary or "
-        "computationally bounded) showing that a false reply is accepted with probability at "
-        "most 2^-128 per term (where a term 2^-t or q/2^t has exponent t at least 128). The "
-        "bound must cover the actual benchmark run: one proof per reply (or a batch bound that "
-        "holds for each member checked on its own), using the row's parameters, with its "
-        "preconditions satisfied by the row's files, and with the verifier binary we run proved "
-        "or stated to implement the verifier the bound analyses.",
-        "Every condition for green holds, except the smallest exponent in the proved bound sits "
-        "between 100 and 127 bits instead of reaching 128.",
-        "The publisher states a bound whose exponents are at least 100 bits on a conjectured "
-        "(or unstated) basis, or states a proved bound of at least 80 bits that either has an "
-        "exponent below 100 or does not fully cover the run. For example, a proved bound lands "
-        "here if the adversary model is left unstated, if the bound is given per layer or per "
-        "round rather than per reply, if a proof covers multiple replies or only holds when a "
-        "whole batch is checked together, if the parameters or preconditions are not shown for "
-        "the row's files, or if the verifier binary is not stated to implement the protocol "
-        "analysed.",
-        "The publisher states no soundness bound, assumes a restricted prover, states a proved "
-        "bound with an exponent below 80 bits, states a conjectured (or unspecified) bound with "
-        "an exponent below 100 bits, or our Model, Prompt, or Reply check failed.",
+        "A proved bound that covers the run, every exponent 128 or more.",
+        "The same, with every exponent 100 or more and one under 128.",
+        "Any other stated bound that is not red: conjectured or its basis not said, not covering "
+        "the run, or with an exponent under 100. The reason names the first condition that "
+        "fails.",
+        "No bound with an exponent is stated, the bound holds only against a weaker prover, or an "
+        "exponent is under 80 (under 100 for a bound not proved). A failed Model, Prompt or Reply "
+        "check also sets it.",
     ),
     "weights_hidden": (
-        "Our Verify without weights check held, the publisher states a proved zero-knowledge "
-        "theorem for the configuration the row runs, the prover and verifier binaries are proved "
-        "or stated to implement that protocol, and the publisher lists everything the proof and "
-        "statement leave visible, with none of those visible values fitted to the model weights.",
-        "Our Verify without weights check held and the publisher states a proved zero-knowledge "
-        "theorem, but the theorem covers only the abstract protocol, the binaries are only "
-        "expected (or not stated) to implement it, the publisher does not list what remains "
-        "visible, or the visible parameters include values fitted to the weights (such as "
-        "quantisation scales).",
-        "Our Verify without weights check held and the publisher states that the model weights "
-        "remain hidden, but cites no proved zero-knowledge theorem.",
-        "The verifier requires the model weights, the publisher states that weights are not "
-        "hidden (or says nothing about weight secrecy), or our Verify without weights check "
-        "failed.",
+        "The publisher states a zero-knowledge theorem proved for the configuration the row runs, "
+        "batch size included, and states that its programs implement it. It publishes a list of "
+        "what stays visible, with nothing on it whose quote says it depends on or is fitted to "
+        "the weights.",
+        "The publisher states a proved zero-knowledge theorem, and a condition of green is "
+        "missing.",
+        "The publisher states that the weights stay hidden and proves no zero-knowledge theorem.",
+        "The Verify without weights check failed, the verifier is given the weights, or the "
+        "publisher states that they are not hidden or states nothing.",
     ),
+    # FM-5, FM-6, FM-7 in the RFC's order: each line excludes the one above it ("short of
+    # green", "Otherwise"); FM-1 and FM-2 (failed, undecided) are the red line and the summary's
     "faithful_model": (
-        "In a single-request-at-a-time fidelity run, the system's proved replies score "
-        "significantly above the midpoint between a second run of the publisher's unquantised "
-        "model and its 8-bit quantised copy (Q8_0).",
-        "The proved replies score significantly above the midpoint between the 8-bit (Q8_0) and "
-        "4-bit (Q4_K_M) quantised copies, or they clear the upper (green) midpoint in a batched "
-        "fidelity run of more than one request at a time.",
-        "Our Fidelity check held against the damaged calibration bar, but the replies did not "
-        "clear the midpoint between Q8_0 and Q4_K_M, the system's claim card allows tokens other "
-        "than the model's top token, or one of the reference or quantised controls is missing "
-        "or failed.",
-        "Our Fidelity check failed.",
+        "Shown above the midpoint of the original's second run and Q8_0, in a fidelity run "
+        "recorded as one request at a time.",
+        "Shown above the midpoint of Q8_0 and Q4_K_M, short of green.",
+        "Otherwise, with the Fidelity check held. A row with the check held is also here, whatever "
+        "the midpoints show, when no claim card is found or the card's policy accepts tokens other "
+        "than the proved model's own top token. So is one with no stored test against the "
+        "midpoints, or with a midpoint whose control is missing, failed or scored on another "
+        "number of replies.",
+        "The Fidelity check failed.",
     ),
     "machine_checked": (
-        "A machine-checked soundness theorem covers the actual verifier program the row runs, "
-        "from the raw bytes it reads to the verdict it returns, with its trusted base explicitly "
-        "listed and no unverified input-translation code outside the theorem, and we have "
-        "recorded a clean build of that proof at the pinned commit using the publisher's pinned "
-        "toolchain.",
-        "Our recorded build of the formal proof succeeded, and the theorem covers the full "
-        "protocol and the statement encoding the model, but it does not cover the executable "
-        "verifier program itself, leaves out the list of axioms and trusted base, or relies on "
-        "unverified code to translate the model into the theorem's input.",
-        "Our recorded build of the formal proof succeeded, but the theorem covers only a "
-        "component of the system (such as a primitive or gadget), or covers only the abstract "
-        "protocol or model statement in isolation.",
-        "The publisher states no machine-checked proof, our recorded build failed or reported "
-        "axioms different from those declared, or a theorem that would have been green was "
-        "lowered because our Model, Prompt, or Reply check failed.",
+        "A machine-checked soundness theorem covers the verifier the row runs, from the bytes it "
+        "reads to its verdict. Its trusted base is listed, and no named code that reads inputs "
+        "sits outside the proof.",
+        "The theorem covers the whole protocol and the relation that encodes the model but not the "
+        "verifier the row runs, or it covers that verifier and a condition of green is missing.",
+        "The theorem covers a component, the constraints against a specification or a "
+        "sub-protocol, or the whole protocol without the relation that encodes the model, or the "
+        "reverse.",
+        "The publisher states that nothing is machine-checked or states nothing, or the matching "
+        "build of the theorem failed or reported axioms other than the declared ones. A failed "
+        "Model, Prompt or Reply check also sets it where the stated step is green.",
     ),
+    # NT-4 comes before NT-5 and NT-6: green and amber in part carry NT-6's "publicly checkable or
+    # not said"; "nothing else" answers the question printed above it (PETAL_QUESTION)
     "no_trusted_party": (
-        "The publisher's documentation shows that soundness rests on standard cryptographic "
-        "assumptions alone, with no setup step that ever generated a secret. Public parameters "
-        "fixed before hashing or derived deterministically from public seeds qualify here.",
-        "Setup generated a secret through an open multi-party ceremony with a publicly "
-        "verifiable transcript, where the secret remains unknown as long as at least one "
-        "participant was honest.",
-        "Verification relies on a ceremony among a fixed set of parties, an optimistic challenge "
-        "window requiring an active challenger, or interactive or designated-verifier proofs "
-        "that cannot be checked by arbitrary third parties.",
-        "Verification relies on a setup run by a single party, a hardware vendor's attestation "
-        "key, another trusted key, or the publisher's documentation does not state what setup "
-        "trust is required.",
+        "Soundness rests on nothing else: no setup produced a secret, as the publisher states or as "
+        "we read its words. Public files fixed before the hash, or derived by a fixed rule from "
+        "public inputs, do not count against it. Anyone can check a proof file, or the publisher "
+        "does not say.",
+        "A setup produced a secret in an open ceremony with a public transcript, whose secret stays "
+        "unknown if one participant was honest. Anyone can check a proof file, or the publisher "
+        "does not say.",
+        "Soundness needs one honest party among a fixed set or a challenger in a challenge "
+        "window, or the check is interactive or for a designated verifier, not a proof file "
+        "anyone can check.",
+        "Soundness rests on a setup run by one party, a hardware key or another trusted key, or "
+        "what it rests on is not stated.",
     ),
 }
-# the checks page: why a petal is hollow, and that silence is not
-HOLLOW_RULE = (
-    "A petal is drawn as a hollow outline in the muted ink while it is still undecided: either "
-    "we have not yet recorded the system's properties file at the pinned commit, its fidelity "
-    "run has not finished, or (for Machine-checked) we have not yet run a clean build of the "
-    "cited formal proof. Silence in the publisher's documentation never makes a petal hollow: if the "
-    "documents at the pinned commit do not state a property, the petal is red with an open "
-    "outline."
-)
+# a petal's terms, defined under its four steps, as (label, words)
+PETAL_MORE = {
+    "unforgeable": (
+        ("covers the run", "The bound holds for the row's parameters and against any prover: one "
+         "that controls its own machine, under no hardware or third-party condition. It covers one "
+         "reply: stated per reply, or per proof with one proof a request. It covers the row's "
+         "batch: a batch of 1, or a bound for each member checked alone. A batch size not "
+         "recorded is not covered. The publisher's or the harness's records show its "
+         "conditions hold for the row's files. The verifier the row runs is proved or stated to "
+         "implement what the bound is about."),
+        ("exponent", "An error term 2^-t or q/2^t has exponent t. Exponents are read as the "
+         "publisher states them, and no bits figure is computed."),
+    ),
+    "faithful_model": (
+        ("shown above", "The Fidelity check's sign-flip test gives p\u00a0<\u00a00.05 for the "
+         "row's scores against the midpoint of the two controls' mean scores."),
+    ),
+    "machine_checked": (
+        ("build", "Each step above red needs a matching build of the named theorem: one recorded "
+         "at the pinned commit with the publisher's toolchain. Level 1 reads that record and makes "
+         "none."),
+        ("scope card", "Printed on the system's page, it sets no state: the petal grades soundness "
+         "only."),
+    ),
+    # Q12: printed under the four steps, as the question is printed over them
+    "no_trusted_party": (
+        ("", "This petal does not grade which model a commitment names."),
+    ),
+}  # fmt: skip
 # the checks whose failure a petal's red names (PETAL_RULE), so a petal and its checks light
 # together on a system page
 PETAL_CHECKS = {"unforgeable": ("model", "prompt", "reply"), "weights_hidden": ("no_weight_file",),
@@ -223,23 +289,30 @@ PETAL_CHECKS = {"unforgeable": ("model", "prompt", "reply"), "weights_hidden": (
                 "no_trusted_party": ()}  # fmt: skip
 # ------------------------------------------------------------------ the figures (RFC-0018 §Cost, FI-7)
 # The figures the checks page defines: the anchor on the checks page, the figure's name, and the
-# definition as (label, words) lines. {slots}, {gap} (the release-group gap), {full} (the share
-# of the highest rate that is full load) and {top} (the ladder's top concurrency) are the level
-# file's constants; {reference} is each model's reference precision.
+# definition as (label, words) lines, a line with no label its figure's own. {slots}, {gap} (the
+# release-group gap), {full} (the share of the highest rate that is full load) and {top} (the
+# ladder's top concurrency) are the level file's constants; 3 and 5 % (steady.min_later_groups,
+# steady.tolerance), 1 (baseline.ladder's first rung), 64 and 512 (kl.texts, kl.tokens) are typed
+# as the level's. "fidelity-figure" is the figure the ladder prints as Fidelity (SI-9); "fidelity"
+# is the check's anchor.
 FIGURE_NAME = {"multiple": "Cost vs serving", "cost": "Cost per reply",
                "check-time": "Verify time per reply", "proof-size": "Proof size per reply",
-               "kl": "KL to the original weights"}  # fmt: skip
+               "fidelity-figure": "Fidelity", "kl": "KL to the original weights"}  # fmt: skip
 # a figure's head where its unit stands beside it: the unit says "per reply", so the head does
 # not; and the surface names fidelity, not the metric (KL and the matched tokens' bar are under
 # Fidelity on a system's page)
 FIGURE_HEAD = {"multiple": "Cost vs serving", "cost": "Cost", "check-time": "Verify time",
                "proof-size": "Proof size", "fidelity": "Fidelity", "serving": "Serving"}  # fmt: skip
+# where a head links on the checks page, where its anchor is not its key: the Fidelity figure has
+# a rule of its own there, apart from the check it does not set (SI-9)
+FIGURE_ANCHOR = {"fidelity": "fidelity-figure"}
 FIDELITY_TITLE = "leading tokens matching the original, mean"  # in a fidelity word's title
 # Fidelity as a figure (RFC-0018 SI-9, amended 2026-11-14): FI-10's mean as a percentage of the
-# reply's positions, beside the model's 8-bit and 4-bit copies; it sets no state
+# reply's positions, beside the model's Q8_0 and Q4_K_M copies; it sets no state
 FIDELITY_AGAINST = ("q8_0", "q4_k_m")  # the controls printed beside a row's Fidelity
 FIDELITY_FIG_TITLE = ("Fidelity: the share of reply positions where the system's top token is "
-                      "the original model's, fed the original model's reply")  # fmt: skip
+                      "the original's reply token, fed the prompt and then that reply token by "
+                      "token")  # fmt: skip
 FIDELITY_CHECK_TITLE = "Fidelity check (leading tokens matching the original): {state}"
 
 
@@ -250,51 +323,74 @@ def beside_unit(name):
 
 FIGURE_RULE = {
     "multiple": (
-        ("m", "Steady-state GPU-seconds per proved reply after the first release group. Within a "
-         "session, proofs released within {gap} of the previous proof form a release group. We "
-         "measure the GPU time from the end of the first group to the final proof of the session "
-         "and divide by the number of replies in those later groups (including token generation). "
-         "Reported as the mean across {slots} sessions."),
-        ("serving", "Baseline GPU-seconds per reply (b) for plain unproved serving: we run the "
-         "publisher's original model weights under the pinned inference engine on the fewest H200 "
-         "GPUs that fit the model, at full load. Full load is the lowest concurrency that reaches "
-         "{full} of peak throughput on a concurrency ladder up to {top} requests."),
-        ("multiple", "The ratio m / b on the same model. Because both numbers are measured in "
-         "GPU-seconds on the same GPU type at the same hourly rate, this ratio is identical in "
-         "dollars."),
-        ("whole session", "If a system's sessions release too few groups (or groups that are too "
-         "uneven) to establish a steady state, it has no m. Instead, we divide its total session "
-         "GPU time per reply by b and label the figure as whole sessions."),
-        ("parts", "When a system runs token generation in a separate phase from proving, we split "
-         "the multiple into two parts (each divided by b): generation and the remaining work. For "
-         "steady-state rows that remainder is proving; for whole-session rows it combines model "
-         "commitment and proving."),
+        ("multiple", "m over b, on one model. GPU time counts only the H200 GPUs bound to the "
+         "job."),
+        ("m", "GPU-seconds per proved reply, generation included: the mean of {slots} sessions. "
+         "Proofs released within {gap} of the previous one form a release group. m runs from the "
+         "first group's last release to the session's last, over the replies released after it. "
+         "Where a system generates all its replies in a phase of its own, m adds that phase's "
+         "GPU-seconds over the session's replies."),
+        # CO-4; FP8 on Maverick is the level file's serving record (the original is 16-bit, FI-1)
+        ("b", "GPU-seconds per reply when the same request is served without a proof. The model "
+         "publisher's own release (FP8 on Llama 4 Maverick) runs on the pinned engine and the "
+         "fewest H200 GPUs that hold it, at full load. Full load is the lowest concurrency, "
+         "doubling from 1 to {top}, whose rate reaches {full} of the highest. If that is {top}, the "
+         "model has no b (not saturated)."),
+        ("whole sessions", "A row has m when each of its {slots} sessions has at least 3 groups "
+         "after the first, each group's time per reply within 5\u202f% of their median. Otherwise "
+         "it has no multiple and prints its session GPU-seconds per reply over b, labelled "
+         "\u201cwhole sessions of N replies\u201d."),
+        ("parts", "Where a system generates its replies in a phase of its own, two parts print "
+         "beside the figure, each over b: generation, and the rest (proving under m, commit and "
+         "proving under whole sessions). The order reads the figure, never a part."),
     ),
     "cost": (
-        ("steady", "Steady-state GPU time per reply (m) converted to US dollars at the release's "
-         "benchmark price for one H200 GPU-hour."),
-        ("session", "For systems without a steady-state multiple: total GPU time from the start "
-         "of model commitment to the release of the last proof, divided by the session's replies, "
-         "in US dollars."),
+        ("steady", "m in USD, at the release's price for one H200 GPU-hour."),
+        ("session", "GPU-seconds from the start of commit to the release of the session's last "
+         "proof, over its replies, generation included, in USD at the same price: the mean of "
+         "{slots} sessions."),
     ),
     "check-time": (
-        ("verify", "Total CPU wall-clock time the system's verifier takes to check all proofs in "
-         "a session, divided by the number of replies in that session."),
+        ("", "The wall time of the verify calls on a session's proofs, summed, over the session's "
+         "replies: the mean of {slots} sessions. A second verify never replaces the session's own "
+         "time."),
     ),
     "proof-size": (
-        ("size", "Total size of the proofs a session stores (every file of each proof, in bytes as "
-         "stored), divided by the number of replies in that session. A proof that "
-         "covers several replies is counted once. Reported as the mean across {slots} sessions, "
-         "in MB (one MB is 1,000,000 bytes)."),
+        ("", "The bytes of every file of a session's proofs, as stored, over the session's replies. "
+         "A proof that covers several replies is counted once. The mean of {slots} sessions, in MB "
+         "(1\u00a0MB is 1,000,000 bytes)."),
+    ),
+    "fidelity-figure": (
+        ("", "The share of reply positions where the system's top token is the original's reply "
+         "token, when the system is fed the prompt and then that reply token by token. It is the "
+         "mean over the prompts, as a percentage, with 0 for a prompt the system's own code "
+         "declines. The model's Q8_0 and Q4_K_M percentages are printed under it."),
+        ("", "Computed by the system's own code on the reference reply, not by the proved "
+         "computation. It sets no state."),
     ),
     "kl": (
-        ("kl", "Mean Kullback-Leibler divergence per scored token (in nats) between the model "
-         "file the system commits to and the publisher's original reference weights ({reference})."),
-        ("computed by", "Measured directly on the committed weight file using llama.cpp rather "
-         "than inside the prover. We print this figure for context; it does not decide any check."),
-        ("none", "Omitted when llama.cpp cannot load the format of the committed weight file."),
+        # FI-7 over the KL texts (PR-3; 64 and 512 are the level file's kl.texts and kl.tokens)
+        ("", "Mean KL divergence per scored token, in nats, of the file the system commits against "
+         "the original, over 64 texts of 512 tokens. Computed by llama.cpp "
+         "on the committed file, not the proved computation. It gates nothing."),
+        ("not measured", "Printed with the reason where llama.cpp cannot run the original (Llama 4 "
+         "Maverick's 16-bit file), or cannot load the committed file and the system's adapter "
+         "returns no distributions of its own."),
     ),
 }  # fmt: skip
+# a figure in one line, for its search entry: what the figure is, about 95 characters at most
+FIGURE_LINE = {
+    "multiple": "GPU-seconds per proved reply, generation included, over a served reply's at full "
+    "load.",
+    "cost": "GPU time per proved reply, in USD at the release's price for one H200 GPU-hour.",
+    "check-time": "Wall time of the verify calls on a session's proofs, over its replies: the mean "
+    "of {slots} sessions.",
+    "proof-size": "A session's stored proof bytes over its replies, in MB. A proof of several "
+    "replies counts once.",
+    "fidelity-figure": "Share of positions where the system's top token is the original's reply "
+    "token, fed prompt and reply.",
+    "kl": "KL per token, committed file against the original, by llama.cpp. It gates nothing.",
+}
 # a rung's fidelity reference, by its stored precision (FI-1)
 # (a no-break hyphen: the precision never splits from its number at a line's end)
 REFERENCE_WORD = {"bf16": "16\u2011bit", "f16": "16\u2011bit", "f32": "32\u2011bit"}
@@ -306,120 +402,140 @@ def kl_head(dtype):
     return FIGURE_NAME["kl"]
 
 
-# the order rule (RFC-0018 OR-1 to OR-4, GL-4), as (label, words). {margin} is the level's.
+# the order rule (RFC-0018 OR-1 to OR-6, GL-4), as (label, words). {margin} is the level's.
 # "Session m" is one counted session's m.
 ORDER_RULE = (
-    ("ranked", "Only systems that pass all six checks on a model are eligible to be ranked, and "
-     "they are ranked only within that model's table."),
-    ("above", "One system is placed strictly above another when its cost multiple is at least "
-     "{margin} lower and its slowest session (highest session m) is still faster than the other's "
-     "fastest session (lowest session m). Systems with a steady-state multiple are placed above "
-     "systems measured only on whole sessions; two whole-session systems are compared the same "
-     "way using session cost per reply."),
-    ("position", "A system's position is 1 plus the number of systems placed strictly above it, "
-     "shown alongside the total number of systems run on that model."),
-    ("unranked", "A system that passes all six checks is given a numbered position only when its "
-     "publisher states a cryptographic security level at the pinned commit; otherwise it is "
-     "listed as passed, unranked."),
-    ("glyph", "The five-petal glyph never affects a system's position in the table."),
+    ("ranked", "Only systems that passed on a model are ranked."),
+    # OR-2; no floor: Non-Goals (printed as stated), Alternatives (a security floor, rejected)
+    ("unranked", "A system that passed is ranked only if the level file records a numeric security "
+     "level that its publisher states at the pinned commit, for at least one verifier it ships. "
+     "Otherwise it is listed as passed, unranked. Level 1 sets no minimum."),
+    ("above", "One system is placed above another when both have a multiple, its mean multiple is "
+     "at least {margin} lower, and its highest session m is below the other's lowest. A system "
+     "with a multiple is placed above one without. Two systems without one compare the same way, "
+     "on session cost per reply."),
+    ("position", "1 plus the number of systems placed above it, so equal counts share a position. "
+     "It is printed beside the count of systems run on that model."),
+    ("below", "Under the ranked systems: passed and unranked, then not passed, each group in "
+     "alphabetical order. A system that has not passed prints its checks and figures and has no "
+     "position."),
+    ("largest model proved", "The largest model, by total parameters, with at least one system "
+     "that passed."),
+    ("glyph", "The glyph never moves a position."),
     ("models", "Nothing is ranked across models."),
 )  # fmt: skip
 # the checks page in one sentence: its description and its search entry
 CHECKS_DESC = (
-    "What the glyph's five petals and the six checks test, how each figure is taken, and how "
-    "systems are ordered."
+    "The rules behind a row of the ladder: the six checks, each figure, the order and the glyph's "
+    "five petals."
 )
+# the words of a rule that link to where Learn gives the rule's reason (/method), by the rule's
+# constant and its line's label: (phrase, address). The phrase is linked where the line holds it,
+# or the label itself where it is the phrase
+REASON_LINK = {
+    ("NOT_TESTED", ""): ("not tested", "/method#the-checks"),
+    ("summary", ""): ("a held check raises none", "/method#order-and-the-glyph"),
+    ("FIGURE_RULE", "parts"): ("generation", "/method#the-figure"),
+    ("CHECK_MORE", "bar"): ("bar", "/method#the-checks"),
+    ("ORDER_RULE", "models"): ("across models", "/method"),
+}
 # ------------------------------------------------------------------ the scale page (RFC-0018 SI-7)
 SCALE_LOG = "log scale"  # beside an axis's unit
 SCALE_SERVING = "Serving"  # a lane's foot: serving's line and its stored figure
-SCALE_NOT_RUN = "not run yet"  # a model no system has run on (the ladder, the scale page)
-# the scale page's line under its title, and the start of its description
-SCALE_LEAD = "Every system run, model by model, on one log scale"
+# a model no system has run on (the ladder, the scale page); its serving line keeps "not run yet"
+SCALE_NOT_RUN = "no system run yet"
+# the start of the scale page's description and search line, before its figures' names
+SCALE_LEAD = "Every system run, on a log axis"
 # beside the size tab of the frontier's rung on the ladder (OR-6: the largest with a passed row)
 FRONTIER_WORD = "Largest model proved"
 # ------------------------------------------------------------------ the mandate page
-# The headline, what the site is for, then what we do, what we do not do, who runs it and how to
-# check us: each line (a plain label, the rule that binds it, the file that rule is in, the
-# words). A line with no file is the owner's commitment. The members (facts.json `credit`) are
-# listed in the section MANDATE_MEMBERS_IN names, once any has agreed.
+# The headline, then who runs it, what we do, what we do not do and how to check us: each line
+# (a plain label, the rule that binds it, the file that holds the rule with its section's anchor,
+# the words; two rules of one file in two sections: a pair of each). A line with no file is the
+# owner's commitment. {lead} and {builder} are the names
+# facts.json `credit` gives, linked as the footer links them. The members (`credit`) are listed in
+# the section MANDATE_MEMBERS_IN names, once any has agreed.
 RFC_18 = "rfcs/0018-level-1-ladder.md"
 MANDATE_BELIEF = (
     "We believe a claim about which AI model answered should come with evidence anyone can "
     "afford to check."
 )
-MANDATE_WHAT = (
-    "When an AI service tells you that a reply came from a specific model, you normally have to "
-    "take the operator's word for it. A proof of inference is a cryptographic receipt that lets "
-    "anyone verify that claim without re-running the model. This benchmark tests the systems "
-    "that build those proofs. On a ladder of open-weights models, we measure how much more it "
-    "costs to generate a proved reply than to serve the same reply normally, and we test whether "
-    "each system's verifier actually rejects the proof when we tamper with the model, the "
-    "prompt, or the reply. Every system receives the same request on the same class of "
-    "hardware, running the publisher's unmodified code."
-)
+# the page's description, share text and search line
+MANDATE_DESC = "Who runs Inference proofs, what it commits to and how to check its figures."
 MANDATE = (
+    ("Who runs it", (
+        ("Run by", "", None, "{lead}."),
+        ("Built by", "", None, "The {builder}, led by {lead}."),
+    )),
     ("What we do", (
-        ("As published", "rule 1", "AGENTS.md", "We run each system at a pinned public commit, "
-         "with no patches to its source code and no flags or settings that are not documented by "
-         "its publisher."),
-        ("Same request", "Request, PR-2", RFC_18, "We give every system on a model the exact "
-         "same request. The prompts are drawn from a public randomness beacon after the benchmark "
-         "rules are frozen, so neither we nor any system author can cherry-pick prompts or tune "
-         "rules around them."),
-        ("Every run", "rule 5", "AGENTS.md", "We publish every run we execute for a release, "
-         "including crashes and failed checks, complete with exit codes and log tails. We report "
-         "full session ranges and sample sizes, never a single cherry-picked run."),
-        ("Computed", "CH-6", RFC_18, "We compute every check outcome, ratio, and summary "
-         "automatically from the stored run records; no reviewer sets a check state or types a "
-         "number by hand."),
-        ("Confirmed", "CH-8", RFC_18, "Before we publish that a system's verifier accepted a "
-         "tampered model, prompt, or reply, we reproduce that failure with the system's own "
-         "command line, outside our harness. Until we confirm it, the check is marked "
-         "undecided and we notify the publisher."),
+        ("Pinned commit", "rule 1", "AGENTS.md#hard-rules", "Each system runs at one pinned "
+         "public commit. Our adapter changes no source and passes no setting the system's "
+         "documentation does not name."),
+        ("Same request", "Prompts, PR-2", f"{RFC_18}#prompts", "Every system gets the same "
+         "request. A public randomness beacon picked the prompts, at its first round after the "
+         "level was frozen, so nobody, we included, chose them or set a constant knowing them."),
+        ("Sample size", "rule 5", "AGENTS.md#hard-rules", "Cost figures come with their sample "
+         "size and each counted session's value, never one best run."),
+        ("Computed", ("CO-6", "CH-6"), (f"{RFC_18}#cost", f"{RFC_18}#the-six-checks"),
+         "Check states and figures are computed "
+         "from stored run records. No reviewer sets a state or types a figure."),
+        ("Reproduced first", "CH-8", f"{RFC_18}#the-six-checks", "When a verifier accepts a "
+         "changed model, prompt or reply in our adapter, the check reads undecided (not "
+         "reproduced), and the publisher is told. The check reads failed only once a record "
+         "shows the system's own command, run outside our adapter, accepting the same input."),
     )),
     ("What we do not do", (
-        ("Payment", "", None, "We do not accept payment for listing a system, ranking it, or "
-         "running a benchmark session."),
-        ("Building", "What this project is", "AGENTS.md", "We do not build or sell a prover of "
-         "our own, and we do not certify the systems we test."),
-        ("Security", "Non-Goals", RFC_18, "We do not attempt to cryptographically forge proofs "
-         "or extract hidden weights. Our six checks test what an external harness can observe; "
-         "for mathematical soundness and zero-knowledge claims, we quote what the publisher's "
-         "own documentation states."),
-        ("Across models", "OR-1", RFC_18, "We never rank systems across different models. Each "
-         "model on the ladder has its own table, and only the systems that pass all six checks on "
-         "that model are ranked in it."),
-    )),
-    ("Who runs it", (
-        ("Operator", "", None, "This benchmark is operated by Lucid Computing."),
-        ("Conflicts", "Conflicts of Interest", RFC_18, "FlashProve is published by Anthropic. "
-         "Parts of this project's harness code and documentation were drafted with the help of "
-         "Claude, Anthropic's model."),
+        ("Payment", "", None, "We take no payment for a listing, a position or a run."),
+        ("Provers", "What this project is", "AGENTS.md#what-this-project-is", "We run provers. "
+         "We do not build our own or certify any."),
+        ("Not tested", "Non-Goals", f"{RFC_18}#non-goals", "No check tries to forge a proof or "
+         "recover the weights. The system's page quotes the publisher on soundness and weight "
+         "secrecy."),
+        ("Ranking", "OR-1", f"{RFC_18}#order", "We rank only systems that passed the six "
+         "checks, and never across models."),
     )),
     ("How to check us", (
-        ("Sources", "rule 2", "AGENTS.md", "Every number on this site carries its unit, timing "
-         "scope, sample size and the stored record it was computed from. A system's page prints "
-         "them."),
-        ("Open code", "Licence", "README.md", "All of our benchmark rules, system adapters, "
-         "measurement scripts, and raw run records are open source in our public repository."),
+        ("Labels", "rule 2", "AGENTS.md#hard-rules", "Every figure carries its unit and its "
+         "record, and a timed figure says what was timed. Nobody else has rerun any of our "
+         "runs."),
+        ("Repository", "Licence", "README.md#licence", "The rules, the adapters, the measuring "
+         "code and the run records are in one public repository. Proofs, weights and other bulk "
+         "files stay outside it, named by digest."),
     )),
 )  # fmt: skip
 MANDATE_MEMBERS_IN = "Who runs it"
-# the mandate's line on the level (its label is the level and its state, linked to the level file)
+# the mandate's line on the level (its label is the level and its state, linked to the level
+# file): the one home of the level's history (three freezes on 2026-11-11, each followed by its
+# beacon round, in the git history of levels/L1.yaml and levels/L1-beacon.json; the file unchanged
+# since; LV-1; RFC-0018's changes since, and the rules added since that decided rows, which
+# MANDATE_LEVEL_LINK leads to: CH-1a, SE-3a)
 MANDATE_LEVEL_IN = "How to check us"
 MANDATE_LEVEL = (
-    "The models, the request, the constants of the checks and the order rule are "
-    "one file. It does not change once frozen: a change of rule is a new level."
+    "The models, the request, the prompts' corpus and beacon, and the constants of the cost, "
+    "fidelity and order rules are one file. It was frozen three times that day, before the first "
+    "counted run, each time with a fresh beacon round, and has not changed since. A change of "
+    "rule is meant to make a new level. But RFC-0018 has changed since the last freeze, and some "
+    "rules added to it decided rows."
 )
-# why a check is undecided (its cause as the board stores it)
+# the words of the level line that link to where Learn names those rules: (phrase, address)
+MANDATE_LEVEL_LINK = ("decided rows", "/method#judgement-and-changes")
+# why a check is undecided (its cause as the board stores it): a system page's title for the cause,
+# lower case and with no full stop; the checks page prints each as a sentence (#cause-<cause>)
 CHECK_CAUSE_WORD = {
-    "system limit": "the system does not support what this test requires (the publisher's own "
-    "statement is quoted on the system page)",
+    # CH-5: "with the publisher's sentence. The row cannot pass."
+    "system limit": "the system cannot do what the test needs, in its publisher's words quoted on "
+    "the system's page, so the row cannot pass",
     "not run": "this check has not been run yet",
-    "not resolved": "the test ran but did not reach a conclusive verdict",
-    "not reproduced": "the verifier accepted a tampered input, and we are reproducing that with "
-    "the system's own command line, outside our harness, before marking the check failed",
+    "not resolved": "the test ran and decided nothing",
+    # RFC-0018's own words, a comma for its semicolon
+    "not reproduced": "a verifier accepted a changed input in our adapter, not yet reproduced "
+    "with the system's own command",
 }
+# the line that opens the undecided causes (an undecided check is never worded as a failure; the
+# standing words are chrome.not_passed's)
+CHECK_CAUSE_LEAD = (
+    "Undecided is not failed: a row short of passed only by undecided checks reads not passed yet."
+)
 
 # ------------------------------------------------------------------ labels of a stored figure
 SCOPE_SHORT = {None: "", "prove.steady": "steady", "prove.session": "session",
@@ -437,7 +553,7 @@ SCOPE_WORD = {
     "verify": "verifying",
     "verify.single_thread": "verifying on one CPU thread",
     "primitive": "one primitive",
-    "serving": "serving at full load, steady state",  # the serving baseline's, in its title (CO-4)
+    "serving": "serving at full load",  # the serving baseline's, in its title (CO-4)
 }
 GRADE_WORD = {
     "measured": "recorded by our harness",
@@ -467,28 +583,49 @@ FULL_LOAD_WORD = "full load"
 # of its own. A session's second part holds commit as well (most of it), so it is never "proving"
 PART_WORD = {"proving": "proving", "generation": "generation",
              "commit_and_proving": "commit and proving"}  # fmt: skip
-OF_WHICH = "of which"  # before a part's name where it stands under its whole (the Cost section)
-# the GPU time per reply after the first release group, m (CO-1); its column in the sessions table
-M_NAME, M_COL = "GPU time per reply after the first group (m)", "After the first group"
-# the line under a whole session's figure, N the level's replies per session (CO-5)
+# before a part's name where it stands beside its whole in a sentence or a table's head (a card's
+# alt text, the sessions table); under its whole, a part's name stands alone
+OF_WHICH = "of which"
+# the GPU time per reply after the first release group, m (CO-3): its name beside the serving and
+# session GPU times (Cost), its full name (that line's title, the sessions column's), its column
+# (beside Session; a session with none prints why under its "none")
+M_HEAD = "Steady GPU time per reply"
+M_NAME, M_COL = "GPU time per reply after the first release group (m)", "Steady"
+# CO-5's label for a figure of the whole sessions, N the level's replies per session
 WHOLE_SESSIONS = "whole sessions of {n:,} replies"
-# the fidelity table (FI-5, FI-6): the replies' figure, a control's id as printed, the p line
+STEADY_STATE = "steady state"  # under a steady multiple, before its sessions (CO-3)
+
+
+def session_count(k):
+    """A count of sessions in words: "3 sessions", "1 session"."""
+    return f"{k:,} session" if k == 1 else f"{k:,} sessions"
+
+
+# the fidelity table (FI-5, FI-6): the replies' figure, a control's id as printed, the p line. A
+# control whose id is not its name: FI-2's words (a quarter of the blocks, both models; the
+# smaller model is named in the level file)
 PREFIX = "Leading tokens matching the original, mean"
-CONTROL_NAME = {"reference-2": "original, run again"}
+CONTROL_NAME = {"reference-2": "original, run again",
+                "drop-every-4th-block": "a quarter of blocks cut",
+                "smaller-model": "a smaller model"}  # fmt: skip
 # a check's record as its link reads, by the file's name (the path stands in the link's title)
 RECORD_WORD = {"run.json": "run record", "controls.json": "controls", "verify-trace": "verify traces",
                "reverify.json": "re-verify record", "fidelity.json": "fidelity record"}  # fmt: skip
 P_ABOVE = "above the bar: p\u00a0=\u00a0{p}"
 # the teacher-forced table under it (RFC-0018 FI-10 to FI-13, SI-9): figures only, no state
 TF_LEAD = (
-    "A second measure, printed beside the check's score; it sets no state. Each row is fed "
-    "the prompt, then the original's reply token by token: at each of the reply's "
-    "{positions:,} positions, is its own top token the original's? Fidelity is the share of "
-    "positions where it is. n\u00a0=\u00a0{n:,} prompts in each row. KL compares, at each "
-    "position, the {k:,} most probable tokens of both, with every other token pooled."
+    "{both}: each row is fed the prompt, then the original's reply, token by token. "
+    "n\u00a0=\u00a0{n:,} prompts in each row. They set no state."
 )
-TF_AGREE = "Fidelity: share of positions where the top token is the original's, mean"
+TF_AGREE = "Fidelity: share of positions where the top token is the reply token, mean"
 TF_KL = "KL to the original, on its reply"
+# the two teacher-forced columns by name: the lead and FI-13's label say which columns they are about
+TF_BOTH = f"Fidelity and {TF_KL}"
+# the KL head's title (FI-12: the tokens both lists hold, every other token one outcome)
+TF_KL_TITLE = (
+    "KL compares, at each position, each token that both lists of the {k:,} most probable tokens "
+    "hold, with every other token pooled as one outcome."
+)
 TF_SUB = "median {median}"
 TF_FAILED = "{k:,} of {n:,} prompts failed, counted as 0"
 TF_TEST = "{name} above it: p\u00a0=\u00a0{above} · below it: p\u00a0=\u00a0{below}"
@@ -542,12 +679,13 @@ def params(n):
 
 
 def architecture(total, active, sized=True):
-    """ "MoE, 400B total, 17B active" or "Dense, 8.03B": a mixture of experts reads fewer
-    parameters per token than it holds. Beside a size that says the total (a model's tab:
-    `sized` False), the rest only: "MoE, 17B active" or "Dense"."""
+    """ "Mixture of experts, 400B total, 17B active" or "Dense, 8.03B": a mixture of experts reads
+    fewer parameters per token than it holds (the glossary's term, spelled out). Beside a size that
+    says the total (a model's tab: `sized` False), the rest only: "Mixture of experts, 17B active"
+    or "Dense"."""
     if active and active < total:
-        return (f"MoE, {params(total)} total, {params(active)} active" if sized
-                else f"MoE, {params(active)} active")  # fmt: skip
+        return (f"Mixture of experts, {params(total)} total, {params(active)} active" if sized
+                else f"Mixture of experts, {params(active)} active")  # fmt: skip
     return f"Dense, {params(total)}" if sized else "Dense"
 
 
