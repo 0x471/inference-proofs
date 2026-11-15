@@ -62,7 +62,7 @@ if [ "$(id -u)" = 0 ]; then  # once, as root: packages and an ordinary user (lea
   copier=$!
   runuser -u builder -- env OUT="$local_out" IMAGE="$IMAGE" BUILD_TIMEOUT_S="$BUILD_TIMEOUT_S" \
     MODE="$MODE" SCRATCH="$scratch" ${LEAN_NUM_THREADS:+LEAN_NUM_THREADS="$LEAN_NUM_THREADS"} \
-    WIDE_JOBS="${WIDE_JOBS:-}" HOME="$bhome" bash "$bhome/proof-build.sh"
+    WIDE_JOBS="${WIDE_JOBS:-}" SETUP_ONLY="${SETUP_ONLY:-}" HOME="$bhome" bash "$bhome/proof-build.sh"
   echo "$?" > "$local_out/runner-exit.txt"
   kill "$copier" 2> /dev/null
   cp -r "$local_out"/. "$OUT"/
@@ -89,10 +89,6 @@ if [ "$MODE" = check ]; then
 else
   export PATH=$HOME/lean-4.29.1-linux/bin:$PATH
 fi
-lean --version > "$OUT/lean-version.txt" 2>&1 && lake --version >> "$OUT/lean-version.txt" 2>&1 ||
-  stop_setup lean-version
-grep -q 'version 4.29.1' "$OUT/lean-version.txt" || stop_setup lean-version
-
 git init -q fp && cd fp && git remote add origin "https://github.com/$REPO.git" &&
   git fetch -q --depth 1 origin "$PIN" && git checkout -q FETCH_HEAD || stop_setup clone
 [ "$(git rev-parse HEAD)" = "$PIN" ] || stop_setup clone-head
@@ -104,6 +100,7 @@ grep -q 'version 4.29.1' "$OUT/lean-version.txt" || stop_setup lean-version
 log "$(tr '\n' ' ' < "$OUT/lean-version.txt")"
 python3 -B scripts/check.py --only tree > "$OUT/check-tree.log" 2>&1 || stop_setup check-tree
 log "check.py --only tree: $(tail -n 1 "$OUT/check-tree.log")"
+if [ -n "${SETUP_ONLY:-}" ]; then log "setup only: stop before the cache fetch"; exit 0; fi
 TOOLCHAIN=$(cat lean-toolchain)
 lake exe cache get > "$OUT/cache-get.log" 2>&1 || stop_setup cache-get
 if grep -q -E 'No cache files to decompress|Decompressed 0 file' "$OUT/cache-get.log"; then
