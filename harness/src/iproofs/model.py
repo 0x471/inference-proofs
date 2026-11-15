@@ -240,6 +240,23 @@ class Review(Document):
 
 
 @dataclasses.dataclass(frozen=True, slots=True, kw_only=True)
+class VerifierInputs(Document):
+    """RFC-0018 SI-3 (amended 2026-11-15): the Statement block, each row the card's own fields
+    by path, or "not stated"."""
+
+    program: str
+    reply: str  # "record" or "proof"
+    commit_record: tuple[str, ...] | str
+    request: tuple[str, ...] | str
+    proof: tuple[str, ...] | str
+    decoding: tuple[str, ...] | str
+    unchecked: tuple[str, ...] | str
+    architecture: tuple[str, ...] | str
+    untimed: tuple[str, ...] | None = None
+    architecture_visible: str | None = None
+
+
+@dataclasses.dataclass(frozen=True, slots=True, kw_only=True)
 class ClaimCard(Document):
     schema: str
     system: str
@@ -261,6 +278,7 @@ class ClaimCard(Document):
     assumptions_not_stated: bool | None = None
     quality_gap: tuple[QualityGap, ...] | None = None
     forbidden_flags: tuple[str, ...] | None = None
+    verifier_inputs: VerifierInputs | None = None
 
 
 @dataclasses.dataclass(frozen=True, slots=True, kw_only=True)
@@ -794,6 +812,28 @@ class StatusFacts(Document):
 
 
 @dataclasses.dataclass(frozen=True, slots=True, kw_only=True)
+class PinFacts(Document):
+    """A row that runs a change to the publisher's code (RFC-0018 SI-3, amended 2026-11-15)."""
+
+    pull: int
+    url: str
+    merged: bool
+    by_builder: bool
+    upstream_commit: str
+    upstream_outcome: str
+    record: str | None = None
+
+
+@dataclasses.dataclass(frozen=True, slots=True, kw_only=True)
+class GenerationFacts(Document):
+    """How a system generates its replies in a phase of its own (CO-7, amended 2026-11-15)."""
+
+    words: str
+    quote: str
+    url: str
+
+
+@dataclasses.dataclass(frozen=True, slots=True, kw_only=True)
 class RowFacts(Document):
     name: str
     technique: str | None = None
@@ -804,6 +844,8 @@ class RowFacts(Document):
     status: StatusFacts | None = None
     overview_workload: str | None = None
     reason: str | None = None  # RFC-0018 SI-4: why a system has no row on the board
+    pin: PinFacts | None = None
+    generation: GenerationFacts | None = None
 
 
 @dataclasses.dataclass(frozen=True, slots=True, kw_only=True)
@@ -974,6 +1016,7 @@ MODELS: dict[tuple[str, str], type[Any]] = {
     ("claim/1", "#/$defs/edge"): BindingEdge,
     ("claim/1", "#/properties/quality_gap/items"): QualityGap,
     ("claim/1", "#/properties/reviewed_by/items"): Review,
+    ("claim/1", "#/properties/verifier_inputs"): VerifierInputs,
     ("workload/1", "#"): Workload,
     ("workload/1", "#/properties/model"): ModelSpec,
     ("workload/1", "#/properties/model/properties/source"): ModelSource,
@@ -1034,6 +1077,8 @@ MODELS: dict[tuple[str, str], type[Any]] = {
     ("site-facts/1", "#/$defs/row"): RowFacts,
     ("site-facts/1", "#/$defs/row/properties/licence"): LicenceFacts,
     ("site-facts/1", "#/$defs/row/properties/status"): StatusFacts,
+    ("site-facts/1", "#/$defs/row/properties/pin"): PinFacts,
+    ("site-facts/1", "#/$defs/row/properties/generation"): GenerationFacts,
     ("serving-model/1", "#"): ServingModel,
     ("serving-model/1", "#/properties/publisher"): ServingPublisher,
     ("serving-model/1", "#/properties/publisher/properties/release"): ServingRelease,

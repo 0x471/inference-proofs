@@ -67,6 +67,11 @@
       "technique": "circuit compiled to a PLONKish SNARK (Halo2)"
     },
     "flashprove": {
+      "generation": {
+        "quote": "greedy decoding, one sequence at a time, one GPU",
+        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/integrations/vllm/integer_model/README.md#L18-L19",
+        "words": "the publisher's integer model, one reply at a time"
+      },
       "licence": {
         "name": "Apache-2.0",
         "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/LICENSE"
@@ -176,6 +181,15 @@
         "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/eb95bfa887299d1637550228d42086c27cbb2b3b/LICENSE"
       },
       "name": "SASH",
+      "pin": {
+        "by_builder": true,
+        "merged": false,
+        "pull": 36,
+        "record": "results/v1.0/sash/refusals/slot-1.json",
+        "upstream_commit": "eb95bfa887299d1637550228d42086c27cbb2b3b",
+        "upstream_outcome": "SASH's own code refused one Level 1 prompt",
+        "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/pull/36"
+      },
       "reason": "not yet run",
       "status": {
         "last_push": "2026-10-19",
