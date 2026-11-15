@@ -139,8 +139,8 @@ from .words import (
     number,
     petal_step,
     quoted,
-    said_word,
     range_words,
+    said_word,
     sig,
 )
 
