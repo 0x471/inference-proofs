@@ -491,7 +491,7 @@ def not_run_html():
         for reason in sorted(groups, key=str.lower)
     )  # fmt: skip
     return (f'<section class="notrun" aria-labelledby="h-notrun"><h2 class="nrh" id="h-notrun">'
-            f'Systems not run</h2><dl class="nrg">{rows}</dl></section>')  # fmt: skip
+            f'<a href="{CHECKS_PAGE}#not-run">Systems not run</a></h2><dl class="nrg">{rows}</dl></section>')  # fmt: skip
 
 
 def build_index():

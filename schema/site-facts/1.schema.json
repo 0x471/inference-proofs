@@ -63,6 +63,11 @@
     },
     "row": {
       "additionalProperties": false,
+      "dependentRequired": {
+        "reason_source": [
+          "reason"
+        ]
+      },
       "properties": {
         "code": {
           "enum": [
@@ -118,6 +123,23 @@
             "another kind of check",
             "not yet run"
           ]
+        },
+        "reason_source": {
+          "additionalProperties": false,
+          "description": "RFC-0018 SI-4a: the fact that sets `reason`, in words (a quoted phrase is the publisher's own), and the link where it is read",
+          "properties": {
+            "url": {
+              "$ref": "#/$defs/url"
+            },
+            "words": {
+              "$ref": "#/$defs/text"
+            }
+          },
+          "required": [
+            "url",
+            "words"
+          ],
+          "type": "object"
         },
         "status": {
           "additionalProperties": false,
