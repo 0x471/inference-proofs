@@ -1,0 +1,285 @@
+{
+  "calls": [
+    {
+      "change": null,
+      "commitment": {
+        "commitment_id": "a4a80d33337d7b3a3a8f53cb1f07807ac784095746b42e22a848c2a323a01f4a",
+        "in_results": true,
+        "run_id": "2026-11-13-flashprove-l1-maverick-p512-o512-prover-h200-hosted-1",
+        "slot": 1
+      },
+      "exit_code": 0,
+      "last_lines": [
+        "YES"
+      ],
+      "name": "twin-slot1-control",
+      "proof": {
+        "archive_digest": "sha256:6bd72f096e8c32405bbc686573f28d66de008c4094b86928050c371767521fd7",
+        "commitment_id": "a4a80d33337d7b3a3a8f53cb1f07807ac784095746b42e22a848c2a323a01f4a",
+        "in_results": true,
+        "proof_id": "req-0",
+        "run_id": "2026-11-13-flashprove-l1-maverick-p512-o512-prover-h200-hosted-1",
+        "slot": 1
+      },
+      "raw": [
+        "raw/calls/twin-slot1-control.json"
+      ],
+      "seconds": {
+        "grade": "measured",
+        "note": "the harness's DockerRunner span of one adapter verify call, container start included; linux/amd64 emulated on Apple silicon, so not comparable with the row's verify time",
+        "null_reason": null,
+        "scope": "verify",
+        "source": {
+          "kind": "harness",
+          "ref": "results/v1.0/flashprove/_trials/2026-11-15-c3-null-twin/raw/calls/twin-slot1-control.json#/harness_seconds"
+        },
+        "tier": "reported",
+        "unit": "s",
+        "value": 29.156711209
+      },
+      "verdict": "accept"
+    },
+    {
+      "change": null,
+      "commitment": {
+        "commitment_id": "11a8469baffc8f82b926dd595b4472cd1327a22e226f9848c6d555be67b72abb",
+        "in_results": true,
+        "run_id": "2026-11-12-flashprove-l1-maverick-p512-o512-prover-h200-hosted-1",
+        "slot": 2
+      },
+      "exit_code": 0,
+      "last_lines": [
+        "YES"
+      ],
+      "name": "twin-slot2",
+      "proof": {
+        "archive_digest": "sha256:acd2ef390f9e11c69111368d8529a68c4ae8ca7d74a5dedfb878691138b56849",
+        "commitment_id": "11a8469baffc8f82b926dd595b4472cd1327a22e226f9848c6d555be67b72abb",
+        "in_results": true,
+        "proof_id": "req-1",
+        "run_id": "2026-11-12-flashprove-l1-maverick-p512-o512-prover-h200-hosted-1",
+        "slot": 2
+      },
+      "raw": [
+        "raw/calls/twin-slot2.json"
+      ],
+      "seconds": {
+        "grade": "measured",
+        "note": "the harness's DockerRunner span of one adapter verify call, container start included; linux/amd64 emulated on Apple silicon, so not comparable with the row's verify time",
+        "null_reason": null,
+        "scope": "verify",
+        "source": {
+          "kind": "harness",
+          "ref": "results/v1.0/flashprove/_trials/2026-11-15-c3-null-twin/raw/calls/twin-slot2.json#/harness_seconds"
+        },
+        "tier": "reported",
+        "unit": "s",
+        "value": 22.20138475
+      },
+      "verdict": "accept"
+    },
+    {
+      "change": null,
+      "commitment": {
+        "commitment_id": "f033a74a07369cf099614ec6247f79b76298df47a05b3e8c4f790f7f634bea7e",
+        "in_results": true,
+        "run_id": "2026-11-12-flashprove-l1-maverick-p512-o512-prover-h200-hosted-2",
+        "slot": 3
+      },
+      "exit_code": 0,
+      "last_lines": [
+        "YES"
+      ],
+      "name": "twin-slot3",
+      "proof": {
+        "archive_digest": "sha256:1ab4ed380822cd13d6208cc65a5d7146fbc09d75b4f0bc0730da412964198138",
+        "commitment_id": "f033a74a07369cf099614ec6247f79b76298df47a05b3e8c4f790f7f634bea7e",
+        "in_results": true,
+        "proof_id": "req-3",
+        "run_id": "2026-11-12-flashprove-l1-maverick-p512-o512-prover-h200-hosted-2",
+        "slot": 3
+      },
+      "raw": [
+        "raw/calls/twin-slot3.json"
+      ],
+      "seconds": {
+        "grade": "measured",
+        "note": "the harness's DockerRunner span of one adapter verify call, container start included; linux/amd64 emulated on Apple silicon, so not comparable with the row's verify time",
+        "null_reason": null,
+        "scope": "verify",
+        "source": {
+          "kind": "harness",
+          "ref": "results/v1.0/flashprove/_trials/2026-11-15-c3-null-twin/raw/calls/twin-slot3.json#/harness_seconds"
+        },
+        "tier": "reported",
+        "unit": "s",
+        "value": 16.870485917
+      },
+      "verdict": "accept"
+    },
+    {
+      "change": {
+        "kind": "other_session_commitment"
+      },
+      "commitment": {
+        "commitment_id": "11a8469baffc8f82b926dd595b4472cd1327a22e226f9848c6d555be67b72abb",
+        "in_results": true,
+        "run_id": "2026-11-12-flashprove-l1-maverick-p512-o512-prover-h200-hosted-1",
+        "slot": 2
+      },
+      "exit_code": 0,
+      "last_lines": [
+        "NO: proof-refused"
+      ],
+      "name": "null-slot1-control-on-slot2",
+      "proof": {
+        "archive_digest": "sha256:6bd72f096e8c32405bbc686573f28d66de008c4094b86928050c371767521fd7",
+        "commitment_id": "a4a80d33337d7b3a3a8f53cb1f07807ac784095746b42e22a848c2a323a01f4a",
+        "in_results": true,
+        "proof_id": "req-0",
+        "run_id": "2026-11-13-flashprove-l1-maverick-p512-o512-prover-h200-hosted-1",
+        "slot": 1
+      },
+      "raw": [
+        "raw/calls/null-slot1-control-on-slot2.json"
+      ],
+      "seconds": {
+        "grade": "measured",
+        "note": "the harness's DockerRunner span of one adapter verify call, container start included; linux/amd64 emulated on Apple silicon, so not comparable with the row's verify time",
+        "null_reason": null,
+        "scope": "verify",
+        "source": {
+          "kind": "harness",
+          "ref": "results/v1.0/flashprove/_trials/2026-11-15-c3-null-twin/raw/calls/null-slot1-control-on-slot2.json#/harness_seconds"
+        },
+        "tier": "reported",
+        "unit": "s",
+        "value": 3.779892375
+      },
+      "verdict": "reject"
+    },
+    {
+      "change": {
+        "kind": "other_session_commitment"
+      },
+      "commitment": {
+        "commitment_id": "f033a74a07369cf099614ec6247f79b76298df47a05b3e8c4f790f7f634bea7e",
+        "in_results": true,
+        "run_id": "2026-11-12-flashprove-l1-maverick-p512-o512-prover-h200-hosted-2",
+        "slot": 3
+      },
+      "exit_code": 0,
+      "last_lines": [
+        "NO: proof-refused"
+      ],
+      "name": "null-slot2-on-slot3",
+      "proof": {
+        "archive_digest": "sha256:acd2ef390f9e11c69111368d8529a68c4ae8ca7d74a5dedfb878691138b56849",
+        "commitment_id": "11a8469baffc8f82b926dd595b4472cd1327a22e226f9848c6d555be67b72abb",
+        "in_results": true,
+        "proof_id": "req-1",
+        "run_id": "2026-11-12-flashprove-l1-maverick-p512-o512-prover-h200-hosted-1",
+        "slot": 2
+      },
+      "raw": [
+        "raw/calls/null-slot2-on-slot3.json"
+      ],
+      "seconds": {
+        "grade": "measured",
+        "note": "the harness's DockerRunner span of one adapter verify call, container start included; linux/amd64 emulated on Apple silicon, so not comparable with the row's verify time",
+        "null_reason": null,
+        "scope": "verify",
+        "source": {
+          "kind": "harness",
+          "ref": "results/v1.0/flashprove/_trials/2026-11-15-c3-null-twin/raw/calls/null-slot2-on-slot3.json#/harness_seconds"
+        },
+        "tier": "reported",
+        "unit": "s",
+        "value": 5.472946417
+      },
+      "verdict": "reject"
+    },
+    {
+      "change": {
+        "kind": "other_session_commitment"
+      },
+      "commitment": {
+        "commitment_id": "11a8469baffc8f82b926dd595b4472cd1327a22e226f9848c6d555be67b72abb",
+        "in_results": true,
+        "run_id": "2026-11-12-flashprove-l1-maverick-p512-o512-prover-h200-hosted-1",
+        "slot": 2
+      },
+      "exit_code": 0,
+      "last_lines": [
+        "NO: proof-refused"
+      ],
+      "name": "null-slot3-on-slot2",
+      "proof": {
+        "archive_digest": "sha256:1ab4ed380822cd13d6208cc65a5d7146fbc09d75b4f0bc0730da412964198138",
+        "commitment_id": "f033a74a07369cf099614ec6247f79b76298df47a05b3e8c4f790f7f634bea7e",
+        "in_results": true,
+        "proof_id": "req-3",
+        "run_id": "2026-11-12-flashprove-l1-maverick-p512-o512-prover-h200-hosted-2",
+        "slot": 3
+      },
+      "raw": [
+        "raw/calls/null-slot3-on-slot2.json"
+      ],
+      "seconds": {
+        "grade": "measured",
+        "note": "the harness's DockerRunner span of one adapter verify call, container start included; linux/amd64 emulated on Apple silicon, so not comparable with the row's verify time",
+        "null_reason": null,
+        "scope": "verify",
+        "source": {
+          "kind": "harness",
+          "ref": "results/v1.0/flashprove/_trials/2026-11-15-c3-null-twin/raw/calls/null-slot3-on-slot2.json#/harness_seconds"
+        },
+        "tier": "reported",
+        "unit": "s",
+        "value": 5.125767583
+      },
+      "verdict": "reject"
+    }
+  ],
+  "gates": "nothing",
+  "host": {
+    "cpu_model": "Apple M3 Max",
+    "logical_cpus": 8,
+    "memory_bytes": 38654705664,
+    "note": "8 CPUs bound to each verify call (cpuset 0-7); no RFC-0006 machine record or self-test, and no GPU",
+    "provider": "the owner's machine (Docker, linux/amd64 emulated)"
+  },
+  "id": "2026-11-15-c3-null-twin",
+  "missing": [
+    "The calls ran from a script that drives the harness's DockerRunner outside `iproofs controls`: the harness commit is recorded, the seed and suite records are not, and there is no RFC-0006 machine record or self-test.",
+    "The proof bytes and verifier files are not in this repository; each call names the archive digest and commitment its run records, which the validator compares.",
+    "Docker did not pull the image: its blobs were fetched from the registry, each checked against the sha256 the pinned manifest names, and loaded; docker ran it by its ID, the config digest sha256:7dafb0f174aee20cc986e71ec40aa2bdbd3dfc558b28dbd7e7a87e21922ba30c of that manifest.",
+    "Slot 1's counted proof (the 2026-11-11 session) was not among the inputs; slot 1 here is the 2026-11-13 control session."
+  ],
+  "program": {
+    "name": "cp_verify, through the adapter's verify",
+    "patched": false,
+    "role": "the verifier the row's verify step runs, in the row's pinned image",
+    "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/verifier/src/cp_verify.cpp"
+  },
+  "purpose": "The C3 null twin: a kept proof verified against the commitment of another session of the same weights, beside each proof's honest twin. FlashProve draws a fresh secret per commit, so two sessions of one model have different commitment IDs; a reject here shows C3's reject does not need different weights.",
+  "release": "v1.0",
+  "runner": {
+    "harness_commit": "6f914baa44fcac823e740ec3b456175b757b8dcb",
+    "image": "ghcr.io/ai-verification-observatory/flashprove@sha256:12611db7e7349ed667599730a7fa77e68459de38b7b2622ea4ac2339c1f656d1",
+    "script": "raw/fp_calls.py.txt",
+    "script_digest": "sha256:a7998bd13d808a99a6f06ac7fef0ffa8856a70a83a1bdf4205f776908167a006"
+  },
+  "schema": "verifier-trial/1",
+  "started_at": "2026-11-15T21:54:13Z",
+  "steps": [],
+  "system": "flashprove",
+  "toolchain": {
+    "docker": "29.8.2",
+    "python3 (harness)": "3.12.13"
+  },
+  "upstream": {
+    "commit": "9e2bdd8ff5bf9c62f18263d7dac189b0400b260c",
+    "repo": "anthropics/FlashProve"
+  }
+}

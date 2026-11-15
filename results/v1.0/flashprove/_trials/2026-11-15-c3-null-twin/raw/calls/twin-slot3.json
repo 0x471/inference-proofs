@@ -1,0 +1,25 @@
+{
+  "adapter_seconds": 16.461759079999865,
+  "commitment": {
+    "commitment_id": "f033a74a07369cf099614ec6247f79b76298df47a05b3e8c4f790f7f634bea7e",
+    "key": "slot3",
+    "run_id": "2026-11-12-flashprove-l1-maverick-p512-o512-prover-h200-hosted-2",
+    "slot": 3
+  },
+  "exit_code": 0,
+  "harness_seconds": 16.870485917,
+  "name": "twin-slot3",
+  "proof": {
+    "archive_digest": "sha256:1ab4ed380822cd13d6208cc65a5d7146fbc09d75b4f0bc0730da412964198138",
+    "key": "slot3",
+    "proof_id": "req-3",
+    "run_id": "2026-11-12-flashprove-l1-maverick-p512-o512-prover-h200-hosted-2",
+    "slot": 3
+  },
+  "raw_exit_code": 0,
+  "raw_last_line": "YES",
+  "reply_change": null,
+  "started_unix": 1794779708.1714199,
+  "stderr_tail": [],
+  "verdict": "accept"
+}

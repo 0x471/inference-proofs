@@ -13,6 +13,8 @@ from iproofs.glyph import PROPERTIES_SCHEMA, not_read_rows, properties_problems
 from iproofs.log.patterns import IPV4_ALLOWED, PATTERNS, is_ipv6
 from iproofs.schema import SchemaRegistry, check_examples, load_document, parse_tree
 from iproofs.serialize import check_format
+from iproofs.trials import TRIAL_GLOB
+from iproofs.trials import problems as trial_problems
 from iproofs.validate import (
     Finding,
     check_claim,
@@ -51,6 +53,7 @@ G2_GLOBS = (
     "results/**/manifest.json",
     "results/**/controls.json",
     "results/**/_controls/*/perturbed.json",
+    "results/**/_trials/*/trial.json",
     "web/_data/facts.json",
 )
 # Known-bad gate fixtures: checked by their own tests, never by the tree scan.
@@ -354,6 +357,11 @@ def g4_derived(root: Path, files: list[str]) -> list[Finding]:
             found += check_derived(root / rel, root)
         elif rel.startswith("results/") and rel.endswith("/controls.json"):
             found += check_controls_summary(root / rel, root)
+        elif fnmatch.fnmatch(rel, TRIAL_GLOB):
+            found += [
+                Finding("G4", rel, "TRIAL-1", message, ErrorKind.INTEGRITY, where)
+                for where, message in trial_problems(root / rel, root)
+            ]
     return found
 
 

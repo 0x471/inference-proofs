@@ -1,0 +1,6 @@
+s2	0	1529.9	VERDICT: ACCEPT (exact match)
+s3	0	1244.4	VERDICT: ACCEPT (exact match)
+c1	0	1237.3	VERDICT: ACCEPT (exact match)
+c2	0	1246.4	VERDICT: ACCEPT (exact match)
+c3	0	1238.3	VERDICT: ACCEPT (exact match)
+s2-other-id	1	291.8	VERDICT: REJECT
