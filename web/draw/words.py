@@ -324,6 +324,7 @@ SCOPE_HEAD = (
 # what the property means stays apart from the verdict: the publisher states it (or not), and the
 # petal grades how far the statement reaches this row
 SCOPE_BLOCK_HEAD = "Soundness, zero knowledge, completeness"  # under the five petals
+SCOPE_CARD_WORD = "scope card"  # with the stated security, behind one disclosure under the three
 SCOPE_STATED = {"stated": "The publisher states it; {petal} grades how far that reaches this row.",
                 "not_stated": "The publisher does not state it; {petal} grades that."}  # fmt: skip
 SCOPE_TESTED = "Tested by us on honest runs, {n} of {n} replies accepted"
@@ -529,6 +530,11 @@ VERIFIER_LINE = (
 NEXT_HEAD = {"up": "Next step, {to}", "decide": "To decide", "repair": "Next step"}
 NEXT_BY = {("publisher",): "By the publisher.", ("us",): "By us.",
            ("publisher", "us"): "By the publisher and us."}  # fmt: skip
+# a system page's petal row (amended 2026-11-16): the next step's first need and how many follow
+NEXT_MORE = "{need}, and {k} more"
+# the one disclosure per petal, and the head of the full reason inside it
+DETAILS_HEAD = "Details"
+REASON_HEAD = "Reason"
 # the checks whose failure a petal's red names (PETAL_RULE), so a petal and its checks light
 # together on a system page
 PETAL_CHECKS = {"unforgeable": ("model", "prompt", "reply"), "weights_hidden": ("no_weight_file",),

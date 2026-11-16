@@ -1006,22 +1006,24 @@ html.js .scalepage .scl-panel { margin-top: 0; }
 /* a petal's or a check's name leads to its definition: the dotted cue of a defined word */
 .ckt tbody th a { text-decoration: underline dotted 1px var(--rule); text-underline-offset: 4px; }
 .ckt tbody th a:hover { text-decoration: underline solid 2px; }
-/* a system's petals: each arm 30 px high (6 px a unit), its name 24 px, joined to the table's stem; the stem starts with the first arm */
-.ckt.gbig tbody th { width: 333px; padding: 12px 24px 12px 0; border-left: 9px solid var(--cobalt); }
+/* a system's petals: each arm 24 px high, its name 19 px, joined to the table's stem; the stem starts with the first arm.
+   Rows are set at the body's scale and parted by a rule, so the five petals stand in one view (amended 2026-11-16) */
+.ckt.gbig tbody th { width: 272px; padding: 9px 20px 9px 0; border-left: 9px solid var(--cobalt); }
+.ckt.gbig tbody td { padding-top: 9px; padding-bottom: 9px; }
 .ckt.gbig tbody tr:first-child > * { padding-top: 0; }
 .ckt.gbig thead th { padding-bottom: 14px; border-bottom: 0; box-shadow: inset 0 -1px 0 var(--rule); }
 .ckt.gbig thead th:first-child { padding-left: 0; border-left: 9px solid transparent; }
-.ckt.gbig th a.sl { display: flex; align-items: center; width: 300px; max-width: 100%; height: 30px; padding: 0 10px; font: 800 24px/30px var(--disp); letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; color: var(--ground); text-decoration: none; }
+.ckt.gbig th a.sl { display: flex; align-items: center; width: 240px; max-width: 100%; height: 24px; padding: 0 8px; font: 800 19px/24px var(--disp); letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; color: var(--ground); text-decoration: none; }
 .ckt.gbig a.sl.green { background: var(--green); } .ckt.gbig a.sl.amber { background: var(--amber); } .ckt.gbig a.sl.red { background: var(--red); }
 .ckt.gbig a.sl.red span { text-decoration: line-through 3px; }
 .ckt.gbig a.sl.hollow { color: var(--muted); box-shadow: inset -1px 0 0 var(--muted), inset 0 1px 0 var(--muted), inset 0 -1px 0 var(--muted); }
-/* a silent red: the hollow outline in the red ink, its name red and not struck (24 px, 800: large text, 4.17:1 on lift) */
+/* a silent red: the hollow outline in the red ink, its name red and not struck (19 px, 800: large text, 4.17:1 on lift) */
 .ckt.gbig a.sl.red.open { background: none; color: var(--red); box-shadow: inset -1px 0 0 var(--red), inset 0 1px 0 var(--red), inset 0 -1px 0 var(--red); }
 .ckt.gbig a.sl.red.open span { text-decoration: none; }
-/* amber in lesser part: the arm 6 units short (one unit of ground, then a cell 5 units long, 6 px a unit), the cell drawn
+/* amber in lesser part: the arm 6 units short (one unit of ground, then a cell 5 units long, about 4.8 px a unit), the cell drawn
    before it (the arm's :after is a phone's touch target) */
-.ckt.gbig th a.sl.cut { position: relative; width: 264px; max-width: calc(100% - 36px); }
-.ckt.gbig th a.sl.cut:before { content: ""; position: absolute; top: 0; left: calc(100% + 6px); width: 30px; height: 100%; background: var(--amber); }
+.ckt.gbig th a.sl.cut { position: relative; width: 211px; max-width: calc(100% - 29px); }
+.ckt.gbig th a.sl.cut:before { content: ""; position: absolute; top: 0; left: calc(100% + 5px); width: 24px; height: 100%; background: var(--amber); }
 .ckt.gbig th a.sl:hover, .ckt.gbig.lit-on a.sl.lit { text-decoration: none; box-shadow: inset 0 3px 0 var(--paper), inset -3px 0 0 var(--paper), inset 0 -3px 0 var(--paper); }
 .ckt.gbig th a.sl.cut:hover:before, .ckt.gbig.lit-on a.sl.cut.lit:before { box-shadow: inset 0 0 0 3px var(--paper); }
 .ckt.gbig th a.sl.red.open:hover, .ckt.gbig.lit-on a.sl.red.open.lit { box-shadow: inset 0 3px 0 var(--red), inset -3px 0 0 var(--red), inset 0 -3px 0 var(--red); }
@@ -1048,28 +1050,35 @@ html.js .scalepage .scl-panel { margin-top: 0; }
 .rt.ckt .scard tbody td.not_stated { color: var(--muted); }
 /* under a system's petals (MC-6, amended 2026-11-16): the three properties, the stated security, then the scope
    card; the card's head stands clear of the last quote, and the card scrolls in its own box on a phone */
-.sgh { margin: 28px 0 0; }
-.sgh > .pvh { margin: 22px 0 4px; color: var(--muted); }
-.sgh .pf { max-width: 70ch; margin: 0; }
-.sgh .pf > div { display: grid; grid-template-columns: 136px minmax(0, 1fr); gap: 12px; padding: 1px 0; }
-.sgh .pf dt { color: var(--muted); }
-.sgh .pf dd { margin: 0; overflow-wrap: anywhere; }
-.sgh :is(dt, dd, th, td) { text-transform: none; letter-spacing: 0; }
-.sgh .scard { display: block; position: relative; max-width: 100%; overflow-x: auto; margin-top: 14px; border-collapse: collapse; font: inherit; }
-.sgh .scard caption { caption-side: top; text-align: left; padding-bottom: 4px; color: var(--muted); }
-.sgh .scard :is(th, td) { padding: 3px 16px 3px 0; vertical-align: top; text-align: left; font: inherit; white-space: nowrap; }
-.sgh .scard thead :is(th, td) { color: var(--muted); border-bottom: 1px solid var(--line); }
-.sgh .scard tbody th { color: var(--muted); font-weight: inherit; }
-.sgh .scard td.sb { white-space: normal; min-width: 18ch; }
-.sgh .scard td:is(.not_stated, .does_not_apply) { color: var(--muted); }
+.psb { margin: 20px 0 0; }
+.psb > .sub-h { margin: 0 0 6px; }
+.psb .pvh { margin: 14px 0 4px; color: var(--muted); }
+.psb .pf { max-width: calc(90ch + 148px); margin: 0; }
+.psb .pf > div { display: grid; grid-template-columns: 136px minmax(0, 1fr); gap: 12px; padding: 2px 0; }
+.psb .pf dt { color: var(--muted); }
+.psb .pf dd { margin: 0; overflow-wrap: anywhere; }
+.psb .qt { max-width: 90ch; }
+.psb .more > summary { margin-top: 10px; }
+.psb .more > .pf { margin-top: 6px; }
+.psb .scard { display: block; position: relative; max-width: 100%; overflow-x: auto; margin-top: 14px; border-collapse: collapse; font: inherit; }
+.psb .scard caption { caption-side: top; text-align: left; padding-bottom: 4px; color: var(--muted); }
+.psb .scard :is(th, td) { padding: 3px 16px 3px 0; vertical-align: top; text-align: left; font: inherit; white-space: nowrap; }
+.psb .scard thead :is(th, td) { color: var(--muted); border-bottom: 1px solid var(--line); }
+.psb .scard tbody th { color: var(--muted); font-weight: inherit; }
+.psb .scard td.sb { white-space: normal; min-width: 18ch; }
+.psb .scard td:is(.not_stated, .does_not_apply) { color: var(--muted); }
 /* a petal's field term under its name, and the word for what it rests on under its step (amended 2026-11-15) */
-.ckt.gbig th .pst { display: block; margin-top: 4px; color: var(--muted); font-weight: 400; text-transform: none; letter-spacing: 0; }
-.ckt .cst .sd { display: block; margin-top: 6px; color: var(--muted); }
+.ckt.gbig th .pst { display: block; margin-top: 4px; padding-left: 8px; font: 400 12px/16px var(--mono); font-stretch: 87.5%; color: var(--muted); text-transform: none; letter-spacing: 0; }
+.ckt .cst .sd { margin-left: 10px; color: var(--muted); }
 /* a petal's scale and facts under its step, its plain sentence over its reason, its next step and other lines under it */
-.ckt .cst .psc { display: block; max-width: 24ch; margin-top: 6px; color: var(--muted); white-space: normal; }
-.ckt .ppl { display: block; max-width: 70ch; margin-bottom: 8px; color: var(--muted); }
-.ckt .pnx, .ckt .pxl { max-width: 70ch; margin: 8px 0 0; }
+/* a petal's default row: the reason's deciding fact, then the first need of its next step */
+.ckt.gbig .rs { max-width: 90ch; }
+.ckt .pnx, .ckt .pxl, .ckt .pdr, .ckt .psc, .ckt .ppl { max-width: 90ch; margin: 8px 0 0; }
+.ckt .pnx.pns { margin-top: 2px; color: var(--muted); }
 .ckt .pnx .k { margin-right: 6px; font-weight: 600; }
+.ckt .pns .k { color: var(--paper); }
+.ckt .pdr .k { margin-right: 6px; font-weight: 600; }
+.ckt .ppl, .ckt .psc { color: var(--muted); }
 .ckt .pvh { margin: 12px 0 2px; color: var(--muted); }
 .ckt .pvis { margin: 0; padding: 0; list-style: none; max-width: 70ch; }
 /* the two groups' heads: the values fitted to the weights (the only kind that sets the step), then the others */
@@ -1136,7 +1145,8 @@ html.js .scalepage .scl-panel { margin-top: 0; }
    summary opens takes the row's width */
 .ckt.gbig td.prs > .bs { display: grid; grid-template-columns: max-content minmax(0, 1fr); column-gap: 8px; align-items: baseline; max-width: none; margin-top: 8px; white-space: normal; }
 .ckt.gbig td.prs > .bs a.df { white-space: nowrap; }
-.ckt.gbig .more > summary { margin-top: 10px; }
+.ckt.gbig .more > summary { margin-top: 6px; padding: 4px 7px 3px; }
+.ckt.gbig .more[open] { padding-bottom: 6px; }
 /* a petal's summary wraps between its counts (never inside one) when they outgrow a phone's cell */
 .ckt.gbig .more > summary { max-width: 100%; white-space: normal; }
 @media (max-width: 760px) {
@@ -1201,6 +1211,7 @@ html.js .scalepage .scl-panel { margin-top: 0; }
   .syspage .rt.stk tr { padding-right: 12px; }
   /* a finger's targets: 40 px */
   .more > summary { padding: 13px 10px; }
+  .ckt.gbig .more > summary { padding: 11px 8px 10px; }
   .syspage .ckt .ev { padding-block: 11px; }
   .rt.stk .rid { display: inline-block; padding-block: 13px; margin-block: -13px; }
   .ckt .cst a.cc { display: inline-block; margin-top: 6px; }
@@ -1810,10 +1821,9 @@ ol.ls > li:before { counter-increment: n; content: counter(n); position: absolut
 }
 @media (max-width: 900px) {
   .cwrap { grid-template-columns: minmax(0, 1fr); row-gap: 24px; padding-top: 28px; }
-  .ckt.gbig th a.sl { width: 250px; height: 25px; padding: 0 8px; font-size: 20px; line-height: 25px; }
-  .ckt.gbig th a.sl.cut { width: 220px; max-width: calc(100% - 30px); }
-  .ckt.gbig th a.sl.cut:before { left: calc(100% + 5px); width: 25px; }
-  .ckt.gbig th a.sl.cut:after { right: -30px; }
+  .ckt.gbig th a.sl { width: 240px; }
+  .ckt.gbig th a.sl.cut { width: 211px; max-width: calc(100% - 29px); }
+  .ckt.gbig th a.sl.cut:after { right: -29px; }
   .checks { padding-top: 28px; }
   .cwrap .gbig { justify-self: start; width: min(318px, 100%); position: static; }
 }
@@ -1918,7 +1928,7 @@ ol.ls > li:before { counter-increment: n; content: counter(n); position: absolut
   .ckt th a { position: relative; z-index: 1; display: inline-block; padding-block: 13px 6px; margin-block: -13px -6px; }
   .ckt.gbig th a.sl { display: flex; padding-block: 0; margin-block: 0; }
   .ckt.gbig th a.sl:after { content: ""; position: absolute; inset: -10px 0; }
-  .ckt.gbig th a.sl.cut:after { right: -36px; }
+  .ckt.gbig th a.sl.cut:after { right: -29px; }
   .figs dt a, .ckt .cst a.cc, .ckt .bs a { position: relative; display: inline-block; }
   .figs dt a:after, .ckt .cst a.cc:after, .ckt .bs a:after { content: ""; position: absolute; inset: -13px -4px; }
   .ckt td :is(a.qt, a.cw) { position: relative; }
@@ -2050,12 +2060,12 @@ ol.ls > li:before { counter-increment: n; content: counter(n); position: absolut
 
 /* the scope card on a phone (MC-6): one block per property, each cell under its column's head */
 @media (max-width: 560px) {
-  .sgh .scard, .sgh .scard tbody, .sgh .scard tr, .sgh .scard :is(th, td) { display: block; }
-  .sgh .scard thead { display: none; }
-  .sgh .scard tr { padding: 6px 0; border-top: 1px solid var(--line); }
-  .sgh .scard :is(th, td) { padding: 2px 0; white-space: normal; }
-  .sgh .scard td.sb { min-width: 0; }
-  .sgh .scard td:before { content: attr(data-h) ": "; color: var(--muted); }
+  .psb .scard, .psb .scard tbody, .psb .scard tr, .psb .scard :is(th, td) { display: block; }
+  .psb .scard thead { display: none; }
+  .psb .scard tr { padding: 6px 0; border-top: 1px solid var(--line); }
+  .psb .scard :is(th, td) { padding: 2px 0; white-space: normal; }
+  .psb .scard td.sb { min-width: 0; }
+  .psb .scard td:before { content: attr(data-h) ": "; color: var(--muted); }
 }
 
 /* a system's page keeps to a phone's width: the Cost block's clauses and the fidelity tests' summary and
@@ -2067,6 +2077,6 @@ ol.ls > li:before { counter-increment: n; content: counter(n); position: absolut
 
 /* the glyph head on a phone: its prose at the body's size (13 px at least), each label over its words */
 @media (max-width: 560px) {
-  .sgh .pf > div { grid-template-columns: minmax(0, 1fr); gap: 0; padding: 3px 0; }
-  .sgh .pf dd, .sgh .scard td { font: var(--f-meta); }
+  .psb .pf > div { grid-template-columns: minmax(0, 1fr); gap: 0; padding: 3px 0; }
+  .psb .pf dd, .psb .scard td { font: var(--f-meta); }
 }

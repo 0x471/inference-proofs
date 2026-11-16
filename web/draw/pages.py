@@ -79,6 +79,7 @@ from .words import (
     CHECKS_DESC,
     CHECKS_LEAD,
     CONTROL_NAME,
+    DETAILS_HEAD,
     DOCS_READ,
     DTYPE_BITS,
     FID_KIND,
@@ -137,6 +138,7 @@ from .words import (
     MANDATE_MEMBERS_IN,
     NEXT_BY,
     NEXT_HEAD,
+    NEXT_MORE,
     NO_STEADY_WORD,
     NOT_RUN_LEAD,
     NOT_RUN_RULE,
@@ -170,6 +172,7 @@ from .words import (
     READING_HEAD,
     READING_NEED,
     READING_RULE,
+    REASON_HEAD,
     REASON_LINK,
     RECORD_WORD,
     REPLY_TOKENS_HEAD,
@@ -177,6 +180,7 @@ from .words import (
     SCOPE_BLOCK_HEAD,
     SCOPE_BOUND_HEAD,
     SCOPE_CARD_HEAD,
+    SCOPE_CARD_WORD,
     SCOPE_COL_WORD,
     SCOPE_HEAD,
     SCOPE_NOT_GRADED,
@@ -471,9 +475,17 @@ def scope_head_html(row):
         security = f"<div><dt>{e(STATED_SECURITY)}</dt><dd>{words}</dd></div>"
     facts = "".join(f"<div><dt>{e(k)}</dt><dd>{v}</dd></div>" for k, v in lines)
     formal = petal["machine_checked"]["formal"]
-    return (f'<div class="sgh"><h3 class="sub-h">{e(SCOPE_BLOCK_HEAD)}</h3>'
-            f'<dl class="pf">{facts}{security}</dl>'
-            f"{scope_card_html(formal)}</div>")  # fmt: skip
+    # the three lines stay in view; the stated security and the scope card one click down
+    # (amended 2026-11-16)
+    card = scope_card_html(formal)
+    held = [w for w, part in ((STATED_SECURITY, security), (SCOPE_CARD_WORD, card)) if part]
+    more = ""
+    if held:
+        security = f'<dl class="pf">{security}</dl>' if security else ""
+        more = (f'<details class="more"><summary>{e(", ".join(held))}</summary>{security}{card}'
+                "</details>")  # fmt: skip
+    return (f'<div class="psb"><h3 class="sub-h">{e(SCOPE_BLOCK_HEAD)}</h3>'
+            f'<dl class="pf">{facts}</dl>{more}</div>')  # fmt: skip
 
 
 def silent(formal):
@@ -541,45 +553,50 @@ def counted_words(k, one):
     return f"{k:,} {one}" if k == 1 else f"{k:,} {one}s"
 
 
-def petal_more(p, of=None):
-    """What a petal holds beyond its reason: first, in the row, what it rests on (a silent red's
-    reason already names the publisher's documents, so it prints this line only when a fact is our
-    reading); then, one click away, a native disclosure whose summary names by count what it
-    holds (the documents read, the quotes, Machine-checked's scope card, Weights hidden's visible
-    list), opening onto them (SI-3, GL-1)."""
+def gist(reason):
+    """A petal's deciding fact, its default line on a system page (amended 2026-11-16): the
+    reason's first clause. A reason opens with what decides the step and joins its clauses with
+    semicolons (GL-5, UF-9), so nothing here is typed per system."""
+    return reason.split("; ", 1)[0]
+
+
+def petal_details(p, row):
+    """What a petal holds beyond its default row, one click down in one native disclosure
+    (RFC-0018 SI-3, amended 2026-11-16): its plain sentence, the full reason and next step where
+    the row cuts them, the scale and fact lines, then the publisher's words, our reading,
+    Formally verified's tool and theorem, Confidentiality's forms and visible values, the trials,
+    the documents read and what the petal rests on. Its summary counts the publisher's quotes."""
     basis = basis_html(p) if not p["sources"] or p["reading"] else ""
-    # our tests: said in the row; the publisher's documents: once, at the disclosure's foot, so
-    # the same qualifier is not printed under every petal
-    foot = f'<p class="pfrom">{basis}</p>' if basis and p["basis"] != "test" else ""
-    row = f'<span class="bs">{basis}</span>' if basis and p["basis"] == "test" else ""
-    # a silent red: the documents read, counted first (GL-1), then its quotes
-    said = [counted_words(len(p["sources"]), "document") + " read"] if p["sources"] else []
+    foot = f'<p class="pfrom">{basis}</p>' if basis else ""
+    reason = p["reason"]
+    full = (f'<p class="pdr"><span class="k">{e(REASON_HEAD)}</span> {e(reason)}</p>'
+            if gist(reason) != reason else "")  # fmt: skip
+    nx = p.get("next") or {}
+    more = next_html(p) if len(nx.get("needs") or ()) > 1 else ""
+    scale = scale_html(p, row)
+    quotes = ""
     if p["quotes"]:  # the publisher's own words at the pinned commit
-        said.append(QUOTES_HEAD.format(n=len(p["quotes"])))
-    if p["formal"] is not None and not silent(p["formal"]):
-        said.append("tool and theorem")
-    if p["forms"]:
-        said.append(counted_words(len(p["forms"]), "form"))
-    kept = kept_html(of, p["id"]) if of is not None else ""  # `of`: the row
-    if kept:
-        said.append(counted_words(kept.count('<p class="cn">'), "trial"))
+        quotes = f'<p class="pvh">{e(QUOTES_HEAD.format(n=len(p["quotes"])))}</p>' + quote_links(
+            p["quotes"]
+        )
     notes = "".join(f'<p class="cn">{e(n)}</p>' for n in p["notes"])
     if notes:  # GL-10: what the reading rests on, in our words, apart from the quotes
         notes = f'<p class="pvh">{e(READING_HEAD)}</p>{notes}'
-        said.append(READING_HEAD.lower())
-    if p["visible"]:  # the publisher's "at least" kept with its count
-        said.append(("at least " if p["visible_at_least"] else "")
-                    + counted_words(len(p["visible"]), "visible value"))  # fmt: skip
-    if not said:
-        return f'<span class="bs">{basis}</span>' if basis else ""
     # a silent red: the documents read, each linked at the pin (GL-1)
     docs = ", ".join(f'<a href="{e(d["url"])}">{e(d["path"])}</a>' for d in p["sources"])
     docs = f'<p class="pfrom"><span class="k">{e(DOCS_READ)}</span> {docs}</p>' if docs else ""
-    body = (quote_links(p["quotes"]) + notes + formal_facts_html(p["formal"]) + forms_html(p["forms"])
-            + visible_html(p["visible"], p["visible_at_least"]) + kept + docs + foot)  # fmt: skip
+    body = (f'<p class="ppl">{e(PETAL_PLAIN[p["id"]])}</p>{full}{more}{scale}{extra_html(p, row)}'
+            + quotes + notes + formal_facts_html(p["formal"]) + forms_html(p["forms"])
+            + visible_html(p["visible"], p["visible_at_least"]) + kept_html(row, p["id"]) + docs
+            + foot)  # fmt: skip
+    said = [DETAILS_HEAD]
+    if p["quotes"]:
+        said.append(counted_words(len(p["quotes"]), "quote"))
+    elif p["sources"]:
+        said.append(counted_words(len(p["sources"]), "document") + " read")
     said = " · ".join(f'<span class="nw">{e(w)}</span>' for w in said)
     owner = f'<span class="sr">, {e(PETAL_NAME[p["id"]])}</span>'
-    return f'{row}<details class="more"><summary>{said}{owner}</summary>{body}</details>'
+    return f'<details class="more"><summary>{said}{owner}</summary>{body}</details>'
 
 
 def said_html(p):
@@ -612,9 +629,9 @@ STATED_REACH = ("part", "protocol", "protocol_and_statement", "verifier_run")
 
 
 def scale_html(p, row):
-    """The lines under a petal's step (§3, §4, §5.3): Confidentiality's step as a scale of what
-    was proved and its architecture fact; Fidelity's proved copy (its bits and number format);
-    Formally verified's stated reach. They set no state."""
+    """The scale lines in a petal's disclosure (§3, §4, §5.3, amended 2026-11-16):
+    Confidentiality's step as a scale of what was proved; Fidelity's proved copy (its bits and
+    number format); Formally verified's stated reach. They set no state."""
     out = []
     if p["id"] == "faithful_model" and (proved := proved_words(row, long=True)):
         out.append(proved)
@@ -624,23 +641,21 @@ def scale_html(p, row):
         if key == "amber_upper" and needs == [READING_NEED]:  # WH-5 capped by GL-10
             key = "amber_reading"
         label = HIDING_LABEL.get(key)
-        out += [label] if label else []
-        out.append(ARCH_SHORT)
+        out += [label] if label else []  # its architecture fact follows, in full (`extra_html`)
     formal = p.get("formal")
     if p["id"] == "machine_checked" and formal and formal["reach"] in STATED_REACH:
         said = SAID_WORD["reading" if p["reading"] else "statement"]
         out.append(REACH_STATED.format(said=said, label=reach_label(formal)))
-    return "".join(f'<span class="psc">{e(w)}</span>' for w in out)
+    return "".join(f'<p class="psc">{e(w)}</p>' for w in out)
 
 
-def next_html(p):
-    """A petal's next step (GL-11, amended 2026-11-16), from the board: the step above and what
-    the row lacks for it, then who acts; for a hollow petal what decides it; for a failed one its
-    repair. It sets nothing."""
+def next_parts(p):
+    """A petal's next step as (head, needs, who acts), or None: the step above and what the row
+    lacks for it; for a hollow petal what decides it; for a failed one its repair (GL-11)."""
     nx = p.get("next")
     if not nx:
-        return ""
-    needs = "; ".join(n["text"] for n in nx["needs"])
+        return None
+    needs = [n["text"] for n in nx["needs"]]
     by = NEXT_BY[tuple(b for b in ("publisher", "us") if any(n["by"] == b for n in nx["needs"]))]
     if nx["to"] is not None:
         head = NEXT_HEAD["up"].format(to=STEP_WORD[nx["to"]])
@@ -648,7 +663,23 @@ def next_html(p):
         head = NEXT_HEAD["decide"]
     else:
         head, by = NEXT_HEAD["repair"], ""
-    return f'<p class="pnx"><span class="k">{e(head)}:</span> {e(needs)}.{" " + e(by) if by else ""}</p>'
+    return head, needs, by
+
+
+def next_html(p, short=False):
+    """A petal's next step (GL-11, amended 2026-11-16), from the board. It sets nothing. `short`
+    (the default row): its first need, the count of the others, and who acts on them all; in
+    full (the disclosure): every need."""
+    parts = next_parts(p)
+    if parts is None:
+        return ""
+    head, needs, by = parts
+    said = "; ".join(needs)
+    if short and len(needs) > 1:
+        said = NEXT_MORE.format(need=needs[0], k=len(needs) - 1)
+    cls = "pnx" + (" pns" if short else "")
+    return (f'<p class="{cls}"><span class="k">{e(head)}:</span> {e(said)}.'
+            f'{" " + e(by) if by else ""}</p>')  # fmt: skip
 
 
 def extra_html(p, row):
@@ -677,9 +708,10 @@ def glyph_html(row):
     """The glyph once, large, as the heads of the petals' table: each arm is its petal's name on
     the ink of its state (never its state word: the ink says it, and the chip beside it), on one
     stem, its plain sentence in its title, with its field term under it; then the step in words
-    (a hollow petal's cause in the chip's title), what it rests on and its scale; then the plain
-    sentence, the reason, the next step, the petal's other lines, and what it holds besides
-    (`petal_more`). An arm, its row and the checks its red names light together."""
+    (a hollow petal's cause in the chip's title) and what it rests on; then two short lines, the
+    reason's deciding fact and the first need of the next step; everything else one click down
+    (`petal_details`, amended 2026-11-16). An arm, its row and the checks its red names light
+    together."""
     trs = []
     for i, p in enumerate(row["glyph"]):
         tok = f"{p['state']} {p['form']}".strip()
@@ -695,12 +727,12 @@ def glyph_html(row):
             f'<a class="sl s{i + 1} {tok}"{data} href="{CHECKS_PAGE}#{p["id"]}" data-k="p{i + 1}" '
             f'title="{e(plain)}"><span>{e(PETAL_NAME[p["id"]])}</span></a>'
             f'<span class="pst">{e(PETAL_TERM[p["id"]])}</span></th>'
-            f'<td class="cst">{state}{said_html(p)}{scale_html(p, row)}</td>'
-            f'<td class="prs"><span class="ppl">{e(plain)}</span>'
-            f'<span class="rs">{e(p["reason"])}</span>{next_html(p)}{extra_html(p, row)}'
-            f"{petal_more(p, row)}</td></tr>"
+            f'<td class="cst">{state}{said_html(p)}</td>'
+            f'<td class="prs"><span class="rs">{e(gist(p["reason"]))}</span>'
+            f"{next_html(p, short=True)}{petal_details(p, row)}</td></tr>"
         )
-    # plain first (D7): the five petals, then the properties they grade and the scope card
+    # plain first (D7): the five petals, then the properties they grade, the stated security and
+    # the scope card
     return ('<div class="checks"><table class="rt ckt gbig"><caption class="sr">Petal, state, '
             f'reason</caption><tbody>{"".join(trs)}</tbody></table></div>'
             + scope_head_html(row))  # fmt: skip
