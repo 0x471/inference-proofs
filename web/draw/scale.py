@@ -39,7 +39,7 @@ from .overview import (
     nobreak,
     position_html,
     scope_note,
-    serving_missing,
+    served_html,
     standing_html,
 )
 from .pages import section, title_band
@@ -232,16 +232,14 @@ def figure_html(row, dim):
 
 
 def serving_html(rung, dim):
-    """The stored serving figure a model's head prints: GPU time beside the multiple (its 1x),
-    named "Serving" as on the ladder; the state where the rung has no baseline; nothing for a
-    figure with no serving counterpart."""
+    """The stored serving figure a model's head prints beside the multiple (its 1x), as the
+    ladder's head prints it: the serving rate, its GPU named (amended 2026-11-16, `served_html`),
+    named "Serving"; the state where the rung has no baseline; nothing for a figure with no
+    serving counterpart."""
     if dim != "multiple":
         return ""
-    b = rung["baseline"]
-    key = "gpu_seconds_per_reply"
-    fig = serving_missing(b) if b is None or not has(b[key]) else fig_html(b[key], sub=BARE)
-    head = SCALE_SERVING
-    return f'<span class="lsv"><span class="k">{e(head)}</span>{fig}</span>'
+    fig = served_html(rung["baseline"])
+    return f'<span class="lsv"><span class="k">{e(SCALE_SERVING)}</span>{fig}</span>'
 
 
 def lane_html(rung, dim, unit, ext):

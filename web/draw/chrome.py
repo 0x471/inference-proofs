@@ -424,7 +424,12 @@ def rate_pair(row):
     served = b.get("reply_tokens_per_gpu_second")
     if lead_figure(row)[2] != "session_multiple" or not (has(proved) and has(served)):
         return None
-    return proved, served, gpu_name(row), b.get("gpu") or SERVING_GPU
+    return proved, served, gpu_name(row), serving_gpu(b)
+
+
+def serving_gpu(b):
+    """The GPU a model's serving baseline ran on, by its short name (CO-4: H200)."""
+    return (b or {}).get("gpu") or SERVING_GPU
 
 
 def only_run(row):

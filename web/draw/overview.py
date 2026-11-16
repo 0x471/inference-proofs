@@ -21,6 +21,7 @@ from .chrome import (
     parts_of,
     rate_pair,
     rung_of,
+    serving_gpu,
 )
 from .glossary import term
 from .hexagon import glyph_svg
@@ -123,13 +124,14 @@ BARE = ""  # `fig_html`'s `sub` for a figure with no line under it
 RATE_ANCHOR = "tokens"  # the Cost section's line on the two rates, on a system's page
 
 
-def fig_html(f, n=None, sub=None, why=None, note=None, how=None):
+def fig_html(f, n=None, sub=None, why=None, note=None, how=None, unit=None):
     """One stored figure: the number in a reading unit, its labels in its title, and under it its
     scope in a word and its sample size (AGENTS.md rule 2). `sub` replaces the line under it
     (`BARE`: no line, as the ladder and the Scale page print a figure; its labels stay in its
     title, `n` and `note` among them, and stand in full on the system's page); `why` replaces a
     null figure's reason (NO_STEADY_WORD on a row with no steady state); `how` opens the title
-    with how the figure is computed (the headline's, `how_computed`)."""
+    with how the figure is computed (the headline's, `how_computed`); `unit` replaces the unit's
+    words (a rate's GPU named: "tokens/s per H200")."""
     if f is None:
         return '<span class="na">not recorded</span>'
     if f["value"] is None:
@@ -137,7 +139,8 @@ def fig_html(f, n=None, sub=None, why=None, note=None, how=None):
         return (
             f'<span class="na" title="{e(labels(f))}">none</span><span class="sub">{e(why)}</span>'
         )
-    num, unit = number(f["value"], f["unit"])
+    num, said = number(f["value"], f["unit"])
+    unit = unit or said
     x = " x" if f["unit"] == "ratio" else ""
     line = sub if sub is not None else sub_words(f, n)
     # the probe (words.js) prints a title's "key: value" parts, split at "; ", one row each: the
@@ -219,13 +222,14 @@ def multiple_html(row, parts=True, bare=False, to=None, rates=None):
     """CO-5: the multiple; with no steady state, the session cost over serving, labelled as whole
     sessions. With `parts`, its two parts under it (CO-7, `split_html`). `bare` (the ladder, the
     Scale page): the figures alone, no line of scope and n under any; `to` (the ladder): the
-    figure and its parts each linked there. `rates` (the ladder, amended 2026-11-16): in the
-    parts' place, the line of the two rates the multiple is made of (`rate_html`), linked to
-    that address."""
+    figure and its parts each linked there. `rates` (the ladder, amended 2026-11-16): under the
+    parts, the line of the two rates the multiple is made of (`rate_html`), linked to that
+    address; parts and rates in one block (`cmx`) that a narrow row sets beside the glyph."""
     _, f, key = lead_figure(row)
     split = split_html(row, key, bare=bare, to=to) if parts else ""
     if rates is not None:
-        split = rate_html(row, rates)
+        under = split + rate_html(row, rates)
+        split = f'<span class="cmx">{under}</span>' if under else ""
     how = how_computed(row)
     if bare:
         fig = fig_html(f, counted(row), sub=BARE, note=whole_note(row, key), how=how)
@@ -241,21 +245,24 @@ def multiple_html(row, parts=True, bare=False, to=None, rates=None):
 
 def rate_html(row, to):
     """The two rates the multiple is made of, in one small line under it (CO-8, amended
-    2026-11-16): "2.03 tokens/s proved · 2,670 served, per H200", each the request's reply tokens
-    per GPU-second, linked to `to` (the Cost section's line on them, where their scope, n, range
-    and GPUs are printed: DEPTH law 3). Its title says how they read against the multiple (served
-    over proved is it) and carries each rate's labels and record. Nothing where the row has no
-    pair (`rate_pair`)."""
+    2026-11-16): "2.027 proved · 2,669 served", then once for both their unit and GPU, "tokens/s
+    per H200"; each the request's reply tokens per GPU-second, linked to `to` (the Cost section's
+    line on them, where their scope, n, range and GPUs are printed: DEPTH law 3). Its title says
+    how they read against the multiple (served over proved is it) and carries each rate's labels
+    and record. Nothing where the row has no pair (`rate_pair`)."""
     pair = rate_pair(row)
     if pair is None:
         return ""
     proved, served, gp, gs = pair
     same = gp == gs
     pn, sn = (number(f["value"], f["unit"])[0] for f in (proved, served))
-    words = (f'<span class="n">{e(pn)}</span> {e(RATE_PROVED)}'
-             + ("" if same else f" {e(RATE_ON.format(gpu=gp))}")
-             + f'<span class="sep">{e(SEP)}</span><span class="n">{e(sn)}</span> {e(RATE_SERVED)}'
-             + f", {e(RATE_PER.format(gpu=gs) if same else RATE_ON.format(gpu=gs))}")  # fmt: skip
+    pw = RATE_PROVED if same else f"{RATE_PROVED} {RATE_ON.format(gpu=gp)}"
+    sw = RATE_SERVED if same else f"{RATE_SERVED} {RATE_ON.format(gpu=gs)}"
+    unit = RATE_PER.format(gpu=gs if same else "GPU")
+    words = (f'<span class="rp"><span class="n">{e(pn)}</span> {e(pw)}</span>'
+             f'<span class="sep">{e(SEP)}</span>'
+             f'<span class="rp"><span class="n">{e(sn)}</span> {e(sw)}</span>'
+             f'<span class="sr">, </span><span class="ru">{e(unit)}</span>')  # fmt: skip
     _, lead, _ = lead_figure(row)
     count = proved["n"] if proved["n"] is not None else counted(row)
     whole = WHOLE_SESSIONS.format(n=rung_of(row)["requests_per_session"])
@@ -581,19 +588,26 @@ def serving_words(b):
 def rung_meta(rung):
     """A model's head as labelled facts: publisher, architecture (the tab says its size: a
     mixture of experts names its active parameters only, as the Scale page's head does) and its
-    serving GPU time per reply (CO-4), the figure every multiple under it is over. How it was
-    served (engine, GPUs, concurrency) is on a system's page, under Cost."""
+    serving rate (CO-4, CO-8), the figure every multiple under it is over, in the unit of the rows'
+    rate line (amended 2026-11-16: until then its GPU time per reply, now under Cost only). How it
+    was served (engine, GPUs, concurrency) is on a system's page, under Cost."""
     b = rung["baseline"]
     facts = [("Publisher", e(rung["publisher"])),
              ("Architecture", nobreak(architecture(rung["parameters_total"],
                                                    rung.get("parameters_active"), sized=False)))]  # fmt: skip
-    if b is None or not has(b["gpu_seconds_per_reply"]):
-        facts.append(("Serving", serving_missing(b)))
-    else:
-        facts.append((FIGURE_HEAD["serving"],
-                      fig_html(b["gpu_seconds_per_reply"], sub=BARE)))  # fmt: skip
+    facts.append((FIGURE_HEAD["serving"], served_html(b)))
     return '<dl class="meta">' + "".join(f"<div><dt>{k}</dt><dd>{v}</dd></div>"
                                          for k, v in facts) + "</dl>"  # fmt: skip
+
+
+def served_html(b):
+    """A model's serving rate as its head prints it (CO-8, amended 2026-11-16): the baseline's
+    reply tokens per GPU-second, its GPU named ("2,669 tokens/s per H200"), the unit of the rows'
+    rate line under it; the state where the board holds none."""
+    f = (b or {}).get("reply_tokens_per_gpu_second")
+    if not has(f):
+        return serving_missing(b)
+    return fig_html(f, sub=BARE, note=f.get("note"), unit=RATE_PER.format(gpu=serving_gpu(b)))
 
 
 def rung_html(rung):

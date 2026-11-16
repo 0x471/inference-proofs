@@ -530,7 +530,9 @@ VERIFIER_LINE = (
 NEXT_HEAD = {"up": "Next step, {to}", "decide": "To decide", "repair": "Next step"}
 NEXT_BY = {("publisher",): "By the publisher.", ("us",): "By us.",
            ("publisher", "us"): "By the publisher and us."}  # fmt: skip
-# a system page's petal row (amended 2026-11-16): the next step's first need and how many follow
+# a system page's petal row (amended 2026-11-16): the next step's target and who acts, every need
+# in the petal's disclosure; a cut reason's first clause and how many clauses follow
+NEXT_SHORT = {"up": "Next step: {to}, {by}", "decide": "To decide, {by}"}
 NEXT_MORE = "{need}, and {k} more"
 # the one disclosure per petal, and the head of the full reason inside it
 DETAILS_HEAD = "Details"
@@ -577,10 +579,11 @@ SERVING_GPU = "H200"  # CO-4: the serving baseline runs on the fewest H200 that 
 # CO-8 (adopted 2026-11-16): reply tokens per GPU-second under Cost (depth 3); amended 2026-11-16:
 # the proved and the served rate also print as one line under the multiple (`overview.rate_html`)
 REPLY_TOKENS_HEAD = "Tokens per second"
-# that line: each rate's word after its number, then the GPU both ran on ("per H200"), or each
-# rate's GPU after its word where the two differ
-RATE_PROVED, RATE_SERVED = "tokens/s proved", "served"
-RATE_PER, RATE_ON = "per {gpu}", "on {gpu}"
+# that line: each rate's word after its number ("2.027 proved · 2,669 served"), then once for both
+# their unit and the GPU both ran on ("tokens/s per H200"), or each rate's GPU after its word and
+# "tokens/s per GPU" where the two differ
+RATE_PROVED, RATE_SERVED = "proved", "served"
+RATE_PER, RATE_ON = "tokens/s per {gpu}", "on {gpu}"
 # its title, first: how the two rates are read against the multiple above them
 RATE_HOW = ("how: the request's {tokens} reply tokens over the GPU-seconds one reply took, on "
             "one GPU")  # fmt: skip
@@ -658,7 +661,8 @@ FIGURE_RULE = {
          "GPU, printed in tokens/s per GPU with the GPU named. Proved: over whole sessions, as "
          "Cost vs serving counts them. Served: the same reply served without a proof, at full "
          "load, on the same GPU type. Served over proved is Cost vs serving."),
-        ("", "Both depend on the GPU, so neither ranks a row: the order reads Cost vs serving."),
+        ("", "Both depend on the GPU, so neither ranks a row: the order reads m, the steady "
+         "multiple (OR-3), never a rate."),
     ),
     "cost": (
         ("steady", "m in USD, at the release's price for one H200 GPU-hour."),
@@ -1166,8 +1170,9 @@ def number(v, unit):  # noqa: PLR0911 (one return per stored unit)
         return sig(v), "GPU-s/reply token"
     if unit == "request/gpu_s":  # CO-4: a rung of the serving ladder
         return sig(v), "replies/GPU-s"
-    if unit == "token/gpu_s":  # CO-8: at 3 digits, the spread of its sessions' range
-        return sig(v, 3), "tokens/s per GPU"
+    if unit == "token/gpu_s":  # CO-8: 4 digits, every whole digit, so served over proved as
+        # printed gives the printed multiple (amended 2026-11-16)
+        return (f"{v:,.0f}" if abs(v) >= 1000 else sig(v, 4)), "tokens/s per GPU"
     raise KeyError(f"no words for the unit {unit!r}")
 
 

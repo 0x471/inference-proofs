@@ -141,6 +141,7 @@ from .words import (
     NEXT_BY,
     NEXT_HEAD,
     NEXT_MORE,
+    NEXT_SHORT,
     NO_STEADY_WORD,
     NOT_RUN_LEAD,
     NOT_RUN_RULE,
@@ -556,26 +557,29 @@ def counted_words(k, one):
     return f"{k:,} {one}" if k == 1 else f"{k:,} {one}s"
 
 
-def gist(reason):
+def gist(p):
     """A petal's deciding fact, its default line on a system page (amended 2026-11-16): the
-    reason's first clause. A reason opens with what decides the step and joins its clauses with
-    semicolons (GL-5, UF-9), so nothing here is typed per system."""
-    return reason.split("; ", 1)[0]
+    reason's first clause, then ", and <k> more" where clauses follow, so a cut says so. A reason
+    opens with what decides the step and joins its clauses with semicolons (GL-5, UF-9), so
+    nothing here is typed per system. A petal our tests set (Fidelity, basis `test`) prints its
+    reason whole: its last clause is the row's own measure, in its unit (FI-5)."""
+    clauses = p["reason"].split("; ")
+    if p["basis"] == "test" or len(clauses) == 1:
+        return p["reason"]
+    return NEXT_MORE.format(need=clauses[0], k=len(clauses) - 1)
 
 
 def petal_details(p, row):
     """What a petal holds beyond its default row, one click down in one native disclosure
-    (RFC-0018 SI-3, amended 2026-11-16): its plain sentence, the full reason and next step where
-    the row cuts them, the scale and fact lines, then the publisher's words, our reading,
+    (RFC-0018 SI-3, amended 2026-11-16): its plain sentence, the full reason and next step (the
+    row's two short lines step aside while it is open, words.css), the scale and fact lines,
+    then the publisher's words, our reading,
     Formally verified's tool and theorem, Confidentiality's forms and visible values, the trials,
     the documents read and what the petal rests on. Its summary counts the publisher's quotes."""
     basis = basis_html(p) if not p["sources"] or p["reading"] else ""
     foot = f'<p class="pfrom">{basis}</p>' if basis else ""
-    reason = p["reason"]
-    full = (f'<p class="pdr"><span class="k">{e(REASON_HEAD)}</span> {e(reason)}</p>'
-            if gist(reason) != reason else "")  # fmt: skip
-    nx = p.get("next") or {}
-    more = next_html(p) if len(nx.get("needs") or ()) > 1 else ""
+    full = f'<p class="pdr"><span class="k">{e(REASON_HEAD)}</span> {e(p["reason"])}</p>'
+    more = next_html(p)
     scale = scale_html(p, row)
     quotes = ""
     if p["quotes"]:  # the publisher's own words at the pinned commit
@@ -671,12 +675,19 @@ def next_parts(p):
 
 def next_html(p, short=False):
     """A petal's next step (GL-11, amended 2026-11-16), from the board. It sets nothing. `short`
-    (the default row): its first need, the count of the others, and who acts on them all; in
-    full (the disclosure): every need."""
+    (the default row): the step it would move to and who acts ("Next step: Mostly met, by the
+    publisher."; "To decide, by us."), or a Failed petal's first repair and the count of the
+    others; in full (the disclosure): every need."""
     parts = next_parts(p)
     if parts is None:
         return ""
     head, needs, by = parts
+    nx = p["next"]
+    if short and by:
+        key = "up" if nx["to"] is not None else "decide"
+        to = STEP_WORD[nx["to"]] if nx["to"] is not None else ""
+        said = NEXT_SHORT[key].format(to=to, by=by[0].lower() + by[1:])
+        return f'<p class="pnx pns">{e(said)}</p>'
     said = "; ".join(needs)
     if short and len(needs) > 1:
         said = NEXT_MORE.format(need=needs[0], k=len(needs) - 1)
@@ -712,7 +723,8 @@ def glyph_html(row):
     the ink of its state (never its state word: the ink says it, and the chip beside it), on one
     stem, its plain sentence in its title, with its field term under it; then the step in words
     (a hollow petal's cause in the chip's title) and what it rests on; then two short lines, the
-    reason's deciding fact and the first need of the next step; everything else one click down
+    reason's deciding fact and the step it would move to with who acts; everything else one
+    click down
     (`petal_details`, amended 2026-11-16). An arm, its row and the checks its red names light
     together."""
     trs = []
@@ -731,7 +743,7 @@ def glyph_html(row):
             f'title="{e(plain)}"><span>{e(PETAL_NAME[p["id"]])}</span></a>'
             f'<span class="pst">{e(PETAL_TERM[p["id"]])}</span></th>'
             f'<td class="cst">{state}{said_html(p)}</td>'
-            f'<td class="prs"><span class="rs">{e(gist(p["reason"]))}</span>'
+            f'<td class="prs"><span class="rs">{e(gist(p))}</span>'
             f"{next_html(p, short=True)}{petal_details(p, row)}</td></tr>"
         )
     # plain first (D7): the five petals, then the properties they grade, the stated security and
@@ -1876,14 +1888,12 @@ def tf_title(head, tf):
 
 def figures_html(row):
     """The row's other figures (the band prints its one figure) as one ruled row of cells, each
-    figure with its unit and no more (SI-8): the two rates the multiple is made of (amended
-    2026-11-16, in USD's place: USD is under Cost only), verify time and proof size per reply,
-    then Fidelity. Each one's scope and n stand under Cost (and in its title); the bar, the
+    figure with its unit and no more (SI-8): verify time and proof size per reply, then Fidelity
+    (USD is under Cost only, and the two rates the multiple is made of stand under it on the band,
+    amended 2026-11-16). Each one's scope and n stand under Cost (and in its title); the bar, the
     controls and KL under Fidelity."""
     figs, n = row["figures"], counted(row)
-    rates = rate_html(row, f"#{RATE_ANCHOR}")
-    cells = [*([(defined(FIGURE_HEAD["rate"], "rate"), rates)] if rates else []),
-             (defined(FIGURE_HEAD["check-time"], "check-time"),
+    cells = [(defined(FIGURE_HEAD["check-time"], "check-time"),
               fig_html(figs["verify_seconds_per_reply"], n, sub=BARE)),
              (defined(FIGURE_HEAD["proof-size"], "proof-size"),
               fig_html(figs["proof_bytes_per_reply"], n, sub=BARE)),
@@ -1986,7 +1996,7 @@ def system_page(row):
     # the figure's plain name, the figure, and under it, once, what was counted and n (CO-5)
     label, lead = FIGURE_HEAD["multiple"], band_figure(row)
     _, _, lkey = lead_figure(row)
-    lead += split_html(row, lkey, bar=False, bare=True)
+    lead += split_html(row, lkey, bar=False, bare=True) + rate_html(row, f"#{RATE_ANCHOR}")
     unranked = "" if row["position"] is not None else " unr"
     band_ = (
         f'<section class="mast mast-sys sysb" aria-labelledby="h-name"><div class="mast-in">'
