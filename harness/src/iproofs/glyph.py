@@ -1229,7 +1229,7 @@ def properties_problems(  # noqa: PLR0912 (one branch per offline rule of spec 1
     if doc.get("system") != system_dir.name:
         problems.append(f"system {doc.get('system')!r} is not the directory {system_dir.name!r}")
     prefix = f"https://github.com/{repo}/blob/{pin}/"
-    for q in _all_quotes(doc.get("petals")):
+    for q in _all_quotes([doc.get("petals"), doc.get("number_format")]):
         if not str(q.get("url")).startswith(prefix):
             problems.append(f"quote url {q.get('url')} is not under {prefix}")
     petals = _m(doc.get("petals"))
