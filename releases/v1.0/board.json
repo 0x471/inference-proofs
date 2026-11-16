@@ -1045,7 +1045,7 @@
               },
               "notes": [
                 "the theorem covers the Lean protocol and states the model as an integer program (THEOREM.md L231-233); the C++ verifier the row runs is tested, not proved (what-is-proved.md L7-8), so the reach stops short of verifier_run; the model statement is the publisher's Lean integer model, and its tables and its reach at a given scale file are not proved (THEOREM.md L229-L231, L242-L243)",
-                "read 2026-11-15: the conclusion is about the publisher's integer model, a reference definition of the model's computation, at the weights the extractor reads; no theorem ties those weights to the ones cp_commit committed (THEOREM.md L227-L228), and at files other than the stored examples the theorem may hold only because verify rejects everything (L314-L315, under Unforgeable's conditions_shown); and the system in the soundness theorem's statement has a constant committer, which commits to nothing, so of that system none of it can be stated with any content (L700-L704): the theorem's model is the extractor's weights, not a committed model's"
+                "read 2026-11-15: the conclusion is about the publisher's integer model, a reference definition of the model's computation, at the weights the extractor reads; no theorem ties those weights to the ones cp_commit committed (THEOREM.md L227-L228), and at files other than the stored examples the theorem may hold only because verify rejects everything (L314-L315, under Integrity's conditions_shown); and the system in the soundness theorem's statement has a constant committer, which commits to nothing, so of that system none of it can be stated with any content (L700-L704): the theorem's model is the extractor's weights, not a committed model's"
               ],
               "quotes": [
                 {
@@ -1121,7 +1121,7 @@
                 "to": "green"
               },
               "notes": [
-                "the publisher states soundness at every public setup of three public files, against any committer and prover, with the random-oracle model as its assumption; no sentence says in words that no setup produced a secret, so the petal is read as transparent and drawn amber in part at most (GL-10, amended 2026-11-15)"
+                "the publisher states soundness at every public setup of three public files, against any committer and prover, with the random-oracle model as its assumption; no sentence says in words that no setup produced a secret, so the petal is read as transparent and graded Mostly met at most (GL-10, amended 2026-11-15)"
               ],
               "quotes": [
                 {
@@ -2757,7 +2757,7 @@
                 "to": "green"
               },
               "notes": [
-                "by the test FlashProve's row meets (GL-10, amended 2026-11-15): a petal is read as transparent when a sentence among its quotes says what soundness rests on and none of it is a setup that produced a secret. SASH states its soundness as stwo's conjectured accounting over the FRI parameters (util.rs L9-L12), and says the setup's two trees are a shape tree the verifier derives from the public parameters and a model tree compared with the published model commitment (prover/README.md L117-L119, docs/statement.md L127-L129). The Fixed statement it calls trusted by the verifier is those parameters and roots (compose.rs L7-L11). No sentence says in words that no setup produced a secret, so read as transparent and drawn amber in part at most, as FlashProve's is"
+                "by the test FlashProve's row meets (GL-10, amended 2026-11-15): a petal is read as transparent when a sentence among its quotes says what soundness rests on and none of it is a setup that produced a secret. SASH states its soundness as stwo's conjectured accounting over the FRI parameters (util.rs L9-L12), and says the setup's two trees are a shape tree the verifier derives from the public parameters and a model tree compared with the published model commitment (prover/README.md L117-L119, docs/statement.md L127-L129). The Fixed statement it calls trusted by the verifier is those parameters and roots (compose.rs L7-L11). No sentence says in words that no setup produced a secret, so read as transparent and graded Mostly met at most, as FlashProve's is"
               ],
               "quotes": [
                 {
