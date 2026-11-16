@@ -588,9 +588,6 @@ LADDER_WORDS = ("Below, each model lists the systems run on it, whether they pas
 # what "passed" means, under the band on every build (SI-1, amended 2026-11-15)
 PASSED_WORDS = ("Passed", ": all six of our ", "checks", " passed. No check tries to ",
                 "forge a proof", ".")  # fmt: skip
-# while no model has two systems run on it (SI-1, amended 2026-11-15): no row was ranked against
-# another, and the line goes by itself once one model has two
-ALONE_WORDS = "No two systems have yet been measured on the same model."
 
 
 def band_html():
@@ -654,22 +651,14 @@ def board_words():
 
 
 def head_html():
-    """The lines between the band and the ladder: what "passed" means (always), and, while no
-    model has two systems run on it, that none has (`alone`)."""
+    """The line between the band and the ladder: what "passed" means (always)."""
     if not any(r["rows"] for r in S.V["rungs"]):
         return ""
     a, b, c, d, f, g = PASSED_WORDS
     lines = [f'<p><a class="df" href="{CHECKS_PAGE}#passed">{e(a)}</a>{e(b)}'
              f'<a href="{CHECKS_PAGE}">{e(c)}</a>{e(d)}'
              f'<a href="{CHECKS_PAGE}#not-tested">{e(f)}</a>{e(g)}</p>']  # fmt: skip
-    if alone(S.V["rungs"]):
-        lines.append(f'<p class="lal">{e(ALONE_WORDS)}</p>')
     return f'<div class="lhd">{"".join(lines)}</div>'
-
-
-def alone(rungs):
-    """Whether no model has two or more systems run on it, while at least one has a row."""
-    return any(r["rows"] for r in rungs) and all(r["systems_run"] < 2 for r in rungs)
 
 
 def not_run_html():

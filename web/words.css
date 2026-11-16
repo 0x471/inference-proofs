@@ -235,7 +235,6 @@ html:has(.top.s-on) { overflow: hidden; }
 .lhd p { margin: 0; max-width: 90ch; }
 .lhd p + p { margin-top: 4px; }
 .lhd a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: 3px; }
-.lhd .lal { color: var(--muted); }
 .lhd + .rung { margin-top: 56px; }
 @media (max-width: 760px) {
   /* as the other title bands (.mast-t), so the title keeps its place from tab to tab */

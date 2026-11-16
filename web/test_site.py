@@ -270,8 +270,7 @@ def test_surface_figures_are_whole_sessions(board_site: Any) -> None:
 
 def test_a_lone_system_is_not_drawn_as_ranked(board_site: Any) -> None:
     """RFC-0018 OR-4 (amended 2026-11-15): a ranked row that is the only system run on its model
-    is an outline square that says so, never a filled "1 of 1", on the ladder and its card; the
-    ladder says no two systems share a model while none does, and not once one does."""
+    is an outline square that says so, never a filled "1 of 1", on the ladder and its card."""
     out, build = board_site.out, board_site.build
     index = (out / "index.html").read_text()
     assert all(r["systems_run"] == 1 for r in board_site.board["rungs"])  # the example board
@@ -280,11 +279,6 @@ def test_a_lone_system_is_not_drawn_as_ranked(board_site: Any) -> None:
     assert build.position_html(row, shared) not in index
     assert build.ONLY_RUN in build.position_html(row, lone)
     assert build.ONLY_RUN not in build.position_html(row, shared)
-    assert build.ALONE_WORDS in index
-    one, two = {"rows": [{}], "systems_run": 1}, {"rows": [{}, {}], "systems_run": 2}
-    assert build.alone([one, {"rows": [], "systems_run": 0}])
-    assert not build.alone([one, two])
-    assert not build.alone([{"rows": [], "systems_run": 0}])
 
 
 def test_a_p_at_its_test_floor_reads_as_a_bound(board_site: Any) -> None:
