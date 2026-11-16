@@ -123,6 +123,17 @@ def test_uf8_amber_upper() -> None:
     assert got(uf(terms=[100, 128])) == amber_upper()
 
 
+def test_uf_reason_opens_with_the_deciding_fact() -> None:
+    """UF-4 to UF-9 (amended 2026-11-16): a reason's first clause is what decided the step, the
+    stated bound last, so a system page's default line (the first clause) is the deciding fact."""
+    for petal in (uf(adversary="weaker"), uf(terms=[130, 79]), uf(basis="conjectured", terms=[99]),
+                  uf(terms=[128, 130]), uf(terms=[124, 101]), uf(basis="conjectured")):  # fmt: skip
+        clauses = petal.reason.split("; ")
+        assert len(clauses) > 1, petal.step
+        assert not clauses[0].startswith("stated bound"), petal.step
+        assert clauses[-1].startswith("stated bound: "), petal.step
+
+
 @pytest.mark.parametrize(
     ("coverage", "bound"),
     [
