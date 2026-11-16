@@ -579,12 +579,10 @@ def rung_html(rung):
             f"{head}{body}</section>")  # fmt: skip
 
 
-# the overview's lead (SI-1, amended 2026-11-15): what a proof of inference is, for a reader with
-# no context, then what the ladder below holds; the third sentence is the board's (`board_words`)
+# the overview's lead (SI-1, amended 2026-11-16): one sentence, what a proof of inference is, for a
+# reader with no context; the ladder under it says the rest
 PROOF_WORDS = ("A proof of inference lets anyone check that a reply is the one a committed model "
                "returns for a prompt.")  # fmt: skip
-LADDER_WORDS = ("Below, each model lists the systems run on it, whether they passed, and the cost "
-                "of a proved reply as a multiple of serving that model.")  # fmt: skip
 # what "passed" means, under the band on every build (SI-1, amended 2026-11-15)
 PASSED_WORDS = ("Passed", ": all six of our ", "checks", " passed. No check tries to ",
                 "forge a proof", ".")  # fmt: skip
@@ -600,13 +598,10 @@ def band_html():
 
 
 def lead_html(run):
-    """At most three sentences under the title, for a reader with no context: what a proof of
-    inference is, what the ladder holds and, from the board, on how many models a system passed
-    and, on the largest of them, its figure (`board_words`). No figure of one model is set beside
-    another model's."""
+    """One sentence under the title, for a reader with no context: what a proof of inference is.
+    The ladder below it holds the figures; none is repeated here."""
     proof = e(PROOF_WORDS).replace("committed model", term("committed model", "Commitment"), 1)
-    said = [proof] + ([e(LADDER_WORDS), board_words()] if run else [])
-    return f'<p class="lede">{" ".join(said)}</p>{how_link()}'
+    return f'<p class="lede">{proof}</p>{how_link()}'
 
 
 # the Learn page that draws the request, the flow, the six checks and the headline figure: one
@@ -619,35 +614,6 @@ def how_link(cls="lto"):
     slug, words = HOW_PAGE
     pages = [p["slug"] for t in (S.V.get("learn") or {}).get("tracks", ()) for p in t["pages"]]
     return f'<p class="{cls}"><a href="/{slug}">{e(words)}</a></p>' if slug in pages else ""
-
-
-def board_words():
-    """On how many of the models a system passed, and on the largest such model (OR-6's
-    frontier) its size and the figure of its one row there, with its unit and its labels in its
-    title; with more than one row there, their count instead. Words escaped, the figure html."""
-    rungs = S.V["rungs"]
-    passed = sum(1 for r in rungs if any(row["passed"] for row in r["rows"]))
-    front = S.V["frontier"]
-    rung = next((r for r in rungs if front and r["id"] == front["rung"]), None)
-    if rung is None or not passed:
-        return e(f"No system has passed on any of the {len(rungs)} models yet.")
-    where = f"{nobreak(rung['model'])} ({e(params(rung['parameters_total']))} parameters)"
-    rows = front["rows"]
-    if len(rows) == 1:
-        row = rows[0]
-        _, f, key = lead_figure(row)
-        fig = (fig_html(f, counted(row), sub=BARE, note=whole_note(row, key),
-                        how=how_computed(row)) if has(f) else None)  # fmt: skip
-        name = f'<a href="{e(href(row))}">{e(name_of(row))}</a>'
-        # Q35: a reply a system "proves with its verifier", never one "proved by" it
-        what = (f"a reply that {name} proves with its verifier costs {fig} as much as serving it"
-                if fig else f"{name} passed")  # fmt: skip
-    else:
-        what = f"{len(rows)} systems passed"
-    head = e(f"A system passed on {passed} of the {len(rungs)} models")
-    if passed == 1:
-        return f"{head}: {where}. There, {what}."
-    return f"{head}; on the largest, {where}, {what}."
 
 
 def head_html():
