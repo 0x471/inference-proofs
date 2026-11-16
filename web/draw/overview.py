@@ -34,6 +34,7 @@ from .words import (
     FULL_LOAD_WORD,
     NULL_WORD,
     PETAL_NAME,
+    PETAL_PLAIN,
     REFERENCE_WORD,
     SCALE_NOT_RUN,
     SEP,
@@ -75,18 +76,19 @@ def states(row):
 
 
 def petal_words(p):
-    """A petal's step in words, and for a red or hollow petal its cause (§The glyph, step table;
-    GL-1, GL-3)."""
-    words = petal_step(p)  # a silent red is "red · not stated": its cause is said once
-    return f"{words}, {CAUSE_WORD[p['cause']]}" if p["cause"] not in (None, "not_stated") else words
+    """A petal's step in words, and for a Not decided petal what it waits on (§The glyph, step
+    table, amended 2026-11-16; GL-3): Not met, Failed and Not stated already say their cause."""
+    words = petal_step(p)
+    return f"{words}, {CAUSE_WORD[p['cause']]}" if p["step"] is None else words
 
 
 def states_words(row):
-    """The petals in words, for screen readers (the glyph is drawn, not read); one span per
-    petal, its name in <b>, which words.js shows beside a petal pointed at. It sits in the
+    """The petals in words, for screen readers (the glyph is drawn, not read): "Integrity:
+    Partly met"; one span per petal, its name in <b>, which words.js shows beside a petal
+    pointed at with the petal's plain sentence (`data-plain`, not read out). It sits in the
     glyph's cell, so the row's header reads the name and standing only."""
-    return "; ".join(f"<span><b>{e(PETAL_NAME[p['id']])}</b> {e(petal_words(p))}</span>"
-                     for p in row["glyph"])  # fmt: skip
+    return "; ".join(f'<span data-plain="{e(PETAL_PLAIN[p["id"]])}"><b>{e(PETAL_NAME[p["id"]])}'
+                     f"</b>: {e(petal_words(p))}</span>" for p in row["glyph"])  # fmt: skip
 
 
 def name_of(row):
@@ -276,7 +278,7 @@ def check_word(row, page=None):
     failed, undecided: FI-6), linked to the Fidelity section of the system's page, which holds
     what it is read from. Its title carries the stored figures: the replies' mean count of
     leading tokens equal to the original's (FI-3), the rung's bar (FI-5) and n. The closeness
-    grade is the glyph's Close to the original petal; KL is under Fidelity on the system's page."""
+    grade is the glyph's Fidelity petal; KL is under Fidelity on the system's page."""
     check = next(c for c in row["checks"] if c["id"] == "fidelity")
     mine, bar = row["fidelity"], (rung_of(row)["fidelity"] or {}).get("bar")
     title = []
@@ -313,14 +315,15 @@ def defined(words, anchor):
 
 
 def standing_html(row, page=None):
-    """`standing` on the overview: passed and unranked link to their definitions, each check not
-    held to its row on the system page (its cause and evidence). `page` is the address of that
-    page from where the words are printed ("" on the page itself)."""
+    """`standing` on the overview (§2.3, amended 2026-11-16): Passed and not ranked link to their
+    definitions, each check not passed to its row on the system page (its cause and evidence).
+    `page` is the address of that page from where the words are printed ("" on the page
+    itself)."""
     if row["passed"] and not row["ranked"]:
-        return (f"{defined('passed', 'passed')}, {defined('unranked', 'unranked')}: "
+        return (f"{defined('Passed', 'passed')}, {defined('not ranked', 'unranked')}: "
                 f"{e(row['unranked_reason'])}")  # fmt: skip
     if row["passed"]:
-        return defined("passed", "passed")
+        return defined("Passed", "passed")
     at = href(row) if page is None else page
     missing = [f'<span class="ckn"><a class="df" href="{e(at)}#ck-{c["id"]}">'
                f'{e(CHECK_NAME[c["id"]])} check</a> {e(STATE_WORD[c["state"]])}</span>'
@@ -497,8 +500,8 @@ PROOF_WORDS = ("A proof of inference lets anyone check that a reply is the one a
 LADDER_WORDS = ("Below, each model lists the systems run on it, whether they passed, and the cost "
                 "of a proved reply as a multiple of serving that model.")  # fmt: skip
 # what "passed" means, under the band on every build (SI-1, amended 2026-11-15)
-PASSED_WORDS = ("Passed", " means our ", "six checks", " held; no check tries to ", "forge a proof",
-                ".")  # fmt: skip
+PASSED_WORDS = ("Passed", ": all six of our ", "checks", " passed. No check tries to ",
+                "forge a proof", ".")  # fmt: skip
 # while no model has two systems run on it (SI-1, amended 2026-11-15): no row was ranked against
 # another, and the line goes by itself once one model has two
 ALONE_WORDS = "No two systems have yet been measured on the same model."

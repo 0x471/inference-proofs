@@ -337,7 +337,7 @@ def card_alt(card):
     cells = ". ".join(f"{k}: {fig_words(v)}" for k, v in figs)
     states = "; ".join(
         f"{PETAL_NAME[p['id']]}: {petal_step(p)}"
-        + (f", {CAUSE_WORD[p['cause']]}" if p["cause"] not in (None, "not_stated") else "")
+        + (f", {CAUSE_WORD[p['cause']]}" if p["step"] is None else "")
         for p in row["glyph"]
     )
     name = S.V["systems"][row["system"]]["name"]
@@ -418,7 +418,8 @@ def share_words(row):
     model and standing, its one figure and, where it has them, its two parts (CO-7), as the card
     prints them."""
     name = S.V["systems"][row["system"]]["name"]
-    return f"{name} on {rung_of(row)['model']}, {standing(row)}. {lead_words(row)}."
+    said = standing(row)  # a state word is lower case in prose
+    return f"{name} on {rung_of(row)['model']}, {said[0].lower() + said[1:]}. {lead_words(row)}."
 
 
 def lead_words(row):
@@ -433,20 +434,20 @@ def lead_words(row):
 
 
 def not_passed(row):
-    """The standing of a row that has not passed: "not passed" with a failed check, "not passed
-    yet" while every check not held is undecided (RFC-0018: an undecided check is never worded as
-    a failure)."""
+    """The standing of a row that has not passed (RFC-0018 §2.3, amended 2026-11-16): "Not
+    passed" with a failed check, "Not passed yet" while every check not passed is not decided (a
+    check not decided is never worded as a failure)."""
     failed = any(c["state"] == "failed" for c in row["checks"])
-    return "not passed" if failed else "not passed yet"
+    return "Not passed" if failed else "Not passed yet"
 
 
 def standing(row):
-    """Passed (a system on a model, SI-6), passed and unranked with why, or not passed with the
-    checks not held (SI-1), each named as a check."""
+    """Passed (a system on a model, SI-6), Passed, not ranked with why, or Not passed with the
+    checks not passed (SI-1), each named as a check."""
     if row["passed"] and not row["ranked"]:
-        return f"passed, unranked: {row['unranked_reason']}"
+        return f"Passed, not ranked: {row['unranked_reason']}"
     if row["passed"]:
-        return "passed"
+        return "Passed"
     missing = [f"{CHECK_NAME[c['id']]} check {STATE_WORD[c['state']]}" for c in row["checks"]
                if c["state"] != "held"]  # fmt: skip
     return f"{not_passed(row)}: " + ", ".join(missing) if missing else not_passed(row)

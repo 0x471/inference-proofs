@@ -1055,6 +1055,11 @@ html.js .scalepage .scl-panel { margin-top: 0; }
 /* a petal's field term under its name, and the word for what it rests on under its step (amended 2026-11-15) */
 .ckt.gbig th .pst { display: block; margin-top: 4px; color: var(--muted); font-weight: 400; text-transform: none; letter-spacing: 0; }
 .ckt .cst .sd { display: block; margin-top: 6px; color: var(--muted); }
+/* a petal's scale and facts under its step, its plain sentence over its reason, its next step and other lines under it */
+.ckt .cst .psc { display: block; max-width: 24ch; margin-top: 6px; color: var(--muted); white-space: normal; }
+.ckt .ppl { display: block; max-width: 70ch; margin-bottom: 8px; color: var(--muted); }
+.ckt .pnx, .ckt .pxl { max-width: 70ch; margin: 8px 0 0; }
+.ckt .pnx .k { margin-right: 6px; font-weight: 600; }
 .ckt .pvh { margin: 12px 0 2px; color: var(--muted); }
 .ckt .pvis { margin: 0; padding: 0; list-style: none; max-width: 70ch; }
 /* the two groups' heads: the values fitted to the weights (the only kind that sets the step), then the others */
@@ -1255,6 +1260,12 @@ html.js .scalepage .scl-panel { margin-top: 0; }
   .six .cs > div:nth-child(-n+2) > dt { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
   .six .cs > div:nth-child(n+3) { grid-column: 1 / -1; }
 }
+/* a check's or a petal's plain sentence and a petal's field term, under its name (checks page) */
+.chk > .cpl { max-width: 90ch; margin: 0 0 12px; font: 400 var(--read)/var(--read-lh) var(--mono); }
+.chk > .cterm { margin: -4px 0 12px; color: var(--muted); }
+@media (min-width: 1181px) { .six > .chk > .cpl { grid-column: 1 / -1; grid-row: 2; margin: 0; } }
+.cs dd .srl { margin: 0; padding-left: 1.2em; }
+.slg .schip { margin: 0 6px 6px 0; }
 /* a petal's cause, opened by the chip a system page prints for such a petal */
 .cs dd .schip { margin-right: 10px; }
 /* a mandate line's rule, under its label: the document and the rule's id, linked to its section */
@@ -1289,6 +1300,7 @@ html.js .scalepage .scl-panel { margin-top: 0; }
 .probe dd { margin: 0; overflow-wrap: break-word; }
 .probe .prk { display: flex; align-items: center; gap: 10px; font: 800 18px/1 var(--disp); }
 .probe .prc { font: 400 11px/16px var(--mono); color: var(--muted); }
+.probe .prp { max-width: 44ch; margin: 8px 0 0; }
 .anim .probe { animation: probe var(--quick) both; }
 /* it appears where it stands, with no travel (its place is its transform, set by words.js) */
 @keyframes probe { from { opacity: 0; } }

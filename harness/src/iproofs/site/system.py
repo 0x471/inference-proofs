@@ -122,6 +122,10 @@ def statement(root: Path, release: str | None, row: dict[str, Any],
         read = [p for p in parts if p in reads["read"]]
     # an erratum to the card (web/_data/errata.json `cards`), printed while the card is the one
     # it corrects: the runs record the card's digest, so the card itself is not edited
+    # the verifier the row runs and the one the publisher's theorem is stated for (GL-5), each the
+    # publisher's words; Formally verified prints them when they differ (RFC-0018 §3)
+    named = (inputs.read_yaml(props) if props.is_file() else {}).get("verifiers") or {}
+    verifiers = {k: (named.get(k) or {}).get("value") for k in ("run", "stated")}
     fix = (inputs.errata(root).get("cards") or {}).get(row["system"])
     if not (isinstance(fix, dict) and path is not None
             and file_digest(path) == fix.get("card_digest")):  # fmt: skip
@@ -137,6 +141,7 @@ def statement(root: Path, release: str | None, row: dict[str, Any],
         "reply": str(vi["reply"]),
         "proof_caveat": vi.get("proof_caveat"),
         "architecture_visible": vi.get("architecture_visible"),
+        "verifiers": verifiers,
         "rows": rows,
         "card": f"systems/{row['system']}/{path.name}" if path else None,
         "verifier_files": files,

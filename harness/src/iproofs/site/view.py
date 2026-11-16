@@ -156,6 +156,7 @@ def _glyph(raw: list[dict[str, Any]]) -> list[dict[str, Any]]:
                     "sources": [{"path": d["path"], "url": d["url"]}
                                 for d in p.get("sources_read") or []],
                     "lowered_by": list(p["lowered_by"]), "form": _form(step, state, cause),
+                    "next": p.get("next"),  # GL-11 (amended 2026-11-16); absent before
                     "formal": _formal(pid, p.get("formal")),
                     "visible": None if visible is None else
                     [{"item": v["item"], "tag": v["tag"], "quotes": _quotes(v["quotes"])}
