@@ -51,12 +51,14 @@ from .overview import (
     split_html,
     standing_html,
     states,
+    sub_line,
     whole_line,
     whole_note,
 )
 from .plots import fid_svg, hbar
 from .words import (
     AS_READ,
+    BASIS_BITS,
     BASIS_READING,
     BASIS_WORD,
     CARD_ERRATUM,
@@ -1049,10 +1051,6 @@ def verifying_html(row):
             f"{e(timed)}{untimed}</span></p>")  # fmt: skip
 
 
-BASIS_BITS = {"computed": "computed from its files", "stated": "as the publisher states it",
-              "file_size": "from its file size"}  # fmt: skip
-
-
 def proved_html(row):
     """The precision the row proves (its workload record), beside the release serving runs (the
     Serving line above it): the copy, its words, its weight bits and how they were found, and
@@ -1603,7 +1601,7 @@ def figures_html(row):
              (defined(FIGURE_HEAD["proof-size"], "proof-size"),
               fig_html(figs["proof_bytes_per_reply"], n, sub=BARE)),
              (defined(FIGURE_HEAD["fidelity"], FIGURE_ANCHOR["fidelity"]),
-              fidelity_word(row, ""))]  # fmt: skip
+              fidelity_word(row, "", long=True))]  # fmt: skip
     return '<dl class="figs">' + "".join(f"<div><dt>{k}</dt><dd>{v}</dd></div>"
                                          for k, v in cells) + "</dl>"  # fmt: skip
 
@@ -1615,23 +1613,40 @@ def band_figure(row):
     if key != "session_multiple":
         return multiple_html(row, parts=False)
     count = f["n"] if f["n"] is not None else counted(row)
-    return fig_html(f, count, sub=whole_line(row, count), note=whole_note(row, key),
-                    how=how_computed(row))  # fmt: skip
+    # the line under it, "whole sessions" linked to their definition (D1)
+    line = sub_line(whole_line(row, count)).replace(
+        "whole sessions", term("whole sessions", "Whole session"), 1
+    )
+    return (fig_html(f, count, sub=BARE, note=whole_note(row, key), how=how_computed(row))
+            + f'<span class="sub">{line}</span>')  # fmt: skip
 
 
+PAPER_WORD = "PDF, at the commit this row runs"  # the band's Paper fact, linked (D5)
 NAME_SIZES = (6, 12, 20)  # a system's name on its band: one size per length up to these
-SHARE = ("Share", "Card", "Copy link", "Copied")  # the share group: its name, its two actions, done
+SHARE = (
+    "Share",
+    "Share card",
+    "Copy link",
+    "Copied",
+)  # the share group: its name, its actions, done
+# the card link's title (D4): what clicking it does, said before it is clicked
+SHARE_CARD_TITLE = ("This page's share card: an image of its glyph and figure, the one a link "
+                    "preview shows. Opens in a new tab, to save or share.")  # fmt: skip
 
 
 def share_html(row):
-    """The share group's actions: the page's card as a download, while its picture is the one
-    this build's source was rendered to (none otherwise), and Copy link, which words.js shows and
-    runs (it copies the page's canonical address and says so)."""
+    """The share group's actions: the page's share card, opened in a new tab as the image it is
+    (a reader who clicks "Share card" sees it, then saves or shares it; it no longer downloads
+    unannounced), while its picture is the one this build's source was rendered to (none
+    otherwise), and Copy link, which words.js shows and runs (it copies the page's canonical
+    address and says so)."""
     pid = row["page"]
     card = ""
     if card_current(pid):
         v = cards_record()[pid]["png"][:12]
-        card = f'<a href="/og/{e(pid)}.png?v={e(v)}" download="{e(pid)}.png">{e(SHARE[1])}</a>'
+        card = (f'<a href="/og/{e(pid)}.png?v={e(v)}" target="_blank" rel="noopener" '
+                f'title="{e(SHARE_CARD_TITLE)}">{e(SHARE[1])}'
+                '<span class="sr"> (image, opens in a new tab)</span></a>')  # fmt: skip
     return (card + f'<button type="button" class="cplink" data-done="{e(SHARE[3])}" hidden>'
             f"{e(SHARE[2])}</button>")  # fmt: skip
 
@@ -1673,6 +1688,10 @@ def system_page(row):
         source = (f'<a href="https://github.com/{e(sysd["repo"])}{at}">'
                   f'{nobreak(sysd["repo"])}</a>')  # fmt: skip
         facts.append(("f-src", "Source", source))
+    paper = ""
+    if sysd.get("paper"):  # D5: the publisher's paper, at the row's commit, where it has one
+        paper = f'<a href="{e(sysd["paper"])}">{e(PAPER_WORD)}</a>'
+        facts.append(("f-pap", "Paper", paper))
     if pin:  # SI-3 (amended 2026-11-15): the version the row runs, at depth 2
         facts.append(("f-pin", "Version", pin_html(pin, name)))
     share = share_html(row)
@@ -1696,6 +1715,7 @@ def system_page(row):
     foot = (
         '<dl class="fend">'
         + (f'<div class="f-src"><dt>Source</dt><dd>{source}</dd></div>' if source else "")
+        + (f'<div class="f-pap"><dt>Paper</dt><dd>{paper}</dd></div>' if paper else "")
         + f'<div class="fshr"><dt>{e(SHARE[0])}</dt><dd>{share}</dd></div></dl>'
     )
     # the share group at the strip's end on a wide screen

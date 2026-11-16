@@ -133,14 +133,15 @@ TRIAL_REFUSED = "refused by the verifier"
 # a stored verifier trial (RFC-0008 §Verifier trials), printed beside the check whose change it
 # makes, or under Machine-checked for another of the publisher's verifiers; it sets no state
 KEPT_HEAD = "Outside the counted suite"
-KEPT_SETS = "it sets no state"
+KEPT_SETS = "gates nothing: it sets no state"
 KEPT_CHANGE = {"reply_token": "one reply token changed, at every reply position in turn",
                "other_session_commitment": "checked against another session's commitment of "
                "the same weights",
                "commitment_id": "checked against a commitment ID no session recorded"}  # fmt: skip
 # what a trial whose every changed call was refused shows, by its change
-KEPT_MEANS = {"other_session_commitment": "So C3 is refused for any second commitment of the "
-              "same weights: its refusal does not show that the weights differ."}  # fmt: skip
+KEPT_MEANS = {"other_session_commitment": "So a refusal against the changed weights' "
+              "commitment does not by itself show that the verifier tells weights apart: it also "
+              "refuses a second commitment of the same weights."}  # fmt: skip
 KEPT_TIME = "the trial script's wall clock"
 # the Level 1 statement on a system page (RFC-0018 SI-4a): the label, and the line by whether
 # the publisher's documents state it at the pin
@@ -433,6 +434,23 @@ FIDELITY_AGAINST = ("q8_0", "q4_k_m")  # the controls printed beside a row's Fid
 FIDELITY_FIG_TITLE = ("Fidelity: the share of reply positions where the system's top token is "
                       "the original's reply token, fed the prompt and then that reply token by "
                       "token")  # fmt: skip
+# the copies printed beside a row's Fidelity at depths 1 and 2 (RFC-0018 SI-9, amended
+# 2026-11-16): plain words; their ids (Q8_0, Q4_K_M) stand in titles and at depth 3
+COPY_WORD = {"q8_0": "8-bit copy", "q4_k_m": "4-bit copy"}
+# what the row proves, beside every Fidelity figure: the weight bits (the workload record) and the
+# number format (the properties file, the publisher's words), one word per recorded value
+FORMAT_WORD = {"integer": "integer", "fixed_point": "fixed-point",
+               "floating_point": "floating-point"}  # fmt: skip
+PROVED_HEAD = "proved"
+# how a workload record found its weight bits, in words
+BASIS_BITS = {"computed": "computed from its files", "stated": "as the publisher states it",
+              "file_size": "from its file size"}  # fmt: skip
+# why the surface figure is top-token agreement, in one line ({tokens}: the request's reply tokens)
+WHY_TOP_TOKEN = (
+    "Why top-token agreement: a greedy reply is the top token at each position, so this counts "
+    "how often the proved model makes the original's choice, at every one of the {tokens:,} "
+    "positions, not only up to the first difference."
+)
 FIDELITY_CHECK_TITLE = "Fidelity check (leading tokens matching the original): {state}"
 
 

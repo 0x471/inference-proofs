@@ -136,6 +136,10 @@
           "pattern": "^[a-z0-9][a-z0-9-]*$",
           "type": "string"
         },
+        "paper": {
+          "$comment": "the publisher's paper, linked at the row's pinned commit (a file of its repository there), where the repository carries one; absent otherwise, and nothing is printed for it (2026-11-16)",
+          "$ref": "#/$defs/url"
+        },
         "pin": {
           "$comment": "where the row's version is not the publisher's own: the change it runs, printed in the band at depth 2 (RFC-0018 SI-3, amended 2026-11-15)",
           "additionalProperties": false,
@@ -350,6 +354,6 @@
     "models",
     "rows"
   ],
-  "title": "Display facts the site prints and no harness record holds: web/_data/facts.json (RFC-0009 \u00a7Site). Every value is text.",
+  "title": "Display facts the site prints and no harness record holds: web/_data/facts.json (RFC-0009 §Site). Every value is text.",
   "type": "object"
 }

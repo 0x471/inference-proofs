@@ -219,7 +219,23 @@ def precision(root: Path, row: dict[str, Any], models: dict[str, Any]) -> dict[s
         "bits_covers": bits.get("covers"),
         "bits_source": bits.get("source"),
         "record": f"workloads/{row['workload']}.yaml",
+        # the number format the row proves, where its properties file records it (properties/2
+        # `number_format`, the publisher's words at the pin); None where it records none
+        "number_format": number_format(root, row),
     }
+
+
+def number_format(root: Path, row: dict[str, Any]) -> dict[str, str] | None:
+    """The proved copy's number format, weights and activations, each `integer`,
+    `fixed_point`, `floating_point` or `not_stated`, as the properties file records it with the
+    publisher's words (RFC-0018 §5.3 of 2026-11-16: never inferred from a format's name); None
+    where the file records none, so a page prints no format rather than "not stated"."""
+    props = root / "systems" / row["system"] / "properties.yaml"
+    raw = (inputs.read_yaml(props) if props.is_file() else {}).get("number_format")
+    if not isinstance(raw, dict):
+        return None
+    return {k: str((raw.get(k) or {}).get("value") or "not_stated")
+            for k in ("weights", "activations")}  # fmt: skip
 
 
 # RFC-0008 §Verifier trials: where a stored trial is printed (it gates nothing). A trial of the
