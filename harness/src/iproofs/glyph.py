@@ -456,9 +456,11 @@ def unforgeable(  # noqa: PLR0911 (one return per line of the table)
     run, stated_for = _verifiers(props)
     head = _bound_head(b, stated_for)
 
+    # UF-4 to UF-8 (amended 2026-11-16): the deciding fact first, then the stated bound, as UF-9
     def decided(step: str, cause: str | None, *why: str, to: Mapping[str, object] | None) -> Petal:
-        return Petal(pid, step, cause, STATEMENT, "; ".join((head, *why)), quotes,
-                     reading=v.noted, notes=v.notes, next_step=to)  # fmt: skip
+        reason = "; ".join((*why, f"stated bound: {head}"))
+        return Petal(pid, step, cause, STATEMENT, reason, quotes, reading=v.noted, notes=v.notes,
+                     next_step=to)  # fmt: skip
 
     least = min(terms)
     # GL-11, Not met to Partly met: every UF-4 to UF-6 line the bound meets, read from the facts

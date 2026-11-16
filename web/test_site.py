@@ -5,10 +5,13 @@ SI-3, SI-5, CH-7). Run from the repository root: uv run pytest web -q
 """
 
 import html
+import json
 import math
 import re
 from pathlib import Path
 from typing import Any
+
+WEB = Path(__file__).resolve().parent
 
 FIG = re.compile(
     r'<span class="fig" title="([^"]*)"><span class="n">([^<]*)</span>'
@@ -50,16 +53,20 @@ def test_every_printed_figure_is_a_board_value(board_site: Any) -> None:
     seen = 0
     for name, text in pages(board_site.out).items():
         assert text.count('class="fig"') == len(FIG.findall(text)), name
-        for title, n, unit in FIG.findall(text):
+        for title, n, said in FIG.findall(text):
             record = re.search(r"record: [^#]+#(/[^;\"]+)", html.unescape(title))
             assert record, (name, title)
             stored = resolve(board_site.board, record[1])
             if isinstance(stored, dict):  # a quantity: its own unit
-                assert (n, unit) == number(stored["value"], stored["unit"]), (name, record[1])
-            elif unit == "tokens":  # a mean matched prefix
+                want = number(stored["value"], stored["unit"])
+                unit = said  # a rate may name its GPU in its unit
+                if stored["unit"] == "token/gpu_s":
+                    unit = re.sub(r"^tokens/s per \S+$", want[1], said)
+                assert (n, unit) == want, (name, record[1])
+            elif said == "tokens":  # a mean matched prefix
                 assert n == board_site.build.sig(stored), (name, record[1])
             else:  # a session's GPU-seconds per reply
-                assert (n, unit) == number(stored, "gpu_s/request"), (name, record[1])
+                assert (n, said) == number(stored, "gpu_s/request"), (name, record[1])
             seen += 1
     assert seen > 40
 
@@ -105,6 +112,25 @@ def test_glyphs_draw_the_board_states(board_site: Any) -> None:
         assert checks == [(c, row["checks"][c]["state"]) for c in CHECKS], row["system"]
 
 
+def test_petal_rows_print_the_boards_reasons(board_site: Any) -> None:
+    """SI-3 (amended 2026-11-16): a petal's default line is its board reason's first clause and
+    the count of the clauses cut (Fidelity's reason whole, its last clause the row's measure),
+    never typed, and the full reason sits in the petal's disclosure."""
+    text = pages(board_site.out)
+    for row in rows(board_site.board):
+        page = text[f"{row['system']}.html"]
+        trs = re.findall(r'<tr class="pt [^"]*">(.*?)</tr>', page, re.S)
+        assert len(trs) == len(row["glyph"]), row["system"]
+        for tr, p in zip(trs, row["glyph"], strict=True):
+            line = re.search(r'<span class="rs">([^<]*)</span>', tr)
+            assert line, (row["system"], p["id"])
+            clauses = p["reason"].split("; ")
+            first = (p["reason"] if p["basis"] == "test" or len(clauses) == 1
+                     else f"{clauses[0]}, and {len(clauses) - 1} more")  # fmt: skip
+            assert html.unescape(line[1]) == first, (row["system"], p["id"])
+            assert p["reason"] in html.unescape(tr), (row["system"], p["id"])
+
+
 def test_order_and_positions_are_the_boards(board_site: Any) -> None:
     """OR-5: rows print in the board's order, a position only where the board holds one."""
     index = pages(board_site.out)["index.html"]
@@ -147,7 +173,7 @@ SCALE_LANE = re.compile(
     r'<table class="scl" data-lo="(-?\d+)" data-hi="(-?\d+)">(.*?)</table>', re.S
 )
 SCALE_ROW = re.compile(
-    r'<tr class="row (ok|np)" id="scale-(multiple|cost|check-time|proof-size)-([^"]+)">(.*?)</tr>',
+    r'<tr class="row (ok|np)" id="scale-(multiple|check-time|proof-size)-([^"]+)">(.*?)</tr>',
     re.S,
 )
 
@@ -164,7 +190,7 @@ def test_scale_positions_are_the_boards(board_site: Any) -> None:
     board = board_site.board
     text = pages(board_site.out)["scale.html"]
     lanes = SCALE_LANE.findall(text)
-    assert len(lanes) == 4  # one table per figure, every lane under its one axis
+    assert len(lanes) == 3  # one table per figure, every lane under its one axis
     seen: dict[str, list[str]] = {}
     for lo_s, hi_s, body in lanes:
         lo, hi = int(lo_s), int(hi_s)
@@ -190,42 +216,27 @@ def test_scale_positions_are_the_boards(board_site: Any) -> None:
             if dim == "multiple":
                 b = base["gpu_seconds_per_reply"]["value"]
                 ticks, serve = [r / b for r in runs if r is not None], 1.0
-            elif dim == "cost":
-                k = "steady" if steady else "session"
-                price = (
-                    row[f"{k}_usd_per_reply"]["value"] / row[f"{k}_gpu_seconds_per_reply"]["value"]
-                )
-                ticks, serve = (
-                    [r * price for r in runs if r is not None],
-                    base["usd_per_reply"]["value"],
-                )
             else:
                 ticks, serve = [], None
             got = re.findall(r'<line class="ss" x1="([^"]+)"', tr)
             assert got == [at(lo, hi, t) for t in ticks], (dim, row["system"])
             sv = re.findall(r'<line class="sv" x1="([^"]+)"', tr)
             assert sv == ([at(lo, hi, serve)] if serve else []), (dim, row["system"])
-    for dim in ("multiple", "cost", "check-time", "proof-size"):
+    for dim in ("multiple", "proof-size", "check-time"):
         assert seen[dim] == [r["system"] for r in rows(board)], dim
-    # hand-computed: the multiple from 1× to 1,000× (sessions up to 612 / 1.408 = 434.6×), the
-    # cost from 10^-4 (serving 0.000894 USD) to 1 USD; FlashProve at its whole sessions' scope,
-    # 49.83 / 0.6024 = 82.72× (log10 / 3 = 63.92 %) and 0.07399 USD ((log10 + 4) / 4 = 71.73 %),
-    # not its steady 68.31× and 0.06110 USD
-    assert [(lo, hi) for lo, hi, _ in lanes] == [
-        ("0", "3"),
-        ("-4", "0"),
-        ("0", "2"),
-        ("0", "2"),
-    ]
+    # hand-computed: the multiple from 1× to 1,000× (sessions up to 612 / 1.408 = 434.6×);
+    # FlashProve at its whole sessions' scope, 49.83 / 0.6024 = 82.72× (log10 / 3 = 63.92 %), not
+    # its steady 68.31×
+    assert [(lo, hi) for lo, hi, _ in lanes] == [("0", "3"), ("0", "2"), ("0", "2")]
     assert re.search(r'id="scale-multiple-flashprove">.*?class="mk" x="63.92%"', text, re.S)
-    assert re.search(r'id="scale-cost-flashprove">.*?class="mk" x="71.73%"', text, re.S)
 
 
 def test_session_parts_print_beside_the_whole_sessions_figure(board_site: Any) -> None:
     """RFC-0018 CO-7: a row with no steady state prints its session figure's two parts. In the
     example board SASH's session is 604.9 GPU-s per reply, of which 100.0 generation and 504.9
     commit and proving, so the ladder's share bar gives commit and proving 100 * 504.9 / 604.9 =
-    83.47 % of its length; both parts' figures are on the ladder, the system page and the card."""
+    83.47 % of its length; both parts' figures are on the ladder (over the two rates there,
+    amended 2026-11-16), the system page and the card."""
     out = board_site.out
     at = "/rungs/1/rows/0/session_"
     for page in ("index.html", "sash.html", "og/sash.html"):
@@ -233,6 +244,41 @@ def test_session_parts_print_beside_the_whole_sessions_figure(board_site: Any) -
         for part in ("generation_multiple", "commit_and_proving_multiple"):
             assert f"{at}{part}" in text, (page, part)
     assert '<rect class="bp" width="83.47"' in (out / "index.html").read_text()
+
+
+def printed(text: str) -> tuple[float, float]:
+    """A printed number and half its last printed place (its rounding's reach)."""
+    places = len(text.split(".")[1]) if "." in text else 0
+    return float(text.replace(",", "")), 0.5 * 10.0**-places
+
+
+def test_printed_rates_divide_to_the_printed_multiple(board_site: Any) -> None:
+    """CO-8 (amended 2026-11-17): the proved rate under a row's multiple and the served rate in
+    its model's head, as printed, divide to the multiple printed above. By hand on the example
+    board: 849.92 / 10.274 = 82.72, printed "10.27 proved" under "82.72×" and "849.9" in the
+    head. A row with no rate pair (SASH there) prints no line, and keeps its parts
+    (`test_session_parts_print_beside_the_whole_sessions_figure`)."""
+    out = board_site.out
+    index = (out / "index.html").read_text()
+    for pid, body in re.findall(r'<tr class="row" id="row-([a-z0-9-]+)">(.*?)</tr>', index, re.S):
+        assert ('class="rts"' in body) == (pid == "flashprove"), pid
+    # the same on the stored release: 2,669 / 2.027 = 1,316.7 against 1,317x; 11,876 / 0.1911 =
+    # 62,146 against 62,160x
+    number = board_site.build.number
+    board = json.loads((WEB.parent / "releases/v1.0/board.json").read_text())
+    for rung in board["rungs"]:
+        served = (rung["baseline"] or {}).get("reply_tokens_per_gpu_second") or {}
+        for r in rung["rows"]:
+            proved = r.get("session_reply_tokens_per_gpu_second") or {}
+            if served.get("value") is None or proved.get("value") is None:
+                continue
+            sv, p = (float(number(f["value"], f["unit"])[0].replace(",", ""))
+                     for f in (served, proved))  # fmt: skip
+            m = float(number(r["session_multiple"]["value"], "ratio")[0].replace(",", ""))
+            assert abs(sv / p - m) <= 1e-3 * m, (r["system"], sv, p, m)
+    for words in ("82.72", "10.27</span> proved", "849.9"):
+        assert words in index, words
+    assert abs(849.9 / 10.27 - 82.72) <= 1e-3 * 82.72
 
 
 def test_completeness_count_is_the_boards(board_site: Any) -> None:
@@ -246,11 +292,11 @@ def test_completeness_count_is_the_boards(board_site: Any) -> None:
 
 
 def test_surface_figures_are_whole_sessions(board_site: Any) -> None:
-    """RFC-0018 CO-5 and SI-1 (amended 2026-11-15): the ladder, a system's band and its card
-    print each row's multiple and cost at the whole sessions' scope wherever the row has one, so
-    a rung never mixes two scopes; the steady figures stay below, under Cost. In the example
-    board FlashProve has both: its ladder row names session_multiple and session_usd_per_reply,
-    never multiple or steady_usd_per_reply."""
+    """RFC-0018 CO-5 and SI-1 (amended 2026-11-15, 2026-11-16): the ladder, a system's band and
+    its card print each row's multiple at the whole sessions' scope wherever the row has one, so
+    a rung never mixes two scopes; the steady figures stay below, under Cost. USD is under Cost
+    only. In the example board FlashProve has both: its ladder row names session_multiple and the
+    two rates it is made of (CO-8), never multiple or a USD figure."""
     out = board_site.out
     index = html.unescape((out / "index.html").read_text())
     tr = re.search(r'<tr class="row" id="row-flashprove">(.*?)</tr>', index, re.S)
@@ -263,9 +309,11 @@ def test_surface_figures_are_whole_sessions(board_site: Any) -> None:
     for page, text in pages_.items():
         pointers = set(re.findall(r"record: [^#]+#(/[^;\"]+)", text))
         assert f"{at}session_multiple" in pointers, page
-        assert f"{at}session_usd_per_reply" in pointers or page == "flashprove.html", page
         assert f"{at}multiple" not in pointers, page
-        assert f"{at}steady_usd_per_reply" not in pointers, page
+        assert not any("usd" in p for p in pointers), page
+    rates = set(re.findall(r"record: [^#]+#(/[^;\"]+)", pages_["index.html"]))
+    assert {f"{at}session_reply_tokens_per_gpu_second",
+            "/rungs/0/baseline/reply_tokens_per_gpu_second"} <= rates  # fmt: skip
 
 
 def test_a_lone_system_is_not_drawn_as_ranked(board_site: Any) -> None:
