@@ -1147,7 +1147,7 @@ def reply_tokens_html(row):
     if bound:  # the GPUs the sessions bound, the ones its GPU-seconds count (SE-2)
         said.append(e(f"{' or '.join(f'{g:,}' for g in bound)} × {gpu_name(row)}"))
     head = term(REPLY_TOKENS_HEAD, REPLY_TOKENS_HEAD)
-    return (f'<p class="rb"><span class="k">{head}</span> <span>{fig_html(f, count, sub=BARE)} '
+    return (f'<p class="rb rtk"><span class="k">{head}</span> <span>{fig_html(f, count, sub=BARE)} '
             f"({', '.join(said)}). {e(NOT_TIMED_APART)}</span></p>")  # fmt: skip
 
 

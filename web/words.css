@@ -998,6 +998,8 @@ html.js .scalepage .scl-panel { margin-top: 0; }
 .syspage .blk > .rb + .rb { padding-top: 4px; }
 /* the Cost block's lines share one label column, as wide as its longest label (Evidence) */
 .syspage #cost > .rb { grid-template-columns: minmax(8ch, max-content) minmax(0, 1fr); }
+/* reply tokens per GPU-second: its long label breaks over two lines, so its figure keeps the room it needs */
+.syspage #cost > .rb.rtk { grid-template-columns: minmax(8ch, 15ch) minmax(0, 1fr); }
 .syspage .blk > .none { padding: 14px 0 16px 12px; border-bottom: 1px solid var(--line); }
 /* a petal's or a check's name leads to its definition: the dotted cue of a defined word */
 .ckt tbody th a { text-decoration: underline dotted 1px var(--rule); text-underline-offset: 4px; }
