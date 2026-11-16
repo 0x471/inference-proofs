@@ -36,6 +36,16 @@ verifiers:
     value: "boundary-grid --verify"
     quotes: [{text: "`verify_composed` -- the only accept path, and what `boundary-grid --verify` runs on every chunk", url: "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/README.md#L34-L35"}]
   stated: {value: null, quotes: []}
+# The number format of the copy the row proves (RFC-0018 SI-9, amended 2026-11-16), read 2026-11-16 in the numeric
+# contract of the attested computation at the pin; printed beside every Fidelity figure, it sets no state
+number_format:
+  weights:
+    value: "integer"
+    quotes: [{text: "weight matmuls are exact int8 x int8 -> int32 accumulations", url: "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/harness/witness/quant.py#L15-L16"}]
+  activations:
+    value: "floating_point"
+    quotes: [{text: "every value flowing between ops is a bf16 value", url: "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/harness/witness/quant.py#L5"}]
+    note: "values between ops are bf16; the weight matmuls take int8 copies of them, one scale per token (L15-L18)"
 petals:
   unforgeable:
     sources_read: ["README.md", "prover/README.md", "docs/statement.md", "prover/src/util.rs"]

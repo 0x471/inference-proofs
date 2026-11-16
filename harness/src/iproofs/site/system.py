@@ -216,31 +216,45 @@ def precision(root: Path, row: dict[str, Any], models: dict[str, Any]) -> dict[s
     bits = p.get("weight_bits") or {}
     words = (models.get(str((wl.get("model") or {}).get("digest"))) or {}).get("precision_words")
     proved = str(p.get("proved"))
+    fmt = number_format(root, row)
+    source = bits.get("source")
+    # a stated width links the publisher's words at the row's own commit: where the workload's
+    # link is at another commit, the number format's weights quote at the pin stands in for it
+    commit = row.get("commit")
+    if source and commit and f"/blob/{commit}/" not in str(source) and fmt:
+        source = next((q["url"] for q in fmt["weights"]["quotes"]), source)
     return {
         "proved": proved,
         "proved_words": (words or {}).get(proved),
         "bits": bits.get("bits"),
         "bits_basis": bits.get("basis"),
         "bits_covers": bits.get("covers"),
-        "bits_source": bits.get("source"),
+        "bits_source": source,
         "record": f"workloads/{row['workload']}.yaml",
         # the number format the row proves, where its properties file records it (properties/2
         # `number_format`, the publisher's words at the pin); None where it records none
-        "number_format": number_format(root, row),
+        "number_format": fmt,
     }
 
 
-def number_format(root: Path, row: dict[str, Any]) -> dict[str, str] | None:
-    """The proved copy's number format, weights and activations, each `integer`,
-    `fixed_point`, `floating_point` or `not_stated`, as the properties file records it with the
-    publisher's words (RFC-0018 §5.3 of 2026-11-16: never inferred from a format's name); None
-    where the file records none, so a page prints no format rather than "not stated"."""
+def number_format(root: Path, row: dict[str, Any]) -> dict[str, dict[str, Any]] | None:
+    """The proved copy's number format, weights and activations, each its value (`integer`,
+    `fixed_point`, `floating_point` or `not_stated`) and its quotes, as the properties file
+    records them with the publisher's words (RFC-0018 SI-9, amended 2026-11-16: never inferred
+    from a format's name); None where the file records none, so a page prints no format rather
+    than "not stated"."""
     props = root / "systems" / row["system"] / "properties.yaml"
     raw = (inputs.read_yaml(props) if props.is_file() else {}).get("number_format")
     if not isinstance(raw, dict):
         return None
-    return {k: str((raw.get(k) or {}).get("value") or "not_stated")
-            for k in ("weights", "activations")}  # fmt: skip
+
+    def part(k: str) -> dict[str, Any]:
+        fact = raw.get(k) or {}
+        return {"value": str(fact.get("value") or "not_stated"),
+                "quotes": [{"text": str(q["text"]), "url": str(q["url"])}
+                           for q in fact.get("quotes") or ()]}  # fmt: skip
+
+    return {k: part(k) for k in ("weights", "activations")}
 
 
 # RFC-0008 §Verifier trials: where a stored trial is printed (it gates nothing). A trial of the

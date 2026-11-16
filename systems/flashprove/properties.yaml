@@ -35,6 +35,15 @@ notion:
   quotes:
     - {text: "`Sound` is index-binding knowledge soundness, in its witness-free case, as defined in `lean/ZKCP/Defs.lean` (`HasIndexBinding`; the terms: [TERMS.md](TERMS.md)), for a claim (a prompt with an output that is said to be the model's)", url: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L352-L354"}
     - {text: "This is binding for the language, not knowledge soundness: the theorem does not show that the prover knows the weights or ran the model.", url: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/LIMITS.md#L1155-L1157"}
+# The number format of the copy the row proves (RFC-0018 SI-9, amended 2026-11-16), read 2026-11-16 in the
+# document that defines Model, the function FlashProve proves; printed beside every Fidelity figure, it sets no state
+number_format:
+  weights:
+    value: "integer"
+    quotes: [{text: "Model is Llama 4 Maverick's text transformer in integer arithmetic: integer weights, fixed-point activations with fitted power-of-two scales, and lookup tables for the non-linear functions", url: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/docs/model.md#L8-L9"}]
+  activations:
+    value: "fixed_point"
+    quotes: [{text: "Model is Llama 4 Maverick's text transformer in integer arithmetic: integer weights, fixed-point activations with fitted power-of-two scales, and lookup tables for the non-linear functions", url: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/docs/model.md#L8-L9"}]
 petals:
   unforgeable:
     sources_read: ["README.md", "guide/what-is-proved.md", "lean/THEOREM.md", "guide/known-limits.md"]
@@ -68,13 +77,13 @@ petals:
         quotes:
           - {text: "against a committer and a prover who may both cheat", url: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L142"}
           - {text: "so nothing is claimed against a quantum adversary", url: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L394-L395"}
-        note: "classical adversaries only (THEOREM.md L394-L395); the files-fixed-before-the-hash condition is counted under conditions_shown"
+        note: "classical adversaries only (THEOREM.md L394-L395); the files-fixed-before-the-hash condition is counted under the conditions clause"
       parameters:
         value: "row"
         quotes:
           - {text: "**One proof format and model size:** full size, not the small examples", url: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/what-is-proved.md#L62"}
           - {text: "Neither figure, 124 bits per query or 128 bits per round, is claimed for the C++ programs.", url: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/what-is-proved.md#L70"}
-        note: "the row runs the full-size format at exact match; whether its own files are in scope is conditions_shown; the bound is stated for the Lean verifier and not claimed for cp_verify, which the row runs (bound.program)"
+        note: "the row runs the full-size format at exact match; whether its own files are in scope is the conditions clause; the bound is stated for the Lean verifier and not claimed for cp_verify, which the row runs (the program clause)"
       conditions_shown:
         value: false
         quotes:
@@ -100,7 +109,7 @@ petals:
           - {text: "Scale files in scope can switch off any of the model's blocks, up to all of them (worked out by hand, not proved).", url: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L229-L231"}
           - {text: "No theorem describes the five constant look-up tables in the Lean text (cosine, sine, the exponential, SiLU and the sigmoid).", url: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L242-L243"}
           - {text: "the kernel checks proofs, not what a definition means", url: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/what-is-proved.md#L83"}
-        note: "the theorem covers the Lean protocol and states the model as an integer program (THEOREM.md L231-233); the C++ verifier the row runs is tested, not proved (what-is-proved.md L7-8), so the reach stops short of verifier_run; the model statement is the publisher's Lean integer model, and its tables and its reach at a given scale file are not proved (THEOREM.md L229-L231, L242-L243)"
+        note: "the theorem covers the Lean protocol and states the model as an integer program (THEOREM.md L231-233); the C++ verifier the row runs is tested, not proved (what-is-proved.md L7-8), so the reach stops short of the verifier code this row runs; the model statement is the publisher's Lean integer model, and its tables and its reach at a given scale file are not proved (THEOREM.md L229-L231, L242-L243)"
       tool:
         value: "Lean 4, kernel 4.29.1"
         quotes:
@@ -115,7 +124,7 @@ petals:
           - {text: "At each position it is the greedy next token after the prompt and the output's own earlier tokens, as an integer program computes it, not the floating-point model.", url: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L231-L233"}
           - {text: "\"The model\" means the extracted weights, which no theorem says are the ones `cp_commit` put in", url: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L227-L228"}
           - {text: "the system in the statement of the soundness theorem on `verify` has a constant committer (a committer that returns one constant whatever the weights, and so commits to nothing; the committer of the six lines is another: the one that `compile` makes (`lean/Johnson/Face/Compiler.lean`), which encodes the weights and hashes the key) where its honest committer goes, so of that system itself none of it can be stated with any content", url: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L700-L704"}
-        note: "read 2026-11-15: the conclusion is about the publisher's integer model, a reference definition of the model's computation, at the weights the extractor reads; no theorem ties those weights to the ones cp_commit committed (THEOREM.md L227-L228), and at files other than the stored examples the theorem may hold only because verify rejects everything (L314-L315, under Integrity's conditions_shown); and the system in the soundness theorem's statement has a constant committer, which commits to nothing, so of that system none of it can be stated with any content (L700-L704): the theorem's model is the extractor's weights, not a committed model's"
+        note: "read 2026-11-15: the conclusion is about the publisher's integer model, a reference definition of the model's computation, at the weights the extractor reads; no theorem ties those weights to the ones cp_commit committed (THEOREM.md L227-L228), and at files other than the stored examples the theorem may hold only because verify rejects everything (L314-L315, under Integrity's conditions clause); and the system in the soundness theorem's statement has a constant committer, which commits to nothing, so of that system none of it can be stated with any content (L700-L704). So the conclusion is about a reference definition of the model, as a step above Partly met needs, and it is not tied to the weights this row commits"
       theorem: "VerifierAndGoals.AtTheName.sound_of_verify_at"
       theorem_url: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/Johnson/Goal/Skeleton/SoundOfVerifyAt.lean#L69"
       trusted_base:

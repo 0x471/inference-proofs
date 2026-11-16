@@ -1246,6 +1246,45 @@
         "quotes"
       ],
       "type": "object"
+    },
+    "number_format": {
+      "$comment": "the number format of the copy the row proves, its weights and its activations, each with the publisher's words at the pin (RFC-0018 SI-9, amended 2026-11-16, Q37); printed beside every Fidelity figure, it sets no state: iproofs.glyph does not read it",
+      "additionalProperties": false,
+      "properties": {
+        "weights": {
+          "$comment": "one part of the proved copy's number format, as the publisher states it at the pin: `integer`, `fixed_point` (integers with a fixed scale) or `floating_point`, or `not_stated`; never inferred from a construction's or a format's name (RFC-0018 SI-9, amended 2026-11-16)",
+          "$ref": "#/$defs/fact",
+          "properties": {
+            "value": {
+              "enum": [
+                "integer",
+                "fixed_point",
+                "floating_point",
+                "not_stated"
+              ]
+            }
+          }
+        },
+        "activations": {
+          "$comment": "one part of the proved copy's number format, as the publisher states it at the pin: `integer`, `fixed_point` (integers with a fixed scale) or `floating_point`, or `not_stated`; never inferred from a construction's or a format's name (RFC-0018 SI-9, amended 2026-11-16)",
+          "$ref": "#/$defs/fact",
+          "properties": {
+            "value": {
+              "enum": [
+                "integer",
+                "fixed_point",
+                "floating_point",
+                "not_stated"
+              ]
+            }
+          }
+        }
+      },
+      "required": [
+        "weights",
+        "activations"
+      ],
+      "type": "object"
     }
   },
   "required": [
