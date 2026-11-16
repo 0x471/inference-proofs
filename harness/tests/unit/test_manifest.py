@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from iproofs.adapter import InProcessRunner
+from iproofs.adapter import OPTIONAL_SUBCOMMANDS, InProcessRunner
 from iproofs.log import JsonlLogger
 from iproofs.log.patterns import IPV4_ALLOWED, PATTERNS, is_ipv6
 from iproofs.runner import Job, JobSpec, Runner, RunnerIdentity
@@ -102,3 +102,15 @@ def test_manifest_passes_g9(run: tuple[Capturing, Path]) -> None:
             if p.rule == "SEC-6" and not is_ipv6(found):
                 continue
             pytest.fail(f"{p.rule} matches {found!r} in manifest.json")
+
+
+def test_manifest_schema_lists_every_optional_subcommand() -> None:
+    """A subcommand the adapter contract allows must be recordable: as a command step when the
+    harness calls it, and in `system.optional_subcommands` when the adapter's info lists it.
+    Either enum falling behind `OPTIONAL_SUBCOMMANDS` fails an honest run at its manifest."""
+    schema = json.loads((ROOT / "schema/manifest/1.schema.json").read_text())
+    props = schema["properties"]
+    steps = props["commands"]["items"]["properties"]["step"]["enum"]
+    listed = props["system"]["properties"]["optional_subcommands"]["items"]["enum"]
+    assert set(OPTIONAL_SUBCOMMANDS) <= set(steps)
+    assert set(listed) == set(OPTIONAL_SUBCOMMANDS)

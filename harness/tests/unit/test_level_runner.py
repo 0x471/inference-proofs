@@ -625,6 +625,11 @@ def test_c1_through_mutate_reply_verifies_the_honest_reply(
     empty.mkdir()
     seen = spy_calls(monkeypatch)
     run_dir = l1_runner(str(empty)).run(spec(tmp_path / "r"))
+    # the session calls mutate_reply (below): it must complete and its manifest must validate,
+    # i.e. the command-step enum has to list mutate_reply (manifest/1).
+    run = read(run_dir, "run.json")
+    assert run["status"] == "completed", run["failure"]
+    assert REGISTRY.errors("manifest/1", read(run_dir, "manifest.json")) == []
     c1 = next(c for c in read(run_dir, "controls.json")["controls"] if c["id"] == "C1")
     assert [t["outcome"] for t in c1["trials"]] == ["rejected"] * 6  # first and last
     assert c1["trials"][0]["mutation"]["mutated"] == {"parts": ["body.bin"],

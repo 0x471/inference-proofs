@@ -386,12 +386,17 @@
             "type": "string"
           },
           "step": {
+            "$comment": "one adapter call: the five required subcommands, the optional ones (iproofs.adapter.OPTIONAL_SUBCOMMANDS, recorded when a control or level session invokes them), and `control` for a control-trial wrapper",
             "enum": [
               "info",
               "setup",
               "commit",
               "prove",
               "verify",
+              "logprobs",
+              "perturb",
+              "mutate_reply",
+              "score",
               "control"
             ]
           }
@@ -908,12 +913,13 @@
           "$ref": "../quantity/1.schema.json#/$defs/systemId"
         },
         "optional_subcommands": {
-          "$comment": "RFC-0018 AD-2, AD-5, AD-6: the optional subcommands the adapter's info listed",
+          "$comment": "RFC-0018 AD-2, AD-5, AD-6, AD-7: the optional subcommands the adapter's info listed (iproofs.adapter.OPTIONAL_SUBCOMMANDS)",
           "items": {
             "enum": [
               "logprobs",
               "perturb",
-              "mutate_reply"
+              "mutate_reply",
+              "score"
             ]
           },
           "type": "array",

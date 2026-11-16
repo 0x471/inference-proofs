@@ -133,6 +133,7 @@ Every pull request that changes the public API, a schema or the methodology adds
 
 ### Fixed
 
+- `manifest/1`: the command `step` enum lists the optional subcommands `logprobs`, `perturb`, `mutate_reply` and `score`, and `system.optional_subcommands` lists `score` (`iproofs.adapter.OPTIONAL_SUBCOMMANDS`, RFC-0018 AD-7). A level session that ran its controls in-session and called `mutate_reply` ended `failed` when its manifest was checked. No stored manifest changes.
 - `iproofs archive upload` stores a repository input (`<repo>.git#<commit>`) as its `git archive`, the bytes `inputs.lock` digests; it fetched the URL as a file and every repository input failed its check.
 - `sash` declares a 21,600 s `verify` limit; the 3,600 s default stopped a job whose grid verification on 8 CPUs took longer.
 - `sash` pins the image rebuilt from `main` at `aa3fbb2`: vendored crates readable by the adapter user (#283) and the program path mapped (#289).
