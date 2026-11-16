@@ -41,6 +41,7 @@ from .overview import (
     fidelity_word,
     fig_html,
     filled,
+    how_link,
     href,
     multiple_html,
     name_of,
@@ -2102,7 +2103,7 @@ def build_checks():
     passed = (f'<p class="rd" id="passed">{e(gate)}</p>'
               f'<p class="rd" id="not-tested">{linked(NOT_TESTED, ("NOT_TESTED", ""))}</p>'
               f'<p class="rd" id="binding">{e(BINDING_GAP)}</p>')  # fmt: skip
-    six = (f'{passed}<div class="clist six">{checks}</div><div class="clist">{undecided}</div>'
+    six = (f'{how_link("rd")}{passed}<div class="clist six">{checks}</div><div class="clist">{undecided}</div>'
            f"{know_html()}")  # fmt: skip
     parts = (("checks", "Six checks"), ("figures", "Figures"), ("order", "Order"),
              ("glyph", "Glyph"), ("not-run", "Not run"))  # fmt: skip

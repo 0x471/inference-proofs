@@ -19,7 +19,7 @@ So a line is placed by one question: how deep is the reader who needs it? What a
 
 Two things sit beside the depths, not in them:
 
-- **Learn** is a way in for a reader who wants the subject explained. It is not a step between the ladder and a system. Its pages follow their own order (a policy track, a track for prover teams and engineers), and a figure there is printed with its labels, since the page is read alone.
+- **Learn** is a way in for a reader who wants the subject explained. It is not a step between the ladder and a system. Its pages follow their own order (a policy track, a track for prover teams and engineers), and a figure there is printed with its labels, since the page is read alone. One of them, "How a check works", draws the request, who holds what, the six checks and the headline fraction; the home lead and the Checks page link it.
 - **The footer** is the same on every page. It holds names only (the level, the release with its date, the licence, who builds the site), each a link: the level to the mandate's line on it, the release to its board file, the licence to its text in the repository. It carries no date of a rule and no hash.
 
 ## Three laws

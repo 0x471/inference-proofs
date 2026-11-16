@@ -226,6 +226,8 @@ html:has(.top.s-on) { overflow: hidden; }
 .band-h { margin: 0; font: 900 min(var(--title), calc((100vw - 2 * var(--gut)) / 12.8))/.92 var(--disp); letter-spacing: -.012em; white-space: nowrap; }
 .lede { max-width: 68ch; margin: 24px 0 0; font: 400 16px/25px var(--mono); text-wrap: pretty; }
 .lede a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+.lto { margin: 16px 0 0; font: 600 14px/22px var(--mono); }
+.lto a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: 3px; }
 .lede .fig { display: inline; }
 .lede .fig .n, .lede .fig .u, .lede .fig .u.x { font: 600 16px/25px var(--mono); letter-spacing: 0; margin: 0; }
 /* the lines between the band and the ladder: what passed means, and while it holds, that no model has two systems */
@@ -1503,6 +1505,57 @@ ol.ls > li:before { counter-increment: n; content: counter(n); position: absolut
 .sx .br { fill: none; stroke: var(--paper); stroke-width: 2; }
 .sx .bt { fill: var(--paper); font-weight: 600; }
 .sx .br2 { fill: none; stroke: var(--rule); }
+/* how a check works: a token or a weight is a cell in rule ink, the one changed is filled in paper,
+   a thing taken away is dashed; boxes and arrows in paper, words in muted, a box's words in paper.
+   No state ink: these are rules, not results. Two layouts of a wide drawing, as the session's */
+.hc { display: block; width: 100%; height: auto; }
+.hc.hcl { min-width: 640px; max-width: 1000px; }
+.hc.hcs { display: none; max-width: 400px; }
+.hc text { font: 400 12px/1 var(--mono); fill: var(--muted); }
+.hc.hcs text { font-size: 13px; }
+.hc .p { fill: var(--paper); font-weight: 600; }
+.hc .d { font: 800 24px/1 var(--disp); fill: var(--paper); }
+.hc .c { fill: none; stroke: var(--rule); }
+.hc .o { fill: none; stroke: var(--line); }
+.hc .x { fill: var(--paper); }
+.hc .b { fill: none; stroke: var(--paper); }
+.hc rect.d { fill: none; stroke: var(--muted); stroke-dasharray: 4 3; }
+.hc .a { fill: none; stroke: var(--paper); stroke-width: 1.5; }
+.hc .k { fill: none; stroke: var(--rule); }
+.hc .l { fill: none; stroke: var(--line); }
+/* the six checks: three panels a row, two, then one */
+.hcg { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px 24px; }
+.hcp { padding-top: 12px; border-top: 1px solid var(--rule); }
+.hcn { font: 800 24px/1 var(--disp); margin-bottom: 12px; }
+.hcn a { text-decoration: none; }
+.hcn a:hover { text-decoration: underline; }
+.hchk { max-width: 400px; }
+.hcd { margin: 12px 0 0; font: 400 12px/18px var(--mono); }
+.hcd div + div { margin-top: 8px; }
+.hcd dt { font: var(--f-label); color: var(--muted); text-transform: uppercase; letter-spacing: var(--track); }
+.hcd dd { margin: 2px 0 0; text-wrap: pretty; }
+/* the headline figure as a fraction: a proved reply over serving it, a bar between, then the multiple */
+.hcf { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; column-gap: 28px; align-items: center; max-width: 900px; }
+.hcq { min-width: 0; }
+.hct { padding: 4px 0; }
+.hcb { display: block; width: 100%; height: 3px; margin: 12px 0; fill: var(--paper); }
+.hck { font: var(--f-label); color: var(--muted); text-transform: uppercase; letter-spacing: var(--track); margin-bottom: 4px; }
+.hcf .fig .n { font: 800 40px/1 var(--disp); }
+.hcf .fig .u { font: 500 13px/20px var(--mono); margin-left: 6px; }
+.hcm { margin-top: 6px; font: 400 12px/18px var(--mono); color: var(--muted); text-wrap: pretty; }
+.hce { font: 800 40px/1 var(--disp); }
+.hcr .fig .n { font-size: 56px; }
+.hcr .fig .u.x { font: 800 32px/1 var(--disp); margin-left: 2px; }
+@media (max-width: 1000px) {
+  .hcg { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 760px) {
+  .hc.hcl { display: none; }
+  .hc.hcs { display: block; }
+  .hcg { grid-template-columns: minmax(0, 1fr); }
+  .hcf { grid-template-columns: minmax(0, 1fr); row-gap: 8px; }
+  .hce { font-size: 32px; }
+}
 /* figures of the board inside a page; a system's name longer than its column breaks inside the word
    (at 7em at least), so the table never outgrows the page */
 .mt th .sub { font: var(--f-meta); }
