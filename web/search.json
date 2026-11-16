@@ -173,12 +173,12 @@
     {
       "group": "Figures",
       "kind": "figure",
-      "meta": "GPU time per proved reply, in USD at the release's price for one H200 GPU-hour.",
-      "name": "Cost per reply",
+      "meta": "Reply tokens per GPU-second, proved and served on the same GPU type. Their ratio is Cost vs serving.",
+      "name": "Tokens per second",
       "pie": "",
-      "terms": "cost per reply gpu time per proved reply, in usd at the release's price for one h200 gpu-hour.",
+      "terms": "tokens per second reply tokens per gpu-second, proved and served on the same gpu type. their ratio is cost vs serving.",
       "tier": 4,
-      "url": "/checks#cost"
+      "url": "/checks#rate"
     },
     {
       "group": "Figures",
@@ -233,10 +233,10 @@
     {
       "group": "Pages",
       "kind": "page",
-      "meta": "Every system run, on a log axis: cost vs serving, cost, verify time, proof size.",
+      "meta": "Every system run, on a log axis: cost vs serving, proof size, verify time.",
       "name": "Scale",
       "pie": "<svg class=\"pie-svg lm\" viewBox=\"0 0 26 18\" width=\"26\" height=\"18\" shape-rendering=\"crispEdges\" aria-hidden=\"true\" focusable=\"false\"><path fill=\"currentColor\" d=\"M0 0h4v18h-4zM4 6h6v6h-6zM12 6h6v6h-6zM20 6h6v6h-6z\"/></svg>",
-      "terms": "scale every system run, on a log axis: cost vs serving, cost, verify time, proof size. scale chart log decade axis",
+      "terms": "scale every system run, on a log axis: cost vs serving, proof size, verify time. scale chart log decade axis",
       "tier": 4,
       "url": "/scale"
     },
@@ -1063,16 +1063,6 @@
     {
       "group": "Glossary",
       "kind": "term",
-      "meta": "The request's reply tokens over the whole session GPU-seconds it took to prove that reply.",
-      "name": "Reply tokens per GPU-second",
-      "pie": "",
-      "terms": "reply tokens per gpu-second the request's reply tokens over the whole session gpu-seconds it took to prove that reply.",
-      "tier": 4.2,
-      "url": "/glossary#reply-tokens-per-gpu-second"
-    },
-    {
-      "group": "Glossary",
-      "kind": "term",
       "meta": "One prompt and the reply checked for it: at Level 1, 512 prompt tokens and a 512-token greedy reply.",
       "name": "Request",
       "pie": "",
@@ -1219,6 +1209,16 @@
       "terms": "token the unit of text a model reads and writes, a word or part of one, stored as an integer.",
       "tier": 4.2,
       "url": "/glossary#token"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
+      "meta": "The request's reply tokens over the GPU-seconds one reply took, on one GPU, printed in tokens/s per GPU with the GPU named.",
+      "name": "Tokens per second",
+      "pie": "",
+      "terms": "tokens per second the request's reply tokens over the gpu-seconds one reply took, on one gpu, printed in tokens/s per gpu with the gpu named.",
+      "tier": 4.2,
+      "url": "/glossary#tokens-per-second"
     },
     {
       "group": "Glossary",

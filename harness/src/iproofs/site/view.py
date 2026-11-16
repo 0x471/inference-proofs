@@ -252,6 +252,13 @@ def _serving(f: dict[str, Any] | None) -> dict[str, Any] | None:
     return None if f is None else {**f, "scope": "serving"}
 
 
+def _served(q: Any, pointer: str, board: str | None) -> dict[str, Any] | None:
+    """The baseline's served rate as the site labels it (`_serving`), with the board's note on
+    what it counts (one run, the timed replies, the GPUs): its n, printed in its title."""
+    f = _serving(figure(q, pointer, board))
+    return None if f is None else {**f, "note": q.get("note")}
+
+
 def _baseline(raw: dict[str, Any] | None, at: str, board: str | None) -> dict[str, Any] | None:
     if raw is None:
         return None
@@ -264,6 +271,10 @@ def _baseline(raw: dict[str, Any] | None, at: str, board: str | None) -> dict[st
         "gpu_seconds_per_reply": _serving(figure(raw["gpu_seconds_per_reply"],
                                                  f"{at}/gpu_seconds_per_reply", board)),
         "usd_per_reply": _serving(figure(raw["usd_per_reply"], f"{at}/usd_per_reply", board)),
+        # CO-8 (amended 2026-11-16): the reply tokens per GPU-second it serves, with what it counts
+        "reply_tokens_per_gpu_second": _served(raw.get("reply_tokens_per_gpu_second"),
+                                               f"{at}/reply_tokens_per_gpu_second", board),
+        "gpu_model": raw.get("gpu_model"),
         # CO-4: the rate at each concurrency of the ladder, the full-load rung among them
         "ladder": [{"concurrency": c["concurrency"],
                     "rate": _serving(figure(c["replies_per_gpu_second"],
@@ -431,6 +442,9 @@ def site_view(root: Path, board: Path | None = None) -> dict[str, Any]:
     for rung in rungs:
         if rung["baseline"] is not None:
             rung["baseline"]["release"] = system.serving_release(root, rung["baseline"]["serving"])
+            # the GPU the serving run's manifest records, by the facts file's short name
+            model = rung["baseline"]["gpu_model"]
+            rung["baseline"]["gpu"] = None if model is None else dict(facts.gpus).get(model, model)
         for row in rung["rows"]:
             row["statement"] = system.statement(root, release_id, row, request)
             row["machine"] = system.machine(root, release_id, row, dict(facts.gpus))

@@ -37,6 +37,7 @@
       "baseline": {
         "cause": null,
         "concurrency": 512,
+        "gpu_model": "NVIDIA H200",
         "gpu_seconds_per_reply": {
           "grade": "derived",
           "null_reason": null,
@@ -277,6 +278,23 @@
             }
           }
         ],
+        "reply_tokens_per_gpu_second": {
+          "grade": "derived",
+          "note": "one serving run at full load: 3 timed batches of 512 replies (1,536 replies) on 4 x NVIDIA H200; one rate over the batches' span, no range",
+          "null_reason": null,
+          "scope": "prove.steady",
+          "source": {
+            "inputs": [
+              "releases/v1.0/board.json#/rungs/0/baseline/gpu_seconds_per_reply",
+              "levels/L1.yaml#/request/output_tokens"
+            ],
+            "kind": "derivation",
+            "ref": "derive:D-L1-SERVED-TOKENS@0.1.0.dev0"
+          },
+          "tier": "reported",
+          "unit": "token/gpu_s",
+          "value": 2668.932082158714
+        },
         "run_id": "2026-11-11-ref-serve-l1-maverick-p512-o512-serving-h200x4-hosted-1",
         "serving": "llama-4-maverick-17b-128e-instruct-fp8",
         "usd_per_reply": {
@@ -1973,6 +1991,7 @@
       "baseline": {
         "cause": null,
         "concurrency": 256,
+        "gpu_model": "NVIDIA H200",
         "gpu_seconds_per_reply": {
           "grade": "derived",
           "null_reason": null,
@@ -2213,6 +2232,23 @@
             }
           }
         ],
+        "reply_tokens_per_gpu_second": {
+          "grade": "derived",
+          "note": "one serving run at full load: 3 timed batches of 256 replies (768 replies) on 1 x NVIDIA H200; one rate over the batches' span, no range",
+          "null_reason": null,
+          "scope": "prove.steady",
+          "source": {
+            "inputs": [
+              "releases/v1.0/board.json#/rungs/1/baseline/gpu_seconds_per_reply",
+              "levels/L1.yaml#/request/output_tokens"
+            ],
+            "kind": "derivation",
+            "ref": "derive:D-L1-SERVED-TOKENS@0.1.0.dev0"
+          },
+          "tier": "reported",
+          "unit": "token/gpu_s",
+          "value": 11876.184146671147
+        },
         "run_id": "2026-11-11-ref-serve-l1-l31-8b-p512-o512-serving-h200x1-hosted-1",
         "serving": "llama-3.1-8b-instruct-bf16",
         "usd_per_reply": {
@@ -3680,6 +3716,7 @@
       "baseline": {
         "cause": "no baseline run stored",
         "concurrency": null,
+        "gpu_model": null,
         "gpu_seconds_per_reply": {
           "grade": "derived",
           "null_reason": "missing_input",
@@ -3697,6 +3734,22 @@
         },
         "gpus": null,
         "ladder": [],
+        "reply_tokens_per_gpu_second": {
+          "grade": "derived",
+          "null_reason": "missing_input",
+          "scope": "prove.steady",
+          "source": {
+            "inputs": [
+              "releases/v1.0/board.json#/rungs/2/baseline/gpu_seconds_per_reply",
+              "levels/L1.yaml#/request/output_tokens"
+            ],
+            "kind": "derivation",
+            "ref": "derive:D-L1-SERVED-TOKENS@0.1.0.dev0"
+          },
+          "tier": "reported",
+          "unit": "token/gpu_s",
+          "value": null
+        },
         "run_id": null,
         "serving": "gpt2-fp32",
         "usd_per_reply": {

@@ -24,7 +24,7 @@ Two things sit beside the depths, not in them:
 
 ## Three laws
 
-1. **Down, never out.** Content moves to its depth; it is not removed. Each depth links to the next: a ladder row to its system's page, a ladder figure to its section there (the multiple, the cost and the verify time to Cost, Fidelity to Fidelity), a word to its definition, a state to its evidence, an evidence line to its record.
+1. **Down, never out.** Content moves to its depth; it is not removed. Each depth links to the next: a ladder row to its system's page, a ladder figure to its section there (the multiple, its two rates, the proof size and the verify time to Cost, Fidelity to Fidelity), a word to its definition, a state to its evidence, an evidence line to its record.
 2. **A bad result never moves down.** "Failed", "not decided", "Not passed yet", "not measured", "not run" stay at the surface, in words, beside the system they concern. Only the explanation of the result moves down.
 3. **A hover title is a shaft, not a home.** A figure's title carries its labels (scope, n, grade, tier, record) at any depth. It is never the only place they are: a phone and a keyboard have no hover, so the same labels are printed in visible text one step down.
 
@@ -37,13 +37,15 @@ The shallowest depth where each kind of content may be printed, and its form the
 | system and model names, model size | 0 | words |
 | standing, and the checks not passed | 0 | words ("Not passed yet: Model check not decided") |
 | the headline figure (cost vs serving) | 0 | figure with its unit |
-| its two parts (generation, commit and proving) | 0, with the headline | figures with their units (see Exceptions) |
+| its two parts (generation, commit and proving) | 0, with the headline | figures with their units (see Exceptions); on the ladder the two rates print in their place (amended 2026-11-16) |
+| the two rates the headline is made of (proved and served reply tokens per GPU-second, CO-8) | 1, with the headline | one line under the multiple on the ladder and in the Figures row, "2.03 tokens/s proved · 2,670 served, per H200", the GPU named; served ÷ proved and each rate's labels in its title, linked to Cost (amended 2026-11-16) |
 | the glyph | 0 | drawn, with its petals' names; on the ladder each petal's hover title is its name, its step word and its plain sentence; each petal's step in words at 2; plain sentence, reason, next step and the publisher's words at 3 |
 | a petal's field term ("soundness") and what it rests on ("tested by us", "stated", "read as") | 2 | words under its name and its step, on the system page; Confidentiality's "Architecture: visible", Formally verified's "stated: <what is verified>" ("read as:" on a reading) and Fidelity's "proved: <bits and number format>" under its step; a Not decided petal has no basis word |
 | a petal's next step (what the row lacks for the step above, and who acts) | 3 | one line under its reason |
 | soundness, zero knowledge and completeness for the row, in that order; the stated security; the scope card | 3 | three lines, each with where it is graded or tested and whom it protects, the publisher's security words verbatim, then the card with one bound per row, under the five petals (plain first) |
-| cost, verify time | 0 | figure with its unit |
-| proof size | 1 (Scale), 2 | figure with its unit |
+| verify time | 0 | figure with its unit |
+| cost in USD | 3 | the Cost block's sheet only (amended 2026-11-16: not on the ladder, the Scale page, the band, the Figures row, a share card, a description or a search entry) |
+| proof size | 0 (a share card), 1 (the ladder, Scale) | figure with its unit (amended 2026-11-16: the ladder's column in the place of USD) |
 | a unit | wherever its figure is | beside the figure, always |
 | fidelity | 1 | the Fidelity figure (the share of reply positions where the top token is the reply token, FI-10's mean as a percentage, SI-9) with what the row proves under it ("proved: 4.84-bit integer weights", the number format as the publisher states it, and "for part of the weights" where the bits cover a part), then the 8-bit and 4-bit copies' percentages; the copies' ids, the proved copy, why top-token agreement and the check's state in its title |
 | the fidelity metrics (matched leading tokens, the bar, p, the controls, KL) | 3 | the Fidelity table, opened by a plain lead (what is compared with what, what 100 % means, what the 8-bit and 4-bit copies are, why top-token agreement), its rows named in words with the copy ids in parentheses; in the surface word's title above that |
@@ -55,7 +57,7 @@ The shallowest depth where each kind of content may be printed, and its form the
 | how the verify time was taken (the program, the verifier's CPUs, the host, a GPU visible), the serving ladder | 3 | one line each under Cost |
 | the proved copy: its bits, how they were found, and its number format with the publisher's words | 3 | the Proved line at the head of Fidelity; Cost's Serving line links to it |
 | the evidence tier ("our runs only, not rerun by anyone else") | 3 | one line under Cost (Evidence), once for the block, linked to the glossary; in every figure's title |
-| reply tokens per GPU-second (CO-8) | 3 | one line under Cost, beside the session GPU time, with the GPUs named, the session's generation and commit-and-proving parts where they are timed apart, and what was not timed apart; never at 0 to 2, never on the Scale page |
+| reply tokens per GPU-second in full (CO-8: range, n, the GPUs bound) | 3 | one line under Cost, beside the session GPU time, with the GPUs named, the served rate beside it, the session's generation and commit-and-proving parts where they are timed apart, and what was not timed apart; at 1 and 2 only as the rate pair with the headline (above), never on the Scale page |
 | what was counted (scope: "whole sessions of N replies", steady, verify) | 2 | once, under the band's figure (a phone's band leaves it to the Cost block); at 3 once for the Cost block, and under a figure whose scope differs |
 | sample size (n) | 2 | once, beside the scope; at 3 beside the Cost block's scope, and under the system's own Fidelity figure (in replies) |
 | pass thresholds, petal steps | 3 as the bar's row; 4 as rules | |
@@ -74,7 +76,7 @@ The shallowest depth where each kind of content may be printed, and its form the
 
 ## Words follow depth
 
-- **The surface names the property; deeper names the measure.** Depths 0 to 2 say "Fidelity", "Cost", "Verify time". The exact metric ("leading tokens matching the original, mean", "KL to the original weights") first appears at depth 3, as a column head. The surface word links to it.
+- **The surface names the property; deeper names the measure.** Depths 0 to 2 say "Fidelity", "Proof size", "Verify time" ("Cost" until 2026-11-16, when USD moved to depth 3). The exact metric ("leading tokens matching the original, mean", "KL to the original weights") first appears at depth 3, as a column head. The surface word links to it.
 - **The head says what, the unit says per what.** "Cost" beside USD/reply, never "Cost per reply" beside USD/reply. `FIGURE_HEAD` in `draw/words.py` holds the heads; `beside_unit` trims a longer name where a unit follows it. A name printed with no unit (a definition's title, a sentence) keeps its full form.
 - **Once per block.** What a block's figures share (scope, n, a model, a date) is said once for the block, not on each figure. A figure that differs from its block says so.
 - **No bare fraction.** A figure is not framed "of N" unless N is what it is judged against. The mean matched prefix is judged against the model's bar, not against the reply's length, so it is printed with the bar or not at all.
@@ -95,8 +97,9 @@ Then, before printing it: does a head, a unit, the glyph or another block of the
 
 ## Exceptions, each deliberate
 
-- **The two parts of the multiple are on the ladder**, a depth above where the test puts them. Where a system generates its reply in a phase of its own, most of its multiple can be generation, not proving, and the headline read alone is taken for the cost of proving (RFC-0018 CO-7, Decision Q15). The parts change how the headline reads, so they travel with it.
-- **The overview opens with a lead and two lines** (RFC-0018 SI-1, amended 2026-11-15), a depth above where definitions go. A reader at the surface knows nothing of the method, so the band says what a proof of inference is and what the ladder lists, and, from the board, on how many models a system passed and the frontier row's figure. Under it, "passed" is said to mean that all six of our checks passed and that no check tries to forge a proof, and, while no model has two systems run, that none has. Without them "passed" and a lone position read as a verdict.
+- **The two parts of the multiple are on the band, the Scale page and a share card**, a depth above where the test puts them. Where a system generates its reply in a phase of its own, most of its multiple can be generation, not proving, and the headline read alone is taken for the cost of proving (RFC-0018 CO-7, Decision Q15). The parts change how the headline reads, so they travel with it. On the ladder the two rates stand in their place (amended 2026-11-16, Q39).
+- **The two rates are on the ladder** (amended 2026-11-16, RFC-0018 CO-8, Q39), a depth above where a hardware-bound figure goes. Readers ask for tokens per second; read alone it depends on the GPU, so it prints only as the two numbers the multiple divides, proved and served on one GPU type, with the GPU named, in one line under the multiple.
+- **The overview opens with a lead** (RFC-0018 SI-1, amended 2026-11-15 and 2026-11-16), a depth above where definitions go. A reader at the surface knows nothing of the method, so the band says what a proof of inference is, in one sentence, and links "How a check works". The line on what "passed" means was removed on 2026-11-16 (Q39) so the systems start high on the page; "Passed" on each row links to its definition on the checks page.
 - **A share card carries the release and its date.** A card outlives the page it was made from; the date says which figures it shows.
 
 ## Known gaps

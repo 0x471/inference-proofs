@@ -4,6 +4,7 @@ stored records (§The board file)."""
 import json
 import math
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -345,8 +346,37 @@ def test_board_session_split_without_steady_state(
     assert math.isclose(r["session_multiple"]["value"], 128.0)
     assert math.isclose(r["session_generation_multiple"]["value"], 40.0)
     assert math.isclose(r["session_commit_and_proving_multiple"]["value"], 88.0)
+    # CO-8 (amended 2026-11-16): 512 reply tokens over 0.5 GPU-s served is 1,024 per GPU-second,
+    # over 64 GPU-s proved 8; 1,024 / 8 = 128, the whole sessions' multiple
+    served = rung_of(board)["baseline"]["reply_tokens_per_gpu_second"]
+    proved = r["session_reply_tokens_per_gpu_second"]
+    assert (served["value"], served["unit"]) == (1024.0, "token/gpu_s")
+    assert math.isclose(proved["value"], 8.0)
+    assert math.isclose(served["value"] / proved["value"], r["session_multiple"]["value"])
     multiples = (r["session_generation_multiple"], r["session_commit_and_proving_multiple"])
     assert {q["scope"] for q in (generation, rest, *multiples)} == {"whole_wall"}
+
+
+def rung_of(board: dict[str, object]) -> Any:
+    return board["rungs"][1]  # type: ignore[index]
+
+
+def test_stored_board_served_over_proved_rate_is_the_headline() -> None:
+    """CO-8 (amended 2026-11-16) on the stored board: for every row with both rates, the
+    baseline's served reply tokens per GPU-second over the row's own is the row's whole
+    sessions' multiple, the headline the ladder prints (CO-5)."""
+    board = json.loads((ROOT / "releases" / "v1.0" / "board.json").read_text())
+    seen = 0
+    for rung in board["rungs"]:
+        served = rung["baseline"].get("reply_tokens_per_gpu_second") or {}
+        for r in rung["rows"]:
+            proved = r.get("session_reply_tokens_per_gpu_second") or {}
+            if served.get("value") is None or proved.get("value") is None:
+                continue
+            assert math.isclose(served["value"] / proved["value"],
+                                r["session_multiple"]["value"], rel_tol=1e-9)  # fmt: skip
+            seen += 1
+    assert seen >= 1
 
 
 def test_board_session_in_its_calls(tree: Tree) -> None:

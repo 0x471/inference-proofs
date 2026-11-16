@@ -542,14 +542,15 @@ PETAL_CHECKS = {"unforgeable": ("model", "prompt", "reply"), "weights_hidden": (
 # steady.tolerance), 1 (baseline.ladder's first rung), 64 and 512 (kl.texts, kl.tokens) are typed
 # as the level's. "fidelity-figure" is the figure the ladder prints as Fidelity (SI-9); "fidelity"
 # is the check's anchor.
-FIGURE_NAME = {"multiple": "Cost vs serving", "cost": "Cost per reply",
+FIGURE_NAME = {"multiple": "Cost vs serving", "cost": "Cost per reply", "rate": "Tokens per second",
                "check-time": "Verify time per reply", "proof-size": "Proof size per reply",
                "fidelity-figure": "Fidelity figure", "kl": "KL to the original weights"}  # fmt: skip
 # a figure's head where its unit stands beside it: the unit says "per reply", so the head does
 # not; and the surface names fidelity, not the metric (KL and the matched tokens' bar are under
 # Fidelity on a system's page)
 FIGURE_HEAD = {"multiple": "Cost vs serving", "cost": "Cost", "check-time": "Verify time",
-               "proof-size": "Proof size", "fidelity": "Fidelity", "serving": "Serving"}  # fmt: skip
+               "proof-size": "Proof size", "fidelity": "Fidelity", "serving": "Serving",
+               "rate": "Tokens per second"}  # fmt: skip
 # where a head links on the checks page, where its anchor is not its key: the Fidelity figure has
 # a rule of its own there, apart from the check it does not set (SI-9)
 FIGURE_ANCHOR = {"fidelity": "fidelity-figure"}
@@ -567,8 +568,20 @@ HOW_MULTIPLE = {
 HOW_ON = {True: "both on {gpu} GPUs", False: "proved on {gpu}, served on {serving}"}
 HOW_RULE = "How each side is timed"  # the link to the rule after it, on the system page
 SERVING_GPU = "H200"  # CO-4: the serving baseline runs on the fewest H200 that hold the model
-# CO-8 (adopted 2026-11-16): reply tokens per GPU-second, once, under Cost (depth 3)
-REPLY_TOKENS_HEAD = "Reply tokens per GPU-second"
+# CO-8 (adopted 2026-11-16): reply tokens per GPU-second under Cost (depth 3); amended 2026-11-16:
+# the proved and the served rate also print as one line under the multiple (`overview.rate_html`)
+REPLY_TOKENS_HEAD = "Tokens per second"
+# that line: each rate's word after its number, then the GPU both ran on ("per H200"), or each
+# rate's GPU after its word where the two differ
+RATE_PROVED, RATE_SERVED = "tokens/s proved", "served"
+RATE_PER, RATE_ON = "per {gpu}", "on {gpu}"
+# its title, first: how the two rates are read against the multiple above them
+RATE_HOW = ("how: the request's {tokens} reply tokens over the GPU-seconds one reply took, on "
+            "one GPU")  # fmt: skip
+RATE_IS = "ratio: served ÷ proved = {multiple}, Cost vs serving"
+# the Cost block's line: the served rate beside the proved one, and what the two make
+RATE_SERVING = ("Serving the same reply at full load", "Served ÷ proved is {multiple}, Cost vs "
+                "serving.")  # fmt: skip
 # what the records time apart: a session's GPU time per reply in its two parts (CO-7), where a
 # system generates in a phase of its own; the prompt side never apart from the reply side
 SPLIT_PARTS = "It counts the whole session: of its {whole}, {parts}."
@@ -633,6 +646,14 @@ FIGURE_RULE = {
          "beside the figure, each over b: generation, and the rest (proving under m, commit and "
          "proving under whole sessions). The order reads the figure, never a part."),
     ),
+    # CO-8 (amended 2026-11-16): the two rates under the multiple; {reply_tokens} the level's
+    "rate": (
+        ("", "The request's {reply_tokens} reply tokens over the GPU-seconds one reply took, on one "
+         "GPU, printed in tokens/s per GPU with the GPU named. Proved: over whole sessions, as "
+         "Cost vs serving counts them. Served: the same reply served without a proof, at full "
+         "load, on the same GPU type. Served over proved is Cost vs serving."),
+        ("", "Both depend on the GPU, so neither ranks a row: the order reads Cost vs serving."),
+    ),
     "cost": (
         ("steady", "m in USD, at the release's price for one H200 GPU-hour."),
         ("session", "GPU-seconds from the start of commit to the release of the session's last "
@@ -673,7 +694,8 @@ FIGURE_RULE = {
 FIGURE_LINE = {
     "multiple": "GPU-seconds per proved reply, generation included, over a served reply's at full "
     "load.",
-    "cost": "GPU time per proved reply, in USD at the release's price for one H200 GPU-hour.",
+    "rate": "Reply tokens per GPU-second, proved and served on the same GPU type. Their ratio is "
+    "Cost vs serving.",
     "check-time": "Wall time of the verify calls on a session's proofs, over its replies: the mean "
     "of {slots} sessions.",
     "proof-size": "A session's stored proof bytes over its replies, in MB. A proof of several "
@@ -1139,7 +1161,7 @@ def number(v, unit):  # noqa: PLR0911 (one return per stored unit)
     if unit == "request/gpu_s":  # CO-4: a rung of the serving ladder
         return sig(v), "replies/GPU-s"
     if unit == "token/gpu_s":  # CO-8: at 3 digits, the spread of its sessions' range
-        return sig(v, 3), "reply tokens/GPU-s"
+        return sig(v, 3), "tokens/s per GPU"
     raise KeyError(f"no words for the unit {unit!r}")
 
 

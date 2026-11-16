@@ -38,6 +38,7 @@ from iproofs.derive import (
     nonzero,
     release_groups,
     reply_tokens_per_gpu_second,
+    served_reply_tokens_per_gpu_second,
     session_per_reply,
     steady_per_reply,
 )
@@ -240,6 +241,20 @@ def _reply_tokens(figures: Sequence["SessionFigures"], tokens: int,
     return out
 
 
+def _served_tokens(per_reply: QuantityTree, tokens: int, inputs: Sequence[str],
+                   note: str | None) -> QuantityTree:  # fmt: skip
+    """CO-8 (amended 2026-11-16): the serving baseline's reply tokens per GPU-second, the
+    request's reply tokens over its GPU-seconds per reply at full load, at the baseline's scope.
+    One rate over the timed batches of one run: it has no range; `note` says what it counts."""
+    v = per_reply.get("value")
+    if not isinstance(v, int | float) or v <= 0 or not tokens:
+        return _quantity(None, Unit.TOKEN_PER_GPU_S, Scope.PROVE_STEADY, "D-L1-SERVED-TOKENS",
+                         inputs, NullReason.MISSING_INPUT)  # fmt: skip
+    rate = served_reply_tokens_per_gpu_second(tokens, float(v))
+    return _quantity(rate, Unit.TOKEN_PER_GPU_S, Scope.PROVE_STEADY, "D-L1-SERVED-TOKENS",
+                     inputs, note=note)  # fmt: skip
+
+
 def _null(
     unit: Unit, scope: Scope | None, formula: str, ref: str, reason: NullReason
 ) -> QuantityTree:
@@ -373,11 +388,14 @@ def price_of(root: Path, level: object) -> tuple[dict[str, object], Input]:
 
 def _baseline(
     root: Path, runs: Sequence[RunView], level: object, rung: object, digest: str, index: str,
-    price: Input,
+    price: Input, tokens: int = 0,
 ) -> tuple[dict[str, object], Input, list[RunView]]:  # fmt: skip
     """The rung's baseline block, its GPU-seconds per reply as a formula input, and the runs
     read. The first run by start time of the rung's serving record under this level that has a
-    full load is used."""
+    full load is used. The block holds the GPU model the run's manifest records and the reply
+    tokens per GPU-second it serves (CO-8, amended 2026-11-16)."""
+    tokens_in = [f"{index}/baseline/gpu_seconds_per_reply",
+                 f"levels/{level_id(level)}.yaml#/request/output_tokens"]  # fmt: skip
     serving = str(field_of(rung, "serving"))
     mine = [r for r in runs
             if r.get("manifest", "serving_model", "id") == serving
@@ -404,11 +422,20 @@ def _baseline(
         missing: dict[str, object] = {
             "serving": serving, "run_id": None, "gpus": None, "concurrency": None,
             "gpu_seconds_per_reply": q, "usd_per_reply": _usd(Scope.PROVE_STEADY, (ref, q), price),
-            "ladder": [], "cause": cause,
+            "ladder": [], "cause": cause, "gpu_model": None,
+            "reply_tokens_per_gpu_second": _served_tokens(q, tokens, tokens_in, None),
         }  # fmt: skip
         return missing, (ref, q), mine
     run, load = found
     q = dict(load.gpu_seconds_per_reply)
+    model = run.get("manifest", "machine", "gpu", "model")
+    model = str(model) if isinstance(model, str) and model else None
+    timed = int_of(field_of(level, "baseline"), "timed_batches", 0)
+    # what the served rate counts, from the records: the timed replies at full load, one run
+    note = (f"one serving run at full load: {timed:,} timed batches of {load.concurrency:,} "
+            f"replies ({timed * load.concurrency:,} replies) on {load.gpus:,} x "
+            f"{model or 'GPU model not recorded'}; one rate over the batches' span, no range"
+            if timed else None)  # fmt: skip
     block: dict[str, object] = {
         "serving": serving,
         "run_id": run.run_id,
@@ -420,6 +447,8 @@ def _baseline(
             {"concurrency": c, "replies_per_gpu_second": dict(rate)} for c, rate in load.ladder
         ],
         "cause": None,
+        "gpu_model": model,
+        "reply_tokens_per_gpu_second": _served_tokens(q, tokens, tokens_in, note),
     }
     return block, (ref, q), mine
 
@@ -769,7 +798,8 @@ def build_board(root: Path, release: str, level: object) -> dict[str, object]:
         rung_id = str(field_of(rung, "id"))
         n = int_of(rung, "requests_per_session", 0)
         base = f"releases/{release}/board.json#/rungs/{ri}"
-        baseline_block, baseline, read = _baseline(root, runs, level, rung, digest, base, price)
+        baseline_block, baseline, read = _baseline(root, runs, level, rung, digest, base, price,
+                                                   reply_tokens)  # fmt: skip
         dates |= {r.run_id[:10] for r in read}
         fidelity_block, fidelity_doc = _fidelity(root, release, rung_id)
         fidelity_doc = _with_steps(root, release, level, rung, fidelity_doc)
