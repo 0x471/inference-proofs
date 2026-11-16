@@ -10,6 +10,10 @@ An algebraic intermediate representation: a computation as a table of values (th
 
 A report, signed by hardware or an organisation, that a condition holds. In policy writing, an attestation is a formal declaration that a standard is met.
 
+### Bar
+
+The most faithful damaged copy that every honest copy scores above; a system's proved replies must score above it to pass the [[Fidelity check]]. Its rule is on the [checks page](/checks#fidelity).
+
 ### Bound
 
 Said of a link in the computation that the verifier's acceptance constrains, such as the weights to their commitment. A [[claim card]] records what is bound as the publisher states it, or reads "not stated". As a noun, a bound is a stated limit, such as on the probability that a false proof is accepted.
@@ -21,10 +25,6 @@ One of the six tests of Level 1: Run, Model, Prompt, Reply, Verify without weigh
 ### Claim card
 
 The record of what one system's accepted proofs establish in one configuration, as its publisher states it. Each field is copied from the publisher's documents at the pinned commit and linked, or reads "not stated" ([RFC-0002](repo:rfcs/0002-claim-card.md)).
-
-### Close to the original
-
-The [petal](/checks#faithful_model) that grades how close a system's proved replies stay to the model its publisher released: how many leading reply tokens match the original's before the first difference, on average, against the same count for the model's 8-bit and 4-bit copies. It is a different measure from the [[fidelity]] figure, which counts top-token agreement. Until 2026-11-15 it was called Faithful model, a word that means something else in interpretability.
 
 ### Commitment
 
@@ -52,7 +52,15 @@ A transform that makes an interactive proof non-interactive by hashing the state
 
 ### Fidelity
 
-How closely the copy a system proves follows the model its publisher released. The Fidelity figure is the share of reply positions where the system's top token is the original's, with the system fed the prompt and then the original's reply (teacher forcing). It sets no state and is labelled "computed by the system's own code on the reference reply, not by the proved computation". The [Fidelity check](/checks#fidelity) and the [[close to the original]] petal score a proved reply by its leading tokens matching the original's.
+How closely the copy a system proves answers like the model its publisher released. One name covers three things, told apart by a word: the [[Fidelity check]] and the Fidelity [petal](/checks#faithful_model) count [[matched leading tokens]], and the [[Fidelity figure]] counts top-token agreement. Beside a figure, the site prints the [[quantization]] the system proves.
+
+### Fidelity check
+
+One of the six [checks](/checks#fidelity): the proved replies match the original's opening tokens better than the [[bar]] does, by a paired test at p < 0.05.
+
+### Fidelity figure
+
+The share of reply positions where the system, fed the prompt and the original's reply, picks the original's next token (top-token agreement). It sets no state and is labelled "computed by the system's own code on the reference reply, not by the proved computation".
 
 ### Field
 
@@ -69,6 +77,10 @@ A five-petal figure of how close a system is to a perfect prover. Its [petals](/
 ### Greedy decoding
 
 Choosing the highest-scoring token at every step. With exact arithmetic and a fixed rule for ties, the same model and prompt always give the same reply.
+
+### Halfway point
+
+The average of two copies' mean scores; a row is shown above it by a paired sign-flip test at p < 0.05. The Fidelity petal's steps are halfway points between the original run again, the 8-bit copy and the 4-bit copy.
 
 ### Harness
 
@@ -98,6 +110,10 @@ A proof that every value in a long list appears in a fixed public table. Provers
 
 Said of a proof checked by a proof assistant's kernel, such as Lean's. What it takes on trust, such as the kernel and its axioms, is its trusted base. The [Machine-checked](/checks#machine_checked) petal grades how much such a proof of soundness covers, up to the verifier the row runs.
 
+### Matched leading tokens
+
+How many tokens at the start of a reply equal the original's, up to the first difference; the score of the [[Fidelity check]].
+
 ### Mixture of experts
 
 A model that runs only part of its weights for each token. Llama 4 Maverick runs about 17 billion of its 400 billion parameters.
@@ -109,6 +125,10 @@ The one polynomial, linear in each variable, that takes a table's values on the 
 ### Multiple
 
 The ranked figure: steady GPU-seconds per further proved reply over the serving baseline's GPU-seconds per reply at full load. The ladder prints it as Cost vs serving, with generation counted. A row with no steady state has [none](/checks#multiple) and prints its whole sessions' cost over serving.
+
+### Number format
+
+Whether the proved copy computes in integers, fixed point (integers with a fixed scale) or floating point, and with how many bits per weight.
 
 ### Operator
 
@@ -148,11 +168,11 @@ The organisation that releases a proof system and its documents, or a model and 
 
 ### Q8_0 and Q4_K_M
 
-Two copies of the original model quantized by llama.cpp, two of the fidelity run's three honest controls. The ladder prints their [[fidelity]] under each system's.
+The 8-bit copy (Q8_0) and the 4-bit copy (Q4_K_M): the original model with its weights rounded to 8 bits, and mostly to 4 bits, by llama.cpp at the level's pinned commit. We run them without a proof, as yardsticks, and the ladder prints their [[Fidelity figure]] under each system's.
 
 ### Quantization
 
-Storing a model's weights, and often its activations, as low-precision integers in place of floating point. Each system on the ladder proves a [quantized copy](/statement#integer-arithmetic) of the original, whose replies can differ from the original's.
+Storing a model's numbers in fewer bits, which is cheaper to prove and can change replies. Each system on the ladder proves a [quantized copy](/statement#integer-arithmetic) of the original; the [[Fidelity figure]] shows how far its replies move.
 
 ### Random oracle
 

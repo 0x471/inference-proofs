@@ -353,6 +353,16 @@
     {
       "group": "Glossary",
       "kind": "term",
+      "meta": "The most faithful damaged copy that every honest copy scores above; a system's proved replies must score above it to pass the Fidelity check.",
+      "name": "Bar",
+      "pie": "",
+      "terms": "bar the most faithful damaged copy that every honest copy scores above; a system's proved replies must score above it to pass the fidelity check.",
+      "tier": 4.2,
+      "url": "/glossary#bar"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
       "meta": "Said of a link in the computation that the verifier's acceptance constrains, such as the weights to their commitment.",
       "name": "Bound",
       "pie": "",
@@ -379,16 +389,6 @@
       "terms": "claim card the record of what one system's accepted proofs establish in one configuration, as its publisher states it.",
       "tier": 4.2,
       "url": "/glossary#claim-card"
-    },
-    {
-      "group": "Glossary",
-      "kind": "term",
-      "meta": "The petal that grades how close a system's proved replies stay to the model its publisher released: how many leading reply tokens match the original's before the first difference, on average, against the same count for the model's 8-bit and 4-bit copies.",
-      "name": "Close to the original",
-      "pie": "",
-      "terms": "close to the original the petal that grades how close a system's proved replies stay to the model its publisher released: how many leading reply tokens match the original's before the first difference, on average, against the same count for the model's 8-bit and 4-bit copies.",
-      "tier": 4.2,
-      "url": "/glossary#close-to-the-original"
     },
     {
       "group": "Glossary",
@@ -453,12 +453,32 @@
     {
       "group": "Glossary",
       "kind": "term",
-      "meta": "How closely the copy a system proves follows the model its publisher released.",
+      "meta": "How closely the copy a system proves answers like the model its publisher released.",
       "name": "Fidelity",
       "pie": "",
-      "terms": "fidelity how closely the copy a system proves follows the model its publisher released.",
+      "terms": "fidelity how closely the copy a system proves answers like the model its publisher released.",
       "tier": 4.2,
       "url": "/glossary#fidelity"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
+      "meta": "One of the six checks: the proved replies match the original's opening tokens better than the bar does, by a paired test at p < 0.05.",
+      "name": "Fidelity check",
+      "pie": "",
+      "terms": "fidelity check one of the six checks: the proved replies match the original's opening tokens better than the bar does, by a paired test at p < 0.05.",
+      "tier": 4.2,
+      "url": "/glossary#fidelity-check"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
+      "meta": "The share of reply positions where the system, fed the prompt and the original's reply, picks the original's next token (top-token agreement).",
+      "name": "Fidelity figure",
+      "pie": "",
+      "terms": "fidelity figure the share of reply positions where the system, fed the prompt and the original's reply, picks the original's next token (top-token agreement).",
+      "tier": 4.2,
+      "url": "/glossary#fidelity-figure"
     },
     {
       "group": "Glossary",
@@ -499,6 +519,16 @@
       "terms": "greedy decoding choosing the highest-scoring token at every step.",
       "tier": 4.2,
       "url": "/glossary#greedy-decoding"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
+      "meta": "The average of two copies' mean scores; a row is shown above it by a paired sign-flip test at p < 0.05.",
+      "name": "Halfway point",
+      "pie": "",
+      "terms": "halfway point the average of two copies' mean scores; a row is shown above it by a paired sign-flip test at p < 0.05.",
+      "tier": 4.2,
+      "url": "/glossary#halfway-point"
     },
     {
       "group": "Glossary",
@@ -573,6 +603,16 @@
     {
       "group": "Glossary",
       "kind": "term",
+      "meta": "How many tokens at the start of a reply equal the original's, up to the first difference; the score of the Fidelity check.",
+      "name": "Matched leading tokens",
+      "pie": "",
+      "terms": "matched leading tokens how many tokens at the start of a reply equal the original's, up to the first difference; the score of the fidelity check.",
+      "tier": 4.2,
+      "url": "/glossary#matched-leading-tokens"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
       "meta": "A model that runs only part of its weights for each token.",
       "name": "Mixture of experts",
       "pie": "",
@@ -599,6 +639,16 @@
       "terms": "multiple the ranked figure: steady gpu-seconds per further proved reply over the serving baseline's gpu-seconds per reply at full load.",
       "tier": 4.2,
       "url": "/glossary#multiple"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
+      "meta": "Whether the proved copy computes in integers, fixed point (integers with a fixed scale) or floating point, and with how many bits per weight.",
+      "name": "Number format",
+      "pie": "",
+      "terms": "number format whether the proved copy computes in integers, fixed point (integers with a fixed scale) or floating point, and with how many bits per weight.",
+      "tier": 4.2,
+      "url": "/glossary#number-format"
     },
     {
       "group": "Glossary",
@@ -693,20 +743,20 @@
     {
       "group": "Glossary",
       "kind": "term",
-      "meta": "Two copies of the original model quantized by llama.cpp, two of the fidelity run's three honest controls.",
+      "meta": "The 8-bit copy (Q8_0) and the 4-bit copy (Q4_K_M): the original model with its weights rounded to 8 bits, and mostly to 4 bits, by llama.cpp at the level's pinned commit.",
       "name": "Q8_0 and Q4_K_M",
       "pie": "",
-      "terms": "q8_0 and q4_k_m two copies of the original model quantized by llama.cpp, two of the fidelity run's three honest controls.",
+      "terms": "q8_0 and q4_k_m the 8-bit copy (q8_0) and the 4-bit copy (q4_k_m): the original model with its weights rounded to 8 bits, and mostly to 4 bits, by llama.cpp at the level's pinned commit.",
       "tier": 4.2,
       "url": "/glossary#q8-0-and-q4-k-m"
     },
     {
       "group": "Glossary",
       "kind": "term",
-      "meta": "Storing a model's weights, and often its activations, as low-precision integers in place of floating point.",
+      "meta": "Storing a model's numbers in fewer bits, which is cheaper to prove and can change replies.",
       "name": "Quantization",
       "pie": "",
-      "terms": "quantization storing a model's weights, and often its activations, as low-precision integers in place of floating point.",
+      "terms": "quantization storing a model's numbers in fewer bits, which is cheaper to prove and can change replies.",
       "tier": 4.2,
       "url": "/glossary#quantization"
     },
