@@ -273,6 +273,16 @@
     {
       "group": "Learn",
       "kind": "learn",
+      "meta": "One request for every system, a commitment, a proof and a verifier without the weights, six checks drawn one by one, and the fraction behind the headline figure.",
+      "name": "How a check works",
+      "pie": "",
+      "terms": "how a check works one request for every system, a commitment, a proof and a verifier without the weights, six checks drawn one by one, and the fraction behind the headline figure. for policy readers the request commit, prove, verify six checks the figure",
+      "tier": 4.1,
+      "url": "/how-a-check-works"
+    },
+    {
+      "group": "Learn",
+      "kind": "learn",
       "meta": "Proving costs a large multiple of serving, and checking needs no weights or trusted chip. A treaty could prove replies sampled from a trusted record.",
       "name": "Deployments and treaties",
       "pie": "",
