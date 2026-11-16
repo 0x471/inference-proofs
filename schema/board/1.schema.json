@@ -1404,6 +1404,10 @@
           "$comment": "CO-7 (amended 2026-11-15): the generation phase's GPU-seconds per reply over the request's reply tokens, mean of the counted sessions; null when the system has no generation phase of its own",
           "$ref": "#/$defs/value"
         },
+        "session_reply_tokens_per_gpu_second": {
+          "$comment": "CO-8 (adopted 2026-11-16): the request's reply tokens over the mean of the counted sessions' GPU-seconds per reply (CO-1), scope whole_wall, unit token/gpu_s; its range the tokens over the largest and the smallest session; printed once, on the system page under Cost; optional, added in place (Q14 precedent)",
+          "$ref": "#/$defs/value"
+        },
         "session_commit_and_proving_multiple": {
           "$comment": "CO-7 (amended 2026-11-13): the commit and proving part over the baseline's GPU-seconds per reply",
           "$ref": "#/$defs/value"

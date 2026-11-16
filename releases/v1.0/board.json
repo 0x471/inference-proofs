@@ -1439,6 +1439,35 @@
             "unit": "gpu_s/request",
             "value": 7.909795765111113
           },
+          "session_reply_tokens_per_gpu_second": {
+            "grade": "derived",
+            "null_reason": null,
+            "scope": "whole_wall",
+            "source": {
+              "inputs": [
+                "results/v1.0/flashprove/2026-11-11-flashprove-l1-maverick-p512-o512-prover-h200-hosted-1/run.json#/events",
+                "results/v1.0/flashprove/2026-11-12-flashprove-l1-maverick-p512-o512-prover-h200-hosted-1/run.json#/events",
+                "results/v1.0/flashprove/2026-11-12-flashprove-l1-maverick-p512-o512-prover-h200-hosted-2/run.json#/events",
+                "results/v1.0/flashprove/2026-11-11-flashprove-l1-maverick-p512-o512-prover-h200-hosted-1/run.json#/proofs",
+                "results/v1.0/flashprove/2026-11-12-flashprove-l1-maverick-p512-o512-prover-h200-hosted-1/run.json#/proofs",
+                "results/v1.0/flashprove/2026-11-12-flashprove-l1-maverick-p512-o512-prover-h200-hosted-2/run.json#/proofs",
+                "levels/L1.yaml#/request/output_tokens"
+              ],
+              "kind": "derivation",
+              "ref": "derive:D-L1-REPLY-TOKENS@0.1.0.dev0"
+            },
+            "stats": {
+              "max": 2.043616101193619,
+              "mean": 2.0265539466507163,
+              "min": 2.0069062486839435,
+              "n": 3,
+              "n_failed": 0,
+              "stdev": null
+            },
+            "tier": "reported",
+            "unit": "token/gpu_s",
+            "value": 2.0265539466507163
+          },
           "session_usd_per_reply": {
             "grade": "derived",
             "null_reason": null,
@@ -3078,6 +3107,35 @@
             "tier": "reported",
             "unit": "gpu_s/request",
             "value": 2409.3074937306665
+          },
+          "session_reply_tokens_per_gpu_second": {
+            "grade": "derived",
+            "null_reason": null,
+            "scope": "whole_wall",
+            "source": {
+              "inputs": [
+                "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1/run.json#/events",
+                "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2/run.json#/events",
+                "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-3/run.json#/events",
+                "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1/run.json#/proofs",
+                "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2/run.json#/proofs",
+                "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-3/run.json#/proofs",
+                "levels/L1.yaml#/request/output_tokens"
+              ],
+              "kind": "derivation",
+              "ref": "derive:D-L1-REPLY-TOKENS@0.1.0.dev0"
+            },
+            "stats": {
+              "max": 0.18837928894200015,
+              "mean": 0.18631142585429933,
+              "min": 0.18279830402770708,
+              "n": 3,
+              "n_failed": 0,
+              "stdev": null
+            },
+            "tier": "reported",
+            "unit": "token/gpu_s",
+            "value": 0.18631142585429933
           },
           "session_usd_per_reply": {
             "grade": "derived",

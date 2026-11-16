@@ -80,11 +80,25 @@ def _system(sid: str, facts: Any, root: Path) -> dict[str, Any]:
         {"pull": row.pin.pull, "url": row.pin.url, "merged": row.pin.merged,
          "by_owner": row.pin.by_owner, "upstream_commit": row.pin.upstream_commit,
          "upstream_outcome": row.pin.upstream_outcome, "record": row.pin.record},
+        # the publisher's paper at the row's pinned commit (B5 of 2026-11-16), linked from the
+        # band; a link at another commit stops the build
+        "paper": _paper(sid, row.paper if row is not None else None, up),
         # CO-7 (amended 2026-11-15): how a generation phase of its own generates
         "generation": None if row is None or row.generation is None else
         {"words": row.generation.words, "quote": row.generation.quote,
          "url": row.generation.url},
     }  # fmt: skip
+
+
+def _paper(sid: str, url: str | None, up: object) -> str | None:
+    """The publisher's paper, a file of its repository at the commit the claim card pins: a link
+    at any other commit would show another version of it than the one the row runs."""
+    if url is None:
+        return None
+    commit = up.get("commit") if isinstance(up, dict) else None
+    if not commit or f"/blob/{commit}/" not in url:
+        raise inputs.config(f"{sid}: the paper {url} is not at the pinned commit {commit}")
+    return url
 
 
 def _quotes(raw: list[dict[str, Any]] | None) -> list[dict[str, str]]:
@@ -190,7 +204,9 @@ ROW_FIGURES = ("multiple", "session_multiple", "steady_gpu_seconds_per_reply",
                "session_commit_and_proving_gpu_seconds_per_reply",
                "session_generation_multiple", "session_commit_and_proving_multiple",
                "session_gpu_seconds_per_reply", "steady_usd_per_reply", "session_usd_per_reply",
-               "verify_seconds_per_reply", "proof_bytes_per_reply")  # fmt: skip
+               "verify_seconds_per_reply", "proof_bytes_per_reply",
+               # CO-8 (adopted 2026-11-16): printed once, under Cost
+               "session_reply_tokens_per_gpu_second")  # fmt: skip
 
 
 def _row(raw: dict[str, Any], at: str, board: str | None, rung: dict[str, Any]) -> dict[str, Any]:

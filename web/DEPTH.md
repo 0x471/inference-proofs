@@ -45,7 +45,7 @@ The shallowest depth where each kind of content may be printed, and its form the
 | cost, verify time | 0 | figure with its unit |
 | proof size | 1 (Scale), 2 | figure with its unit |
 | a unit | wherever its figure is | beside the figure, always |
-| fidelity | 1 | the Fidelity figure (the share of reply positions where the top token is the reply token, FI-10's mean as a percentage, SI-9) with the Q8_0 and Q4_K_M percentages under it; the check's state in its title |
+| fidelity | 1 | the Fidelity figure (the share of reply positions where the top token is the reply token, FI-10's mean as a percentage, SI-9) with what the row proves under it ("proved: 4.84-bit weights", the number format where the publisher states one), then the 8-bit and 4-bit copies' percentages; the copies' ids, the proved copy, why top-token agreement and the check's state in its title |
 | the fidelity metrics (matched leading tokens, the bar, p, the controls, KL) | 3 | the Fidelity table; in the surface word's title above that |
 | serving, the figure every multiple is over | 1 | figure with its unit, in the model's head |
 | how the model was served (engine, GPUs, concurrency) | 3 | one line under Cost |
@@ -53,7 +53,8 @@ The shallowest depth where each kind of content may be printed, and its form the
 | a change to the publisher's code the row runs (a pull request, not merged upstream) | 2 | one line in the band, its record linked |
 | what the verifier is given (from our commit record, the request, the proof), the decoding rule, what no call checks | 3 | the Statement block, the claim card's words linked |
 | how the verify time was taken (the program, the verifier's CPUs, the host, a GPU visible), the proved precision, the serving ladder | 3 | one line each under Cost |
-| the evidence tier ("our runs only, not rerun by anyone else") | 3 | one line under Cost (Evidence), once for the block; in every figure's title |
+| the evidence tier ("our runs only, not rerun by anyone else") | 3 | one line under Cost (Evidence), once for the block, linked to the glossary; in every figure's title |
+| reply tokens per GPU-second (CO-8) | 3 | one line under Cost, beside the session GPU time, with the GPUs named and what was not timed apart; never at 0 to 2, never on the Scale page |
 | what was counted (scope: "whole sessions of N replies", steady, verify) | 2 | once, under the band's figure (a phone's band leaves it to the Cost block); at 3 once for the Cost block, and under a figure whose scope differs |
 | sample size (n) | 2 | once, beside the scope; at 3 beside the Cost block's scope, and under the system's own Fidelity figure (in replies) |
 | pass thresholds, petal steps | 3 as the bar's row; 4 as rules | |

@@ -19,8 +19,10 @@ from .chrome import (
     counted,
     fig_words,
     footer,
+    gpu_name,
     has,
     header,
+    how_computed,
     lead_figure,
     link,
     page,
@@ -29,6 +31,7 @@ from .chrome import (
     rung_of,
     share_words,
 )
+from .glossary import term
 from .hexagon import glyph_svg
 from .overview import (
     BARE,
@@ -48,6 +51,7 @@ from .overview import (
     split_html,
     standing_html,
     states,
+    sub_line,
     whole_line,
     whole_note,
 )
@@ -57,6 +61,7 @@ from .words import (
     ARCH_NO_FACT,
     ARCH_SHORT,
     AS_READ,
+    BASIS_BITS,
     BASIS_READING,
     BASIS_WORD,
     CARD_ERRATUM,
@@ -83,6 +88,7 @@ from .words import (
     FIGURE_RULE,
     FULL_LOAD_WORD,
     HIDING_LABEL,
+    HOW_RULE,
     KEPT_CHANGE,
     KEPT_HEAD,
     KEPT_MEANS,
@@ -120,6 +126,7 @@ from .words import (
     NO_STEADY_WORD,
     NOT_RUN_LEAD,
     NOT_RUN_RULE,
+    NOT_TIMED_APART,
     NOTION_HEAD,
     NULL_WORD,
     OF_WHICH,
@@ -149,6 +156,7 @@ from .words import (
     READING_RULE,
     REASON_LINK,
     RECORD_WORD,
+    REPLY_TOKENS_HEAD,
     SCOPE_BOUND_HEAD,
     SCOPE_CARD_HEAD,
     SCOPE_COL_WORD,
@@ -937,8 +945,15 @@ def sessions_html(row):
              *(["Release groups"] if len(groups) > 1 else [])]  # fmt: skip
     once = (f'<p class="rb"><span class="k">Release groups</span> {next(iter(groups)):,} in each '
             "session</p>" if len(groups) == 1 else "")  # fmt: skip
-    out = (once + stacked(heads, [cells(k, s) for k, s in enumerate(row["sessions"])],
-                          {M_COL: M_NAME})
+    # D1: what a session, a slot and a whole session are, each linked to its definition, once
+    lead = (
+        f'<p class="rd">Each {term("session", "Session")} is one run from a cold start on '
+        f"one {term('slot', 'Slot')}'s prompts, and one counts per slot. Session: its GPU "
+        f"time per reply over the {term('whole session', 'Whole session')}. {e(M_COL)}: the "
+        f"same after its first release group, in {term('steady state', 'Steady state')}.</p>"
+    )
+    out = (lead + once + stacked(heads, [cells(k, s) for k, s in enumerate(row["sessions"])],
+                                 {M_COL: M_NAME})
            if row["sessions"] else '<p class="none">No counted session.</p>')  # fmt: skip
     if row["incomplete"]:
         rows = [
@@ -1141,10 +1156,6 @@ def verifying_html(row):
             f"{e(timed)}{untimed}</span></p>")  # fmt: skip
 
 
-BASIS_BITS = {"computed": "computed from its files", "stated": "as the publisher states it",
-              "file_size": "from its file size"}  # fmt: skip
-
-
 def proved_html(row):
     """The precision the row proves (its workload record), beside the release serving runs (the
     Serving line above it): the copy, its words, its weight bits and how they were found, and
@@ -1208,6 +1219,43 @@ def ladder_html(rung):
     )
 
 
+# a stored tier's glossary entry, where its words link (D2: they say whose runs these are)
+TIER_TERM = {"reported": "Evidence: our runs only, not rerun by anyone else"}
+
+
+def how_html(row):
+    """B5 at the Cost section's head: how the headline is computed, in one sentence (the same as
+    opens its title), its scope's words linked to their definition, then the rule."""
+    said = e(how_computed(row)).replace(
+        "whole sessions", term("whole sessions", "Whole session"), 1
+    )
+    return (
+        f'<p class="rd">{said} <a class="df" href="{CHECKS_PAGE}#multiple">{e(HOW_RULE)}</a>.</p>'
+    )
+
+
+def reply_tokens_html(row):
+    """CO-8 (adopted 2026-11-16): reply tokens per GPU-second, once, beside the session GPU time:
+    the figure with its unit, its range, n in whole sessions and the GPUs bound, then what the
+    records do not time apart. It depends on the GPU, so it prints nowhere above this depth."""
+    f = row["figures"].get("session_reply_tokens_per_gpu_second")
+    if not has(f):
+        return ""
+    st = f.get("stats") or {}
+    count = f["n"] if f["n"] is not None else counted(row)
+    said = []
+    if (st.get("n") or 0) > 1 and st.get("min") is not None and st.get("max") is not None:
+        lo, hi = (number(st[k], f["unit"])[0] for k in ("min", "max"))
+        said.append(e(f"{lo} to {hi}"))
+    said.append(f"n\u00a0=\u00a0{count:,} " + term("whole sessions", "Whole session"))
+    bound = sorted({s.get("gpus") for s in row["sessions"] if s.get("gpus")})
+    if bound:  # the GPUs the sessions bound, the ones its GPU-seconds count (SE-2)
+        said.append(e(f"{' or '.join(f'{g:,}' for g in bound)} × {gpu_name(row)}"))
+    head = term(REPLY_TOKENS_HEAD, REPLY_TOKENS_HEAD)
+    return (f'<p class="rb rtk"><span class="k">{head}</span> <span>{fig_html(f, count, sub=BARE)} '
+            f"({', '.join(said)}). {e(NOT_TIMED_APART)}</span></p>")  # fmt: skip
+
+
 def evidence_words(named):
     """The evidence tier of a block's figures in words (TIER_WORD, AGENTS.md rule 2), once for the
     block where they share one; else each tier with the figures that carry it. `named`: (name,
@@ -1215,9 +1263,15 @@ def evidence_words(named):
     tiers: dict[str, list[str]] = {}
     for k, f in named:
         tiers.setdefault(TIER_WORD[f["tier"]], []).append(beside_unit(k))
+
+    def linked(w):
+        tier = next((k for k, v in TIER_WORD.items() if v == w), None)
+        return term(w, TIER_TERM[tier]) if tier in TIER_TERM else e(w)
+
     if len(tiers) == 1:
-        return next(iter(tiers))
-    return "; ".join(f"{w}: {', '.join(low_first(k) for k in ks)}" for w, ks in tiers.items())
+        return linked(next(iter(tiers)))
+    return "; ".join(f"{linked(w)}: {e(', '.join(low_first(k) for k in ks))}"
+                     for w, ks in tiers.items())  # fmt: skip
 
 
 # CO-7 (amended 2026-11-15): the session less its commit call and its generation phase
@@ -1287,16 +1341,20 @@ def cost_html(row):
                     f"<dd>{v}</dd></div>" for k, v in rows)  # fmt: skip
     serving = (f'<p class="rb"><span class="k">Serving</span> <span>{e(serving_words(base))}</span>'
                f"</p>{ladder_html(rung)}" if line else "")  # fmt: skip
+    whole = e(whole_line(row, n)).replace(
+        "whole sessions", term("whole sessions", "Whole session"), 1
+    )
     over = (f'<span class="nw">{e(gpus_words(row))},</span> '
-            f'<span class="nw">{e(whole_line(row, n))}</span>')  # fmt: skip
+            f'<span class="nw">{whole}</span>')  # fmt: skip
     proving = f'<p class="rb"><span class="k">Proving</span> <span>{over}</span></p>' if n else ""
     # the tier of every figure the block prints (the price is the reference file's, not a run's)
     shown = [(k, f) for k, f, _, _ in drawn] + [(k, f) for k, f, _ in sheet if has(f)]
-    evidence = (f'<p class="rb"><span class="k">Evidence</span> <span>{e(evidence_words(shown))}'
+    evidence = (f'<p class="rb"><span class="k">Evidence</span> <span>{evidence_words(shown)}'
                 "</span></p>" if shown else "")  # fmt: skip
     missing.pop(NO_STEADY_WORD, None)  # the sessions table prints each session's none and why
-    return (f"{serving}{proved_html(row)}{proving}{generation_html(row)}{verifying_html(row)}"
-            f"{size_html(row)}{evidence}{cost_bars(row, drawn)}"
+    return (f"{how_html(row)}{serving}{proved_html(row)}{proving}{generation_html(row)}"
+            f"{verifying_html(row)}{size_html(row)}{evidence}{cost_bars(row, drawn)}"
+            f"{reply_tokens_html(row)}"
             f'<dl class="parts">{cells}</dl>{missing_html(missing)}')  # fmt: skip
 
 
@@ -1648,7 +1706,7 @@ def figures_html(row):
              (defined(FIGURE_HEAD["proof-size"], "proof-size"),
               fig_html(figs["proof_bytes_per_reply"], n, sub=BARE)),
              (defined(FIGURE_HEAD["fidelity"], FIGURE_ANCHOR["fidelity"]),
-              fidelity_word(row, ""))]  # fmt: skip
+              fidelity_word(row, "", long=True))]  # fmt: skip
     return '<dl class="figs">' + "".join(f"<div><dt>{k}</dt><dd>{v}</dd></div>"
                                          for k, v in cells) + "</dl>"  # fmt: skip
 
@@ -1660,22 +1718,40 @@ def band_figure(row):
     if key != "session_multiple":
         return multiple_html(row, parts=False)
     count = f["n"] if f["n"] is not None else counted(row)
-    return fig_html(f, count, sub=whole_line(row, count), note=whole_note(row, key))
+    # the line under it, "whole sessions" linked to their definition (D1)
+    line = sub_line(whole_line(row, count)).replace(
+        "whole sessions", term("whole sessions", "Whole session"), 1
+    )
+    return (fig_html(f, count, sub=BARE, note=whole_note(row, key), how=how_computed(row))
+            + f'<span class="sub">{line}</span>')  # fmt: skip
 
 
+PAPER_WORD = "PDF, at the commit this row runs"  # the band's Paper fact, linked (D5)
 NAME_SIZES = (6, 12, 20)  # a system's name on its band: one size per length up to these
-SHARE = ("Share", "Card", "Copy link", "Copied")  # the share group: its name, its two actions, done
+SHARE = (
+    "Share",
+    "Share card",
+    "Copy link",
+    "Copied",
+)  # the share group: its name, its actions, done
+# the card link's title (D4): what clicking it does, said before it is clicked
+SHARE_CARD_TITLE = ("This page's share card: an image of its glyph and figure, the one a link "
+                    "preview shows. Opens in a new tab, to save or share.")  # fmt: skip
 
 
 def share_html(row):
-    """The share group's actions: the page's card as a download, while its picture is the one
-    this build's source was rendered to (none otherwise), and Copy link, which words.js shows and
-    runs (it copies the page's canonical address and says so)."""
+    """The share group's actions: the page's share card, opened in a new tab as the image it is
+    (a reader who clicks "Share card" sees it, then saves or shares it; it no longer downloads
+    unannounced), while its picture is the one this build's source was rendered to (none
+    otherwise), and Copy link, which words.js shows and runs (it copies the page's canonical
+    address and says so)."""
     pid = row["page"]
     card = ""
     if card_current(pid):
         v = cards_record()[pid]["png"][:12]
-        card = f'<a href="/og/{e(pid)}.png?v={e(v)}" download="{e(pid)}.png">{e(SHARE[1])}</a>'
+        card = (f'<a href="/og/{e(pid)}.png?v={e(v)}" target="_blank" rel="noopener" '
+                f'title="{e(SHARE_CARD_TITLE)}">{e(SHARE[1])}'
+                '<span class="sr"> (image, opens in a new tab)</span></a>')  # fmt: skip
     return (card + f'<button type="button" class="cplink" data-done="{e(SHARE[3])}" hidden>'
             f"{e(SHARE[2])}</button>")  # fmt: skip
 
@@ -1717,6 +1793,10 @@ def system_page(row):
         source = (f'<a href="https://github.com/{e(sysd["repo"])}{at}">'
                   f'{nobreak(sysd["repo"])}</a>')  # fmt: skip
         facts.append(("f-src", "Source", source))
+    paper = ""
+    if sysd.get("paper"):  # D5: the publisher's paper, at the row's commit, where it has one
+        paper = f'<a href="{e(sysd["paper"])}">{e(PAPER_WORD)}</a>'
+        facts.append(("f-pap", "Paper", paper))
     if pin:  # SI-3 (amended 2026-11-15): the version the row runs, at depth 2
         facts.append(("f-pin", "Version", pin_html(pin, name)))
     share = share_html(row)
@@ -1740,6 +1820,7 @@ def system_page(row):
     foot = (
         '<dl class="fend">'
         + (f'<div class="f-src"><dt>Source</dt><dd>{source}</dd></div>' if source else "")
+        + (f'<div class="f-pap"><dt>Paper</dt><dd>{paper}</dd></div>' if paper else "")
         + f'<div class="fshr"><dt>{e(SHARE[0])}</dt><dd>{share}</dd></div></dl>'
     )
     # the share group at the strip's end on a wide screen

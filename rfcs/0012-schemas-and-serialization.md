@@ -393,8 +393,10 @@ Amendment of 2026-11-15 (RFC-0018 SE-3b, SE-5, SI-3, SI-4a, CO-7, MC-7, WH-6, FM
 
 Amendment of 2026-11-16 (RFC-0018 Q37, GL-11, CO-8, SI-9). Additive, and the one stored board is recomputed in the same change (RFC-0018 Q14), so no stored run record changes:
 
+- `quantity/1`: the unit `token/gpu_s` (reply tokens per GPU-second), in the unit enum and the INV-QTY-3 list.
 - `board/1`: per petal the optional `next` (GL-11: the step it would move to and each need with who acts; null at green); per row the optional `session_reply_tokens_per_gpu_second` (CO-8).
 - `properties/2`: the optional top-level `number_format` (SI-9: the proved copy's weights and activations, each `integer`, `fixed_point`, `floating_point` or `not_stated`, with its quotes).
+- `site-facts/1`: per system `paper`, the publisher's paper as a file of its repository at the row's pinned commit, where the repository carries one; the site refuses a link at another commit.
 
 ## Testing Strategy
 

@@ -837,6 +837,7 @@ class RowFacts(Document):
     pin: PinFacts | None = None
     generation: GenerationFacts | None = None
     reason_source: ReasonSource | None = None  # SI-4b
+    paper: str | None = None  # the publisher's paper, at the row's pinned commit (2026-11-16)
 
 
 @dataclasses.dataclass(frozen=True, slots=True, kw_only=True)

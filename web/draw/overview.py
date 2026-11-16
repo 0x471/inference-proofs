@@ -13,6 +13,7 @@ from .chrome import (
     footer,
     has,
     header,
+    how_computed,
     lead_figure,
     not_passed,
     page,
@@ -22,20 +23,24 @@ from .chrome import (
 )
 from .hexagon import glyph_svg
 from .words import (
+    BASIS_BITS,
     CAUSE_WORD,
     CHECK_NAME,
     CHECK_PLAIN,
+    COPY_WORD,
     FIDELITY_AGAINST,
     FIDELITY_CHECK_TITLE,
     FIDELITY_FIG_TITLE,
     FIDELITY_TITLE,
     FIGURE_ANCHOR,
     FIGURE_HEAD,
+    FORMAT_WORD,
     FRONTIER_WORD,
     FULL_LOAD_WORD,
     NULL_WORD,
     PETAL_NAME,
     PETAL_PLAIN,
+    PROVED_HEAD,
     REFERENCE_WORD,
     SCALE_NOT_RUN,
     SEP,
@@ -43,6 +48,7 @@ from .words import (
     STEADY_STATE,
     TF_INTERVAL,
     WHOLE_SESSIONS,
+    WHY_TOP_TOKEN,
     architecture,
     e,
     labels,
@@ -103,12 +109,13 @@ def href(row):
 BARE = ""  # `fig_html`'s `sub` for a figure with no line under it
 
 
-def fig_html(f, n=None, sub=None, why=None, note=None):
+def fig_html(f, n=None, sub=None, why=None, note=None, how=None):
     """One stored figure: the number in a reading unit, its labels in its title, and under it its
     scope in a word and its sample size (AGENTS.md rule 2). `sub` replaces the line under it
     (`BARE`: no line, as the ladder and the Scale page print a figure; its labels stay in its
     title, `n` and `note` among them, and stand in full on the system's page); `why` replaces a
-    null figure's reason (NO_STEADY_WORD on a row with no steady state)."""
+    null figure's reason (NO_STEADY_WORD on a row with no steady state); `how` opens the title
+    with how the figure is computed (the headline's, `how_computed`)."""
     if f is None:
         return '<span class="na">not recorded</span>'
     if f["value"] is None:
@@ -119,7 +126,8 @@ def fig_html(f, n=None, sub=None, why=None, note=None):
     num, unit = number(f["value"], f["unit"])
     x = " x" if f["unit"] == "ratio" else ""
     line = sub if sub is not None else sub_words(f, n)
-    return (f'<span class="fig" title="{e(labels(f, n, note))}"><span class="n">{e(num)}</span>'
+    title = f"{how} {labels(f, n, note)}" if how else labels(f, n, note)
+    return (f'<span class="fig" title="{e(title)}"><span class="n">{e(num)}</span>'
             f'<span class="u{x}">{e(unit)}</span></span>'
             + (f'<span class="sub">{sub_line(line)}</span>' if line else ""))  # fmt: skip
 
@@ -198,16 +206,17 @@ def multiple_html(row, parts=True, bare=False, to=None):
     figure and its parts each linked there."""
     _, f, key = lead_figure(row)
     split = split_html(row, key, bare=bare, to=to) if parts else ""
+    how = how_computed(row)
     if bare:
-        fig = fig_html(f, counted(row), sub=BARE, note=whole_note(row, key))
+        fig = fig_html(f, counted(row), sub=BARE, note=whole_note(row, key), how=how)
         return (to_section(fig, to) if has(f) else fig) + (split if has(f) else "")
     if key == "session_multiple":
         count = f["n"] if f["n"] is not None else counted(row)
-        return fig_html(f, counted(row), sub=whole_line(row, count)) + split
+        return fig_html(f, counted(row), sub=whole_line(row, count), how=how) + split
     if not has(f):
         return fig_html(f, counted(row))
     count = f["n"] if f["n"] is not None else counted(row)
-    return fig_html(f, counted(row), sub=steady_line(count)) + split
+    return fig_html(f, counted(row), sub=steady_line(count), how=how) + split
 
 
 def split_html(row, key, bar=True, bare=False, to=None):
@@ -241,21 +250,71 @@ def pct(v):
 
 
 def fidelity_against(rung):
-    """The rung's Q8_0 and Q4_K_M copies' Fidelity in one line ("Q8_0 98.4 % · Q4_K_M 90.6 %"),
-    each that ran; "" where none did."""
+    """The rung's 8-bit and 4-bit copies' Fidelity in one line ("8-bit copy 98.4 % · 4-bit copy
+    90.6 %"), each that ran; "" where none did. Their ids stand in the figure's title."""
     tf = rung.get("teacher_forced") or {}
     by = {c["id"]: c for c in tf.get("controls") or []}
-    out = [f"{i.upper()} {pct(by[i]['percent'])}\u202f%" for i in FIDELITY_AGAINST
+    out = [f"{COPY_WORD[i]} {pct(by[i]['percent'])}\u202f%" for i in FIDELITY_AGAINST
            if i in by and by[i]["status"] == "ok" and by[i].get("percent") is not None]  # fmt: skip
     return SEP.join(out)
 
 
-def fidelity_word(row, page=None, against=True):
+def bits_words(bits):
+    """Weight bits at 3 significant digits, whole when integral ("4.84", "8")."""
+    return f"{bits:,.0f}" if float(bits).is_integer() else sig(bits, 3)
+
+
+def proved_words(row, long=False):
+    """What the row proves, beside every Fidelity figure (RFC-0018 SI-9, amended 2026-11-16): its
+    weight bits from the workload record and its number format from the properties file, where
+    that records one (never inferred from a format's name). The ladder's short form: "proved:
+    4.84-bit integer weights"; `long` (the Figures row) adds the activations, a part of the
+    weights the bits cover, and "number format not stated" where the publisher states none. ""
+    where the row has no precision record."""
+    p = row.get("precision") or {}
+    if not p:
+        return ""
+    fmt = p.get("number_format") or {}
+    w, a = (FORMAT_WORD.get(fmt.get(k, "")) for k in ("weights", "activations"))
+    bits = p.get("bits")
+    head = f"{bits_words(bits)}-bit " if isinstance(bits, int | float) else ""
+    said = f"{PROVED_HEAD}: {head}{w + ' ' if w else ''}weights"
+    if not long:
+        return said + (", format not stated" if fmt and not w else "")
+    if a:
+        said += f", {a} activations"
+    if p.get("bits_covers") == "part":
+        said += ", for part of the weights"
+    if fmt and not (w and a):  # recorded, and the publisher states no format for a part
+        said += ("; number format not stated" if not (w or a)
+                 else f"; {'activations' if w else 'weights'}' format not stated")  # fmt: skip
+    return said
+
+
+def proved_title(row):
+    """The proved copy in a Fidelity figure's title: its id, its bits and how they were found,
+    and what they cover."""
+    p = row.get("precision") or {}
+    if not p:
+        return ""
+    said = f"{PROVED_HEAD}: {p['proved']}"
+    if isinstance(p.get("bits"), int | float):
+        said += f", {bits_words(p['bits'])} bits per weight"
+        if p.get("bits_covers") == "part":
+            said += " for part of the weights"
+        if how := BASIS_BITS.get(p.get("bits_basis") or ""):
+            said += f", {how}"
+    return said
+
+
+def fidelity_word(row, page=None, against=True, long=False):
     """A row's Fidelity as the surface prints it (RFC-0018 SI-9, amended 2026-11-14): FI-10's
     mean as a percentage of the reply's positions, linked to the Fidelity section of the
-    system's page, with the rung's Q8_0 and Q4_K_M under it (`against`). Its title says what it
-    is, whose computation, n and the record, and the FIDELITY check's state, which it does not
-    set. A row with no teacher-forced pass prints the check's state in a word, as before."""
+    system's page, then what the row proves (`proved_words`, `long` on the Figures row), then
+    the rung's 8-bit and 4-bit copies (`against`). Its title says what it is, why top-token
+    agreement, whose computation, the proved copy, n and the record, and the Fidelity check's
+    state, which it does not set. A row with no teacher-forced pass prints the check's state in a
+    word, as before."""
     tf = rung_of(row).get("teacher_forced") or {}
     mine = (tf.get("rows") or {}).get(row["system"])
     if mine is None or mine["status"] != "ok" or mine.get("percent") is None:
@@ -264,13 +323,18 @@ def fidelity_word(row, page=None, against=True):
     low_high = mine.get("percent_interval")
     spread = ([TF_INTERVAL.format(low=pct(low_high[0]), high=pct(low_high[1]))]
               if low_high else [])  # fmt: skip
-    title = [FIDELITY_FIG_TITLE, mine["label"], f"n = {mine['n']:,} prompts", *spread,
+    why = WHY_TOP_TOKEN.format(tokens=S.V["request"]["output_tokens"])
+    copies = [f"{COPY_WORD[i]}: {i.upper()}" for i in FIDELITY_AGAINST]
+    title = [f"{FIDELITY_FIG_TITLE}. {why.rstrip('.')}", mine["label"], f"n = {mine['n']:,} prompts",
+             *spread, *([proved_title(row)] if proved_title(row) else []), *copies,
              FIDELITY_CHECK_TITLE.format(state=STATE_WORD[check["state"]]),
              f"record: {tf['path']}"]  # fmt: skip
     at = href(row) if page is None else page
+    proved = proved_words(row, long)
     line = fidelity_against(rung_of(row)) if against else ""
     return (f'<a class="fig fp" href="{e(at)}#fidelity" title="{e("; ".join(title))}">'
             f'<span class="n">{e(pct(mine["percent"]))}</span><span class="u">%</span></a>'
+            + (f'<span class="sub pv">{e(proved)}</span>' if proved else "")
             + (f'<span class="sub">{sub_line(line)}</span>' if line else ""))  # fmt: skip
 
 
