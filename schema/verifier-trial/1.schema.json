@@ -1,0 +1,403 @@
+{
+  "$id": "https://inference-proofs.org/schema/verifier-trial/1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "call": {
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "$comment": "a call without a verdict keeps its exit code and last lines (AGENTS.md rule 5)",
+          "if": {
+            "properties": {
+              "verdict": {
+                "const": null
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "last_lines": {
+                "minItems": 1
+              }
+            }
+          }
+        }
+      ],
+      "properties": {
+        "change": {
+          "$comment": "what differs from the honest call: null for none; the reply token at index i ((t + 1) mod vocab_size, as C1); the commitment of another session of the same weights (the C3 null twin); a commitment ID the harness never recorded",
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "index": {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "kind": {
+                  "const": "reply_token"
+                },
+                "token": {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "was": {
+                  "minimum": 0,
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "kind",
+                "index",
+                "token",
+                "was"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "const": "other_session_commitment"
+                }
+              },
+              "required": [
+                "kind"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "const": "commitment_id"
+                },
+                "value": {
+                  "pattern": "^[0-9a-f]{64}$",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "kind",
+                "value"
+              ],
+              "type": "object"
+            }
+          ]
+        },
+        "commitment": {
+          "$ref": "#/$defs/source"
+        },
+        "exit_code": {
+          "type": "integer"
+        },
+        "last_lines": {
+          "$comment": "the program's last output lines",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "name": {
+          "pattern": "^[a-z0-9][a-z0-9-]{0,63}$",
+          "type": "string"
+        },
+        "peak_memory": {
+          "$comment": "maximum resident set of the call, as its timing tool reported it",
+          "$ref": "../quantity/1.schema.json#/$defs/quantity"
+        },
+        "proof": {
+          "$ref": "#/$defs/source"
+        },
+        "raw": {
+          "$comment": "the call's own outputs, relative to the trial's folder",
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "seconds": {
+          "$ref": "../quantity/1.schema.json#/$defs/quantity"
+        },
+        "verdict": {
+          "enum": [
+            "accept",
+            "reject",
+            null
+          ]
+        }
+      },
+      "required": [
+        "name",
+        "proof",
+        "commitment",
+        "change",
+        "exit_code",
+        "verdict",
+        "last_lines",
+        "seconds",
+        "raw"
+      ],
+      "type": "object"
+    },
+    "source": {
+      "$comment": "a session the proof or the commitment comes from: in_results true when its run directory is in results/, whose manifest's commitment_id and digests.txt archive digest the validator compares with these",
+      "additionalProperties": false,
+      "properties": {
+        "archive_digest": {
+          "$ref": "../quantity/1.schema.json#/$defs/digest"
+        },
+        "commitment_id": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "in_results": {
+          "type": "boolean"
+        },
+        "manifest_digest": {
+          "$comment": "for a session not in results/: the sha256 of the manifest.json its job wrote",
+          "$ref": "../quantity/1.schema.json#/$defs/digest"
+        },
+        "note": {
+          "maxLength": 500,
+          "type": "string"
+        },
+        "proof_id": {
+          "$ref": "../quantity/1.schema.json#/$defs/proofId"
+        },
+        "run_id": {
+          "$ref": "../quantity/1.schema.json#/$defs/runId"
+        },
+        "slot": {
+          "maximum": 3,
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "run_id",
+        "in_results",
+        "commitment_id",
+        "slot"
+      ],
+      "type": "object"
+    },
+    "step": {
+      "additionalProperties": false,
+      "properties": {
+        "exit_code": {
+          "type": "integer"
+        },
+        "name": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "seconds": {
+          "$ref": "../quantity/1.schema.json#/$defs/quantity"
+        }
+      },
+      "required": [
+        "name",
+        "exit_code",
+        "seconds"
+      ],
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "results/<release>/<system>/_trials/<trial id>/trial.json: verify calls on stored proofs that no counted session or control suite makes, such as a publisher's second verifier, a null twin or a probe at every reply position. It gates nothing: no check, petal, position or order reads it (RFC-0008, amended 2026-11-15).",
+  "properties": {
+    "calls": {
+      "items": {
+        "$ref": "#/$defs/call"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "gates": {
+      "const": "nothing"
+    },
+    "host": {
+      "additionalProperties": false,
+      "properties": {
+        "cpu_model": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "logical_cpus": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "memory_bytes": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "note": {
+          "maxLength": 500,
+          "type": "string"
+        },
+        "provider": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "provider",
+        "cpu_model",
+        "logical_cpus",
+        "memory_bytes"
+      ],
+      "type": "object"
+    },
+    "id": {
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}-[a-z0-9][a-z0-9-]*$",
+      "type": "string"
+    },
+    "missing": {
+      "$comment": "provenance this record lacks, in words; empty when nothing is missing",
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "program": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "patched": {
+          "const": false
+        },
+        "role": {
+          "$comment": "the publisher's own name for the program, and whether the row runs it",
+          "minLength": 1,
+          "type": "string"
+        },
+        "url": {
+          "format": "uri",
+          "pattern": "^https://",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "url",
+        "role",
+        "patched"
+      ],
+      "type": "object"
+    },
+    "purpose": {
+      "maxLength": 600,
+      "minLength": 1,
+      "type": "string"
+    },
+    "release": {
+      "$ref": "../quantity/1.schema.json#/$defs/releaseId"
+    },
+    "runner": {
+      "additionalProperties": false,
+      "properties": {
+        "harness_commit": {
+          "$comment": "the harness commit whose code made the calls, or null when a job script outside the harness did",
+          "oneOf": [
+            {
+              "$ref": "../quantity/1.schema.json#/$defs/commit"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "image": {
+          "$comment": "the container image the calls ran in, by digest (AGENTS.md rule 11)",
+          "pattern": "^[a-z0-9][a-z0-9./_-]*@sha256:[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "script": {
+          "$comment": "the script that made the calls, relative to the trial's folder",
+          "minLength": 1,
+          "type": "string"
+        },
+        "script_digest": {
+          "$ref": "../quantity/1.schema.json#/$defs/digest"
+        }
+      },
+      "required": [
+        "image",
+        "script",
+        "script_digest",
+        "harness_commit"
+      ],
+      "type": "object"
+    },
+    "schema": {
+      "const": "verifier-trial/1"
+    },
+    "started_at": {
+      "format": "date-time",
+      "type": "string"
+    },
+    "steps": {
+      "$comment": "what ran before the calls (an install, a build), each with its exit code",
+      "items": {
+        "$ref": "#/$defs/step"
+      },
+      "type": "array"
+    },
+    "system": {
+      "$ref": "../quantity/1.schema.json#/$defs/systemId"
+    },
+    "toolchain": {
+      "$comment": "tool versions the job printed, by name",
+      "additionalProperties": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "type": "object"
+    },
+    "upstream": {
+      "additionalProperties": false,
+      "properties": {
+        "commit": {
+          "$ref": "../quantity/1.schema.json#/$defs/commit"
+        },
+        "repo": {
+          "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "repo",
+        "commit"
+      ],
+      "type": "object"
+    }
+  },
+  "required": [
+    "schema",
+    "id",
+    "system",
+    "release",
+    "purpose",
+    "gates",
+    "upstream",
+    "program",
+    "runner",
+    "host",
+    "toolchain",
+    "started_at",
+    "steps",
+    "calls",
+    "missing"
+  ],
+  "title": "Verifier trial on stored proofs, gating nothing",
+  "type": "object"
+}

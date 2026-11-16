@@ -177,7 +177,7 @@ exec "$STUB_REAL_PYTHON" "$@"  # the extras' import and the dataset upload, on s
 """
 STUB_IPROOFS = """#!/usr/bin/env bash
 echo "iproofs $*" >> "$STUB_LOG"
-[ "${1:-}" = machine-record ] && echo '{}'
+[ "${1:-}" = machine-record ] && { echo '{}'; exit "${STUB_SELFTEST_RC:-0}"; }
 exit 0
 """
 STUB_DEV_INSTALL = """import os, sys
@@ -247,6 +247,27 @@ def test_failed_development_install_stops_before_the_weights(tmp_path: Path) -> 
     assert "engine check failed" in log
     assert f"dev_install {DEV_IMAGE} 0" in calls(tmp_path)
     assert not [c for c in calls(tmp_path) if c.startswith(("iproofs fetch-model", "iproofs run"))]
+
+
+@pytest.mark.parametrize("required", [True, False])
+def test_failed_selftest_stops_a_run_only_when_required(tmp_path: Path, required: bool) -> None:
+    """IPROOFS_REQUIRE_SELFTEST=1: a failed self-test stops the run before the install, the
+    weights and the run (exit 5), so no session is made on a host it would be ineligible from
+    (RFC-0014). Without it the job goes on, as before."""
+    repo, head, env = stubbed(tmp_path)
+    req = {"IPROOFS_REQUIRE_SELFTEST": "1"} if required else {}
+    done = job(repo, "run", "ref-serve", "fp-maverick-w1024-b1:1", IPROOFS_COMMIT=head,
+               IPROOFS_JOB_BUDGET_S="5000", STUB_SELFTEST_RC="1", **req, **env)  # fmt: skip
+    log = log_of(repo, "upload: skipped")
+    later = [c for c in calls(tmp_path) if c.startswith(("dev_install", "iproofs fetch-model",
+                                                          "iproofs run"))]  # fmt: skip
+    if required:
+        assert done.returncode == 5, log
+        assert "self-test failed: stopping before any weights" in log
+        assert not later
+    else:
+        assert done.returncode == 0, log
+        assert [c for c in later if c.startswith("iproofs run")]
 
 
 @pytest.mark.parametrize("dev", [True, False])

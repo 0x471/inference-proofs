@@ -16,12 +16,14 @@ from .chrome import (
     HEAD_SCRIPT,
     LEARN_PAGE,
     MANDATE_PAGE,
+    ONLY_RUN,
     SCALE_PAGE,
     SITE_URL,
     counted,
     credit_words,
     font_faces,
     lead_figure,
+    only_run,
     parts_of,
     row_cost,
     rung_of,
@@ -51,8 +53,10 @@ from .words import (
     MANDATE_DESC,
     PETAL_NAME,
     PETAL_QUESTION,
+    PETAL_TERM,
     architecture,
     e,
+    release_tail,
 )
 
 # ------------------------------------------------------------------ search
@@ -105,9 +109,11 @@ def search_entries():
             rung["id"],
         )
     # a petal, a check, a figure in one line each (the checks page's: the petal's question, the
-    # check's held rule, what the figure is), a pointer to its rule
+    # check's passing rule, what the figure is), a pointer to its rule; a petal found by its field
+    # term too
     for pid in S.V["petals"]:
-        add("petal", PETAL_NAME[pid], f"{CHECKS_PAGE}#{pid}", PETAL_QUESTION[pid], "")
+        add("petal", PETAL_NAME[pid], f"{CHECKS_PAGE}#{pid}", PETAL_QUESTION[pid], "",
+            PETAL_TERM[pid])  # fmt: skip
     for c in S.V["checks"]:
         add("check", CHECK_NAME[c], f"{CHECKS_PAGE}#{c}", filled(CHECK_LINE[c]), "")
     for f, line in FIGURE_LINE.items():
@@ -118,7 +124,7 @@ def search_entries():
         CHECKS_PAGE,
         CHECKS_DESC,
         PAGE_MARK,
-        "checks figures order rule undecided unranked not tested",
+        "checks figures order rule not decided not ranked not tested",
     )
     add(
         "page",
@@ -202,8 +208,11 @@ def vercel_json():
         "cleanUrls": True,
         "trailingSlash": False,
         "framework": None,
-        # every commit of the push, not only its last one
-        "ignoreCommand": "git diff --quiet ${VERCEL_GIT_PREVIOUS_SHA:-HEAD^} HEAD -- .",
+        # every commit of the push, not only its last one; a previous commit outside the
+        # deploy clone (a long push) makes git fail, which must build, not fail the deployment
+        "ignoreCommand": (
+            "git diff --quiet ${VERCEL_GIT_PREVIOUS_SHA:-HEAD^} HEAD -- . && exit 0 || exit 1"
+        ),
         "outputDirectory": "public",
         "redirects": [
             {"source": "/system", "destination": first, "permanent": False},
@@ -338,10 +347,10 @@ def system_card(pid):
                       f'{fig_html(p, n, sub=BARE)}</span>' for w, p in parts)  # fmt: skip
         lead = fig_html(f, n, sub=BARE) + f'<span class="pts">{pts}</span>'
     head, _, why = standing(row).partition(": ")
-    if row["position"] is not None:
-        why = f"position {row['position']} of {rung['systems_run']}"
+    if row["position"] is not None:  # OR-4: no count where nothing else ran on the model
+        why = ONLY_RUN if only_run(row) else f"position {row['position']} of {rung['systems_run']}"
     rel = S.V["release"]
-    when = f"Release {rel['id']}" + (f", {rel['date']}" if rel["date"] else "") if rel else ""
+    when = f"Release {release_tail(rel)}" if rel else ""
     weight = 600 if row["position"] is not None else 400
     css = f"""
 .top{{position:absolute;left:0;top:0;width:{CARD_W}px;height:72px;padding:0 64px;display:flex;align-items:center;box-shadow:inset 0 -1px 0 {LINE}}}

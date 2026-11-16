@@ -1,5 +1,21 @@
 {
   "$defs": {
+    "cardRefs": {
+      "$comment": "fields of the system's claim card by their path (`assumptions.0`, `coverage.policy.detail`), whose text and source the page prints; \"not stated\" where the card says nothing on it",
+      "anyOf": [
+        {
+          "const": "not stated"
+        },
+        {
+          "items": {
+            "pattern": "^[a-z_]+(\\.[a-z_0-9]+)*$",
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array"
+        }
+      ]
+    },
     "fact": {
       "$comment": "one fact the glyph is computed from: its value and the publisher's deciding passages",
       "additionalProperties": false,
@@ -63,6 +79,28 @@
       },
       "required": [
         "value",
+        "quotes"
+      ],
+      "type": "object"
+    },
+    "form_item": {
+      "$comment": "a form of the stated property, printed as the publisher's words with its link; sets no step (RFC-0018 WH, amended 2026-11-15). `item` is a substring of its first quote, checked offline",
+      "additionalProperties": false,
+      "properties": {
+        "item": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "quotes": {
+          "items": {
+            "$ref": "#/$defs/quote"
+          },
+          "minItems": 1,
+          "type": "array"
+        }
+      },
+      "required": [
+        "item",
         "quotes"
       ],
       "type": "object"
@@ -184,6 +222,34 @@
     "configuration": {
       "$ref": "../quantity/1.schema.json#/$defs/configurationId"
     },
+    "level_statement": {
+      "$comment": "RFC-0018 SI-4a (2026-11-15): whether the publisher states, at the pin, that an accept means the reply is the committed model's own computation, decoded greedily, on the prompt the verifier is given. A row whose file does not state it takes no position. A `note` marks the value as the reader's reading of several sentences, not one sentence that says it.",
+      "additionalProperties": false,
+      "properties": {
+        "accept_is_model_reply": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/fact"
+            },
+            {
+              "properties": {
+                "value": {
+                  "type": "boolean"
+                }
+              }
+            }
+          ]
+        },
+        "sources_read": {
+          "$ref": "#/$defs/sources_read"
+        }
+      },
+      "required": [
+        "sources_read",
+        "accept_is_model_reply"
+      ],
+      "type": "object"
+    },
     "petals": {
       "additionalProperties": false,
       "properties": {
@@ -280,6 +346,19 @@
                         },
                         "verifier_run": {
                           "$ref": "#/$defs/scope_cell"
+                        },
+                        "bound": {
+                          "$comment": "the publisher's bound for this property, verbatim, a substring of one of its quotes; null when none is stated. Printed, sets no state",
+                          "$ref": "#/$defs/fact",
+                          "properties": {
+                            "value": {
+                              "minLength": 1,
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            }
+                          }
                         }
                       },
                       "required": [
@@ -300,6 +379,19 @@
                         },
                         "verifier_run": {
                           "$ref": "#/$defs/scope_cell"
+                        },
+                        "bound": {
+                          "$comment": "the publisher's bound for this property, verbatim, a substring of one of its quotes; null when none is stated. Printed, sets no state",
+                          "$ref": "#/$defs/fact",
+                          "properties": {
+                            "value": {
+                              "minLength": 1,
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            }
+                          }
                         }
                       },
                       "required": [
@@ -320,6 +412,19 @@
                         },
                         "verifier_run": {
                           "$ref": "#/$defs/scope_cell"
+                        },
+                        "bound": {
+                          "$comment": "the publisher's bound for this property, verbatim, a substring of one of its quotes; null when none is stated. Printed, sets no state",
+                          "$ref": "#/$defs/fact",
+                          "properties": {
+                            "value": {
+                              "minLength": 1,
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            }
+                          }
                         }
                       },
                       "required": [
@@ -408,6 +513,19 @@
                         "type": "string"
                       },
                       "type": "array"
+                    }
+                  }
+                },
+                "conclusion": {
+                  "$comment": "MC-7 (amended 2026-11-15): what the named theorem's conclusion is about: `model` (a reference definition of the model's computation), `other` (anything else, for example a hash) or `not_stated`. A step above amber in lesser part needs `model`",
+                  "$ref": "#/$defs/fact",
+                  "properties": {
+                    "value": {
+                      "enum": [
+                        "model",
+                        "other",
+                        "not_stated"
+                      ]
                     }
                   }
                 }
@@ -906,6 +1024,62 @@
                       "type": "boolean"
                     }
                   }
+                },
+                "zk_kind": {
+                  "$comment": "the form of the proved zero knowledge after Fiat-Shamir, in the publisher's words: statistical, computational or perfect; printed, sets no step",
+                  "$ref": "#/$defs/fact",
+                  "properties": {
+                    "value": {
+                      "enum": [
+                        "statistical",
+                        "computational",
+                        "perfect",
+                        "not_said"
+                      ]
+                    }
+                  }
+                },
+                "zk_model": {
+                  "$comment": "the model the proved zero knowledge is stated in: the random-oracle model or the standard model; printed, sets no step",
+                  "$ref": "#/$defs/fact",
+                  "properties": {
+                    "value": {
+                      "enum": [
+                        "random_oracle",
+                        "standard",
+                        "not_said"
+                      ]
+                    }
+                  }
+                },
+                "zk_unit": {
+                  "$comment": "what one proved zero-knowledge statement covers: one request a proof, or a batch; read with the workload's batch size into the reason, sets no step",
+                  "$ref": "#/$defs/fact",
+                  "properties": {
+                    "value": {
+                      "enum": [
+                        "request",
+                        "batch",
+                        "not_said"
+                      ]
+                    }
+                  }
+                },
+                "forms": {
+                  "$comment": "each form of the proved zero knowledge, the publisher's words with their link; printed, sets no step",
+                  "items": {
+                    "$ref": "#/$defs/form_item"
+                  },
+                  "type": "array"
+                },
+                "visible_at_least": {
+                  "$comment": "true when the publisher says its list of visible values is a lower bound (\"at least\"); the count is printed with those words",
+                  "$ref": "#/$defs/fact",
+                  "properties": {
+                    "value": {
+                      "type": "boolean"
+                    }
+                  }
                 }
               },
               "required": [
@@ -961,6 +1135,154 @@
       "required": [
         "repo",
         "commit"
+      ],
+      "type": "object"
+    },
+    "verifier_inputs": {
+      "$comment": "RFC-0018 SI-3 (amended 2026-11-15): the system page's Statement block. Each row names the fields of the claim card that say it; the page prints their text, linked to their source, or \"not stated\". `program` is the verifier this configuration runs and times; `untimed` names the publisher's other verifiers, which no session times; `reply` says where that verifier takes the reply from: the harness record (the adapter passes the claimed reply) or the proof itself. It lives here, not in the claim card, because the v1.0 runs record the card's digest (RFC-0014 §Eligibility)",
+      "additionalProperties": false,
+      "properties": {
+        "architecture": {
+          "$ref": "#/$defs/cardRefs"
+        },
+        "architecture_visible": {
+          "$comment": "what of the architecture a proof's reader sees, in the card's words; set when `architecture` names fields",
+          "minLength": 1,
+          "type": "string"
+        },
+        "commit_record": {
+          "$ref": "#/$defs/cardRefs"
+        },
+        "decoding": {
+          "$ref": "#/$defs/cardRefs"
+        },
+        "program": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "proof": {
+          "$ref": "#/$defs/cardRefs"
+        },
+        "proof_caveat": {
+          "$comment": "RFC-0018 SI-3 (amended 2026-11-15): our line on what the proof carries that no verdict of ours refuses yet, printed on the From the proof row; it sets no state",
+          "minLength": 1,
+          "type": "string"
+        },
+        "reply": {
+          "enum": [
+            "record",
+            "proof"
+          ]
+        },
+        "request": {
+          "$ref": "#/$defs/cardRefs"
+        },
+        "unchecked": {
+          "$ref": "#/$defs/cardRefs"
+        },
+        "untimed": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "program",
+        "reply",
+        "commit_record",
+        "request",
+        "proof",
+        "decoding",
+        "unchecked",
+        "architecture"
+      ],
+      "type": "object"
+    },
+    "verifiers": {
+      "$comment": "the verifier program the row runs (`run`) and the verifier the publisher's bound and machine-checked theorem are stated for (`stated`, null when the documents name none), each named as the publisher names it; read into the reasons of Unforgeable and Machine-checked (RFC-0018 GL-5, amended 2026-11-15)",
+      "additionalProperties": false,
+      "properties": {
+        "run": {
+          "$comment": "the verifier program the row runs, as the publisher names it",
+          "$ref": "#/$defs/fact",
+          "properties": {
+            "value": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        },
+        "stated": {
+          "$comment": "the verifier the bound and the theorem are stated for; null when none is named",
+          "$ref": "#/$defs/fact",
+          "properties": {
+            "value": {
+              "minLength": 1,
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        }
+      },
+      "required": [
+        "run",
+        "stated"
+      ],
+      "type": "object"
+    },
+    "notion": {
+      "$comment": "the publisher's own name for its soundness notion, as quotes at the pin, printed on the system page's Stated security line; it sets no state (RFC-0018 SI-3, amended 2026-11-15)",
+      "additionalProperties": false,
+      "properties": {
+        "quotes": {
+          "$ref": "#/$defs/quotes"
+        }
+      },
+      "required": [
+        "quotes"
+      ],
+      "type": "object"
+    },
+    "number_format": {
+      "$comment": "the number format of the copy the row proves, its weights and its activations, each with the publisher's words at the pin (RFC-0018 SI-9, amended 2026-11-16, Q37); printed beside every Fidelity figure, it sets no state: iproofs.glyph does not read it",
+      "additionalProperties": false,
+      "properties": {
+        "weights": {
+          "$comment": "one part of the proved copy's number format, as the publisher states it at the pin: `integer`, `fixed_point` (integers with a fixed scale) or `floating_point`, or `not_stated`; never inferred from a construction's or a format's name (RFC-0018 SI-9, amended 2026-11-16)",
+          "$ref": "#/$defs/fact",
+          "properties": {
+            "value": {
+              "enum": [
+                "integer",
+                "fixed_point",
+                "floating_point",
+                "not_stated"
+              ]
+            }
+          }
+        },
+        "activations": {
+          "$comment": "one part of the proved copy's number format, as the publisher states it at the pin: `integer`, `fixed_point` (integers with a fixed scale) or `floating_point`, or `not_stated`; never inferred from a construction's or a format's name (RFC-0018 SI-9, amended 2026-11-16)",
+          "$ref": "#/$defs/fact",
+          "properties": {
+            "value": {
+              "enum": [
+                "integer",
+                "fixed_point",
+                "floating_point",
+                "not_stated"
+              ]
+            }
+          }
+        }
+      },
+      "required": [
+        "weights",
+        "activations"
       ],
       "type": "object"
     }

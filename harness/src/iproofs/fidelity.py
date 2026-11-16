@@ -23,13 +23,16 @@ those records and the rows' counted sessions into `fidelity.json` (schema `fidel
   file. No honest control ran, or no damaged control qualifies: no bar.
 - FI-6: a row is `held` when it beats the bar, `failed` when the bar beats it, else
   `undecided`, cause `not resolved` (also with no bar).
-- Faithful model's steps (RFC-0018 FM-4 to FM-7): T_green is the midpoint of the reference
+- Close to the original's steps (RFC-0018 FM-4 to FM-7): T_green is the midpoint of the reference
   rerun's and Q8_0's mean scores, T_upper of Q8_0's and Q4_K_M's. A row is shown above a
-  threshold T = (S_a + S_b) / (2n), S the two controls' score sums over the n prompts, when the
-  FI-4 test on d_i = 2n s_i - (S_a + S_b) gives p < alpha. Multiplying s_i - T by 2n > 0 keeps
-  the order of every sign vector and makes the differences integers, so the exact count is the
-  same subset-sum count, with no float rounding. Seeds: `pair_seed(randomness, system,
-  "T_green" or "T_upper")`.
+  threshold T = (S_a + S_b) / (2n), S the two controls' score sums over the n prompts, when
+  FI-4's paired test on the per-prompt differences d_i = 2 s_i - (a_i + b_i) gives p < alpha,
+  a_i and b_i the two controls' scores on prompt i: the row's score against the two controls'
+  midpoint on the same prompt, doubled so the differences stay integers (exact count, no float
+  rounding). The mean of d is 2 (mean(s) - T), so the statistic is the row's distance to T;
+  pairing by prompt removes the prompt-to-prompt spread the row and the controls share.
+  Seeds: `pair_seed(randomness, system, "T_green" or "T_upper")` (amended 2026-11-15: the test
+  was on d_i = 2n s_i - (S_a + S_b), the row against a fixed T, which does not pair).
 - FI-7: KL figures are `quantity/1` values in nats per token, measured by llama.cpp
   (`Mean    KLD:` of `llama-perplexity --kl-divergence`), never gating.
 """
@@ -59,8 +62,8 @@ SEED_RULE = (
 STEP_SEED_IDS = ("T_green", "T_upper")
 STEPS_RULE = (
     "T_green = (mean(rerun) + mean(Q8_0)) / 2 and T_upper = (mean(Q8_0) + mean(Q4_K_M)) / 2 "
-    "over the same n prompts; a row is shown above T when the FI-4 sign-flip test on "
-    "d_i = 2n*s_i - (S_a + S_b) gives p < alpha"
+    "over the same n prompts; a row is shown above T when the FI-4 paired sign-flip test on "
+    "d_i = 2*s_i - (a_i + b_i), a and b the two controls' scores on prompt i, gives p < alpha"
 )
 STEPS_SEED_RULE = 'SEED_RULE with a = the row\'s system id and b = "T_green" or "T_upper"'
 # llama.cpp tools/perplexity/perplexity.cpp L1926 at cd959bae: `Mean    KLD: %10.6lf ± %10.6lf`
@@ -242,18 +245,23 @@ def choose_bar(
 
 @dataclass(frozen=True, slots=True)
 class Threshold:
-    """One step threshold (FM-5, FM-6): the two controls it is the midpoint of, the sum S_a +
-    S_b of their scores over the `n` prompts, or the cause it has none."""
+    """One step threshold (FM-5, FM-6): the two controls it is the midpoint of, their score
+    sums a_i + b_i on each of the `n` prompts, in prompt order, or the cause it has none."""
 
     name: str  # T_green or T_upper
     controls: tuple[str, ...]
     n: int
-    total: int | None
+    sums: tuple[int, ...] | None
     cause: str | None
 
     @property
+    def total(self) -> int | None:
+        """S_a + S_b over the n prompts."""
+        return None if self.sums is None else sum(self.sums)
+
+    @property
     def value(self) -> float | None:
-        return None if self.total is None else self.total / (2 * self.n)
+        return None if self.sums is None else sum(self.sums) / (2 * self.n)
 
     def record(self) -> dict[str, object]:
         return {"controls": list(self.controls), "value": self.value, "cause": self.cause}
@@ -286,8 +294,8 @@ def _threshold(name: str, named: Sequence[tuple[ControlResult | None, str]], n: 
             break
     if cause is not None:
         return Threshold(name, ids, n, None, cause)
-    total = sum(sum(c.scores) for c, _ in named if c is not None)
-    return Threshold(name, ids, n, total, None)
+    a, b = (c.scores for c, _ in named if c is not None)
+    return Threshold(name, ids, n, tuple(x + y for x, y in zip(a, b, strict=True)), None)
 
 
 def thresholds(
@@ -304,9 +312,17 @@ def thresholds(
     }
 
 
+def step_diffs(scores: Sequence[int], sums: Sequence[int]) -> list[int]:
+    """FM-5, FM-6: the paired differences d_i = 2 s_i - (a_i + b_i) of the row's score on prompt
+    i against the midpoint of the two controls' scores on that prompt, doubled to stay integers."""
+    if len(scores) != len(sums):
+        raise ValueError(f"{len(scores)} scores for {len(sums)} control sums")
+    return [2 * s - c for s, c in zip(scores, sums, strict=True)]
+
+
 @dataclass(frozen=True, slots=True)
 class StepTest:
-    """The FI-4 test "the row is shown above the threshold" on d_i = 2n s_i - (S_a + S_b)."""
+    """The FI-4 paired test "the row is shown above the threshold" on d_i = 2 s_i - (a_i + b_i)."""
 
     threshold: str
     value: float
@@ -337,10 +353,10 @@ def step_tests(
     for key, t in steps.items():
         n = len(scores)
         value = t.value
-        if t.total is None or value is None or n != t.n:
+        if t.sums is None or value is None or n != t.n:
             out[key] = None
             continue
-        diffs = [2 * n * s - t.total for s in scores]
+        diffs = step_diffs(scores, t.sums)
         exact = n <= rule.exact_up_to
         seed = None if exact else pair_seed(rule.randomness_hex, system, t.name)
         p = sign_flip_p(diffs, exact_up_to=rule.exact_up_to, resamples=rule.resamples,
@@ -349,17 +365,45 @@ def step_tests(
     return out
 
 
+VLLM_SLOTS_CAUSE = (
+    "the vLLM run takes no slot count and sends every prompt in one generate call (FI-9)"
+)
+
+
+def run_slots(records: Sequence[Mapping[str, object]]) -> tuple[int | None, str | None]:
+    """FM-5: how many requests the rung's fidelity runs (`fidelity-run.json` and each
+    `fidelity-run-<part>.json`) served at once, with the cause when no count holds. llama.cpp's
+    run serves `slots` requests at a time, so the rung's count is the highest over its records.
+    A vLLM record's `slots` is the command-line argument only: the offline entrypoint
+    (`systems/ref-fidelity-vllm`) reads none and sends every prompt in one `generate` call, so
+    the rung has no count (amended 2026-11-15)."""
+    counts: list[int] = []
+    for record in records:
+        engine = record.get("engine")
+        if isinstance(engine, Mapping) and engine.get("tool") == "vllm":
+            return None, VLLM_SLOTS_CAUSE
+        slots = record.get("slots")
+        if not isinstance(slots, int) or isinstance(slots, bool):
+            return None, "a fidelity run record holds no slot count"
+        counts.append(slots)
+    if not counts:
+        return None, "no fidelity run record"
+    return max(counts), None
+
+
 def with_steps(
     doc: Mapping[str, object],
     specs: Sequence[Mapping[str, object]],
     slots: int | None,
     randomness_hex: str,
+    slots_cause: str | None = None,
 ) -> dict[str, object]:
     """A stored `fidelity.json` that holds no step thresholds (scored before the amendment of
     2026-11-13; results are append-only, APP-1), with `slots`, `steps` and each row's
     `step_tests` computed from its own stored scores, as `build_fidelity` computes them.
-    `specs` are the rung's controls in the level file, `slots` the count in the rung's
-    `fidelity-run.json`. A document that holds `steps` is returned as it is."""
+    `specs` are the rung's controls in the level file, `slots` and `slots_cause` what
+    `run_slots` gives for the rung's run records. A document that holds `steps` is returned as
+    it is."""
     out: dict[str, Any] = dict(doc)
     if "steps" in out:
         return out
@@ -378,6 +422,8 @@ def with_steps(
                         int(test["resamples"]), randomness_hex)  # fmt: skip
     steps = thresholds(pairs, int(out["n"]))
     out["slots"] = slots
+    if slots is None and slots_cause:
+        out["slots_cause"] = slots_cause
     out["steps"] = {"rule": STEPS_RULE, "seed_rule": STEPS_SEED_RULE,
                     "green": steps["green"].record(), "upper": steps["upper"].record()}  # fmt: skip
     rows: dict[str, object] = {}
@@ -662,7 +708,8 @@ class Header:
     engine: Mapping[str, object]
     reference_replies: str  # repository path of reference.jsonl
     reference_digest: str
-    slots: int  # FI-1: the fidelity run's llama-server slots, from fidelity-run.json
+    slots: int | None  # FM-5: `run_slots` over the rung's run records
+    slots_cause: str | None = None  # why `slots` is None
 
 
 def fidelity_document(
@@ -692,7 +739,12 @@ def fidelity_document(
             "resamples": rule.resamples,
             "seed_rule": SEED_RULE,
         },
-        "slots": header.slots,
+        **({"slots": header.slots} if header.slots is not None else {}),
+        **(
+            {"slots_cause": header.slots_cause}
+            if header.slots is None and header.slots_cause
+            else {}
+        ),
         "steps": {
             "rule": STEPS_RULE,
             "seed_rule": STEPS_SEED_RULE,

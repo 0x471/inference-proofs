@@ -65,6 +65,8 @@ hf-job.sh fidelity llama-4-maverick   # fidelity-h200x8-hosted, IPROOFS_FIDELITY
 
 The verifier-side controls of a kept SASH session run as in `hf-jobs.md` stage 5 (`seed`, `controls`, `merge`); `iproofs controls RUN_DIR` reads the level from the run's manifest. A session whose verify host showed a GPU (SASH) is verified again on `cpu-xl` with `hf-job.sh reverify SYSTEM RUN_PATH` (RFC-0018 CH-4a); the job adds `reverify/` beside the stored run, and `iproofs results import JOB_RUN --add-to results/<release>/<system>/<run id>` brings it into the imported run.
 
+SASH's slot 2 needs a new session (its 2026-11-13 session failed the machine self-test): [`sash-slot2-rerun.md`](sash-slot2-rerun.md) has the jobs, their estimates, the import, and the two weakened-prover control jobs that follow it.
+
 ### Teacher-forced passes (RFC-0018 FI-10 to FI-15)
 
 Printed beside the fidelity check, gating nothing. They need the rung's stored `reference.jsonl`, so they come after its fidelity job, one job per engine, each `hf-job.sh fidelity RUNG` with `IPROOFS_TF=1`:

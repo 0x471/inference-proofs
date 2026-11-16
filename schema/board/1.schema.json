@@ -134,6 +134,55 @@
             "failed",
             "undecided"
           ]
+        },
+        "trials": {
+          "$comment": "RFC-0018 CH-1c: per control and position, the counted trials, how many were refused, how many of those by the prover making no proof (no_proof, a declared P1 stop, CH-1a), and how many distinct changed inputs they sent (MODEL, PROMPT, REPLY)",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "control": {
+                "enum": [
+                  "P1",
+                  "C1",
+                  "C2",
+                  "C3"
+                ]
+              },
+              "inputs": {
+                "minimum": 1,
+                "type": "integer"
+              },
+              "no_proof": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "position": {
+                "enum": [
+                  null,
+                  "first",
+                  "last",
+                  "interior"
+                ]
+              },
+              "refused": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "trials": {
+                "minimum": 1,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "control",
+              "position",
+              "trials",
+              "refused",
+              "inputs"
+            ],
+            "type": "object"
+          },
+          "type": "array"
         }
       },
       "required": [
@@ -270,6 +319,156 @@
             "type": "string"
           },
           "type": "array"
+        },
+        "conclusion": {
+          "$comment": "MC-7 (amended 2026-11-15): what the theorem's conclusion is about, from properties/2",
+          "enum": [
+            "model",
+            "other",
+            "not_stated"
+          ]
+        },
+        "ceiling": {
+          "$comment": "MC-7 (amended 2026-11-15): the most a matching proof build can give, the stated step lowered by MC-7; never above the stated step",
+          "enum": [
+            "green",
+            "amber_upper",
+            "amber_lower",
+            "red"
+          ]
+        },
+        "scope_bounds": {
+          "$comment": "the publisher's bound for each scope-card row, verbatim with its quotes, or null; printed, sets no state",
+          "additionalProperties": false,
+          "properties": {
+            "soundness": {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "text": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "quotes": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "text": {
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "url": {
+                            "minLength": 1,
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "text",
+                          "url"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "text",
+                    "quotes"
+                  ],
+                  "type": "object"
+                }
+              ]
+            },
+            "zero_knowledge": {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "text": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "quotes": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "text": {
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "url": {
+                            "minLength": 1,
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "text",
+                          "url"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "text",
+                    "quotes"
+                  ],
+                  "type": "object"
+                }
+              ]
+            },
+            "completeness": {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "text": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "quotes": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "text": {
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "url": {
+                            "minLength": 1,
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "text",
+                          "url"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "text",
+                    "quotes"
+                  ],
+                  "type": "object"
+                }
+              ]
+            }
+          },
+          "type": "object"
         }
       },
       "required": [
@@ -589,6 +788,56 @@
           "$comment": "N1: true when a fact the petal's decision read carries a note, so the value is the reader's reading, not the publisher's words; absent means false",
           "type": "boolean"
         },
+        "next": {
+          "$comment": "RFC-0018 GL-11 (adopted 2026-11-16): the petal's next step, computed on the path that sets its step: the step it would move to (null on a hollow petal, what decides it; or on a failed one, its repair) and each need with who acts; null at green. It sets nothing and is never summed or sorted (GL-8). Optional, added in place (Q14 precedent)",
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "to": {
+                  "enum": [
+                    "green",
+                    "amber_upper",
+                    "amber_lower",
+                    null
+                  ]
+                },
+                "needs": {
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "text": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "by": {
+                        "enum": [
+                          "publisher",
+                          "us"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "text",
+                      "by"
+                    ],
+                    "type": "object"
+                  },
+                  "minItems": 1,
+                  "type": "array"
+                }
+              },
+              "required": [
+                "to",
+                "needs"
+              ],
+              "type": "object"
+            }
+          ]
+        },
         "reason": {
           "minLength": 1,
           "type": "string"
@@ -644,6 +893,58 @@
               "type": "array"
             }
           ]
+        },
+        "forms": {
+          "$comment": "Weights hidden: the forms of the proved zero knowledge, the publisher's words with their quotes (properties/2 hiding.forms); printed, sets no step",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "item": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "quotes": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "text": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "url": {
+                      "minLength": 1,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "text",
+                    "url"
+                  ],
+                  "type": "object"
+                },
+                "minItems": 1,
+                "type": "array"
+              }
+            },
+            "required": [
+              "item",
+              "quotes"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "visible_at_least": {
+          "$comment": "Weights hidden: true when the publisher says its list of visible values is a lower bound",
+          "type": "boolean"
+        },
+        "notes": {
+          "$comment": "RFC-0018 GL-10 (amended 2026-11-15): with reading true, the notes of the facts the decision read, our reading in words, printed with the petal",
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
         }
       },
       "required": [
@@ -910,6 +1211,96 @@
           },
           "type": "array"
         },
+        "ineligible_sessions": {
+          "$comment": "RFC-0018 SE-3b: a run RFC-0014 §Eligibility keeps out of the release, with its reason codes; it enters no figure and no check, RUN's attempts included",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "reasons": {
+                "items": {
+                  "enum": [
+                    "other_release",
+                    "manifest_invalid",
+                    "self_test_failed",
+                    "claim_card_not_listed",
+                    "harness_dirty",
+                    "adapter_dirty"
+                  ]
+                },
+                "minItems": 1,
+                "type": "array"
+              },
+              "run_id": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "slot": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "run_id",
+              "slot",
+              "reasons"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "level_statement": {
+          "$comment": "RFC-0018 SI-4a: the publisher's statement, recorded at the pin in the properties file, that an accept means the reply is the committed model's own computation, decoded greedily, on the prompt. A passed row without it takes no position.",
+          "additionalProperties": false,
+          "properties": {
+            "quotes": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "text": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "url": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "text",
+                  "url"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "read": {
+              "type": "boolean"
+            },
+            "reading": {
+              "type": "boolean"
+            },
+            "sources_read": {
+              "items": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "stated": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "read",
+            "stated",
+            "reading",
+            "quotes",
+            "sources_read"
+          ],
+          "type": "object"
+        },
         "multiple": {
           "$comment": "CO-5: mean steady m over the baseline's GPU-seconds per reply; null (not_applicable) when the row has no steady state",
           "$ref": "#/$defs/value"
@@ -999,6 +1390,22 @@
         },
         "session_commit_and_proving_gpu_seconds_per_reply": {
           "$comment": "CO-7 (amended 2026-11-13): the session cost per reply less its generation part (commit, the prove call outside its generation phase and the seconds between the two calls), mean of the counted sessions, scope whole_wall; null when the system has no generation phase of its own",
+          "$ref": "#/$defs/value"
+        },
+        "session_commit_gpu_seconds_per_reply": {
+          "$comment": "CO-7 (amended 2026-11-15): the commit call's GPU-seconds (commit.start to commit.end) over N, mean of the counted sessions, scope commit",
+          "$ref": "#/$defs/value"
+        },
+        "session_proving_gpu_seconds_per_reply": {
+          "$comment": "CO-7 (amended 2026-11-15): the session cost per reply less its commit part and its generation part (zero with no generation phase of its own), mean of the counted sessions, scope whole_wall",
+          "$ref": "#/$defs/value"
+        },
+        "generation_gpu_seconds_per_reply_token": {
+          "$comment": "CO-7 (amended 2026-11-15): the generation phase's GPU-seconds per reply over the request's reply tokens, mean of the counted sessions; null when the system has no generation phase of its own",
+          "$ref": "#/$defs/value"
+        },
+        "session_reply_tokens_per_gpu_second": {
+          "$comment": "CO-8 (adopted 2026-11-16): the request's reply tokens over the mean of the counted sessions' GPU-seconds per reply (CO-1), scope whole_wall, unit token/gpu_s; its range the tokens over the largest and the smallest session; printed once, on the system page under Cost; optional, added in place (Q14 precedent)",
           "$ref": "#/$defs/value"
         },
         "session_commit_and_proving_multiple": {
@@ -1244,6 +1651,54 @@
                 "string",
                 "null"
               ]
+            },
+            "runs": {
+              "$comment": "RFC-0018 FI-8, FI-9 (amended 2026-11-15): each fidelity run record of the rung, its part (null for fidelity-run.json), its engine and the slot count it stores",
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "part": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "engine": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "slots": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "part",
+                  "engine",
+                  "slots"
+                ]
+              }
+            },
+            "slots": {
+              "$comment": "FM-5 (amended 2026-11-15): the slot count of the rung's fidelity runs; null for a run part in vLLM, which sends every prompt in one generate call",
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 1
+            },
+            "slots_cause": {
+              "$comment": "why slots is null",
+              "type": [
+                "string",
+                "null"
+              ]
             }
           },
           "required": [
@@ -1294,6 +1749,10 @@
           "properties": {
             "alpha": {
               "type": "number"
+            },
+            "interval_rule": {
+              "$comment": "SI-9 (amended 2026-11-15): how percent_interval is computed",
+              "type": "string"
             },
             "controls": {
               "items": {
@@ -1413,6 +1872,20 @@
                   "n": {
                     "minimum": 0,
                     "type": "integer"
+                  },
+                  "percent_interval": {
+                    "$comment": "SI-9 (amended 2026-11-15): the 95 % bootstrap interval of percent over the prompts, [low, high], computed by the board (interval_rule); null for a failed entry",
+                    "items": {
+                      "maximum": 100,
+                      "minimum": 0,
+                      "type": "number"
+                    },
+                    "maxItems": 2,
+                    "minItems": 2,
+                    "type": [
+                      "array",
+                      "null"
+                    ]
                   },
                   "percent": {
                     "$comment": "SI-9 (amended 2026-11-14): mean ÷ positions × 100, the site's Fidelity; computed by the board",
@@ -1638,6 +2111,20 @@
                     "minimum": 0,
                     "type": "integer"
                   },
+                  "percent_interval": {
+                    "$comment": "SI-9 (amended 2026-11-15): the 95 % bootstrap interval of percent over the prompts, [low, high], computed by the board (interval_rule); null for a failed entry",
+                    "items": {
+                      "maximum": 100,
+                      "minimum": 0,
+                      "type": "number"
+                    },
+                    "maxItems": 2,
+                    "minItems": 2,
+                    "type": [
+                      "array",
+                      "null"
+                    ]
+                  },
                   "percent": {
                     "$comment": "SI-9 (amended 2026-11-14): mean ÷ positions × 100, the site's Fidelity; computed by the board",
                     "type": [
@@ -1791,7 +2278,8 @@
             "machine_checked",
             "paper",
             "tested",
-            "not_stated"
+            "not_stated",
+            "does_not_apply"
           ]
         }
       },

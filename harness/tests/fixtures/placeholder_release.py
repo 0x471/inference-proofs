@@ -5,7 +5,7 @@ returns its `releases/v0.1/release.yaml`. The tree holds copies of the real `sch
 `reference/`, `rfcs/`, `LICENSES/`, the tracked files of `web/` (less
 `shots/`), the workloads `fp-maverick-w1024-b24` and `sash-l31-8b-c1024` and the system
 directories of `flashprove`, `sash`, `ref-serve` and `ref-recompute`, so the deployed pages keep
-the real names, pins, claim cards and criteria rows. Only the runs are synthetic: PLACEHOLDER
+the real names, pins and claim cards. Only the runs are synthetic: PLACEHOLDER
 records of no real run, built from the `run/1` and `manifest/1` shapes, with every derived metric
 computed by `iproofs.derive.derive_repetition` and tokens counted by
 `iproofs.derive.tokens_per_proof`, so `iproofs release freeze` passes the real gates G2 to G7 on
@@ -29,18 +29,16 @@ failure records carry no invented log line. The
 rerun reference replays FlashProve's runs only: a replay of SASH's run on the Maverick workload is
 refused by the runner (`recorded_seed`, RFC-0015 RC-1).
 
-`extras=True` adds cases the site tests need and the deployed build must not carry (a target, a
-criteria copy naming the release with two overrides, an ineligible run, a
-withdrawn run, an unexpected control, a second workload, the closed Llama 3.1 8B workload
-`l31-8b-c1024` run by SASH and by a second test prover); they edit the tree's copies of SASH's
-`system.yaml`, the closed workload and the data files, never the real ones. The second prover,
-`fixture-closed` ("Fixture prover"), exists in no real tree: it is SASH's system file and claim card
-copied under another name, with SASH's criteria and facts rows, so the closed table holds two
-proving systems of its claim class, as `iproofs release freeze` requires (RFC-0003 Q7); real SASH
-has no row on that workload yet. The extras hold no second claim card of one system: the renderer
-draws one glyph per system page, so `iproofs site build` refuses a system with two card
-configurations (RFC-0016 SRC-1).
-"""
+`extras=True` adds cases the site tests need and the deployed build must not carry (a target, an
+ineligible run, a withdrawn run, an unexpected control, a second workload, the closed Llama 3.1 8B
+workload `l31-8b-c1024` run by SASH and by a second test prover); they edit the tree's copies of
+SASH's `system.yaml`, the closed workload and the data files, never the real ones. The second
+prover, `fixture-closed` ("Fixture prover"), exists in no real tree: it is SASH's system file and
+claim card copied under another name, with SASH's facts row, so the closed table holds two proving
+systems of its claim class, as `iproofs release freeze` requires (RFC-0003 Q7); real SASH has no
+row on that workload yet. The extras hold no second claim card of one system: the renderer draws
+one glyph per system page, so `iproofs site build` refuses a system with two card configurations
+(RFC-0016 SRC-1)."""
 
 import contextlib
 import hashlib
@@ -742,7 +740,7 @@ def _extras_tree(root: Path) -> None:
 
 def _fixture_prover(root: Path) -> None:
     """The second prover on the closed workload (module docstring): SASH's system file and claim
-    card under the name `fixture-closed`, its criteria and facts rows copies of SASH's, and the
+    card under the name `fixture-closed`, its facts row a copy of SASH's, and the
     tree's copy of the workload listing it. Test data only."""
     src, dst = root / "systems/sash", root / f"systems/{FIXTURE}"
     dst.mkdir(parents=True)
@@ -764,12 +762,6 @@ def _fixture_prover(root: Path) -> None:
     # SASH runs its native workload and the closed one here: its overview row is the native one
     facts["rows"]["sash"]["overview_workload"] = SASH_WORKLOAD
     write_json(facts_path, facts)
-    crit_path = root / "web/_data/criteria.json"
-    crit = json.loads(crit_path.read_text())
-    row = json.loads(json.dumps(next(r for r in crit["rows"] if r["id"] == "sash")))
-    row |= {"id": FIXTURE, "name": FIXTURE_NAME, "card": {**row["card"], "system": FIXTURE}}
-    crit["rows"].append(row)
-    write_json(crit_path, crit)
 
 
 def _extras_runs(root: Path, release: dict[str, Any], adapter: str, configs: list[Config]) -> None:
@@ -805,26 +797,6 @@ def _extras_runs(root: Path, release: dict[str, Any], adapter: str, configs: lis
                                    "digest": digest})  # fmt: skip
     second = Config(FIXTURE, CLOSED_WORKLOAD, card["configuration"], card["card_version"], digest)
     release["runs"] += _prover_runs(root, second, adapter, 3, SASH_CONTROLS).dirs
-    _criteria(root, first, sash_first)
-
-
-def _criteria(root: Path, first: str, sash_first: str) -> None:
-    """The tree's criteria copy names the release and overrides Whole output checked from the
-    accepted controls (OVR-4): FlashProve's from C1, SASH's from C2. Test data only: the real
-    criteria file is not changed."""
-    path = root / "web/_data/criteria.json"
-    crit = json.loads(path.read_text())
-    crit["release"] = RELEASE
-    for row in crit["rows"]:
-        if row["id"] == "flashprove":
-            cell = row["cells"]["whole_output"]
-            cell |= {"stated": "partly", "state": "no",
-                     "contradicted_by": [{"control": "C1", "run_id": first}]}  # fmt: skip
-        if row["id"] == "sash":
-            cell = row["cells"]["whole_output"]
-            cell |= {"stated": "yes", "state": "no",
-                     "contradicted_by": [{"control": "C2", "run_id": sash_first}]}  # fmt: skip
-    write_json(path, crit)
 
 
 # ---------------------------------------------------------------- command

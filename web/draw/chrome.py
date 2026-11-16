@@ -17,13 +17,17 @@ from .words import (
     CHECK_NAME,
     FIGURE_HEAD,
     FIGURE_NAME,
+    HOW_MULTIPLE,
+    HOW_ON,
     OF_WHICH,
     PART_WORD,
     PETAL_NAME,
+    SERVING_GPU,
     STATE_WORD,
-    STEP_WORD,
     WHOLE_SESSIONS,
     e,
+    petal_step,
+    release_tail,
     shown,
 )
 
@@ -233,7 +237,7 @@ def footer():
     if rel is not None:
         board = rel["board"]
         where = link(board) if board.startswith("releases/") else None
-        tail = rel["id"] + (f", {rel['date']}" if rel["date"] else "")
+        tail = release_tail(rel)
         parts.append(f'<a class="nw" href="{e(where)}"><span class="fk">Release</span> '
                      f'<span class="fv">{e(tail)}</span></a>' if where
                      else f'<span class="nw">Release {e(tail)}</span><code>{e(board)}</code>')  # fmt: skip
@@ -330,16 +334,13 @@ def card_alt(card):
     if card == "home":
         return "Inference proofs."
     row = S.PAGE[card]
-    _, f, key = lead_figure(row)
-    lead = f"{FIGURE_HEAD['multiple']}: {fig_words(f)}"
-    if parts := parts_of(row, key):  # CO-7: "of which" once, before both parts
-        lead += f", {OF_WHICH} " + " and ".join(f"{w} {fig_words(p)}" for w, p in parts)
+    lead = lead_words(row)
     figs = [(FIGURE_HEAD["cost"], row_cost(row)),
             (FIGURE_HEAD["check-time"], row["figures"]["verify_seconds_per_reply"])]  # fmt: skip
     cells = ". ".join(f"{k}: {fig_words(v)}" for k, v in figs)
     states = "; ".join(
-        f"{PETAL_NAME[p['id']]}: {STEP_WORD[p['step']]}"
-        + (f", {CAUSE_WORD[p['cause']]}" if p["cause"] is not None else "")
+        f"{PETAL_NAME[p['id']]}: {petal_step(p)}"
+        + (f", {CAUSE_WORD[p['cause']]}" if p["step"] is None else "")
         for p in row["glyph"]
     )
     name = S.V["systems"][row["system"]]["name"]
@@ -378,15 +379,32 @@ SPLITS = {"multiple": (("proving", "proving_multiple"), ("generation", "generati
 
 
 def lead_figure(row):
-    """A row's one figure (CO-5): the multiple of serving; with no steady state, the whole
-    sessions' multiple, named so in its label; else the multiple's null. Returns (label, figure,
-    its key in the row's figures)."""
+    """A row's one figure (CO-5, amended 2026-11-15): the whole sessions' multiple, named so in
+    its label, on every row that has one, so the rows of a rung print one scope; else the steady
+    multiple (or its null). The order rule still reads the steady multiple (OR-3): this changes
+    what is printed, never a position. Returns (label, figure, its key in the row's figures)."""
     figs = row["figures"]
-    if not has(figs["multiple"]) and has(figs["session_multiple"]):
+    if has(figs["session_multiple"]):
         n = rung_of(row)["requests_per_session"]
         return (f"{FIGURE_NAME['multiple']}, {WHOLE_SESSIONS.format(n=n)}",
                 figs["session_multiple"], "session_multiple")  # fmt: skip
     return FIGURE_NAME["multiple"], figs["multiple"], "multiple"
+
+
+def gpu_name(row):
+    """The GPU the row's counted sessions ran on, as their manifests record it (the facts file's
+    short name); the serving GPU where no manifest is stored."""
+    seen = (row.get("machine") or {}).get("gpu_model") or []
+    return " or ".join(seen) if seen else SERVING_GPU
+
+
+def how_computed(row):
+    """The headline in one plain sentence (B5): what is divided by what, at which scope, on
+    which GPUs, at one GPU price, by the figure the row prints (`lead_figure`)."""
+    _, _, key = lead_figure(row)
+    gpu = gpu_name(row)
+    on = HOW_ON[gpu == SERVING_GPU].format(gpu=gpu, serving=SERVING_GPU)
+    return HOW_MULTIPLE[key].format(on=on)
 
 
 def parts_of(row, key):
@@ -397,28 +415,58 @@ def parts_of(row, key):
 
 
 def row_cost(row):
-    """The cost per reply at the multiple's own scope: steady when the row has a steady
-    multiple, else its whole sessions, so one row never mixes two scopes."""
+    """The cost per reply at the printed multiple's scope (`lead_figure`): the whole sessions'
+    on every row that has one (SI-1), else the steady one, so one row never mixes two scopes."""
     figs = row["figures"]
-    steady = figs["multiple"].get("value") is not None
-    return figs["steady_usd_per_reply" if steady else "session_usd_per_reply"]
+    whole = has(figs["session_multiple"]) or not has(figs["multiple"])
+    return figs["session_usd_per_reply" if whole else "steady_usd_per_reply"]
+
+
+def only_run(row):
+    """Whether the row is the only system run on its model (OR-4, amended 2026-11-15): its
+    position is then printed unfilled, with no count, since nothing on the model was ranked
+    against it."""
+    return rung_of(row)["systems_run"] == 1
+
+
+ONLY_RUN = "only system run on this model"
+
+
+def share_words(row):
+    """A system page in a sentence (its description and share text, depth 0): the system, its
+    model and standing, its one figure and, where it has them, its two parts (CO-7), as the card
+    prints them."""
+    name = S.V["systems"][row["system"]]["name"]
+    said = standing(row)  # a state word is lower case in prose
+    return f"{name} on {rung_of(row)['model']}, {said[0].lower() + said[1:]}. {lead_words(row)}."
+
+
+def lead_words(row):
+    """The row's one figure in words, with its two parts where it has them (CO-7: "of which"
+    once, before both): "Cost vs serving: 1,317×, of which commit and proving 118.2× and
+    generation 1,199×"."""
+    _, f, key = lead_figure(row)
+    lead = f"{FIGURE_HEAD['multiple']}: {fig_words(f)}"
+    if parts := parts_of(row, key):
+        lead += f", {OF_WHICH} " + " and ".join(f"{w} {fig_words(p)}" for w, p in parts)
+    return lead
 
 
 def not_passed(row):
-    """The standing of a row that has not passed: "not passed" with a failed check, "not passed
-    yet" while every check not held is undecided (RFC-0018: an undecided check is never worded as
-    a failure)."""
+    """The standing of a row that has not passed (RFC-0018 §2.3, amended 2026-11-16): "Not
+    passed" with a failed check, "Not passed yet" while every check not passed is not decided (a
+    check not decided is never worded as a failure)."""
     failed = any(c["state"] == "failed" for c in row["checks"])
-    return "not passed" if failed else "not passed yet"
+    return "Not passed" if failed else "Not passed yet"
 
 
 def standing(row):
-    """Passed (a system on a model, SI-6), passed and unranked with why, or not passed with the
-    checks not held (SI-1), each named as a check."""
+    """Passed (a system on a model, SI-6), Passed, not ranked with why, or Not passed with the
+    checks not passed (SI-1), each named as a check."""
     if row["passed"] and not row["ranked"]:
-        return f"passed, unranked: {row['unranked_reason']}"
+        return f"Passed, not ranked: {row['unranked_reason']}"
     if row["passed"]:
-        return "passed"
+        return "Passed"
     missing = [f"{CHECK_NAME[c['id']]} check {STATE_WORD[c['state']]}" for c in row["checks"]
                if c["state"] != "held"]  # fmt: skip
     return f"{not_passed(row)}: " + ", ".join(missing) if missing else not_passed(row)

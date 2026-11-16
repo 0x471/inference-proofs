@@ -25,6 +25,7 @@ from iproofs.fidelity import (
     parse_kl,
     read_kl_base,
     row_replies,
+    run_slots,
     score_control,
     score_row,
     scored_texts,
@@ -184,11 +185,11 @@ def test_parse_kl_reads_llama_perplexity_mean() -> None:
 
 
 def test_step_test_scaling_hand_counted() -> None:
-    """Controls summing S_a + S_b = 18 over n = 3 prompts: T = 18 / 6 = 3. Scores [3, 4, 2]
-    give d = 6 s - 18 = [0, 6, -6], observed 0; the sums of 0 +-6 +-6 are 12, 0, 0, -12, three
-    reach 0 and the zero doubles each vector: p = 6 / 8. Scores [5, 6, 7] give d = [12, 18, 24]:
-    only the observed vector reaches 54, p = 1 / 8."""
-    t = {"green": Threshold("T_green", ("a", "b"), 3, 18, None)}
+    """Controls scoring 3 and 3 on each of n = 3 prompts: sums a_i + b_i = 6, T = 18 / 6 = 3.
+    Scores [3, 4, 2] give d = 2 s - 6 = [0, 2, -2], observed 0; the sums of 0 +-2 +-2 are 4, 0,
+    0, -4, three reach 0 and the zero doubles each vector: p = 6 / 8. Scores [5, 6, 7] give
+    d = [4, 6, 8]: only the observed vector reaches 18, p = 1 / 8."""
+    t = {"green": Threshold("T_green", ("a", "b"), 3, (6, 6, 6), None)}
     found = step_tests("sash", [3, 4, 2], t, RULE)["green"]
     assert found is not None
     assert (found.value, found.p, found.method, found.seed) == (3.0, 0.75, "exact", None)
@@ -199,10 +200,24 @@ def test_step_test_scaling_hand_counted() -> None:
                       RULE) == {"green": None}  # fmt: skip
 
 
+def test_step_test_is_paired_by_prompt() -> None:
+    """FI-4 pairs by prompt (L1.yaml `paired-sign-flip`). Controls a = b = [10, 0, 4]: sums
+    [20, 0, 8], T = 28 / 6. The row [11, 1, 5] is one token above both controls on every
+    prompt: d = 2 s - (a + b) = [2, 2, 2], only the observed vector reaches 6, p = 1 / 8. The
+    unpaired test against the fixed T (d = 6 s - 28 = [38, -22, 2], observed 18) counts the
+    subsets of {38, 22, 2} with sum at most (62 - 18) / 2 = 22, namely {}, {22}, {2}: p = 3 / 8,
+    which the paired test must not give."""
+    t = {"upper": Threshold("T_upper", ("a", "b"), 3, (20, 0, 8), None)}
+    found = step_tests("sash", [11, 1, 5], t, RULE)["upper"]
+    assert found is not None
+    assert (found.value, found.p) == (28 / 6, 1 / 8)
+    assert sign_flip_p([38, -22, 2], exact_up_to=20, resamples=1, seed=0) == 3 / 8
+
+
 def test_step_test_monte_carlo_seed() -> None:
     """n = 25 > exact_up_to: the draws are seeded by pair_seed(randomness, system, T_...)."""
-    t = {"green": Threshold("T_green", ("a", "b"), 25, 500, None),
-         "upper": Threshold("T_upper", ("b", "c"), 25, 400, None)}  # fmt: skip
+    t = {"green": Threshold("T_green", ("a", "b"), 25, (20,) * 25, None),
+         "upper": Threshold("T_upper", ("b", "c"), 25, (16,) * 25, None)}  # fmt: skip
     found = step_tests("flashprove", [10] * 25, t, RULE)
     green, upper = found["green"], found["upper"]
     assert green is not None
@@ -385,3 +400,40 @@ def test_a_controls_part_supplies_the_controls_a_vllm_run_left_out(tmp_path: Pat
     assert got["reference-2"] == ([[1, 2]], None)
     assert got["q8_0"] == ([[1, 2]], None)
     assert got["drop"] == (None, "not run: the 16-bit file in llama.cpp")
+
+
+def test_honest_q8_0_is_shown_above_t_upper_on_the_8b_rung() -> None:
+    """The stored 8B record (n = 15, exact count): the honest Q8_0 copy's own replies, scored as
+    a row, are shown above T_upper, the Q8_0 and Q4_K_M midpoint. Paired by prompt, d_i =
+    q8_i - q4_i and p = 8 / 2^15; the unpaired test against a fixed T gave p = 0.21, so an
+    honest 8-bit copy could not reach amber in part."""
+    doc = json.loads((ROOT / "results/v1.0/fidelity/llama-3.1-8b/fidelity.json").read_text())
+    scores = {c["id"]: tuple(c["scores"]) for c in doc["controls"]}
+    specs = [
+        {"id": "reference-2", "kind": "honest", "recipe": "rerun"},
+        {"id": "q8_0", "kind": "honest", "recipe": "quantize", "type": "Q8_0"},
+        {"id": "q4_k_m", "kind": "honest", "recipe": "quantize", "type": "Q4_K_M"},
+    ]
+    pairs = [(s, ControlResult(s["id"], "honest", s["recipe"], "ok", scores[s["id"]]))
+             for s in specs]  # fmt: skip
+    found = step_tests("q8_0", scores["q8_0"], thresholds(pairs, 15), RULE)["upper"]
+    assert found is not None
+    assert (found.method, found.p) == ("exact", 8 / 2**15)
+
+
+def test_run_slots_counts_every_part_and_no_vllm_run() -> None:
+    """FM-5's guard: the highest llama.cpp slot count over the rung's run records; a vLLM record
+    gives no count, since its entrypoint sends every prompt in one generate call, whatever
+    `slots` says.
+    The stored Maverick records say `slots: 1` for the vLLM run and 16 for its controls."""
+    llama = {"engine": {"tool": "llama.cpp"}, "slots": 1}
+    assert run_slots([llama]) == (1, None)
+    assert run_slots([llama, {**llama, "slots": 16}]) == (16, None)
+    folder = ROOT / "results/v1.0/fidelity"
+    eight = [json.loads((folder / "llama-3.1-8b/fidelity-run.json").read_text())]
+    assert run_slots(eight) == (1, None)
+    runs = sorted((folder / "llama-4-maverick").glob("fidelity-run*.json"))
+    maverick = [json.loads(p.read_text()) for p in runs]
+    found, cause = run_slots(maverick)
+    assert found is None
+    assert cause is not None

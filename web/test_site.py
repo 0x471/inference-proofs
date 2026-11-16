@@ -113,7 +113,7 @@ def test_order_and_positions_are_the_boards(board_site: Any) -> None:
     got = [(sid, int(m[1]) if (m := re.search(r'class="pn">(\d+)<', cell)) else None)
            for sid, cell in printed]  # fmt: skip
     assert got == want
-    # OR-6: the rung marked as the largest model proved is the board's frontier, and no other
+    # OR-6: the rung marked as the largest model with a passed row is the board's frontier, and no other
     marked = [sid for sid, sec in re.findall(r'<section class="rung" id="([^"]+)"(.*?)</section>',
                                              index, re.S) if 'class="rf"' in sec]  # fmt: skip
     front = board_site.board["frontier"]
@@ -184,7 +184,8 @@ def test_scale_positions_are_the_boards(board_site: Any) -> None:
                 dim,
                 row["system"],
             )
-            steady = row["multiple"]["value"] is not None
+            # CO-5 (amended 2026-11-15): the whole sessions' scope wherever the row has it
+            steady = row["session_multiple"]["value"] is None
             runs = [s["m" if steady else "session"] for s in row["sessions"]]
             if dim == "multiple":
                 b = base["gpu_seconds_per_reply"]["value"]
@@ -207,15 +208,17 @@ def test_scale_positions_are_the_boards(board_site: Any) -> None:
     for dim in ("multiple", "cost", "check-time", "proof-size"):
         assert seen[dim] == [r["system"] for r in rows(board)], dim
     # hand-computed: the multiple from 1× to 1,000× (sessions up to 612 / 1.408 = 434.6×), the
-    # cost from 10^-4 (serving 0.000894 USD) to 1 USD; FlashProve's 68.31× and 0.06110 USD
+    # cost from 10^-4 (serving 0.000894 USD) to 1 USD; FlashProve at its whole sessions' scope,
+    # 49.83 / 0.6024 = 82.72× (log10 / 3 = 63.92 %) and 0.07399 USD ((log10 + 4) / 4 = 71.73 %),
+    # not its steady 68.31× and 0.06110 USD
     assert [(lo, hi) for lo, hi, _ in lanes] == [
         ("0", "3"),
         ("-4", "0"),
         ("0", "2"),
         ("0", "2"),
     ]
-    assert re.search(r'id="scale-multiple-flashprove">.*?class="mk" x="61.15%"', text, re.S)
-    assert re.search(r'id="scale-cost-flashprove">.*?class="mk" x="69.65%"', text, re.S)
+    assert re.search(r'id="scale-multiple-flashprove">.*?class="mk" x="63.92%"', text, re.S)
+    assert re.search(r'id="scale-cost-flashprove">.*?class="mk" x="71.73%"', text, re.S)
 
 
 def test_session_parts_print_beside_the_whole_sessions_figure(board_site: Any) -> None:
@@ -230,3 +233,75 @@ def test_session_parts_print_beside_the_whole_sessions_figure(board_site: Any) -
         for part in ("generation_multiple", "commit_and_proving_multiple"):
             assert f"{at}{part}" in text, (page, part)
     assert '<rect class="bp" width="83.47"' in (out / "index.html").read_text()
+
+
+def test_completeness_count_is_the_boards(board_site: Any) -> None:
+    """MC-6 (amended 2026-11-15, 2026-11-16): the Completeness line at the head of a system's glyph
+    counts the replies of the board's counted sessions (their release groups summed), N of N."""
+    text = pages(board_site.out)
+    for row in rows(board_site.board):
+        n = sum(sum(s["groups"]) for s in row["sessions"])
+        page = html.unescape(text[f"{row['system']}.html"])
+        assert f"{n:,}\u00a0of\u00a0{n:,} replies accepted" in page, row["system"]
+
+
+def test_surface_figures_are_whole_sessions(board_site: Any) -> None:
+    """RFC-0018 CO-5 and SI-1 (amended 2026-11-15): the ladder, a system's band and its card
+    print each row's multiple and cost at the whole sessions' scope wherever the row has one, so
+    a rung never mixes two scopes; the steady figures stay below, under Cost. In the example
+    board FlashProve has both: its ladder row names session_multiple and session_usd_per_reply,
+    never multiple or steady_usd_per_reply."""
+    out = board_site.out
+    index = html.unescape((out / "index.html").read_text())
+    tr = re.search(r'<tr class="row" id="row-flashprove">(.*?)</tr>', index, re.S)
+    assert tr
+    at = "/rungs/0/rows/0/"
+    pages_ = {"index.html": tr[1]}
+    for page in ("flashprove.html", "og/flashprove.html"):
+        text = html.unescape((out / page).read_text())
+        pages_[page] = text.split('class="figs"')[0]  # the band (all of a card)
+    for page, text in pages_.items():
+        pointers = set(re.findall(r"record: [^#]+#(/[^;\"]+)", text))
+        assert f"{at}session_multiple" in pointers, page
+        assert f"{at}session_usd_per_reply" in pointers or page == "flashprove.html", page
+        assert f"{at}multiple" not in pointers, page
+        assert f"{at}steady_usd_per_reply" not in pointers, page
+
+
+def test_a_lone_system_is_not_drawn_as_ranked(board_site: Any) -> None:
+    """RFC-0018 OR-4 (amended 2026-11-15): a ranked row that is the only system run on its model
+    is an outline square that says so, never a filled "1 of 1", on the ladder and its card."""
+    out, build = board_site.out, board_site.build
+    index = (out / "index.html").read_text()
+    assert all(r["systems_run"] == 1 for r in board_site.board["rungs"])  # the example board
+    row, lone, shared = {"position": 1}, {"systems_run": 1}, {"systems_run": 2}
+    assert build.position_html(row, lone) in index  # every ranked row here is a lone one
+    assert build.position_html(row, shared) not in index
+    assert build.ONLY_RUN in build.position_html(row, lone)
+    assert build.ONLY_RUN not in build.position_html(row, shared)
+
+
+def test_a_p_at_its_test_floor_reads_as_a_bound(board_site: Any) -> None:
+    """FI-4: a drawn p with no resample at least as extreme is 1 / (1 + 200,000), the lowest
+    the test gives, so it prints as a bound; a counted p at 2^-15 is exact and says it is the
+    floor; any other p is its value."""
+    said, p_html = board_site.build.p_said, board_site.build.p_html
+    drawn = html.unescape(said(1 / 200_001, 360))
+    assert drawn.startswith("p\u00a0<\u00a05.0"), drawn  # a bound: no resample was as extreme
+    counted = said(2.0**-15, 15)
+    assert html.unescape(counted).startswith("p\u00a0=\u00a03.1"), counted  # exact, and floor
+    assert counted != "p\u00a0=\u00a0" + p_html(2.0**-15)
+    assert said(0.0058, 15) == "p\u00a0=\u00a0" + p_html(0.0058)
+    assert said(4 / 2**15, 15) == "p\u00a0=\u00a0" + p_html(4 / 2**15)
+
+
+def test_gpt2_prints_the_model_card_count() -> None:
+    """The level file records GPT-2 at 137,022,720, the Hub's safetensors total, which counts its
+    12 causal-mask buffers of 1 x 1 x 1,024 x 1,024; the site prints 137,022,720 less them,
+    124,439,808, which reads 124M, the count the model card states."""
+    from iproofs.site.view import site_view  # noqa: PLC0415
+
+    view = site_view(Path(__file__).resolve().parents[1])
+    gpt2 = next(r for r in view["rungs"] if r["id"] == "gpt-2")
+    assert gpt2["parameters_total"] == 137_022_720 - 12 * 1024 * 1024 == 124_439_808
+    assert "124M" in gpt2["parameters_erratum"]["card"]["quote"]

@@ -1,6 +1,6 @@
 Level 1's [[statement]] is that the reply is the committed model's own [[greedy decoding|greedy]] reply to a prompt the verifier is given ([RFC-0018](repo:rfcs/0018-level-1-ladder.md#site)). A system that proves another statement, such as VerInf, is listed under "a different statement" and has no row.
 
-The verifier holds the [[commitment]], the prompt, the reply (given, or read from the proof) and the model's dimensions and arithmetic, never the [[witness]] (the weights and every activation). FlashProve claims [[zero knowledge]], [proved for its protocol only and not stated for its programs](/flashprove#glyph), and SASH states no hiding property.
+The verifier never holds the [[witness]] (the weights and every activation). What it is given differs by system, and each system's Statement block lists it with the publisher's words ([FlashProve](/flashprove#statement), [SASH](/sash#statement)). FlashProve's `cp_verify` takes the [[commitment]] and its files from our commit record, and the prompt and the reply from the request. SASH's `boundary-grid --verify` takes the model roots and the grid's link counts from our commit record and the prompt from the request; it reads the reply, and each segment's shape and the switches of its checks, from the proof itself, whose Fixed statement is "[produced at setup, trusted by the verifier](https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/src/compose.rs#L5-L11)". FlashProve claims [[zero knowledge]], [proved for its protocol only and not stated for its programs](/flashprove#glyph), and SASH states no hiding property.
 
 ## Each system's statement
 
@@ -36,7 +36,7 @@ A proof covers only the positions it checks, and in FlashProve "[a reply stopped
 
 SASH binds the seams between segments: "[The residual stream leaving a segment and the keys and values a block writes are committed as their own trees, and `boundary-grid` compares each such root with the root the consuming segment committed for its input.](https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/docs/statement.md?plain=1#L138-L141)"
 
-Fourteen of the [sixteen edges](https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/docs/statement.md?plain=1#L19-L36) SASH lists can be turned off by an `--unsound-skip-` switch. The [Run check](/checks#run) fails if a counted session used one.
+Fourteen of the [sixteen edges](https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/docs/statement.md?plain=1#L19-L36) SASH lists can be turned off by an `--unsound-skip-` switch. Our adapter refuses to pass one outside a control job, and the [Run check](/checks#run) fails if one of our counted sessions used one, as its recorded commands show. A switch made by a prover we did not run is another matter: the proof's own Fixed statement carries the switches, the pinned verifier is expected to accept a proof made with one and report the skip, and our verdict does not yet refuse such a proof. Whether SASH's verifier, called as the row calls it, refuses a proof made with one is not yet run.
 
 ## The error bound
 

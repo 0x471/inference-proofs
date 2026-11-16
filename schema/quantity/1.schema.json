@@ -77,7 +77,8 @@
                   "gpu_s/request",
                   "USD/request",
                   "s/request",
-                  "request/gpu_s"
+                  "request/gpu_s",
+                  "token/gpu_s"
                 ]
               }
             }
@@ -369,7 +370,8 @@
             "B/request",
             "s/request",
             "request/gpu_s",
-            "nat/token"
+            "nat/token",
+            "token/gpu_s"
           ]
         },
         "upstream_grade": {

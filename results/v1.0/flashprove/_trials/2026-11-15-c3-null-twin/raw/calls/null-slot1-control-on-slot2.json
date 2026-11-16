@@ -1,0 +1,25 @@
+{
+  "adapter_seconds": 3.3722539529999267,
+  "commitment": {
+    "commitment_id": "11a8469baffc8f82b926dd595b4472cd1327a22e226f9848c6d555be67b72abb",
+    "key": "slot2",
+    "run_id": "2026-11-12-flashprove-l1-maverick-p512-o512-prover-h200-hosted-1",
+    "slot": 2
+  },
+  "exit_code": 0,
+  "harness_seconds": 3.779892375,
+  "name": "null-slot1-control-on-slot2",
+  "proof": {
+    "archive_digest": "sha256:6bd72f096e8c32405bbc686573f28d66de008c4094b86928050c371767521fd7",
+    "key": "slot1-control",
+    "proof_id": "req-0",
+    "run_id": "2026-11-13-flashprove-l1-maverick-p512-o512-prover-h200-hosted-1",
+    "slot": 1
+  },
+  "raw_exit_code": 1,
+  "raw_last_line": "NO: proof-refused",
+  "reply_change": null,
+  "started_unix": 1794779725.3268712,
+  "stderr_tail": [],
+  "verdict": "reject"
+}

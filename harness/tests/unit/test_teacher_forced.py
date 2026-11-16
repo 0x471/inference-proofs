@@ -16,6 +16,7 @@ from iproofs.teacher_forced import (
     fidelity_percent,
     kl_figure,
     measure_kl,
+    percent_interval,
     position_kl,
     prompt_kl,
     read_topk,
@@ -40,6 +41,20 @@ def test_fidelity_is_the_mean_as_a_percentage_of_positions() -> None:
     assert round(fidelity_percent(471.2, 512) or 0, 1) == 92.0  # SASH's stored mean on 8B
     assert fidelity_percent(512.0, 512) == 100.0
     assert fidelity_percent(None, 512) is None
+
+
+def test_fidelity_interval_over_the_prompts() -> None:
+    """SI-9's 95 % bootstrap interval. Scores all 256 of 512: every resample mean is 50 %, so
+    is the interval. Scores [0, 512]: a resample mean is 0, 50 or 100 % with probability 1/4,
+    1/2, 1/4, so about 2,500 of 10,000 are 0 and 2,500 are 100: the 251st is 0 and the 9,750th
+    100. One score gives none. The interval holds the percentage and repeats for its id."""
+    assert percent_interval("a", [256] * 15, 512) == [50.0, 50.0]
+    assert percent_interval("a", [0, 512], 512) == [0.0, 100.0]
+    assert percent_interval("a", [7], 512) is None
+    scores = [471, 480, 455, 499, 466, 470, 488, 430, 475, 460, 482, 463, 470, 478, 461]
+    low, high = percent_interval("sash", scores, 512) or [0.0, 0.0]
+    assert low < sum(scores) / 15 / 512 * 100 < high
+    assert percent_interval("sash", scores, 512) == [low, high]
 
 
 def test_kl_of_a_full_small_vocabulary() -> None:

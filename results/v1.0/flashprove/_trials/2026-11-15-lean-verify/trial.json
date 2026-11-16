@@ -1,0 +1,505 @@
+{
+  "calls": [
+    {
+      "change": null,
+      "commitment": {
+        "commitment_id": "11a8469baffc8f82b926dd595b4472cd1327a22e226f9848c6d555be67b72abb",
+        "in_results": true,
+        "run_id": "2026-11-12-flashprove-l1-maverick-p512-o512-prover-h200-hosted-1",
+        "slot": 2
+      },
+      "exit_code": 0,
+      "last_lines": [
+        "VERDICT: ACCEPT (exact match)"
+      ],
+      "name": "s2",
+      "peak_memory": {
+        "grade": "measured",
+        "note": "GNU time's maximum resident set size, kbytes times 1024",
+        "null_reason": null,
+        "scope": null,
+        "source": {
+          "kind": "adapter",
+          "ref": "results/v1.0/flashprove/_trials/2026-11-15-lean-verify/raw/calls/s2/time.txt"
+        },
+        "tier": "reported",
+        "unit": "B",
+        "value": 11003940864
+      },
+      "proof": {
+        "archive_digest": "sha256:acd2ef390f9e11c69111368d8529a68c4ae8ca7d74a5dedfb878691138b56849",
+        "commitment_id": "11a8469baffc8f82b926dd595b4472cd1327a22e226f9848c6d555be67b72abb",
+        "in_results": true,
+        "proof_id": "req-1",
+        "run_id": "2026-11-12-flashprove-l1-maverick-p512-o512-prover-h200-hosted-1",
+        "slot": 2
+      },
+      "raw": [
+        "raw/calls/s2/stdout",
+        "raw/calls/s2/stderr",
+        "raw/calls/s2/time.txt"
+      ],
+      "seconds": {
+        "grade": "measured",
+        "note": "wall clock of one lean_verify.sh call, taken by the trial's job script around the call (python time.time), not by the harness",
+        "null_reason": null,
+        "scope": "verify",
+        "source": {
+          "kind": "adapter",
+          "ref": "results/v1.0/flashprove/_trials/2026-11-15-lean-verify/raw/calls.tsv"
+        },
+        "tier": "reported",
+        "unit": "s",
+        "value": 1529.9
+      },
+      "verdict": "accept"
+    },
+    {
+      "change": null,
+      "commitment": {
+        "commitment_id": "f033a74a07369cf099614ec6247f79b76298df47a05b3e8c4f790f7f634bea7e",
+        "in_results": true,
+        "run_id": "2026-11-12-flashprove-l1-maverick-p512-o512-prover-h200-hosted-2",
+        "slot": 3
+      },
+      "exit_code": 0,
+      "last_lines": [
+        "VERDICT: ACCEPT (exact match)"
+      ],
+      "name": "s3",
+      "peak_memory": {
+        "grade": "measured",
+        "note": "GNU time's maximum resident set size, kbytes times 1024",
+        "null_reason": null,
+        "scope": null,
+        "source": {
+          "kind": "adapter",
+          "ref": "results/v1.0/flashprove/_trials/2026-11-15-lean-verify/raw/calls/s3/time.txt"
+        },
+        "tier": "reported",
+        "unit": "B",
+        "value": 10997723136
+      },
+      "proof": {
+        "archive_digest": "sha256:1ab4ed380822cd13d6208cc65a5d7146fbc09d75b4f0bc0730da412964198138",
+        "commitment_id": "f033a74a07369cf099614ec6247f79b76298df47a05b3e8c4f790f7f634bea7e",
+        "in_results": true,
+        "proof_id": "req-3",
+        "run_id": "2026-11-12-flashprove-l1-maverick-p512-o512-prover-h200-hosted-2",
+        "slot": 3
+      },
+      "raw": [
+        "raw/calls/s3/stdout",
+        "raw/calls/s3/stderr",
+        "raw/calls/s3/time.txt"
+      ],
+      "seconds": {
+        "grade": "measured",
+        "note": "wall clock of one lean_verify.sh call, taken by the trial's job script around the call (python time.time), not by the harness",
+        "null_reason": null,
+        "scope": "verify",
+        "source": {
+          "kind": "adapter",
+          "ref": "results/v1.0/flashprove/_trials/2026-11-15-lean-verify/raw/calls.tsv"
+        },
+        "tier": "reported",
+        "unit": "s",
+        "value": 1244.4
+      },
+      "verdict": "accept"
+    },
+    {
+      "change": null,
+      "commitment": {
+        "commitment_id": "725abc6480146f7f1ca6bd66fb8fb8a5b8b90d39623cde97838a5273df383a3a",
+        "in_results": false,
+        "manifest_digest": "sha256:2f2f4fa142f1467768181e8afef6f2f7246c1c20b851e570f7f440dea247a465",
+        "note": "a control session (control: true, slot 1, harness 3b5197d) whose run directory was not imported; its job wrote the same run id as the imported 2026-11-13 control session",
+        "run_id": "2026-11-13-flashprove-l1-maverick-p512-o512-prover-h200-hosted-1",
+        "slot": 1
+      },
+      "exit_code": 0,
+      "last_lines": [
+        "VERDICT: ACCEPT (exact match)"
+      ],
+      "name": "c1",
+      "peak_memory": {
+        "grade": "measured",
+        "note": "GNU time's maximum resident set size, kbytes times 1024",
+        "null_reason": null,
+        "scope": null,
+        "source": {
+          "kind": "adapter",
+          "ref": "results/v1.0/flashprove/_trials/2026-11-15-lean-verify/raw/calls/c1/time.txt"
+        },
+        "tier": "reported",
+        "unit": "B",
+        "value": 11005509632
+      },
+      "proof": {
+        "archive_digest": "sha256:6536fcb167422a42b4b61e07d2fd9f0e3784b74c6bddb03ce8ff1b189c3c9c1b",
+        "commitment_id": "725abc6480146f7f1ca6bd66fb8fb8a5b8b90d39623cde97838a5273df383a3a",
+        "in_results": false,
+        "manifest_digest": "sha256:2f2f4fa142f1467768181e8afef6f2f7246c1c20b851e570f7f440dea247a465",
+        "note": "a control session (control: true, slot 1, harness 3b5197d) whose run directory was not imported; its job wrote the same run id as the imported 2026-11-13 control session",
+        "proof_id": "req-0",
+        "run_id": "2026-11-13-flashprove-l1-maverick-p512-o512-prover-h200-hosted-1",
+        "slot": 1
+      },
+      "raw": [
+        "raw/calls/c1/stdout",
+        "raw/calls/c1/stderr",
+        "raw/calls/c1/time.txt"
+      ],
+      "seconds": {
+        "grade": "measured",
+        "note": "wall clock of one lean_verify.sh call, taken by the trial's job script around the call (python time.time), not by the harness",
+        "null_reason": null,
+        "scope": "verify",
+        "source": {
+          "kind": "adapter",
+          "ref": "results/v1.0/flashprove/_trials/2026-11-15-lean-verify/raw/calls.tsv"
+        },
+        "tier": "reported",
+        "unit": "s",
+        "value": 1237.3
+      },
+      "verdict": "accept"
+    },
+    {
+      "change": null,
+      "commitment": {
+        "commitment_id": "73970e106cf6f8f3565578b3304f988716d1c0307a119af567bcaa7d482d5b28",
+        "in_results": false,
+        "manifest_digest": "sha256:51e6976d39c0d9c66f4ccc713dfb7a2065c01f7248fca07d3908b4f0bd2bd844",
+        "note": "a control session (control: true, slot 1, harness 77e6ad2) whose run directory was not imported; its job wrote the same run id as the imported 2026-11-13 control session",
+        "run_id": "2026-11-13-flashprove-l1-maverick-p512-o512-prover-h200-hosted-1",
+        "slot": 1
+      },
+      "exit_code": 0,
+      "last_lines": [
+        "VERDICT: ACCEPT (exact match)"
+      ],
+      "name": "c2",
+      "peak_memory": {
+        "grade": "measured",
+        "note": "GNU time's maximum resident set size, kbytes times 1024",
+        "null_reason": null,
+        "scope": null,
+        "source": {
+          "kind": "adapter",
+          "ref": "results/v1.0/flashprove/_trials/2026-11-15-lean-verify/raw/calls/c2/time.txt"
+        },
+        "tier": "reported",
+        "unit": "B",
+        "value": 11000160256
+      },
+      "proof": {
+        "archive_digest": "sha256:254e31091c9f6d90c8f00e6f8df6aec8857bbe8fcd0efd9a6946039ef639af33",
+        "commitment_id": "73970e106cf6f8f3565578b3304f988716d1c0307a119af567bcaa7d482d5b28",
+        "in_results": false,
+        "manifest_digest": "sha256:51e6976d39c0d9c66f4ccc713dfb7a2065c01f7248fca07d3908b4f0bd2bd844",
+        "note": "a control session (control: true, slot 1, harness 77e6ad2) whose run directory was not imported; its job wrote the same run id as the imported 2026-11-13 control session",
+        "proof_id": "req-0",
+        "run_id": "2026-11-13-flashprove-l1-maverick-p512-o512-prover-h200-hosted-1",
+        "slot": 1
+      },
+      "raw": [
+        "raw/calls/c2/stdout",
+        "raw/calls/c2/stderr",
+        "raw/calls/c2/time.txt"
+      ],
+      "seconds": {
+        "grade": "measured",
+        "note": "wall clock of one lean_verify.sh call, taken by the trial's job script around the call (python time.time), not by the harness",
+        "null_reason": null,
+        "scope": "verify",
+        "source": {
+          "kind": "adapter",
+          "ref": "results/v1.0/flashprove/_trials/2026-11-15-lean-verify/raw/calls.tsv"
+        },
+        "tier": "reported",
+        "unit": "s",
+        "value": 1246.4
+      },
+      "verdict": "accept"
+    },
+    {
+      "change": null,
+      "commitment": {
+        "commitment_id": "a4a80d33337d7b3a3a8f53cb1f07807ac784095746b42e22a848c2a323a01f4a",
+        "in_results": true,
+        "run_id": "2026-11-13-flashprove-l1-maverick-p512-o512-prover-h200-hosted-1",
+        "slot": 1
+      },
+      "exit_code": 0,
+      "last_lines": [
+        "VERDICT: ACCEPT (exact match)"
+      ],
+      "name": "c3",
+      "peak_memory": {
+        "grade": "measured",
+        "note": "GNU time's maximum resident set size, kbytes times 1024",
+        "null_reason": null,
+        "scope": null,
+        "source": {
+          "kind": "adapter",
+          "ref": "results/v1.0/flashprove/_trials/2026-11-15-lean-verify/raw/calls/c3/time.txt"
+        },
+        "tier": "reported",
+        "unit": "B",
+        "value": 11009314816
+      },
+      "proof": {
+        "archive_digest": "sha256:6bd72f096e8c32405bbc686573f28d66de008c4094b86928050c371767521fd7",
+        "commitment_id": "a4a80d33337d7b3a3a8f53cb1f07807ac784095746b42e22a848c2a323a01f4a",
+        "in_results": true,
+        "proof_id": "req-0",
+        "run_id": "2026-11-13-flashprove-l1-maverick-p512-o512-prover-h200-hosted-1",
+        "slot": 1
+      },
+      "raw": [
+        "raw/calls/c3/stdout",
+        "raw/calls/c3/stderr",
+        "raw/calls/c3/time.txt"
+      ],
+      "seconds": {
+        "grade": "measured",
+        "note": "wall clock of one lean_verify.sh call, taken by the trial's job script around the call (python time.time), not by the harness",
+        "null_reason": null,
+        "scope": "verify",
+        "source": {
+          "kind": "adapter",
+          "ref": "results/v1.0/flashprove/_trials/2026-11-15-lean-verify/raw/calls.tsv"
+        },
+        "tier": "reported",
+        "unit": "s",
+        "value": 1238.3
+      },
+      "verdict": "accept"
+    },
+    {
+      "change": {
+        "kind": "commitment_id",
+        "value": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "commitment": {
+        "commitment_id": "11a8469baffc8f82b926dd595b4472cd1327a22e226f9848c6d555be67b72abb",
+        "in_results": true,
+        "run_id": "2026-11-12-flashprove-l1-maverick-p512-o512-prover-h200-hosted-1",
+        "slot": 2
+      },
+      "exit_code": 1,
+      "last_lines": [
+        "VERDICT: REJECT"
+      ],
+      "name": "s2-other-id",
+      "peak_memory": {
+        "grade": "measured",
+        "note": "GNU time's maximum resident set size, kbytes times 1024",
+        "null_reason": null,
+        "scope": null,
+        "source": {
+          "kind": "adapter",
+          "ref": "results/v1.0/flashprove/_trials/2026-11-15-lean-verify/raw/calls/s2-other-id/time.txt"
+        },
+        "tier": "reported",
+        "unit": "B",
+        "value": 6550495232
+      },
+      "proof": {
+        "archive_digest": "sha256:acd2ef390f9e11c69111368d8529a68c4ae8ca7d74a5dedfb878691138b56849",
+        "commitment_id": "11a8469baffc8f82b926dd595b4472cd1327a22e226f9848c6d555be67b72abb",
+        "in_results": true,
+        "proof_id": "req-1",
+        "run_id": "2026-11-12-flashprove-l1-maverick-p512-o512-prover-h200-hosted-1",
+        "slot": 2
+      },
+      "raw": [
+        "raw/calls/s2-other-id/stdout",
+        "raw/calls/s2-other-id/stderr",
+        "raw/calls/s2-other-id/time.txt"
+      ],
+      "seconds": {
+        "grade": "measured",
+        "note": "wall clock of one lean_verify.sh call, taken by the trial's job script around the call (python time.time), not by the harness",
+        "null_reason": null,
+        "scope": "verify",
+        "source": {
+          "kind": "adapter",
+          "ref": "results/v1.0/flashprove/_trials/2026-11-15-lean-verify/raw/calls.tsv"
+        },
+        "tier": "reported",
+        "unit": "s",
+        "value": 291.8
+      },
+      "verdict": "reject"
+    }
+  ],
+  "gates": "nothing",
+  "host": {
+    "cpu_model": "AMD EPYC 7R13 Processor",
+    "logical_cpus": 32,
+    "memory_bytes": 264744828928,
+    "note": "flavor cpu-performance; no RFC-0006 machine record or self-test was taken",
+    "provider": "Hugging Face Jobs"
+  },
+  "id": "2026-11-15-lean-verify",
+  "missing": [
+    "The calls ran from a job script outside the harness: no harness commit, no RFC-0006 machine record, no self-test; times are the script's wall clock (source kind adapter, never an input to a derived figure).",
+    "The apt packages, the elan installer and the Lean package cache (lake exe cache get, from public servers) are not pinned by content hash; the upstream commit, the image and the Lean toolchain are.",
+    "The proof bytes and verifier files are not in this repository: raw/inputs/<call>/digests.txt holds their sha256, and raw/inputs.py.txt (the script, kept as text) how the request and ID files were made from the harness record.",
+    "Slot 1's counted proof (the 2026-11-11 session, archive/req-0.tar in its digests.txt) was not among the trial's inputs, so 2 of the 3 counted sessions are covered.",
+    "Calls c1 and c2 verify proofs of two control sessions whose run directories are not in results/; their manifests' sha256 are recorded.",
+    "The install and build logs (apt.log, build.log) are kept outside this repository, since their package version strings match its IP-address scan; raw/kept-outside.txt holds their sha256 and sizes.",
+    "Only an early reject was tried (a commitment ID no session recorded); no call changed a reply token."
+  ],
+  "program": {
+    "name": "tools/lean-verify/lean_verify.sh",
+    "patched": false,
+    "role": "runs verify, the Lean verifier that sound_of_verify_at is about; the row's verify step runs cp_verify",
+    "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/tools/lean-verify/lean_verify.sh"
+  },
+  "purpose": "FlashProve's Lean verifier, the program its soundness theorem is about, run unpatched on five kept Level 1 FlashProve proofs (counted slots 2 and 3, three slot-1 control sessions), then once with a commitment ID no session recorded. The row runs cp_verify, not this program.",
+  "release": "v1.0",
+  "runner": {
+    "harness_commit": null,
+    "image": "docker.io/library/ubuntu@sha256:2198e4c65076e9cb0b3d695219df667c0e3b0072da64ca3c2648aca17dcecaf5",
+    "script": "raw/job.sh",
+    "script_digest": "sha256:e7200e078681572f8e56b68edc3bc69332fc611ae32058dc06f9437b47dd65b2"
+  },
+  "schema": "verifier-trial/1",
+  "started_at": "2026-11-15T17:01:54Z",
+  "steps": [
+    {
+      "exit_code": 0,
+      "name": "apt",
+      "seconds": {
+        "grade": "measured",
+        "note": "whole seconds, taken by the trial's job script (date +%s), not by the harness",
+        "null_reason": null,
+        "scope": "setup",
+        "source": {
+          "kind": "adapter",
+          "ref": "results/v1.0/flashprove/_trials/2026-11-15-lean-verify/raw/steps.tsv"
+        },
+        "tier": "reported",
+        "unit": "s",
+        "value": 19.0
+      }
+    },
+    {
+      "exit_code": 0,
+      "name": "clone",
+      "seconds": {
+        "grade": "measured",
+        "note": "whole seconds, taken by the trial's job script (date +%s), not by the harness",
+        "null_reason": null,
+        "scope": "setup",
+        "source": {
+          "kind": "adapter",
+          "ref": "results/v1.0/flashprove/_trials/2026-11-15-lean-verify/raw/steps.tsv"
+        },
+        "tier": "reported",
+        "unit": "s",
+        "value": 8.0
+      }
+    },
+    {
+      "exit_code": 0,
+      "name": "tree",
+      "seconds": {
+        "grade": "measured",
+        "note": "whole seconds, taken by the trial's job script (date +%s), not by the harness",
+        "null_reason": null,
+        "scope": "setup",
+        "source": {
+          "kind": "adapter",
+          "ref": "results/v1.0/flashprove/_trials/2026-11-15-lean-verify/raw/steps.tsv"
+        },
+        "tier": "reported",
+        "unit": "s",
+        "value": 113.0
+      }
+    },
+    {
+      "exit_code": 0,
+      "name": "elan",
+      "seconds": {
+        "grade": "measured",
+        "note": "whole seconds, taken by the trial's job script (date +%s), not by the harness",
+        "null_reason": null,
+        "scope": "setup",
+        "source": {
+          "kind": "adapter",
+          "ref": "results/v1.0/flashprove/_trials/2026-11-15-lean-verify/raw/steps.tsv"
+        },
+        "tier": "reported",
+        "unit": "s",
+        "value": 0.0
+      }
+    },
+    {
+      "exit_code": 0,
+      "name": "lake_version",
+      "seconds": {
+        "grade": "measured",
+        "note": "whole seconds, taken by the trial's job script (date +%s), not by the harness",
+        "null_reason": null,
+        "scope": "setup",
+        "source": {
+          "kind": "adapter",
+          "ref": "results/v1.0/flashprove/_trials/2026-11-15-lean-verify/raw/steps.tsv"
+        },
+        "tier": "reported",
+        "unit": "s",
+        "value": 11.0
+      }
+    },
+    {
+      "exit_code": 0,
+      "name": "cache_get",
+      "seconds": {
+        "grade": "measured",
+        "note": "whole seconds, taken by the trial's job script (date +%s), not by the harness",
+        "null_reason": null,
+        "scope": "setup",
+        "source": {
+          "kind": "adapter",
+          "ref": "results/v1.0/flashprove/_trials/2026-11-15-lean-verify/raw/steps.tsv"
+        },
+        "tier": "reported",
+        "unit": "s",
+        "value": 60.0
+      }
+    },
+    {
+      "exit_code": 0,
+      "name": "build",
+      "seconds": {
+        "grade": "measured",
+        "note": "whole seconds, taken by the trial's job script (date +%s), not by the harness",
+        "null_reason": null,
+        "scope": "setup",
+        "source": {
+          "kind": "adapter",
+          "ref": "results/v1.0/flashprove/_trials/2026-11-15-lean-verify/raw/steps.tsv"
+        },
+        "tier": "reported",
+        "unit": "s",
+        "value": 1500.0
+      }
+    }
+  ],
+  "system": "flashprove",
+  "toolchain": {
+    "g++": "g++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "lake": "5.0.0-src+f72c35b",
+    "lean": "4.29.1",
+    "python3": "3.12.3"
+  },
+  "upstream": {
+    "commit": "9e2bdd8ff5bf9c62f18263d7dac189b0400b260c",
+    "repo": "anthropics/FlashProve"
+  }
+}

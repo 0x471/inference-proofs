@@ -11,8 +11,9 @@ The [[relying party]] (a customer, an auditor, a regulator or an inspectorate) j
 
 ## Outside the proof
 
+- What an operator proves in its own deployment. Our runs show what each system's own prover and verifier did on our request, with the commitment we recorded; they show nothing about the proofs an operator makes of its own traffic, which runs whatever code it chooses outside our tests. A relying party checks each proof itself ([what it supplies](/deployment#what-a-relying-party-supplies)).
 - When, or whether, the reply was served. A proof made later shows the operator holds a model that gives this reply, "not that it necessarily served it earlier" ([South and others, 2024](https://arxiv.org/html/2402.02675v2#A1.SS1)).
-- The model as released. The systems on the [ladder](/) prove a [[quantization|quantized]] copy ([why](/statement#integer-arithmetic)). No proof says how far its replies drift from the original's: we measure that, and the [Fidelity check](/checks#fidelity) stops a copy quantized far from the original.
+- The model as released. The verifiers on the [ladder](/) check a [[quantization|quantized]] copy ([why](/statement#integer-arithmetic)). No proof says how far its replies drift from the original's: we measure that, and the [Fidelity check](/checks#fidelity) stops a copy quantized far from the original.
 - A reply with tokens chosen at random. The ladder's proofs cover the [[greedy decoding|greedy]] reply.
 - What else the machines ran. [Anthropic](https://www.anthropic.com/research/provable-inference), which publishes FlashProve, writes that a proof "does not establish that the hardware is not, e.g., training on the side".
 - That the model is safe, or how it was trained.
@@ -31,6 +32,6 @@ The ladder's models all have open weights: nothing here measures a closed model.
 
 ## Passed
 
-Passed means all six [checks](/checks#passed) held. [No check](/checks#not-tested) attempts a forged proof or tests whether the weights stay hidden. The [[glyph]] grades the publisher's statements on both.
+Passed means all six of our [checks](/checks#passed) passed. [No check](/checks#not-tested) attempts a forged proof or tests whether the weights stay hidden. The [[glyph]] grades the publisher's statements on both.
 
-The [Model](/checks#model) check changes one weight, [Prompt](/checks#prompt) one prompt token and [Reply](/checks#reply) one reply token, and no change may end in an accepted proof. A trial counts only if the same run, unchanged, is accepted. A held check shows that those changes were refused, and no more. Each counted proof must also be verified with no GPU visible and no model file on the machine ([Verify without weights](/checks#no_weight_file)).
+The [Model](/checks#model) check changes one weight, [Prompt](/checks#prompt) one prompt token and [Reply](/checks#reply) one reply token, and no change may end in an accepted proof. A trial counts only if the same run, unchanged, is accepted. A passed check shows that those changes were refused, and no more. Each counted proof must also be verified with no GPU visible and no model file on the machine ([Verify without weights](/checks#no_weight_file)).

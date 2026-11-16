@@ -785,12 +785,42 @@ class LicenceFacts(Document):
 
 
 @dataclasses.dataclass(frozen=True, slots=True, kw_only=True)
+class ReasonSource(Document):
+    """RFC-0018 SI-4b: the fact that sets a system's reason, in words, and where it is read."""
+
+    words: str
+    url: str
+
+
+@dataclasses.dataclass(frozen=True, slots=True, kw_only=True)
 class StatusFacts(Document):
     state: str
     last_push: str | None = None
     source: str | None = None
     retrieved: str | None = None
     quote: str | None = None
+
+
+@dataclasses.dataclass(frozen=True, slots=True, kw_only=True)
+class PinFacts(Document):
+    """A row that runs a change to the publisher's code (RFC-0018 SI-3, amended 2026-11-15)."""
+
+    pull: int
+    url: str
+    merged: bool
+    by_owner: bool
+    upstream_commit: str
+    upstream_outcome: str
+    record: str | None = None
+
+
+@dataclasses.dataclass(frozen=True, slots=True, kw_only=True)
+class GenerationFacts(Document):
+    """How a system generates its replies in a phase of its own (CO-7, amended 2026-11-15)."""
+
+    words: str
+    quote: str
+    url: str
 
 
 @dataclasses.dataclass(frozen=True, slots=True, kw_only=True)
@@ -804,6 +834,10 @@ class RowFacts(Document):
     status: StatusFacts | None = None
     overview_workload: str | None = None
     reason: str | None = None  # RFC-0018 SI-4: why a system has no row on the board
+    pin: PinFacts | None = None
+    generation: GenerationFacts | None = None
+    reason_source: ReasonSource | None = None  # SI-4b
+    paper: str | None = None  # the publisher's paper, at the row's pinned commit (2026-11-16)
 
 
 @dataclasses.dataclass(frozen=True, slots=True, kw_only=True)
@@ -944,12 +978,14 @@ TREES = frozenset(
         "fidelity/1",
         "level/1",
         "manifest/1",
+        "refusal/1",
         "release-index/1",
         "reverify/1",
         "run/1",
         "target/1",
         "teacher-forced/1",
         "teacher-forced-run/1",
+        "verifier-trial/1",
         "verify-trace/1",
     }
 )
@@ -1034,6 +1070,9 @@ MODELS: dict[tuple[str, str], type[Any]] = {
     ("site-facts/1", "#/$defs/row"): RowFacts,
     ("site-facts/1", "#/$defs/row/properties/licence"): LicenceFacts,
     ("site-facts/1", "#/$defs/row/properties/status"): StatusFacts,
+    ("site-facts/1", "#/$defs/row/properties/pin"): PinFacts,
+    ("site-facts/1", "#/$defs/row/properties/generation"): GenerationFacts,
+    ("site-facts/1", "#/$defs/row/properties/reason_source"): ReasonSource,
     ("serving-model/1", "#"): ServingModel,
     ("serving-model/1", "#/properties/publisher"): ServingPublisher,
     ("serving-model/1", "#/properties/publisher/properties/release"): ServingRelease,
