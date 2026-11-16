@@ -204,9 +204,9 @@
       "group": "Figures",
       "kind": "figure",
       "meta": "Share of positions where the system's top token is the original's reply token, fed prompt and reply.",
-      "name": "Fidelity",
+      "name": "Fidelity figure",
       "pie": "",
-      "terms": "fidelity share of positions where the system's top token is the original's reply token, fed prompt and reply.",
+      "terms": "fidelity figure share of positions where the system's top token is the original's reply token, fed prompt and reply.",
       "tier": 4,
       "url": "/checks#fidelity-figure"
     },
@@ -423,6 +423,16 @@
     {
       "group": "Glossary",
       "kind": "term",
+      "meta": "The part of a whole session's GPU time that is not generation: the commit call, which commits to the weights, and the proving of every reply.",
+      "name": "Commit and proving",
+      "pie": "",
+      "terms": "commit and proving the part of a whole session's gpu time that is not generation: the commit call, which commits to the weights, and the proving of every reply.",
+      "tier": 4.2,
+      "url": "/glossary#commit-and-proving"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
       "meta": "A value computed from data, such as a model's weights, that fixes them for later proofs without publishing them.",
       "name": "Commitment",
       "pie": "",
@@ -603,6 +613,16 @@
     {
       "group": "Glossary",
       "kind": "term",
+      "meta": "The phase of a session in which the system's own model computes the replies, where the system does this apart from proving them.",
+      "name": "Generation",
+      "pie": "",
+      "terms": "generation the phase of a session in which the system's own model computes the replies, where the system does this apart from proving them.",
+      "tier": 4.2,
+      "url": "/glossary#generation"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
       "meta": "A five-petal figure of how close a system is to a perfect prover.",
       "name": "Glyph",
       "pie": "",
@@ -639,6 +659,16 @@
       "terms": "halfway point the average of two copies' mean scores; a row is shown above it by a paired sign-flip test at p < 0.05.",
       "tier": 4.2,
       "url": "/glossary#halfway-point"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
+      "meta": "The fidelity run's yardsticks, fixed in the level file before any run: honest copies are the original run again and its 8-bit and 4-bit copies, the usual ways to run the model; damaged copies (3-bit and 2-bit copies, a quarter of the model's blocks cut, a smaller model) are made worse on purpose, and the highest-scoring of them that every honest copy scores above is the bar.",
+      "name": "Honest and damaged copies",
+      "pie": "",
+      "terms": "honest and damaged copies the fidelity run's yardsticks, fixed in the level file before any run: honest copies are the original run again and its 8-bit and 4-bit copies, the usual ways to run the model; damaged copies (3-bit and 2-bit copies, a quarter of the model's blocks cut, a smaller model) are made worse on purpose, and the highest-scoring of them that every honest copy scores above is the bar.",
+      "tier": 4.2,
+      "url": "/glossary#honest-and-damaged-copies"
     },
     {
       "group": "Glossary",
@@ -803,10 +833,10 @@
     {
       "group": "Glossary",
       "kind": "term",
-      "meta": "A check that has not run, ran and decided nothing, or that the system cannot run.",
+      "meta": "A check that has not run, ran without a result that counts yet, or that the system cannot run.",
       "name": "Not decided (check)",
       "pie": "",
-      "terms": "not decided (check) a check that has not run, ran and decided nothing, or that the system cannot run.",
+      "terms": "not decided (check) a check that has not run, ran without a result that counts yet, or that the system cannot run.",
       "tier": 4.2,
       "url": "/glossary#not-decided-check"
     },
@@ -1263,10 +1293,10 @@
     {
       "group": "Glossary",
       "kind": "term",
-      "meta": "A figure that counts a session's GPU time from the start of its commit to its last proof, start-up included, divided by its replies.",
+      "meta": "A figure that counts a session's GPU time from the start of its commit call to its last proof (the commit, generation and proving; loading the model before the commit is not counted), divided by its replies.",
       "name": "Whole session",
       "pie": "",
-      "terms": "whole session a figure that counts a session's gpu time from the start of its commit to its last proof, start-up included, divided by its replies.",
+      "terms": "whole session a figure that counts a session's gpu time from the start of its commit call to its last proof (the commit, generation and proving; loading the model before the commit is not counted), divided by its replies.",
       "tier": 4.2,
       "url": "/glossary#whole-session"
     },

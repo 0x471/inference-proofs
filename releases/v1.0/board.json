@@ -567,7 +567,7 @@
                 "to": "amber_upper"
               },
               "notes": [
-                "classical adversaries only (THEOREM.md L394-L395); the files-fixed-before-the-hash condition is counted under conditions_shown"
+                "classical adversaries only (THEOREM.md L394-L395); the files-fixed-before-the-hash condition is counted under the conditions clause"
               ],
               "quotes": [
                 {
@@ -1044,8 +1044,8 @@
                 "to": null
               },
               "notes": [
-                "the theorem covers the Lean protocol and states the model as an integer program (THEOREM.md L231-233); the C++ verifier the row runs is tested, not proved (what-is-proved.md L7-8), so the reach stops short of verifier_run; the model statement is the publisher's Lean integer model, and its tables and its reach at a given scale file are not proved (THEOREM.md L229-L231, L242-L243)",
-                "read 2026-11-15: the conclusion is about the publisher's integer model, a reference definition of the model's computation, at the weights the extractor reads; no theorem ties those weights to the ones cp_commit committed (THEOREM.md L227-L228), and at files other than the stored examples the theorem may hold only because verify rejects everything (L314-L315, under Integrity's conditions_shown); and the system in the soundness theorem's statement has a constant committer, which commits to nothing, so of that system none of it can be stated with any content (L700-L704): the theorem's model is the extractor's weights, not a committed model's"
+                "the theorem covers the Lean protocol and states the model as an integer program (THEOREM.md L231-233); the C++ verifier the row runs is tested, not proved (what-is-proved.md L7-8), so the reach stops short of the verifier code this row runs; the model statement is the publisher's Lean integer model, and its tables and its reach at a given scale file are not proved (THEOREM.md L229-L231, L242-L243)",
+                "read 2026-11-15: the conclusion is about the publisher's integer model, a reference definition of the model's computation, at the weights the extractor reads; no theorem ties those weights to the ones cp_commit committed (THEOREM.md L227-L228), and at files other than the stored examples the theorem may hold only because verify rejects everything (L314-L315, under Integrity's conditions clause); and the system in the soundness theorem's statement has a constant committer, which commits to nothing, so of that system none of it can be stated with any content (L700-L704). So the conclusion is about a reference definition of the model, as a step above Partly met needs, and it is not tied to the weights this row commits"
               ],
               "quotes": [
                 {
@@ -2437,7 +2437,7 @@
                 "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-3/verify-trace/",
                 "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-3/reverify/reverify.json"
               ],
-              "note": "2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2/req-0: a GPU was visible (and 4 more requests)",
+              "note": "2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2: a GPU was visible on 5 requests' verify calls, and none was verified again on a host with no GPU",
               "state": "undecided"
             },
             "prompt": {
