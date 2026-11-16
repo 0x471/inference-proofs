@@ -875,6 +875,8 @@ SE3B_ROW = "{n} {name} {session} ran on a host whose self-test failed and no lon
 SE3B_NONE = "no session was dropped"
 MANDATE_CORRECTIONS_IN = "Changes and corrections"
 MANDATE_CORRECTIONS = (
+    ("2026-11-16", "SASH's slot 2 counts a new session, run on a host whose self-test passed "
+     "and verified again on a host with no GPU. SASH's row reads Passed again."),
     ("2026-11-16", "The petals are renamed Integrity, Confidentiality, Fidelity, Formally verified "
      "and Trust assumptions, and the state words are plain. No state, step, position or figure "
      "moved."),
