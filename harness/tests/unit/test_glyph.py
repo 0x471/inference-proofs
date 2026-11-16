@@ -561,6 +561,25 @@ def test_fm4_controls_missing() -> None:
     assert fm(no_steps) == amber_lower("test")
 
 
+def test_fm4_a_missing_rerun_is_named_by_its_recipe() -> None:
+    """A rerun that did not run is named by its recipe, never by its id, in the reason and the
+    next step; a step that stores no list of controls names its fixed pair."""
+    doc = fdoc([7] * 5)
+    doc["controls"] = [{"id": "reference-2", "recipe": "rerun", "status": "failed", "scores": []},
+                       *doc["controls"][1:]]  # type: ignore[index]  # fmt: skip
+    doc["steps"]["green"] = {"controls": ["reference-2", "q8_0"], "value": None,  # type: ignore[index]
+                           "cause": "reference-2 failed"}  # fmt: skip
+    doc["rows"][SYSTEM]["step_tests"]["green"] = None  # type: ignore[index]
+    tree = faithful_model("held", None, doc, SYSTEM, "exact_match").tree()
+    assert "reference-2" not in str(tree["reason"]).replace("(reference-2 failed)", "")
+    assert "between the original run again and the 8-bit copy" in str(tree["reason"])
+    assert tree["next"] == {"to": "amber_upper", "needs": [{"text": "the original run again run and scored",
+                                                         "by": "us"}]}  # fmt: skip
+    del doc["steps"]["green"]["controls"]  # type: ignore[index]
+    tree = faithful_model("held", None, doc, SYSTEM, "exact_match").tree()
+    assert "between the original run again and the 8-bit copy has no value" in str(tree["reason"])
+
+
 def test_fm5_to_fm7_hand_counted() -> None:
     """[7]*5: d_green = 70 - 50 = 20, p = 1/32 < 0.05, and d_upper = 70 - 30 = 40, p = 1/32:
     green with one slot, amber in part with two or with none recorded. [5]*5: d_green = 0,

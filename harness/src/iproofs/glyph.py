@@ -955,6 +955,9 @@ _THRESHOLD_NAMES = (("green", "T_green"), ("upper", "T_upper"))
 # FM (amended 2026-11-15): a control as a reason names it, by its type or recipe
 _CONTROL_WORDS = {"q8_0": "the 8-bit copy", "q4_k_m": "the 4-bit copy",
                   "rerun": "the original run again"}  # fmt: skip
+# a halfway point's two controls by their words, where a step stores no list of its controls
+_THRESHOLD_PAIRS = {"green": ("the original run again", "the 8-bit copy"),
+                    "upper": ("the 8-bit copy", "the 4-bit copy")}  # fmt: skip
 # the precision of the rung's fidelity reference (FI-1), as a reason names the original
 _REFERENCE_WORDS = {"bf16": "16-bit", "f16": "16-bit", "f32": "32-bit"}
 
@@ -967,6 +970,15 @@ def tokens(x: float) -> str:
     if abs(x) >= 10:
         return f"{x:.1f}"
     return f"{x:.3g}"
+
+
+def control_word(doc: Mapping[str, object], cid: str) -> str:
+    """A control's words, by its recipe for the rerun (as `control_means` names it), whether or
+    not it ran; its id where it has no words."""
+    for c in doc.get("controls") or ():  # type: ignore[attr-defined]
+        if str(_m(c).get("id")) == cid and _m(c).get("recipe") == "rerun":
+            return _CONTROL_WORDS["rerun"]
+    return _CONTROL_WORDS.get(cid, cid)
 
 
 def control_means(doc: Mapping[str, object]) -> dict[str, tuple[str, float]]:
@@ -1118,16 +1130,17 @@ def faithful_model(  # noqa: PLR0911, PLR0912, PLR0915 (one return per line of t
         said = []
         for i in ids(key):
             m = means.get(i)
-            words = m[0] if m else _CONTROL_WORDS.get(i, i)
+            words = m[0] if m else control_word(doc, i)
             said.append(f"{words} ({tokens(m[1])})" if m and with_means else words)
-        return " and ".join(said)
+        return " and ".join(said or _THRESHOLD_PAIRS[key])
 
     for key, _ in _THRESHOLD_NAMES:  # FM-4 (F1): a control missing or failed
         threshold = _m(steps.get(key))
         if threshold.get("value") is None:
             cause = threshold.get("cause") or "no value stored"
             missing = [i for i in ids(key) if i not in ran] or ids(key)
-            needs = [(f"{_CONTROL_WORDS.get(i, i)} run and scored", US) for i in missing]
+            needs = ([(f"{control_word(doc, i)} run and scored", US) for i in missing]
+                     or [(f"{w} run and scored", US) for w in _THRESHOLD_PAIRS[key]])  # fmt: skip
             return petal(AMBER_LOWER, f"the halfway point between {between(key, False)} has no "
                          f"value ({cause}), and the steps above need it", None, *needs)  # fmt: skip
     g, u = _m(tests.get("green")), _m(tests.get("upper"))
