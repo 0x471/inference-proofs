@@ -29,6 +29,21 @@ def quoted(text):
 # ------------------------------------------------------------------ the six checks (RFC-0018)
 CHECK_NAME = {"run": "Run", "model": "Model", "prompt": "Prompt", "reply": "Reply",
               "no_weight_file": "Verify without weights", "fidelity": "Fidelity"}  # fmt: skip
+# Each check in one plain sentence, printed first under its name on the checks page, before the
+# precise rule: what passes it (SPEC section 8; RFC-0018 SI-3, amended 2026-11-16). {slots} and
+# {reply_tokens} are the level file's constants, 0.05 its fidelity.alpha
+CHECK_PLAIN = {
+    "run": "The publisher's prover, as published at the pin, ran {slots} sessions from a cold "
+    "start, and every reply got an accepted proof.",
+    "model": "A proof made with one weight changed is not accepted against the original weights' "
+    "commitment.",
+    "prompt": "With one prompt token changed, the verifier refuses the proof.",
+    "reply": "Every proof covers all {reply_tokens} reply tokens, and with one changed (first, "
+    "last or one inside) the verifier refuses it.",
+    "no_weight_file": "The verifier reached every verdict with no copy of the model and no GPU.",
+    "fidelity": "The proved replies match the original's opening tokens better than the bar (a "
+    "damaged copy of the model) does, by a paired test at p\u00a0<\u00a00.05.",
+}
 # Each check's rule, RFC-0018's table ("Held when", "Failed when") in short, as a condition in the
 # present tense. {slots}, {attempts}, {reply_tokens} and {reference} are the level file's
 # constants (`overview.filled`); 3 of 3 and 0.05 (fidelity.alpha) are typed as the level's.
@@ -90,8 +105,8 @@ CHECK_MORE = {
          "publisher's release, at the publisher's precision, named with its commit on each "
          "system page: {reference}."),
         ("bar", "Among the damaged controls that every honest control scores above, the one with "
-         "the highest mean score. The honest controls are the original's second run and its Q8_0 "
-         "and Q4_K_M copies. A system's page lists the damaged ones. With none, the model has no "
+         "the highest mean score. The honest controls are the original run again and its 8-bit "
+         "and 4-bit copies (Q8_0, Q4_K_M). A system's page lists the damaged ones. With none, the model has no "
          "bar and the check is undecided (not resolved) on every row."),
     ),
 }  # fmt: skip

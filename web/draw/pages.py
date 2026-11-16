@@ -64,6 +64,7 @@ from .words import (
     CHECK_HELD,
     CHECK_MORE,
     CHECK_NAME,
+    CHECK_PLAIN,
     CHECKS_DESC,
     CHECKS_LEAD,
     CONTROL_NAME,
@@ -1256,10 +1257,13 @@ def control_name(cid):
 
 
 def control_th(cid):
-    """A control's row head, its id in the title where its name is not the id."""
+    """A control's row head, its id in the title where its name is not the id; an id in
+    parentheses after the name is set small in the mono face, whose underscore reads."""
     name, title = control_name(cid)
     at = f' title="{e(title)}"' if title else ""
-    return f'<th scope="row"{at}>{e(name)}</th>'
+    words, paren, rest = name.partition(" (")
+    said = e(words) + (f' <span class="cid">({e(rest)}</span>' if paren else "")
+    return f'<th scope="row"{at}>{said}</th>'
 
 
 def kl_why(row):
@@ -1831,7 +1835,8 @@ def build_checks():
     # lines (their own terms then left to a screen reader); a block each on a narrow one
     checks = '<div class="ckh" aria-hidden="true"><span>Check</span><span>Held when</span>' + \
         "<span>Failed when</span></div>" + "".join(
-        f'<div class="chk" id="{c}"><h3 class="cn2">{e(CHECK_NAME[c])}</h3>'
+        f'<div class="chk" id="{c}"><div class="chd"><h3 class="cn2">{e(CHECK_NAME[c])} check</h3>'
+        f'<p class="ckp">{e(filled(CHECK_PLAIN[c]))}</p></div>'
         + rules((("held", CHECK_HELD[c]), ("failed", CHECK_FAILED[c]), *CHECK_MORE.get(c, ())),
                 at="CHECK_MORE")
         + "</div>"
