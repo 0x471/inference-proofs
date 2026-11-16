@@ -395,6 +395,7 @@ Amendment of 2026-11-16 (RFC-0018 CO-8, Q37). Additive, and the one stored board
 
 - `quantity/1`: the unit `token/gpu_s` (reply tokens per GPU-second), in the unit enum and the INV-QTY-3 list.
 - `board/1`: per row `session_reply_tokens_per_gpu_second` (CO-8).
+- `site-facts/1`: per system `paper`, the publisher's paper as a file of its repository at the row's pinned commit, where the repository carries one; the site refuses a link at another commit.
 
 ## Testing Strategy
 
