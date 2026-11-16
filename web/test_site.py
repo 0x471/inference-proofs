@@ -105,6 +105,23 @@ def test_glyphs_draw_the_board_states(board_site: Any) -> None:
         assert checks == [(c, row["checks"][c]["state"]) for c in CHECKS], row["system"]
 
 
+def test_petal_rows_print_the_boards_reasons(board_site: Any) -> None:
+    """SI-3 (amended 2026-11-16): a petal's default line is its board reason's first clause, never
+    typed, and the full reason sits in the petal's disclosure wherever the line cuts it."""
+    text = pages(board_site.out)
+    for row in rows(board_site.board):
+        page = text[f"{row['system']}.html"]
+        trs = re.findall(r'<tr class="pt [^"]*">(.*?)</tr>', page, re.S)
+        assert len(trs) == len(row["glyph"]), row["system"]
+        for tr, p in zip(trs, row["glyph"], strict=True):
+            line = re.search(r'<span class="rs">([^<]*)</span>', tr)
+            assert line, (row["system"], p["id"])
+            first = p["reason"].split("; ", 1)[0]
+            assert html.unescape(line[1]) == first, (row["system"], p["id"])
+            if first != p["reason"]:
+                assert p["reason"] in html.unescape(tr), (row["system"], p["id"])
+
+
 def test_order_and_positions_are_the_boards(board_site: Any) -> None:
     """OR-5: rows print in the board's order, a position only where the board holds one."""
     index = pages(board_site.out)["index.html"]

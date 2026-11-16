@@ -39,10 +39,10 @@ The shallowest depth where each kind of content may be printed, and its form the
 | the headline figure (cost vs serving) | 0 | figure with its unit |
 | its two parts (generation, commit and proving) | 0, with the headline | figures with their units (see Exceptions); on the ladder the two rates print in their place (amended 2026-11-16) |
 | the two rates the headline is made of (proved and served reply tokens per GPU-second, CO-8) | 1, with the headline | one line under the multiple on the ladder and in the Figures row, "2.03 tokens/s proved · 2,670 served, per H200", the GPU named; served ÷ proved and each rate's labels in its title, linked to Cost (amended 2026-11-16) |
-| the glyph | 0 | drawn, with its petals' names; on the ladder each petal's hover title is its name, its step word and its plain sentence; each petal's step in words at 2; plain sentence, reason, next step and the publisher's words at 3 |
-| a petal's field term ("soundness") and what it rests on ("tested by us", "stated", "read as") | 2 | words under its name and its step, on the system page; Confidentiality's "Architecture: visible", Formally verified's "stated: <what is verified>" ("read as:" on a reading) and Fidelity's "proved: <bits and number format>" under its step; a Not decided petal has no basis word |
-| a petal's next step (what the row lacks for the step above, and who acts) | 3 | one line under its reason |
-| soundness, zero knowledge and completeness for the row, in that order; the stated security; the scope card | 3 | three lines, each with where it is graded or tested and whom it protects, the publisher's security words verbatim, then the card with one bound per row, under the five petals (plain first) |
+| the glyph | 0 | drawn, with its petals' names; on the ladder each petal's hover title is its name, its step word and its plain sentence; each petal's step in words at 2; at 3 its row adds two short lines, the reason's first clause and the next step's first need, and one disclosure per petal holds the plain sentence, the full reason and next step, the scale and fact lines and the publisher's words (amended 2026-11-16) |
+| a petal's field term ("soundness") and what it rests on ("tested by us", "stated", "read as") | 2 | words under its name and beside its step, on the system page; a Not decided petal has no basis word. Confidentiality's "Architecture: visible", Formally verified's "stated: <what is verified>" ("read as:" on a reading) and Fidelity's "proved: <bits and number format>" sit in the petal's disclosure at 3 (amended 2026-11-16) |
+| a petal's next step (what the row lacks for the step above, and who acts) | 3 | its first need, the count of the others and who acts, one line under the reason's first clause; every need in the petal's disclosure (amended 2026-11-16) |
+| soundness, zero knowledge and completeness for the row, in that order; the stated security; the scope card | 3 | three lines in view, each with where it is graded or tested and whom it protects, under the five petals (plain first); the publisher's security words verbatim and the card with one bound per row behind one disclosure under them (amended 2026-11-16) |
 | verify time | 0 | figure with its unit |
 | cost in USD | 3 | the Cost block's sheet only (amended 2026-11-16: not on the ladder, the Scale page, the band, the Figures row, a share card, a description or a search entry) |
 | proof size | 0 (a share card), 1 (the ladder, Scale) | figure with its unit (amended 2026-11-16: the ladder's column in the place of USD) |
@@ -66,7 +66,7 @@ The shallowest depth where each kind of content may be printed, and its form the
 | the level's freeze date, its file and digest | 4 | the mandate's line on the level |
 | the release | 0 (a card's stamp), footer | "Release v1.0, 2026-11-12": a card is a snapshot, and its date says of when |
 | the publisher's repository (source), the share group | 2 | the band's facts and the strip; on a phone, the page's foot |
-| publisher quotes | 3 | behind each petal's disclosure, headed "The publisher's words (n)" |
+| publisher quotes | 3 | behind each petal's one disclosure ("Details", with the count of quotes), headed "The publisher's words (n)" |
 | run records, failed runs | 3 | counts and links under Checks and Sessions |
 | definitions | 4 | the checks page and the glossary; a head at 1 or 2 links to its definition |
 | method prose | 4, Learn | prose |
