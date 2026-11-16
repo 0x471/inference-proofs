@@ -40,6 +40,9 @@ class Unit(StrEnum):
     # RFC-0018: the serving ladder's rate and the KL figure
     REQUEST_PER_GPU_S = "request/gpu_s"
     NAT_PER_TOKEN = "nat/token"
+    # RFC-0018 CO-8 (adopted 2026-11-16): the request's reply tokens over a whole session's
+    # GPU-seconds per reply
+    TOKEN_PER_GPU_S = "token/gpu_s"
 
 
 class Scope(StrEnum):
@@ -99,7 +102,7 @@ TIME_UNITS = frozenset({
     Unit.S, Unit.NS, Unit.TOKEN_PER_S, Unit.S_PER_TOKEN,
     Unit.USD, Unit.USD_PER_1K_TOKEN, Unit.PARAM_TOKEN_PER_S, Unit.S_PER_BIT_TOKEN,
     Unit.GPU_S_PER_TOKEN, Unit.GPU_S_PER_REQUEST, Unit.USD_PER_REQUEST, Unit.S_PER_REQUEST,
-    Unit.REQUEST_PER_GPU_S,
+    Unit.REQUEST_PER_GPU_S, Unit.TOKEN_PER_GPU_S,
 })  # fmt: skip
 
 

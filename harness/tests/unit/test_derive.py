@@ -16,6 +16,7 @@ from iproofs.derive import (
     measured,
     recompute,
     release_groups,
+    reply_tokens_per_gpu_second,
     scope_seconds,
     session_per_reply,
     steady_per_reply,
@@ -479,6 +480,17 @@ def test_release_groups_v01_flashprove() -> None:
     assert f"{m:.4g}" == "7.128"
     session = session_per_reply(doc["events"]["commit.start"], times, 120, doc["gpu_count"])
     assert math.isclose(session, (max(times) - doc["events"]["commit.start"]) / 1e9 / 120)
+
+
+def test_reply_tokens_per_gpu_second_is_the_tokens_over_the_mean_session() -> None:
+    """CO-8, by hand: sessions at 256 and 512 GPU-seconds per reply, 512 reply tokens. The mean
+    is 384 s, so 512 / 384 = 1.333 reply tokens per GPU-second (not the mean of 2.0 and 1.0,
+    1.5); the range is 512 / 512 = 1.0 to 512 / 256 = 2.0, n = 2."""
+    r = reply_tokens_per_gpu_second([256.0, 512.0], 512)
+    assert math.isclose(r.value, 4 / 3)
+    assert (r.low, r.high, r.n) == (1.0, 2.0, 2)
+    with pytest.raises(IProofsError):
+        reply_tokens_per_gpu_second([], 512)
 
 
 def groups_at(*spec: tuple[float, int]) -> list[Group]:

@@ -37,6 +37,7 @@ from iproofs.derive import (
     generation_seconds,
     nonzero,
     release_groups,
+    reply_tokens_per_gpu_second,
     session_per_reply,
     steady_per_reply,
 )
@@ -221,6 +222,22 @@ def _ratio(formula: str, unit: Unit, scope: Scope | None, a: Input, b: Input) ->
 def _usd(scope: Scope | None, gpu_seconds: Input, price: Input) -> QuantityTree:
     return derived("D-L1-USD", __version__, Unit.USD_PER_REQUEST, scope, [gpu_seconds, price],
                    lambda x: x[0] * x[1] / 3600)  # fmt: skip
+
+
+def _reply_tokens(figures: Sequence["SessionFigures"], tokens: int,
+                  inputs: Sequence[str]) -> QuantityTree:  # fmt: skip
+    """CO-8 (adopted 2026-11-16): reply tokens per GPU-second over whole sessions, the request's
+    reply tokens over the sessions' mean GPU-seconds per reply (CO-1), with its range (the tokens
+    over the largest and the smallest session) and n; null where a session has no value."""
+    per_reply = [f.per_reply for f in figures]
+    if not per_reply or not tokens or any(v is None or v <= 0 for v in per_reply):
+        return _quantity(None, Unit.TOKEN_PER_GPU_S, Scope.WHOLE_WALL, "D-L1-REPLY-TOKENS",
+                         inputs, NullReason.MISSING_INPUT)  # fmt: skip
+    r = reply_tokens_per_gpu_second([float(v) for v in per_reply if v is not None], tokens)
+    out = _quantity(r.value, Unit.TOKEN_PER_GPU_S, Scope.WHOLE_WALL, "D-L1-REPLY-TOKENS", inputs)
+    out["stats"] = {"n": r.n, "n_failed": 0, "mean": r.value, "stdev": None, "min": r.low,
+                    "max": r.high}  # fmt: skip
+    return out
 
 
 def _null(
@@ -638,6 +655,10 @@ def _row_tree(
                        for f in figures], Unit.GPU_S_PER_TOKEN, Scope.WHOLE_WALL,
                       "D-L1-GENERATION-TOKEN", [*(marks or proofs), "levels/L1.yaml#/request/"
                                                 "output_tokens"], unsplit, no_phase)  # fmt: skip
+    # CO-8 (adopted 2026-11-16): the request's reply tokens over the whole sessions' GPU time
+    reply_tokens = _reply_tokens(
+        figures, tokens, [*events, *proofs, "levels/L1.yaml#/request/output_tokens"]
+    )
     session_generation_in = (f"{index}/session_generation_gpu_seconds_per_reply",
                              session_generation)  # fmt: skip
     commit_proving_in = (f"{index}/session_commit_and_proving_gpu_seconds_per_reply",
@@ -677,6 +698,7 @@ def _row_tree(
         "session_commit_gpu_seconds_per_reply": commit_part,
         "session_proving_gpu_seconds_per_reply": rest,
         "generation_gpu_seconds_per_reply_token": per_token,
+        "session_reply_tokens_per_gpu_second": reply_tokens,
         "session_generation_multiple": _ratio(
             "D-L1-MULTIPLE", Unit.RATIO, Scope.WHOLE_WALL, session_generation_in, baseline
         ),
