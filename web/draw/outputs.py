@@ -53,6 +53,7 @@ from .words import (
     MANDATE_DESC,
     PETAL_NAME,
     PETAL_QUESTION,
+    PETAL_TERM,
     architecture,
     e,
     release_tail,
@@ -108,9 +109,11 @@ def search_entries():
             rung["id"],
         )
     # a petal, a check, a figure in one line each (the checks page's: the petal's question, the
-    # check's held rule, what the figure is), a pointer to its rule
+    # check's passing rule, what the figure is), a pointer to its rule; a petal found by its field
+    # term too
     for pid in S.V["petals"]:
-        add("petal", PETAL_NAME[pid], f"{CHECKS_PAGE}#{pid}", PETAL_QUESTION[pid], "")
+        add("petal", PETAL_NAME[pid], f"{CHECKS_PAGE}#{pid}", PETAL_QUESTION[pid], "",
+            PETAL_TERM[pid])  # fmt: skip
     for c in S.V["checks"]:
         add("check", CHECK_NAME[c], f"{CHECKS_PAGE}#{c}", filled(CHECK_LINE[c]), "")
     for f, line in FIGURE_LINE.items():
@@ -121,7 +124,7 @@ def search_entries():
         CHECKS_PAGE,
         CHECKS_DESC,
         PAGE_MARK,
-        "checks figures order rule undecided unranked not tested",
+        "checks figures order rule not decided not ranked not tested",
     )
     add(
         "page",

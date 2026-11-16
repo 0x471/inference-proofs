@@ -391,6 +391,11 @@ Amendment of 2026-11-15 (RFC-0018 SE-3b, SE-5, SI-3, SI-4a, CO-7, MC-7, WH-6, FM
 - `site-facts/1`: per system `pin` (the pull request a row runs, SI-3), `generation`, and per not-run reason `reason_source` (SI-4b).
 - `claim/1` is unchanged: the Statement block's fields stay in `properties/2`, so the claim card digests the v1.0 runs record stay valid.
 
+Amendment of 2026-11-16 (RFC-0018 Q37, GL-11, CO-8, SI-9). Additive, and the one stored board is recomputed in the same change (RFC-0018 Q14), so no stored run record changes:
+
+- `board/1`: per petal the optional `next` (GL-11: the step it would move to and each need with who acts; null at green); per row the optional `session_reply_tokens_per_gpu_second` (CO-8).
+- `properties/2`: the optional top-level `number_format` (SI-9: the proved copy's weights and activations, each `integer`, `fixed_point`, `floating_point` or `not_stated`, with its quotes).
+
 ## Testing Strategy
 
 Unit tests in `harness/tests/unit/`:

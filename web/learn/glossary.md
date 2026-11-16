@@ -1,3 +1,7 @@
+### Abstraction of the protocol
+
+What a machine-checked proof covers, in three levels: **an abstraction of the protocol**, the method without this model's computation (or the model without the method); **the protocol**, the method with the model's computation; **the code this row runs**, the verifier program the row actually runs. Only the verifier the row runs counts as the code.
+
 ### Adapter
 
 The wrapper through which the harness runs a system's commands, in a container built at the system's pinned commit. It passes no setting the system's documentation does not name ([what we do](/mandate#what-we-do)).
@@ -5,6 +9,10 @@ The wrapper through which the harness runs a system's commands, in a container b
 ### AIR
 
 An algebraic intermediate representation: a computation as a table of values (the trace) with polynomial constraints between rows. STARK provers such as [Winterfell](https://github.com/meta/winterfell/blob/2f78ee9bf667a561bdfcdfa68668d0f9b18b8315/README.md?plain=1#L59) take a computation in this form.
+
+### Architecture
+
+A model's layout and sizes: its layers, widths and heads. It is public for every Level 1 model, so no Level 1 petal grades hiding it.
 
 ### Attestation
 
@@ -16,15 +24,11 @@ Said of a link in the computation that the verifier's acceptance constrains, suc
 
 ### Check
 
-One of the six tests of Level 1: Run, Model, Prompt, Reply, Verify without weights, Fidelity. Each ends held, failed or [undecided](/checks#undecided), and an undecided check names its cause: system limit, not run, not resolved or not reproduced.
+One of the six tests of Level 1: [[run check|Run]], [[model check|Model]], [[prompt check|Prompt]], [[reply check|Reply]], [[verify without weights check|Verify without weights]] and [[fidelity check|Fidelity]]. Each ends [[passed (check)|passed]], [[failed (check)|failed]] or [[not decided (check)|not decided]], and a check not decided names its cause: the system cannot do what the test needs, not run yet, the test ran and decided nothing, or a changed input accepted in our adapter and not yet repeated with the system's own command.
 
 ### Claim card
 
 The record of what one system's accepted proofs establish in one configuration, as its publisher states it. Each field is copied from the publisher's documents at the pinned commit and linked, or reads "not stated" ([RFC-0002](repo:rfcs/0002-claim-card.md)).
-
-### Close to the original
-
-The [petal](/checks#faithful_model) that grades how close a system's proved replies stay to the model its publisher released: how many leading reply tokens match the original's before the first difference, on average, against the same count for the model's 8-bit and 4-bit copies. It is a different measure from the [[fidelity]] figure, which counts top-token agreement. Until 2026-11-15 it was called Faithful model, a word that means something else in interpretability.
 
 ### Commitment
 
@@ -32,11 +36,15 @@ A value computed from data, such as a model's weights, that fixes them for later
 
 ### Completeness
 
-The property that a verifier accepts every proof an honest prover makes of a true statement, often except with a small stated probability. It is the one of the three properties a test can show: on a system's page, completeness reads "tested by us on honest runs" with the count of honest replies whose proofs were accepted. In safeguards writing, a complete declaration leaves nothing out.
+The property that a verifier accepts every proof an honest prover makes of a true statement, often except with a small stated probability. It protects the provider, and it is the one of the three properties a test can show: on a system's page it reads "tested by us on honest runs" with the count of honest replies whose proofs were accepted ([[run check|Run check]]). No petal grades it. In safeguards writing, a complete declaration leaves nothing out.
+
+### Confidentiality
+
+Whether checking a proof reveals the model's weights, graded on the [[zero knowledge]] the publisher states and proves ([petal](/checks#weights_hidden)). It protects the provider. At Level 1 the [[architecture]] is visible, since the models are open-weights.
 
 ### Conjectured
 
-Said of a soundness bound that rests on an unproved conjecture. On the [Unforgeable](/checks#unforgeable) petal, a conjectured bound reaches amber in lesser part at most.
+Said of a soundness bound that rests on an unproved conjecture. On the [Integrity](/checks#unforgeable) petal, a conjectured bound reaches Partly met at most.
 
 ### Control
 
@@ -46,17 +54,33 @@ An input changed on purpose (a negative control), from which a working system gi
 
 An acceptance policy under which each checked token must be the committed model's top token. A policy with a [tolerance](/statement#checked-tokens) also accepts other tokens.
 
+### Failed
+
+For a petal: one of our checks, or our build of the publisher's proof, contradicted it. For a check, see [[failed (check)]].
+
+### Failed (check)
+
+A check whose test showed the opposite of what it needs, repeated with the system's own command where a changed input was accepted in our adapter.
+
 ### Fiat-Shamir
 
 A transform that makes an interactive proof non-interactive by hashing the statement and transcript into each challenge.
 
 ### Fidelity
 
-How closely the copy a system proves follows the model its publisher released. The Fidelity figure is the share of reply positions where the system's top token is the original's, with the system fed the prompt and then the original's reply (teacher forcing). It sets no state and is labelled "computed by the system's own code on the reference reply, not by the proved computation". The [Fidelity check](/checks#fidelity) and the [[close to the original]] petal score a proved reply by its leading tokens matching the original's.
+How closely the copy a system proves answers like the model its publisher released. The [Fidelity petal](/checks#faithful_model) and the [[fidelity check|Fidelity check]] count matched leading tokens: how many tokens at the start of a reply equal the original's, up to the first difference. The Fidelity figure counts top-token agreement: the share of reply positions where the system, fed the prompt and the original's reply (teacher forcing), picks the original's next token. The figure sets no state.
+
+### Fidelity check
+
+The proved replies match the original's opening tokens better than the bar does, by a paired test at p < 0.05 ([rule](/checks#fidelity)).
 
 ### Field
 
 A finite set of numbers, such as the integers modulo a prime, with exact addition, multiplication and division. Proof systems compute in one because their [random checks](/forward-pass#testing-a-product-at-random) need a product of two nonzero numbers never to be 0.
+
+### Formally verified
+
+How far a computer-checked ([[machine-checked]]) proof of soundness reaches ([petal](/checks#machine_checked)): part of the protocol, an abstraction of it, the protocol with the model, or the verifier code the row runs. Our recorded build of the named proof decides the step. It protects the customer.
 
 ### FRI
 
@@ -64,7 +88,7 @@ A protocol that shows committed values lie close to a Reed-Solomon codeword, the
 
 ### Glyph
 
-A five-petal figure of how close a system is to a perfect prover. Its [petals](/checks#glyph), all green for such a prover, are Unforgeable, Weights hidden, Close to the original, Machine-checked and No third party trusted. Nothing adds them up, and the glyph never changes a system's position.
+A five-petal figure of how close a system is to a perfect prover. Its [petals](/checks#glyph), every one Met for such a prover, are [[integrity|Integrity]], [[confidentiality|Confidentiality]], [[fidelity|Fidelity]], [[formally verified|Formally verified]] and [[trust assumptions|Trust assumptions]]. Nothing adds them up, and the glyph never changes a system's position.
 
 ### Greedy decoding
 
@@ -77,6 +101,10 @@ The benchmark's software (the Python package iproofs), which runs each adapter i
 ### Inference
 
 Running a trained model forward on an input to produce an output. A language model writes its reply one token at a time.
+
+### Integrity
+
+Whether a provider can get a reply accepted that the model did not compute, graded on the [[soundness]] bound the publisher states for what the row runs ([petal](/checks#unforgeable)). It protects the customer. It grades soundness only: [[completeness]] is what the Run check tests.
 
 ### KL divergence
 
@@ -96,11 +124,19 @@ A proof that every value in a long list appears in a fixed public table. Provers
 
 ### Machine-checked
 
-Said of a proof checked by a proof assistant's kernel, such as Lean's. What it takes on trust, such as the kernel and its axioms, is its trusted base. The [Machine-checked](/checks#machine_checked) petal grades how much such a proof of soundness covers, up to the verifier the row runs.
+Said of a proof checked by a proof assistant's kernel, such as Lean's. What it takes on trust, such as the kernel and its axioms, is its trusted base. The [[formally verified|Formally verified]] petal grades how far such a proof of soundness reaches.
+
+### Met, Mostly met, Partly met
+
+A petal's top step, the step below it, and the lowest step above Not met. Each petal's rule on the [checks page](/checks#glyph) says what each needs. The steps are drawn as inks; no printed word names an ink.
 
 ### Mixture of experts
 
 A model that runs only part of its weights for each token. Llama 4 Maverick runs about 17 billion of its 400 billion parameters.
+
+### Model check
+
+A proof made with one weight changed is not accepted against the original weights' commitment ([rule](/checks#model)).
 
 ### Multilinear extension
 
@@ -110,13 +146,37 @@ The one polynomial, linear in each variable, that takes a table's values on the 
 
 The ranked figure: steady GPU-seconds per further proved reply over the serving baseline's GPU-seconds per reply at full load. The ladder prints it as Cost vs serving, with generation counted. A row with no steady state has [none](/checks#multiple) and prints its whole sessions' cost over serving.
 
+### Next step
+
+What would move a petal up one step, computed from its rule, and who acts: the publisher or us. A petal not decided prints what decides it.
+
+### Not decided
+
+A petal we cannot grade yet; its line says what it waits on, and it is never a failure.
+
+### Not decided (check)
+
+A check that has not run, ran and decided nothing, or that the system cannot run.
+
+### Not met
+
+A petal's step when the publisher's own facts fall below Partly met.
+
+### Not stated
+
+A petal's step when the publisher's documents read at the pinned commit say nothing on it. A guarantee nobody states is graded as none.
+
 ### Operator
 
 The party that serves a model and makes its proofs, such as a lab or an API provider. [RFC-0018](repo:rfcs/0018-level-1-ladder.md) also uses the word for the team that runs this benchmark.
 
 ### Passed
 
-Said of a system on a model when all six [checks](/checks#passed) held there.
+Said of a system on a model when all six of our [checks](/checks#passed) passed there. **Not passed yet**: no check failed, but at least one is [[not decided (check)|not decided]]. **Not passed**: a check failed. **Not ranked**: passed, without a [[position]], for the reason printed beside it.
+
+### Passed (check)
+
+A check whose test came out as its rule requires: for a check that changes an input, the change we made was refused.
 
 ### Pinned commit
 
@@ -129,6 +189,10 @@ A commitment to a polynomial that the prover opens at any point the verifier pic
 ### Position
 
 A ranked system's place in its model's table: 1 plus the number of systems placed above it. A system [has one](/checks#order) only if it passed and its publisher states a numeric security level at the pinned commit, for at least one verifier it ships.
+
+### Prompt check
+
+With one prompt token changed, the verifier refuses the proof ([rule](/checks#prompt)).
 
 ### Proof of inference
 
@@ -146,6 +210,10 @@ The program that makes a proof, and by extension whoever runs it. It holds the [
 
 The organisation that releases a proof system and its documents, or a model and its weights. The model as its publisher released it is the original.
 
+### The publisher's words
+
+Sentences copied word for word from the publisher's documents at the pinned commit, each linked to its line. They are printed as the publisher's and never set a state alone.
+
 ### Q8_0 and Q4_K_M
 
 Two copies of the original model quantized by llama.cpp, two of the fidelity run's three honest controls. The ladder prints their [[fidelity]] under each system's.
@@ -160,7 +228,7 @@ An ideal hash function that gives every new input a fresh, uniformly random outp
 
 ### Read as
 
-Said of a petal whose state rests on our reading of a publisher's documents, not on a sentence that says it. The petal prints the quotes it rests on and is drawn amber at most, for every system alike. The name of a construction, such as STARK, is never read as a claim.
+What a petal rests on, printed beside its step: **stated**, the publisher's own sentence; **read as**, our reading of sentences none of which says it alone; **tested by us**, our own runs. A petal read as prints the quotes it rests on and is graded Mostly met at most, for every system alike. The name of a construction, such as STARK, is never read as a claim.
 
 ### Recomputation
 
@@ -170,6 +238,10 @@ Checking a claimed output by [running the computation again](/deployment) and co
 
 Whoever acts on a verifier's verdict, such as a customer, an auditor, a regulator or an inspectorate. It runs the [[verifier]] or trusts someone who does, and judges what a verdict is worth.
 
+### Reply check
+
+Every proof covers all of the request's reply tokens, and with one changed (first, last or one inside) the verifier refuses it ([rule](/checks#reply)).
+
 ### Request
 
 One prompt and the reply checked for it: at Level 1, 512 prompt tokens and a [512-token greedy reply](/checks#passed).
@@ -177,6 +249,10 @@ One prompt and the reply checked for it: at Level 1, 512 prompt tokens and a [51
 ### Residual
 
 What a dishonest prover can still do while its proofs are accepted. FlashProve's [[claim card]] quotes its publisher's known limits, and SASH's reads "not stated".
+
+### Run check
+
+The publisher's prover, as published at the pin, ran three sessions from a cold start, and every reply got an accepted proof ([rule](/checks#run)).
 
 ### Sampled
 
@@ -200,11 +276,11 @@ Two names for proof systems: SNARKs (succinct non-interactive arguments of knowl
 
 ### Soundness
 
-The property that a verifier refuses proofs of false statements, except with a probability the [[security level]] bounds. It rests on a security proof under stated assumptions. A test can refute it but never establish it.
+The property that a verifier refuses proofs of false statements, except with a probability the [[security level]] bounds. It protects the customer, and [[integrity|Integrity]] grades the bound its publisher states. It rests on a security proof under stated assumptions. A test can refute it but never establish it.
 
 ### Soundness error
 
-The probability, as the publisher states it, that a verifier accepts a proof of a false statement: the bound behind [[soundness]]. It is stated for a given verifier, per proof or per part of one, often as a function of the forger's hash queries. The [Unforgeable](/checks#unforgeable) petal prints it first, then every condition that keeps it from covering what the row runs, such as a verifier other than the one the bound is stated for.
+The probability, as the publisher states it, that a verifier accepts a proof of a false statement: the bound behind [[soundness]]. It is stated for a given verifier, per proof or per part of one, often as a function of the forger's hash queries. The [Integrity](/checks#unforgeable) petal grades it: its reason names every condition that keeps it from covering what the row runs, then the bound, such as a verifier other than the one the bound is stated for.
 
 ### Statement
 
@@ -222,13 +298,17 @@ A protocol that convinces a verifier of a polynomial's sum over exponentially ma
 
 The unit of text a model reads and writes, a word or part of one, stored as an integer.
 
+### Trust assumptions
+
+Whether checking a proof relies on anyone's honesty besides the mathematics, such as a [[trusted setup|setup]] secret or a hardware maker's key ([petal](/checks#no_trusted_party)). It protects the customer.
+
 ### Trusted execution environment
 
 A hardware enclave (TEE) in a processor that isolates code and memory from the machine's owner. It signs a report of what it loaded, an [[attestation]] that rests on the chip maker's keys and an untampered chip.
 
 ### Trusted setup
 
-A one-time step that makes public parameters from a secret whose holder could forge proofs, as in KZG commitments. A system is [transparent](/checks#no_trusted_party) when soundness rests on cryptographic assumptions alone and no setup produced a secret.
+A one-time step that makes public parameters from a secret whose holder could forge proofs, as in KZG commitments. The [[trust assumptions|Trust assumptions]] petal is Met when the publisher states that soundness rests on cryptographic assumptions alone and no setup produced a secret.
 
 ### Verification
 
@@ -237,6 +317,10 @@ Checking a claim against evidence that holds even if the claimant has a reason t
 ### Verifier
 
 The program that checks a proof against the commitment and the prompt, and accepts or refuses. It is given the reply or reads it from the proof. In policy writing, the verifier is the inspectorate or the auditor, here called the [[relying party]].
+
+### Verify without weights check
+
+The verifier reached every verdict with no copy of the model and no GPU ([rule](/checks#no_weight_file)).
 
 ### Weights
 
@@ -248,4 +332,4 @@ Everything the prover uses to build a proof and the verifier does not see. In a 
 
 ### Zero knowledge
 
-The property that a proof shows nothing beyond the truth of its statement: all a verifier sees could be simulated without the weights. It comes in forms. Honest-verifier zero knowledge holds only against a verifier that follows the protocol. After Fiat-Shamir it can hold against any verifier, often within a stated number of hash queries and in the [[random oracle]] model. It is perfect, statistical or computational as the simulated view is identical, close up to a stated distance, or only hard to tell apart. What the statement makes public stays visible: the model's sizes, the prompt, the reply. The [Weights hidden](/checks#weights_hidden) petal prints the form the publisher states, asks it of the programs that run, not only of the protocol, and of the row's batches.
+The property that a proof shows nothing beyond the truth of its statement: all a verifier sees could be simulated without the weights. It comes in forms. Honest-verifier zero knowledge holds only against a verifier that follows the protocol. After Fiat-Shamir it can hold against any verifier, often within a stated number of hash queries and in the [[random oracle]] model. It is perfect, statistical or computational as the simulated view is identical, close up to a stated distance, or only hard to tell apart. What the statement makes public stays visible: the model's sizes, the prompt, the reply. It protects the provider. The [[confidentiality|Confidentiality]] petal prints the form the publisher states, asks it of the programs that run, not only of the protocol, and of the row's batches.

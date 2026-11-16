@@ -25,7 +25,7 @@ Two things sit beside the depths, not in them:
 ## Three laws
 
 1. **Down, never out.** Content moves to its depth; it is not removed. Each depth links to the next: a ladder row to its system's page, a ladder figure to its section there (the multiple, the cost and the verify time to Cost, Fidelity to Fidelity), a word to its definition, a state to its evidence, an evidence line to its record.
-2. **A bad result never moves down.** "Failed", "undecided", "not passed yet", "not measured", "not run" stay at the surface, in words, beside the system they concern. Only the explanation of the result moves down.
+2. **A bad result never moves down.** "Failed", "not decided", "Not passed yet", "not measured", "not run" stay at the surface, in words, beside the system they concern. Only the explanation of the result moves down.
 3. **A hover title is a shaft, not a home.** A figure's title carries its labels (scope, n, grade, tier, record) at any depth. It is never the only place they are: a phone and a keyboard have no hover, so the same labels are printed in visible text one step down.
 
 ## What goes where
@@ -35,12 +35,13 @@ The shallowest depth where each kind of content may be printed, and its form the
 | Content | Shallowest depth | Form there |
 |---|---|---|
 | system and model names, model size | 0 | words |
-| standing, and the checks not held | 0 | words ("not passed yet: Model check undecided") |
+| standing, and the checks not passed | 0 | words ("Not passed yet: Model check not decided") |
 | the headline figure (cost vs serving) | 0 | figure with its unit |
 | its two parts (generation, commit and proving) | 0, with the headline | figures with their units (see Exceptions) |
-| the glyph | 0 | drawn, with its petals' names; each petal's step in words at 2; reason and quotes at 3 |
-| a petal's field term ("soundness error, as stated") and what it rests on ("tested", "stated", "read as") | 2 | words under its name and its step, on the system page |
-| soundness, zero knowledge and completeness for the row; the stated security; the scope card | 3 | three lines, the publisher's security words verbatim, then the card with one bound per row, at the head of the Glyph section |
+| the glyph | 0 | drawn, with its petals' names; on the ladder each petal's hover title is its name, its step word and its plain sentence; each petal's step in words at 2; plain sentence, reason, next step and the publisher's words at 3 |
+| a petal's field term ("soundness") and what it rests on ("tested by us", "stated", "read as") | 2 | words under its name and its step, on the system page; Confidentiality's "Architecture: visible" and Formally verified's "stated: <what is verified>" under its step |
+| a petal's next step (what the row lacks for the step above, and who acts) | 3 | one line under its reason |
+| soundness, zero knowledge and completeness for the row, in that order; the stated security; the scope card | 3 | three lines, each with where it is graded or tested and whom it protects, the publisher's security words verbatim, then the card with one bound per row, at the head of the Glyph section |
 | cost, verify time | 0 | figure with its unit |
 | proof size | 1 (Scale), 2 | figure with its unit |
 | a unit | wherever its figure is | beside the figure, always |
@@ -52,7 +53,7 @@ The shallowest depth where each kind of content may be printed, and its form the
 | a change to the publisher's code the row runs (a pull request, not merged upstream) | 2 | one line in the band, its record linked |
 | what the verifier is given (from our commit record, the request, the proof), the decoding rule, what no call checks | 3 | the Statement block, the claim card's words linked |
 | how the verify time was taken (the program, the verifier's CPUs, the host, a GPU visible), the proved precision, the serving ladder | 3 | one line each under Cost |
-| the evidence tier ("one runner, not reproduced") | 3 | one line under Cost (Evidence), once for the block; in every figure's title |
+| the evidence tier ("our runs only, not rerun by anyone else") | 3 | one line under Cost (Evidence), once for the block; in every figure's title |
 | what was counted (scope: "whole sessions of N replies", steady, verify) | 2 | once, under the band's figure (a phone's band leaves it to the Cost block); at 3 once for the Cost block, and under a figure whose scope differs |
 | sample size (n) | 2 | once, beside the scope; at 3 beside the Cost block's scope, and under the system's own Fidelity figure (in replies) |
 | pass thresholds, petal steps | 3 as the bar's row; 4 as rules | |
@@ -61,7 +62,7 @@ The shallowest depth where each kind of content may be printed, and its form the
 | the level's freeze date, its file and digest | 4 | the mandate's line on the level |
 | the release | 0 (a card's stamp), footer | "Release v1.0, 2026-11-12": a card is a snapshot, and its date says of when |
 | the publisher's repository (source), the share group | 2 | the band's facts and the strip; on a phone, the page's foot |
-| publisher quotes | 3 | behind each petal's disclosure |
+| publisher quotes | 3 | behind each petal's disclosure, headed "The publisher's words (n)" |
 | run records, failed runs | 3 | counts and links under Checks and Sessions |
 | definitions | 4 | the checks page and the glossary; a head at 1 or 2 links to its definition |
 | method prose | 4, Learn | prose |
@@ -75,7 +76,7 @@ The shallowest depth where each kind of content may be printed, and its form the
 - **The head says what, the unit says per what.** "Cost" beside USD/reply, never "Cost per reply" beside USD/reply. `FIGURE_HEAD` in `draw/words.py` holds the heads; `beside_unit` trims a longer name where a unit follows it. A name printed with no unit (a definition's title, a sentence) keeps its full form.
 - **Once per block.** What a block's figures share (scope, n, a model, a date) is said once for the block, not on each figure. A figure that differs from its block says so.
 - **No bare fraction.** A figure is not framed "of N" unless N is what it is judged against. The mean matched prefix is judged against the model's bar, not against the reply's length, so it is printed with the bar or not at all.
-- **A state keeps its word at every depth.** held, failed, undecided; in full, in part, in lesser part. An abstraction never softens a state.
+- **A state keeps its word at every depth.** passed, failed, not decided for a check; Met, Mostly met, Partly met, Not met, Not stated, Failed, Not decided for a petal; Passed, Not passed, Not passed yet for a row. No word names an ink: the drawing does. An abstraction never softens a state.
 - **No visible id above depth 3.** A rule id, a file name or a control's id is a link's title there.
 
 ## The test
@@ -93,7 +94,7 @@ Then, before printing it: does a head, a unit, the glyph or another block of the
 ## Exceptions, each deliberate
 
 - **The two parts of the multiple are on the ladder**, a depth above where the test puts them. Where a system generates its reply in a phase of its own, most of its multiple can be generation, not proving, and the headline read alone is taken for the cost of proving (RFC-0018 CO-7, Decision Q15). The parts change how the headline reads, so they travel with it.
-- **The overview opens with a lead and two lines** (RFC-0018 SI-1, amended 2026-11-15), a depth above where definitions go. A reader at the surface knows nothing of the method, so the band says what a proof of inference is and what the ladder lists, and, from the board, on how many models a system passed and the frontier row's figure. Under it, "passed" is said to mean that our six checks held and that no check tries to forge a proof, and, while no model has two systems run, that none has. Without them "passed" and a lone position read as a verdict.
+- **The overview opens with a lead and two lines** (RFC-0018 SI-1, amended 2026-11-15), a depth above where definitions go. A reader at the surface knows nothing of the method, so the band says what a proof of inference is and what the ladder lists, and, from the board, on how many models a system passed and the frontier row's figure. Under it, "passed" is said to mean that all six of our checks passed and that no check tries to forge a proof, and, while no model has two systems run, that none has. Without them "passed" and a lone position read as a verdict.
 - **A share card carries the release and its date.** A card outlives the page it was made from; the date says which figures it shows.
 
 ## Known gaps

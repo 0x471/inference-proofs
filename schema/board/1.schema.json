@@ -788,6 +788,56 @@
           "$comment": "N1: true when a fact the petal's decision read carries a note, so the value is the reader's reading, not the publisher's words; absent means false",
           "type": "boolean"
         },
+        "next": {
+          "$comment": "RFC-0018 GL-11 (adopted 2026-11-16): the petal's next step, computed on the path that sets its step: the step it would move to (null on a hollow petal, what decides it; or on a failed one, its repair) and each need with who acts; null at green. It sets nothing and is never summed or sorted (GL-8). Optional, added in place (Q14 precedent)",
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "to": {
+                  "enum": [
+                    "green",
+                    "amber_upper",
+                    "amber_lower",
+                    null
+                  ]
+                },
+                "needs": {
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "text": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "by": {
+                        "enum": [
+                          "publisher",
+                          "us"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "text",
+                      "by"
+                    ],
+                    "type": "object"
+                  },
+                  "minItems": 1,
+                  "type": "array"
+                }
+              },
+              "required": [
+                "to",
+                "needs"
+              ],
+              "type": "object"
+            }
+          ]
+        },
         "reason": {
           "minLength": 1,
           "type": "string"

@@ -236,13 +236,13 @@ def test_session_parts_print_beside_the_whole_sessions_figure(board_site: Any) -
 
 
 def test_completeness_count_is_the_boards(board_site: Any) -> None:
-    """MC-6 (amended 2026-11-15): the Completeness line at the head of a system's glyph counts the
-    replies of the board's counted sessions (their release groups summed), N of N."""
+    """MC-6 (amended 2026-11-15, 2026-11-16): the Completeness line at the head of a system's glyph
+    counts the replies of the board's counted sessions (their release groups summed), N of N."""
     text = pages(board_site.out)
     for row in rows(board_site.board):
         n = sum(sum(s["groups"]) for s in row["sessions"])
         page = html.unescape(text[f"{row['system']}.html"])
-        assert f"({n:,}\u00a0of\u00a0{n:,})" in page, row["system"]
+        assert f"{n:,}\u00a0of\u00a0{n:,} replies accepted" in page, row["system"]
 
 
 def test_surface_figures_are_whole_sessions(board_site: Any) -> None:

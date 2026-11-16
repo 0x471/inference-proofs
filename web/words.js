@@ -719,15 +719,17 @@
     show(p, () => {
       const d = document.createElement('div'); d.className = 'prk';
       const state = ['green', 'amber', 'red', 'hollow'].find((s) => p.classList.contains(s));
-      // the arm's form (cut: amber in lesser part; open: a silent red) is drawn on the chip too
+      // the arm's form (cut: Partly met; open: Not stated) is drawn on the chip too
       const form = ['cut', 'open'].find((f) => p.classList.contains(f));
       const chip = document.createElement('span'); chip.className = form ? `schip ${state} ${form}` : `schip ${state}`;
-      // the words: the step, then for a red or hollow petal its cause after the name
-      const [step, ...cause] = words[i].textContent.slice(words[i].firstChild.textContent.length).trim().split(', ');
+      // the words ("Name: step, cause"): the step, then for a Not decided petal what it waits on after the name, then
+      // under them the petal's plain sentence
+      const [step, ...cause] = words[i].textContent.slice(words[i].firstChild.textContent.length).replace(/^:\s*/, '').split(', ');
       chip.textContent = step;
       d.append(chip, words[i].firstChild.textContent);
       if (cause.length) { const c = document.createElement('span'); c.className = 'prc'; c.textContent = cause.join(', '); d.append(c); }
       probe.append(d);
+      if (words[i].dataset.plain) { const q = document.createElement('p'); q.className = 'prp'; q.textContent = words[i].dataset.plain; probe.append(q); }
       g.classList.add('lit-on'); p.classList.add('lit');
     });
   };

@@ -32,6 +32,6 @@ The ladder's models all have open weights: nothing here measures a closed model.
 
 ## Passed
 
-Passed means all six [checks](/checks#passed) held. [No check](/checks#not-tested) attempts a forged proof or tests whether the weights stay hidden. The [[glyph]] grades the publisher's statements on both.
+Passed means all six of our [checks](/checks#passed) passed. [No check](/checks#not-tested) attempts a forged proof or tests whether the weights stay hidden. The [[glyph]] grades the publisher's statements on both.
 
-The [Model](/checks#model) check changes one weight, [Prompt](/checks#prompt) one prompt token and [Reply](/checks#reply) one reply token, and no change may end in an accepted proof. A trial counts only if the same run, unchanged, is accepted. A held check shows that those changes were refused, and no more. Each counted proof must also be verified with no GPU visible and no model file on the machine ([Verify without weights](/checks#no_weight_file)).
+The [Model](/checks#model) check changes one weight, [Prompt](/checks#prompt) one prompt token and [Reply](/checks#reply) one reply token, and no change may end in an accepted proof. A trial counts only if the same run, unchanged, is accepted. A passed check shows that those changes were refused, and no more. Each counted proof must also be verified with no GPU visible and no model file on the machine ([Verify without weights](/checks#no_weight_file)).

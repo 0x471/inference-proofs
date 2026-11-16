@@ -3,7 +3,7 @@
     {
       "group": "Systems",
       "kind": "system",
-      "meta": "Llama 4 Maverick 17B-128E Instruct · passed",
+      "meta": "Llama 4 Maverick 17B-128E Instruct · Passed",
       "name": "FlashProve",
       "pie": "<svg class=\"pie-svg\" viewBox=\"0 -1 25 31\" width=\"25\" height=\"31\" shape-rendering=\"crispEdges\" aria-hidden=\"true\" focusable=\"false\"><rect class=\"stem\" fill=\"#5b7bff\" y=\"-1\" width=\"3\" height=\"31\"/><path class=\"sl s1 amber cut\" data-step=\"amber_lower\" fill=\"#e49921\" d=\"M3 0H18V5H3ZM20 0H25V5H20Z\"/><rect class=\"sl s2 amber\" data-step=\"amber_upper\" fill=\"#e49921\" x=\"3\" y=\"6\" width=\"22\" height=\"5\"/><path class=\"sl s3 amber cut\" data-step=\"amber_lower\" fill=\"#e49921\" d=\"M3 12H18V17H3ZM20 12H25V17H20Z\"/><path class=\"sl s4 hollow\" data-step=\"none\" data-cause=\"proof_build_not_run\" fill=\"none\" stroke=\"#9b978e\" stroke-width=\"1\" d=\"M3 18.5H24.5V22.5H3\"/><rect class=\"sl s5 amber\" data-step=\"amber_upper\" fill=\"#e49921\" x=\"3\" y=\"24\" width=\"22\" height=\"5\"/></svg>",
       "terms": "flashprove llama 4 maverick 17b-128e instruct · passed l1-maverick-p512-o512 flashprove",
@@ -13,10 +13,10 @@
     {
       "group": "Systems",
       "kind": "system",
-      "meta": "Llama 3.1 8B Instruct · not passed yet: Verify without weights check undecided",
+      "meta": "Llama 3.1 8B Instruct · Not passed yet: Verify without weights check not decided",
       "name": "SASH",
       "pie": "<svg class=\"pie-svg\" viewBox=\"0 -1 25 31\" width=\"25\" height=\"31\" shape-rendering=\"crispEdges\" aria-hidden=\"true\" focusable=\"false\"><rect class=\"stem\" fill=\"#5b7bff\" y=\"-1\" width=\"3\" height=\"31\"/><path class=\"sl s1 amber cut\" data-step=\"amber_lower\" fill=\"#e49921\" d=\"M3 0H18V5H3ZM20 0H25V5H20Z\"/><path class=\"sl s2 red open\" data-step=\"red\" data-cause=\"not_stated\" fill=\"none\" stroke=\"#e03c44\" stroke-width=\"1\" d=\"M3 6.5H24.5V10.5H3\"/><path class=\"sl s3 amber cut\" data-step=\"amber_lower\" fill=\"#e49921\" d=\"M3 12H18V17H3ZM20 12H25V17H20Z\"/><path class=\"sl s4 red open\" data-step=\"red\" data-cause=\"not_stated\" fill=\"none\" stroke=\"#e03c44\" stroke-width=\"1\" d=\"M3 18.5H24.5V22.5H3\"/><rect class=\"sl s5 amber\" data-step=\"amber_upper\" fill=\"#e49921\" x=\"3\" y=\"24\" width=\"22\" height=\"5\"/></svg>",
-      "terms": "sash llama 3.1 8b instruct · not passed yet: verify without weights check undecided l1-l31-8b-p512-o512 sash",
+      "terms": "sash llama 3.1 8b instruct · not passed yet: verify without weights check not decided l1-l31-8b-p512-o512 sash",
       "tier": 0,
       "url": "/sash"
     },
@@ -54,9 +54,9 @@
       "group": "Glyph",
       "kind": "petal",
       "meta": "The bound the publisher states on a false reply being accepted: whether it is proved, and whether it covers what the row runs.",
-      "name": "Unforgeable",
+      "name": "Integrity",
       "pie": "",
-      "terms": "unforgeable the bound the publisher states on a false reply being accepted: whether it is proved, and whether it covers what the row runs.",
+      "terms": "integrity the bound the publisher states on a false reply being accepted: whether it is proved, and whether it covers what the row runs. soundness",
       "tier": 2,
       "url": "/checks#unforgeable"
     },
@@ -64,39 +64,39 @@
       "group": "Glyph",
       "kind": "petal",
       "meta": "What the publisher states and proves about a proof showing nothing of the weights' values.",
-      "name": "Weights hidden",
+      "name": "Confidentiality",
       "pie": "",
-      "terms": "weights hidden what the publisher states and proves about a proof showing nothing of the weights' values.",
+      "terms": "confidentiality what the publisher states and proves about a proof showing nothing of the weights' values. zero knowledge of the weights",
       "tier": 2,
       "url": "/checks#weights_hidden"
     },
     {
       "group": "Glyph",
       "kind": "petal",
-      "meta": "How close the proved replies stay to the model publisher's own release, against the model's controls.",
-      "name": "Close to the original",
+      "meta": "How close the proved replies stay to the model publisher's own release, against the model's 8-bit and 4-bit copies.",
+      "name": "Fidelity",
       "pie": "",
-      "terms": "close to the original how close the proved replies stay to the model publisher's own release, against the model's controls.",
+      "terms": "fidelity how close the proved replies stay to the model publisher's own release, against the model's 8-bit and 4-bit copies. quantization error, in matched leading tokens",
       "tier": 2,
       "url": "/checks#faithful_model"
     },
     {
       "group": "Glyph",
       "kind": "petal",
-      "meta": "How far a machine-checked proof of soundness reaches toward the verifier the row runs.",
-      "name": "Machine-checked",
+      "meta": "How far a machine-checked proof of soundness reaches: part of the protocol, an abstraction of it, the protocol with the model, or the verifier code the row runs.",
+      "name": "Formally verified",
       "pie": "",
-      "terms": "machine-checked how far a machine-checked proof of soundness reaches toward the verifier the row runs.",
+      "terms": "formally verified how far a machine-checked proof of soundness reaches: part of the protocol, an abstraction of it, the protocol with the model, or the verifier code the row runs. machine-checked soundness proof",
       "tier": 2,
       "url": "/checks#machine_checked"
     },
     {
       "group": "Glyph",
       "kind": "petal",
-      "meta": "What soundness rests on besides cryptographic assumptions.",
-      "name": "No third party trusted",
+      "meta": "What checking a proof relies on besides cryptography: a setup secret, a fixed set of parties, or a hardware maker's or another trusted key.",
+      "name": "Trust assumptions",
       "pie": "",
-      "terms": "no third party trusted what soundness rests on besides cryptographic assumptions.",
+      "terms": "trust assumptions what checking a proof relies on besides cryptography: a setup secret, a fixed set of parties, or a hardware maker's or another trusted key. trusted setup or party",
       "tier": 2,
       "url": "/checks#no_trusted_party"
     },
@@ -226,7 +226,7 @@
       "meta": "The rules behind a row of the ladder: the six checks, each figure, the order and the glyph's five petals.",
       "name": "Checks",
       "pie": "<svg class=\"pie-svg lm\" viewBox=\"0 0 26 18\" width=\"26\" height=\"18\" shape-rendering=\"crispEdges\" aria-hidden=\"true\" focusable=\"false\"><path fill=\"currentColor\" d=\"M0 0h4v18h-4zM4 6h6v6h-6zM12 6h6v6h-6zM20 6h6v6h-6z\"/></svg>",
-      "terms": "checks the rules behind a row of the ladder: the six checks, each figure, the order and the glyph's five petals. checks figures order rule undecided unranked not tested",
+      "terms": "checks the rules behind a row of the ladder: the six checks, each figure, the order and the glyph's five petals. checks figures order rule not decided not ranked not tested",
       "tier": 4,
       "url": "/checks"
     },
@@ -323,6 +323,16 @@
     {
       "group": "Glossary",
       "kind": "term",
+      "meta": "What a machine-checked proof covers, in three levels: an abstraction of the protocol, the method without this model's computation (or the model without the method); the protocol, the method with the model's computation; the code this row runs, the verifier program the row actually runs.",
+      "name": "Abstraction of the protocol",
+      "pie": "",
+      "terms": "abstraction of the protocol what a machine-checked proof covers, in three levels: an abstraction of the protocol, the method without this model's computation (or the model without the method); the protocol, the method with the model's computation; the code this row runs, the verifier program the row actually runs.",
+      "tier": 4.2,
+      "url": "/glossary#abstraction-of-the-protocol"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
       "meta": "The wrapper through which the harness runs a system's commands, in a container built at the system's pinned commit.",
       "name": "Adapter",
       "pie": "",
@@ -339,6 +349,16 @@
       "terms": "air an algebraic intermediate representation: a computation as a table of values (the trace) with polynomial constraints between rows.",
       "tier": 4.2,
       "url": "/glossary#air"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
+      "meta": "A model's layout and sizes: its layers, widths and heads.",
+      "name": "Architecture",
+      "pie": "",
+      "terms": "architecture a model's layout and sizes: its layers, widths and heads.",
+      "tier": 4.2,
+      "url": "/glossary#architecture"
     },
     {
       "group": "Glossary",
@@ -363,10 +383,10 @@
     {
       "group": "Glossary",
       "kind": "term",
-      "meta": "One of the six tests of Level 1: Run, Model, Prompt, Reply, Verify without weights, Fidelity.",
+      "meta": "One of the six tests of Level 1: Run, Model, Prompt, Reply, Verify without weights and Fidelity.",
       "name": "Check",
       "pie": "",
-      "terms": "check one of the six tests of level 1: run, model, prompt, reply, verify without weights, fidelity.",
+      "terms": "check one of the six tests of level 1: run, model, prompt, reply, verify without weights and fidelity.",
       "tier": 4.2,
       "url": "/glossary#check"
     },
@@ -379,16 +399,6 @@
       "terms": "claim card the record of what one system's accepted proofs establish in one configuration, as its publisher states it.",
       "tier": 4.2,
       "url": "/glossary#claim-card"
-    },
-    {
-      "group": "Glossary",
-      "kind": "term",
-      "meta": "The petal that grades how close a system's proved replies stay to the model its publisher released: how many leading reply tokens match the original's before the first difference, on average, against the same count for the model's 8-bit and 4-bit copies.",
-      "name": "Close to the original",
-      "pie": "",
-      "terms": "close to the original the petal that grades how close a system's proved replies stay to the model its publisher released: how many leading reply tokens match the original's before the first difference, on average, against the same count for the model's 8-bit and 4-bit copies.",
-      "tier": 4.2,
-      "url": "/glossary#close-to-the-original"
     },
     {
       "group": "Glossary",
@@ -409,6 +419,16 @@
       "terms": "completeness the property that a verifier accepts every proof an honest prover makes of a true statement, often except with a small stated probability.",
       "tier": 4.2,
       "url": "/glossary#completeness"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
+      "meta": "Whether checking a proof reveals the model's weights, graded on the zero knowledge the publisher states and proves (petal).",
+      "name": "Confidentiality",
+      "pie": "",
+      "terms": "confidentiality whether checking a proof reveals the model's weights, graded on the zero knowledge the publisher states and proves (petal).",
+      "tier": 4.2,
+      "url": "/glossary#confidentiality"
     },
     {
       "group": "Glossary",
@@ -443,6 +463,26 @@
     {
       "group": "Glossary",
       "kind": "term",
+      "meta": "For a petal: one of our checks, or our build of the publisher's proof, contradicted it.",
+      "name": "Failed",
+      "pie": "",
+      "terms": "failed for a petal: one of our checks, or our build of the publisher's proof, contradicted it.",
+      "tier": 4.2,
+      "url": "/glossary#failed"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
+      "meta": "A check whose test showed the opposite of what it needs, repeated with the system's own command where a changed input was accepted in our adapter.",
+      "name": "Failed (check)",
+      "pie": "",
+      "terms": "failed (check) a check whose test showed the opposite of what it needs, repeated with the system's own command where a changed input was accepted in our adapter.",
+      "tier": 4.2,
+      "url": "/glossary#failed-check"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
       "meta": "A transform that makes an interactive proof non-interactive by hashing the statement and transcript into each challenge.",
       "name": "Fiat-Shamir",
       "pie": "",
@@ -453,12 +493,22 @@
     {
       "group": "Glossary",
       "kind": "term",
-      "meta": "How closely the copy a system proves follows the model its publisher released.",
+      "meta": "How closely the copy a system proves answers like the model its publisher released.",
       "name": "Fidelity",
       "pie": "",
-      "terms": "fidelity how closely the copy a system proves follows the model its publisher released.",
+      "terms": "fidelity how closely the copy a system proves answers like the model its publisher released.",
       "tier": 4.2,
       "url": "/glossary#fidelity"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
+      "meta": "The proved replies match the original's opening tokens better than the bar does, by a paired test at p < 0.05 (rule).",
+      "name": "Fidelity check",
+      "pie": "",
+      "terms": "fidelity check the proved replies match the original's opening tokens better than the bar does, by a paired test at p < 0.05 (rule).",
+      "tier": 4.2,
+      "url": "/glossary#fidelity-check"
     },
     {
       "group": "Glossary",
@@ -469,6 +519,16 @@
       "terms": "field a finite set of numbers, such as the integers modulo a prime, with exact addition, multiplication and division.",
       "tier": 4.2,
       "url": "/glossary#field"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
+      "meta": "How far a computer-checked (machine-checked) proof of soundness reaches (petal): part of the protocol, an abstraction of it, the protocol with the model, or the verifier code the row runs.",
+      "name": "Formally verified",
+      "pie": "",
+      "terms": "formally verified how far a computer-checked (machine-checked) proof of soundness reaches (petal): part of the protocol, an abstraction of it, the protocol with the model, or the verifier code the row runs.",
+      "tier": 4.2,
+      "url": "/glossary#formally-verified"
     },
     {
       "group": "Glossary",
@@ -523,6 +583,16 @@
     {
       "group": "Glossary",
       "kind": "term",
+      "meta": "Whether a provider can get a reply accepted that the model did not compute, graded on the soundness bound the publisher states for what the row runs (petal).",
+      "name": "Integrity",
+      "pie": "",
+      "terms": "integrity whether a provider can get a reply accepted that the model did not compute, graded on the soundness bound the publisher states for what the row runs (petal).",
+      "tier": 4.2,
+      "url": "/glossary#integrity"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
       "meta": "A measure of how far one probability distribution lies from another (Kullback-Leibler divergence).",
       "name": "KL divergence",
       "pie": "",
@@ -573,12 +643,32 @@
     {
       "group": "Glossary",
       "kind": "term",
+      "meta": "A petal's top step, the step below it, and the lowest step above Not met.",
+      "name": "Met, Mostly met, Partly met",
+      "pie": "",
+      "terms": "met, mostly met, partly met a petal's top step, the step below it, and the lowest step above not met.",
+      "tier": 4.2,
+      "url": "/glossary#met-mostly-met-partly-met"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
       "meta": "A model that runs only part of its weights for each token.",
       "name": "Mixture of experts",
       "pie": "",
       "terms": "mixture of experts a model that runs only part of its weights for each token.",
       "tier": 4.2,
       "url": "/glossary#mixture-of-experts"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
+      "meta": "A proof made with one weight changed is not accepted against the original weights' commitment (rule).",
+      "name": "Model check",
+      "pie": "",
+      "terms": "model check a proof made with one weight changed is not accepted against the original weights' commitment (rule).",
+      "tier": 4.2,
+      "url": "/glossary#model-check"
     },
     {
       "group": "Glossary",
@@ -603,6 +693,56 @@
     {
       "group": "Glossary",
       "kind": "term",
+      "meta": "What would move a petal up one step, computed from its rule, and who acts: the publisher or us.",
+      "name": "Next step",
+      "pie": "",
+      "terms": "next step what would move a petal up one step, computed from its rule, and who acts: the publisher or us.",
+      "tier": 4.2,
+      "url": "/glossary#next-step"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
+      "meta": "A petal we cannot grade yet; its line says what it waits on, and it is never a failure.",
+      "name": "Not decided",
+      "pie": "",
+      "terms": "not decided a petal we cannot grade yet; its line says what it waits on, and it is never a failure.",
+      "tier": 4.2,
+      "url": "/glossary#not-decided"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
+      "meta": "A check that has not run, ran and decided nothing, or that the system cannot run.",
+      "name": "Not decided (check)",
+      "pie": "",
+      "terms": "not decided (check) a check that has not run, ran and decided nothing, or that the system cannot run.",
+      "tier": 4.2,
+      "url": "/glossary#not-decided-check"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
+      "meta": "A petal's step when the publisher's own facts fall below Partly met.",
+      "name": "Not met",
+      "pie": "",
+      "terms": "not met a petal's step when the publisher's own facts fall below partly met.",
+      "tier": 4.2,
+      "url": "/glossary#not-met"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
+      "meta": "A petal's step when the publisher's documents read at the pinned commit say nothing on it.",
+      "name": "Not stated",
+      "pie": "",
+      "terms": "not stated a petal's step when the publisher's documents read at the pinned commit say nothing on it.",
+      "tier": 4.2,
+      "url": "/glossary#not-stated"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
       "meta": "The party that serves a model and makes its proofs, such as a lab or an API provider.",
       "name": "Operator",
       "pie": "",
@@ -613,12 +753,22 @@
     {
       "group": "Glossary",
       "kind": "term",
-      "meta": "Said of a system on a model when all six checks held there.",
+      "meta": "Said of a system on a model when all six of our checks passed there.",
       "name": "Passed",
       "pie": "",
-      "terms": "passed said of a system on a model when all six checks held there.",
+      "terms": "passed said of a system on a model when all six of our checks passed there.",
       "tier": 4.2,
       "url": "/glossary#passed"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
+      "meta": "A check whose test came out as its rule requires: for a check that changes an input, the change we made was refused.",
+      "name": "Passed (check)",
+      "pie": "",
+      "terms": "passed (check) a check whose test came out as its rule requires: for a check that changes an input, the change we made was refused.",
+      "tier": 4.2,
+      "url": "/glossary#passed-check"
     },
     {
       "group": "Glossary",
@@ -649,6 +799,16 @@
       "terms": "position a ranked system's place in its model's table: 1 plus the number of systems placed above it.",
       "tier": 4.2,
       "url": "/glossary#position"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
+      "meta": "With one prompt token changed, the verifier refuses the proof (rule).",
+      "name": "Prompt check",
+      "pie": "",
+      "terms": "prompt check with one prompt token changed, the verifier refuses the proof (rule).",
+      "tier": 4.2,
+      "url": "/glossary#prompt-check"
     },
     {
       "group": "Glossary",
@@ -693,6 +853,16 @@
     {
       "group": "Glossary",
       "kind": "term",
+      "meta": "Sentences copied word for word from the publisher's documents at the pinned commit, each linked to its line.",
+      "name": "The publisher's words",
+      "pie": "",
+      "terms": "the publisher's words sentences copied word for word from the publisher's documents at the pinned commit, each linked to its line.",
+      "tier": 4.2,
+      "url": "/glossary#the-publisher-s-words"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
       "meta": "Two copies of the original model quantized by llama.cpp, two of the fidelity run's three honest controls.",
       "name": "Q8_0 and Q4_K_M",
       "pie": "",
@@ -723,10 +893,10 @@
     {
       "group": "Glossary",
       "kind": "term",
-      "meta": "Said of a petal whose state rests on our reading of a publisher's documents, not on a sentence that says it.",
+      "meta": "What a petal rests on, printed beside its step: stated, the publisher's own sentence; read as, our reading of sentences none of which says it alone; tested by us, our own runs.",
       "name": "Read as",
       "pie": "",
-      "terms": "read as said of a petal whose state rests on our reading of a publisher's documents, not on a sentence that says it.",
+      "terms": "read as what a petal rests on, printed beside its step: stated, the publisher's own sentence; read as, our reading of sentences none of which says it alone; tested by us, our own runs.",
       "tier": 4.2,
       "url": "/glossary#read-as"
     },
@@ -753,6 +923,16 @@
     {
       "group": "Glossary",
       "kind": "term",
+      "meta": "Every proof covers all of the request's reply tokens, and with one changed (first, last or one inside) the verifier refuses it (rule).",
+      "name": "Reply check",
+      "pie": "",
+      "terms": "reply check every proof covers all of the request's reply tokens, and with one changed (first, last or one inside) the verifier refuses it (rule).",
+      "tier": 4.2,
+      "url": "/glossary#reply-check"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
       "meta": "One prompt and the reply checked for it: at Level 1, 512 prompt tokens and a 512-token greedy reply.",
       "name": "Request",
       "pie": "",
@@ -769,6 +949,16 @@
       "terms": "residual what a dishonest prover can still do while its proofs are accepted.",
       "tier": 4.2,
       "url": "/glossary#residual"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
+      "meta": "The publisher's prover, as published at the pin, ran three sessions from a cold start, and every reply got an accepted proof (rule).",
+      "name": "Run check",
+      "pie": "",
+      "terms": "run check the publisher's prover, as published at the pin, ran three sessions from a cold start, and every reply got an accepted proof (rule).",
+      "tier": 4.2,
+      "url": "/glossary#run-check"
     },
     {
       "group": "Glossary",
@@ -883,6 +1073,16 @@
     {
       "group": "Glossary",
       "kind": "term",
+      "meta": "Whether checking a proof relies on anyone's honesty besides the mathematics, such as a setup secret or a hardware maker's key (petal).",
+      "name": "Trust assumptions",
+      "pie": "",
+      "terms": "trust assumptions whether checking a proof relies on anyone's honesty besides the mathematics, such as a setup secret or a hardware maker's key (petal).",
+      "tier": 4.2,
+      "url": "/glossary#trust-assumptions"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
       "meta": "A hardware enclave (TEE) in a processor that isolates code and memory from the machine's owner.",
       "name": "Trusted execution environment",
       "pie": "",
@@ -919,6 +1119,16 @@
       "terms": "verifier the program that checks a proof against the commitment and the prompt, and accepts or refuses.",
       "tier": 4.2,
       "url": "/glossary#verifier"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
+      "meta": "The verifier reached every verdict with no copy of the model and no GPU (rule).",
+      "name": "Verify without weights check",
+      "pie": "",
+      "terms": "verify without weights check the verifier reached every verdict with no copy of the model and no gpu (rule).",
+      "tier": 4.2,
+      "url": "/glossary#verify-without-weights-check"
     },
     {
       "group": "Glossary",

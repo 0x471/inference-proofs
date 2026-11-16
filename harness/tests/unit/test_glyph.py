@@ -796,3 +796,67 @@ def test_fm_reason_numbers() -> None:
                         {"id": "q2_k", "recipe": "quantize", "scores": []}]}  # fmt: skip
     assert control_means(doc) == {"reference-2": ("the original run again", 500.5),
                                    "q8_0": ("the 8-bit copy", 66.0)}  # fmt: skip
+
+
+# ---------------------------------------------------------------- the next step (GL-11)
+
+
+def needs(petal: Petal) -> tuple[object, list[tuple[str, str]]]:
+    """A petal's next step as (to, [(need, by)])."""
+    assert petal.next_step is not None
+    found = petal.next_step["needs"]
+    assert isinstance(found, list)
+    return petal.next_step["to"], [(str(n["text"]), str(n["by"])) for n in found]
+
+
+def test_next_is_null_at_green() -> None:
+    """GL-11: a petal at its top step has no next step."""
+    assert uf(terms=[128, 130]).next_step is None
+    assert mc(build()).next_step is None
+    assert uf(terms=[128, 130]).tree()["next"] is None
+
+
+def test_next_uf9_lists_exactly_the_failing_needs_in_order() -> None:
+    """GL-11, UF-9: FlashProve's facts (proved, [124, 101], per proof, together, batch 24,
+    conditions not shown, not stated for the program run) fail the program, batch and conditions
+    clauses only, in UF-9's order; each need is the publisher's. A proved [124, 90] bound that
+    covers the run lacks only the exponent."""
+    flashprove = uf(Coverage("request", 24), unit="proof", terms=[124, 101], batch="together",
+                    conditions_shown=False, program="not_stated")  # fmt: skip
+    to, got_ = needs(flashprove)
+    assert to == "amber_upper"
+    assert [by for _, by in got_] == ["publisher"] * 3
+    assert [n.split(" ")[0:2] for n, _ in got_] == [["stated", "or"], ["stated", "for"],
+                                                    ["its", "conditions"]]  # fmt: skip
+    assert "24-reply batch" in got_[1][0]
+    to, got_ = needs(uf(terms=[124, 90]))
+    assert (to, got_) == ("amber_upper", [("every exponent 100 or more", "publisher")])
+
+
+def test_next_mc5_names_the_build_that_decides_it() -> None:
+    """GL-11, MC-5: a hollow Machine-checked petal names the theorem, the pin, the toolchain and
+    the tool to build with, by us; with no toolchain pinned, the publisher's pin is the need. The
+    reason keeps the ceiling a build could give."""
+    petal = mc(None, reach="protocol_and_statement")
+    to, got_ = needs(petal)
+    assert to is None
+    assert got_ == [(f"our recorded build of Fake.Verifier.sound at {PIN[:7]} with coq 8.20.0, "
+                     "reporting only the declared axioms", "us")]  # fmt: skip
+    assert "once built: Mostly met at most" in petal.reason
+    assert needs(mc(None, toolchain=None)) == (None, [("a pinned toolchain", "publisher")])
+
+
+def test_next_a_reading_targeting_green_needs_the_publisher_sentence() -> None:
+    """GL-10, GL-11: a petal capped at amber_upper by a reading needs the publisher's sentence for
+    green; a reading below amber_upper does not add it (its target is not green)."""
+    later = {"value": "row", "quotes": [quote("q")], "note": "n"}
+    capped = statement_petals(properties2(bound={"parameters": later}), HELD, PIN, ONE, None)
+    to, got_ = needs(capped["unforgeable"])
+    assert to == "green"
+    assert got_ == [("a sentence of the publisher's that says it, in place of our reading",
+                     "publisher")]  # fmt: skip
+    lower = statement_petals(properties2(bound={"parameters": later, "terms": [124, 90]}), HELD,
+                             PIN, ONE, None)  # fmt: skip
+    to, got_ = needs(lower["unforgeable"])
+    assert to == "amber_upper"
+    assert all("our reading" not in n for n, _ in got_)
