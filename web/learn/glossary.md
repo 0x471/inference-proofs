@@ -1,6 +1,6 @@
 ### Abstraction of the protocol
 
-What a machine-checked proof covers, in three levels: **an abstraction of the protocol**, the method without this model's computation (or the model without the method); **the protocol**, the method with the model's computation; **the code this row runs**, the verifier program the row actually runs. Only the verifier the row runs counts as the code.
+What a machine-checked proof covers, in three levels: **an abstraction of the protocol**, the method without this model's computation (or the model without the method); **the protocol**, the method with the model's computation; **the code this row runs**, the verifier program the row actually runs. Only the verifier the row runs counts as the code. A proof about a formal model of the method, rather than about a program, verifies the protocol (or an abstraction of it), never the code.
 
 ### Adapter
 
@@ -28,11 +28,15 @@ Said of a link in the computation that the verifier's acceptance constrains, suc
 
 ### Check
 
-One of the six tests of Level 1: [[run check|Run]], [[model check|Model]], [[prompt check|Prompt]], [[reply check|Reply]], [[verify without weights check|Verify without weights]] and [[fidelity check|Fidelity]]. Each ends [[passed (check)|passed]], [[failed (check)|failed]] or [[not decided (check)|not decided]], and a check not decided names its cause: the system cannot do what the test needs, not run yet, the test ran and decided nothing, or a changed input accepted in our adapter and not yet repeated with the system's own command.
+One of the six tests of Level 1: [[run check|Run]], [[model check|Model]], [[prompt check|Prompt]], [[reply check|Reply]], [[verify without weights check|Verify without weights]] and [[fidelity check|Fidelity]]. Each ends [[passed (check)|passed]], [[failed (check)|failed]] or [[not decided (check)|not decided]], and a check not decided names its cause: the system cannot do what the test needs, not run yet, the test ran and its result does not count yet, or a changed input accepted in our adapter and not yet repeated with the system's own command.
 
 ### Claim card
 
 The record of what one system's accepted proofs establish in one configuration, as its publisher states it. Each field is copied from the publisher's documents at the pinned commit and linked, or reads "not stated" ([RFC-0002](repo:rfcs/0002-claim-card.md)).
+
+### Commit and proving
+
+The part of a [[whole session]]'s GPU time that is not [[generation]]: the commit call, which commits to the weights, and the proving of every reply. Under Cost vs serving it is printed beside generation, each over the same serving time.
 
 ### Commitment
 
@@ -106,6 +110,10 @@ How far a computer-checked ([[machine-checked]]) proof of soundness reaches ([pe
 
 A protocol that shows committed values lie close to a Reed-Solomon codeword, the evaluations of a low-degree polynomial. Its authors [built it](https://eccc.weizmann.ac.il/report/2017/134/) for proof systems that "require only public randomness for their setup".
 
+### Generation
+
+The phase of a [[session]] in which the system's own model computes the replies, where the system does this apart from proving them. Its GPU time counts in the proved side of Cost vs serving, and the figure prints it as a part of its own.
+
 ### Glyph
 
 A five-petal figure of how close a system is to a perfect prover. Its [petals](/checks#glyph), every one Met for such a prover, are [[integrity|Integrity]], [[confidentiality|Confidentiality]], [[fidelity|Fidelity]], [[formally verified|Formally verified]] and [[trust assumptions|Trust assumptions]]. Nothing adds them up, and the glyph never changes a system's position.
@@ -121,6 +129,10 @@ Choosing the highest-scoring token at every step. With exact arithmetic and a fi
 ### Halfway point
 
 The average of two copies' mean scores; a row is shown above it by a paired sign-flip test at p < 0.05. The Fidelity petal's steps are halfway points between the original run again, the 8-bit copy and the 4-bit copy.
+
+### Honest and damaged copies
+
+The fidelity run's yardsticks, fixed in the [level](/mandate#level) file before any run: honest copies are the original run again and its 8-bit and 4-bit copies, the usual ways to run the model; damaged copies (3-bit and 2-bit copies, a quarter of the model's blocks cut, a smaller model) are made worse on purpose, and the highest-scoring of them that every honest copy scores above is the [[bar]].
 
 ### Harness
 
@@ -188,7 +200,7 @@ A petal we cannot grade yet; its line says what it waits on, and it is never a f
 
 ### Not decided (check)
 
-A check that has not run, ran and decided nothing, or that the system cannot run.
+A check that has not run, ran without a result that counts yet, or that the system cannot run. Its line says what would decide it and who acts.
 
 ### Not met
 
@@ -372,7 +384,7 @@ The learned numbers a model is made of, about 8 billion in Llama 3.1 8B. For a c
 
 ### Whole session
 
-A figure that counts a [[session]]'s GPU time from the start of its commit to its last proof, start-up included, divided by its replies. Cost vs serving, the session GPU time and reply tokens per GPU-second are figures of whole sessions.
+A figure that counts a [[session]]'s GPU time from the start of its commit call to its last proof (the commit, generation and proving; loading the model before the commit is not counted), divided by its replies. Cost vs serving, the session GPU time and reply tokens per GPU-second are figures of whole sessions.
 
 ### Witness
 

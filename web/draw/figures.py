@@ -14,8 +14,11 @@ No inline style: the Content-Security-Policy allows none (outputs.vercel_json). 
 what a reader operates; the state inks stay with the states of a check (words.css).
 """
 
+import re
+
 from . import state as S
 from .chrome import CHECKS_PAGE, counted, has, lead_figure, rung_of, standing
+from .glossary import term
 from .overview import (
     BARE,
     baseline_html,
@@ -784,6 +787,19 @@ CHECK_DOES = {
 }  # fmt: skip
 
 
+# the terms a panel's words link to the glossary, at their first use (D1): (words, entry)
+NEED_TERMS = (("slots", "Slot"), ("session", "Session"), ("the bar", "Bar"))
+
+
+def need_html(words):
+    """A panel's "passes when" words, escaped, each term NEED_TERMS names linked once."""
+    out = e(words)
+    for w, entry in NEED_TERMS:
+        out = re.sub(rf"\b{re.escape(w)}\b", lambda _m, w=w, entry=entry: term(w, entry), out,
+                     count=1)  # fmt: skip
+    return out
+
+
 @drawn(FIGURES, "checks")
 def checks_figure():
     """The six checks as six panels, in the board's order: each its name (linked to its rule),
@@ -798,7 +814,7 @@ def checks_figure():
             f'<div class="hcp"><p class="hcn"><a href="{CHECKS_PAGE}#{c}">{e(CHECK_NAME[c])}</a>'
             f'</p>{hc_svg("hchk", 340, 120, said, body)}<dl class="hcd">'
             f"<div><dt>{e(how)}</dt><dd>{e(what)}</dd></div>"
-            f"<div><dt>Passes when</dt><dd>{e(need.format(**fill))}</dd></div></dl></div>"
+            f"<div><dt>Passes when</dt><dd>{need_html(need.format(**fill))}</dd></div></dl></div>"
         )
     return f'<div class="hcg">{panels}</div>'
 

@@ -85,7 +85,7 @@ CHECK_FAILED = {
     "the system's own command, run outside our adapter, accepted the same changed input.",
     "no_weight_file": "The trace names a file of the model, or a verify call needed one.",
     "fidelity": "The bar scores above the replies, by the same test. With neither shown, the "
-    "check is not decided (decided nothing).",
+    "check is not decided.",
 }
 # a check's lines after held and failed: Run's cap (SE-4: 40 and 120 USD are the level file's
 # sessions.cap_usd and the Maverick rung's cap_usd, typed as the level's; the view carries
@@ -107,7 +107,7 @@ CHECK_MORE = {
         ("bar", "Among the damaged controls that every honest control scores above, the one with "
          "the highest mean score. The honest controls are the original run again and its 8-bit "
          "and 4-bit copies (Q8_0, Q4_K_M). A system's page lists the damaged ones. With none, the "
-         "model has no bar and the check is not decided (decided nothing) on every row."),
+         "model has no bar and the check is not decided on every row."),
     ),
 }  # fmt: skip
 # a check in one line, for its search entry: the held rule with every condition kept, about 95
@@ -130,8 +130,8 @@ CHECK_LINE = {
 STATE_WORD = {"held": "passed", "failed": "failed", "undecided": "not decided"}
 # under a system page's Checks head (depth 3): what a passed check is
 CHECKS_LEAD = (
-    "Each check runs the publisher's own prover honestly and tries a change it should refuse. A "
-    "passed check is a refused change, not a test of soundness."
+    "Three checks change one thing the verifier must refuse (Model, Prompt, Reply). Run, Verify "
+    "without weights and Fidelity test an honest run. No check tries to forge a proof."
 )
 # what a control's counted trials sent, from the board's `trials` (RFC-0018 CH-1c), by control
 # and C1's position; printed with a check's records
@@ -189,7 +189,7 @@ PETAL_TERM = {"unforgeable": "soundness",
 # name's title at depths 1 and 2; printed under the name at depth 3 and on the checks page
 PETAL_PLAIN = {
     "unforgeable": "Can a provider get a reply accepted that the committed model did not compute? "
-    "Integrity grades the chance of that which the publisher states, and whether the statement "
+    "Integrity grades the chance of that, as the publisher states it, and whether the statement "
     "covers what this row runs. It protects the customer. Met: a proved chance of at most 2^-128 "
     "(128 bits) that covers this row.",
     "weights_hidden": "Does checking a proof reveal the model's weights? Confidentiality grades "
@@ -198,7 +198,7 @@ PETAL_PLAIN = {
     "faithful_model": "Is the model that is proved as good as the one its publisher released? "
     "Proving usually runs a copy whose numbers are stored in fewer bits (quantization). Fidelity "
     "compares its replies with the original's, using our 8-bit and 4-bit copies as yardsticks. It "
-    "protects the customer. Met: about as close as running the original again.",
+    "protects the customer. Met: shown closer to the original run again than to the 8-bit copy.",
     "machine_checked": "Has a computer checked the mathematical proof that false replies are "
     "refused, and does that check reach the code this row runs? It protects the customer. Met: "
     "the verifier code this row runs is machine-checked.",
@@ -250,7 +250,7 @@ CAUSE_WORD = {"not_stated": "not stated",
               "check_failed": "a check failed, or the proof build failed",
               "not_read": "not read yet",
               "not_decided": "Fidelity check not decided or not recorded",
-              "proof_build_not_run": "no build of the named proof recorded yet"}  # fmt: skip
+              "proof_build_not_run": "waits on our build of the publisher's machine-checked proof"}  # fmt: skip
 # each cause in a line, on the checks page (#cause-<id>), opened by its word and how it is drawn:
 # the checks page draws that opening as the chip a system page prints for the petal
 # (PETAL_CAUSE_DRAW), the words kept for a screen reader
@@ -317,13 +317,16 @@ SCOPE_CARD_HEAD = (
 SCOPE_HEAD = (
     ("soundness", "Soundness", "a false reply is refused", "unforgeable", "the customer",
      "No check of ours tries to forge a proof."),
-    ("zero_knowledge", "Zero knowledge", "the weights stay hidden", "weights_hidden",
+    ("zero_knowledge", "Zero knowledge", "a proof reveals nothing of the weights", "weights_hidden",
      "the provider", "No check of ours tries to recover the weights."),
     ("completeness", "Completeness", "an honest reply is accepted", None, "the provider", ""),
 )  # fmt: skip
-SCOPE_STATED = {"stated": "stated by the publisher", "not_stated": "not stated by the publisher"}
-SCOPE_TESTED = "tested by us on honest runs, {n} of {n} replies accepted"
-SCOPE_GRADED = "Graded under {petal}."
+# what the property means stays apart from the verdict: the publisher states it (or not), and the
+# petal grades how far the statement reaches this row
+SCOPE_BLOCK_HEAD = "Soundness, zero knowledge, completeness"  # under the five petals
+SCOPE_STATED = {"stated": "The publisher states it; {petal} grades how far that reaches this row.",
+                "not_stated": "The publisher does not state it; {petal} grades that."}  # fmt: skip
+SCOPE_TESTED = "Tested by us on honest runs, {n} of {n} replies accepted"
 SCOPE_NOT_GRADED = "Not graded."
 SCOPE_PROTECTS = "Protects {whom}."
 STATED_SECURITY = "Stated security"
@@ -421,7 +424,8 @@ PETAL_RULE = {
     # NT-4 comes before NT-5 and NT-6; Q12's line is printed under the steps (PETAL_MORE)
     "no_trusted_party": (
         ("green", "The publisher states that soundness rests on cryptography alone: no setup "
-         "made a secret. Anyone can check a proof file, or the publisher does not say."),
+         "made a secret. Met also needs proof files anyone can check, unless the publisher is silent "
+         "on who can check them."),
         ("amber_upper", "An open setup ceremony with a public transcript, safe if one participant "
          "was honest; or Met's facts read by us, not stated in words."),
         ("amber_lower", "One honest party among a fixed set, or a challenger within a window; or "
@@ -462,7 +466,13 @@ PETAL_MORE = {
          "statement."),
         ("the code", "Only the verifier this row runs counts as the code. A verified verifier "
          "the row does not run counts at the protocol level."),
-        ("scope card", "Printed at the head of a system's glyph, it sets no state: the petal "
+        ("protocol or code", "A proof about a formal model of the method, rather than about a "
+         "program, verifies the protocol, not the code. Level 1 says the protocol, model "
+         "included, when that formal model includes this model's computation, and an "
+         "abstraction of the protocol when it leaves the computation out (or covers the model "
+         "without the method). Only a proof about the verifier program this row runs verifies "
+         "the code."),
+        ("scope card", "Printed under a system's petals, it sets no state: the petal "
          "grades soundness only. Soundness is the verifier's and zero knowledge the prover's, so "
          "the cells that ask them of the other party do not apply."),
     ),
@@ -482,13 +492,17 @@ PETAL_NOT_GRADED = {
 }
 # once for the checks page's glyph section, after the steps
 PETAL_STEPS_FOOT = "Each system page prints its next step, computed from this table."
-# Confidentiality's steps as a scale of what is hidden (§4, amended 2026-11-16), printed beside
-# the step at depth 3
-HIDING_LABEL = {"green": "Hidden, proved for what this row runs",
-                "amber_upper": "Hidden, proved with stated limits",
-                "amber_lower": "Hidden by statement, no proof",
+# Confidentiality's steps as a scale of what was proved or stated (§4, amended 2026-11-16),
+# printed beside the step at depth 3: what the publisher proved, never a result for the row.
+# Mostly met splits by its path: WH-6's missing conditions, or WH-5 capped by our reading (GL-10)
+HIDING_LABEL = {"green": "Zero knowledge proved for what this row runs",
+                "amber_upper": "Zero knowledge proved, with limits",
+                "amber_reading": "Zero knowledge proved for what this row runs, on our reading",
+                "amber_lower": "Stated, no proof",
                 ("red", "stated"): "Not hidden",
                 ("red", "not_stated"): "No guarantee stated"}  # fmt: skip
+# the need a reading adds to a next step (glyph.py's READING_NEED, the same words on the board)
+READING_NEED = "a sentence of the publisher's that says it, in place of our reading"
 # Confidentiality's architecture fact (§4): printed on every Level 1 row, it sets no state
 ARCH_SHORT = "Architecture: visible"
 ARCH_LONG = (
@@ -505,7 +519,7 @@ REACH_LABEL = {"verifier_run": "the verifier code this row runs",
                "part": "part of the protocol",
                "none": "nothing, as the publisher states", "not_stated": "not stated"}  # fmt: skip
 REACH_GAP = {"base": "no trusted base listed", "input": "input-reading code outside the proof"}
-REACH_STATED = "stated: {label}"
+REACH_STATED = "{said}: {label}"  # "stated" or "read as" (SAID_WORD), by the petal's reading
 # the line that says which verifier a theorem is about (§3): only the one the row runs is the code
 VERIFIER_LINE = (
     "The theorem is stated for {stated}; this row runs {run}. Only the verifier this row runs "
@@ -530,7 +544,7 @@ PETAL_CHECKS = {"unforgeable": ("model", "prompt", "reply"), "weights_hidden": (
 # is the check's anchor.
 FIGURE_NAME = {"multiple": "Cost vs serving", "cost": "Cost per reply",
                "check-time": "Verify time per reply", "proof-size": "Proof size per reply",
-               "fidelity-figure": "Fidelity", "kl": "KL to the original weights"}  # fmt: skip
+               "fidelity-figure": "Fidelity figure", "kl": "KL to the original weights"}  # fmt: skip
 # a figure's head where its unit stands beside it: the unit says "per reply", so the head does
 # not; and the surface names fidelity, not the metric (KL and the matched tokens' bar are under
 # Fidelity on a system's page)
@@ -543,25 +557,28 @@ FIGURE_ANCHOR = {"fidelity": "fidelity-figure"}
 # in the headline figure's title, by the figure printed (`chrome.lead_figure`); {on} the GPUs
 HOW_MULTIPLE = {
     "session_multiple": "Cost vs serving divides the GPU-seconds a proved reply took over whole "
-    "sessions (commit, generation and proving, start-up included) by the GPU-seconds serving the "
-    "same reply took with no proof, at full load; {on}, at the same GPU price on both sides.",
+    "sessions (from the start of the commit call to the last proof: commit, generation and "
+    "proving, not the loading before the commit) by the GPU-seconds serving the same reply took "
+    "with no proof, at full load, {on}, at the same GPU price on both sides.",
     "multiple": "Cost vs serving divides the GPU-seconds each further proved reply took in steady "
     "state (generation included) by the GPU-seconds serving the same reply took with no proof, "
-    "at full load; {on}, at the same GPU price on both sides.",
+    "at full load, {on}, at the same GPU price on both sides.",
 }
 HOW_ON = {True: "both on {gpu} GPUs", False: "proved on {gpu}, served on {serving}"}
 HOW_RULE = "How each side is timed"  # the link to the rule after it, on the system page
 SERVING_GPU = "H200"  # CO-4: the serving baseline runs on the fewest H200 that hold the model
 # CO-8 (adopted 2026-11-16): reply tokens per GPU-second, once, under Cost (depth 3)
 REPLY_TOKENS_HEAD = "Reply tokens per GPU-second"
-# what the records time apart: no record times the prompt side apart from the reply side
+# what the records time apart: a session's GPU time per reply in its two parts (CO-7), where a
+# system generates in a phase of its own; the prompt side never apart from the reply side
+SPLIT_PARTS = "It counts the whole session: of its {whole}, {parts}."
 NOT_TIMED_APART = ("Prompt side (prefill) and reply side (decode) are not timed apart in these "
                    "records.")  # fmt: skip
 FIDELITY_TITLE = "leading tokens matching the original, mean"  # in a fidelity word's title
 # Fidelity as a figure (RFC-0018 SI-9, amended 2026-11-14): FI-10's mean as a percentage of the
 # reply's positions, beside the model's Q8_0 and Q4_K_M copies; it sets no state
 FIDELITY_AGAINST = ("q8_0", "q4_k_m")  # the controls printed beside a row's Fidelity
-FIDELITY_FIG_TITLE = ("Fidelity: the share of reply positions where the system's top token is "
+FIDELITY_FIG_TITLE = ("Fidelity figure: the share of reply positions where the system's top token is "
                       "the original's reply token, fed the prompt and then that reply token by "
                       "token")  # fmt: skip
 # the copies printed beside a row's Fidelity at depths 1 and 2 (RFC-0018 SI-9, amended
@@ -572,10 +589,14 @@ COPY_WORD = {"q8_0": "8-bit copy", "q4_k_m": "4-bit copy"}
 FORMAT_WORD = {"integer": "integer", "fixed_point": "fixed-point",
                "floating_point": "floating-point"}  # fmt: skip
 PROVED_HEAD = "proved"
+FORMAT_HEAD = "number format"  # the depth-3 Proved line's words where none is stated
+# the Cost section's Serving line points to the Proved line at the head of Fidelity
+PROVED_LINK = ("the copy this row proves", " is under Fidelity")
 # how a workload record found its weight bits, in words
 BASIS_BITS = {"computed": "computed from its files", "stated": "as the publisher states it",
               "file_size": "from its file size"}  # fmt: skip
 # why the surface figure is top-token agreement, in one line ({tokens}: the request's reply tokens)
+WHY_HEAD = "Why top-token agreement: "
 WHY_TOP_TOKEN = (
     "Why top-token agreement: a greedy reply is the top token at each position, so this counts "
     "how often the proved model makes the original's choice, at every one of the {tokens:,} "
@@ -636,6 +657,7 @@ FIGURE_RULE = {
          "under it."),
         ("", "Computed by the system's own code on the reference reply, not by the proved "
          "computation. It sets no state."),
+        ("", WHY_TOP_TOKEN.replace("{tokens:,}", "{reply_tokens}")),
     ),
     "kl": (
         # FI-7 over the KL texts (PR-3; 64 and 512 are the level file's kl.texts and kl.tokens)
@@ -896,10 +918,18 @@ CHECK_CAUSE_WORD = {
     "system limit": "the system cannot do what this test needs (its publisher's words are "
     "quoted), so the row cannot pass",
     "not run": "not run yet",
-    "not resolved": "the test ran and decided nothing",
+    "not resolved": "the test ran, and its result does not count yet",
     "not reproduced": "a verifier accepted a changed input in our adapter; not yet repeated with "
     "the system's own command",
 }
+# what decides a check that is not decided, and who acts, by (check, cause); None for any check.
+# {session}: the session the check's note names, by date and ordinal. Printed under its cause
+CHECK_DECIDE = {
+    ("no_weight_file", "not resolved"): ("the proofs of session {session} verified again, in the "
+                                         "run's image, on a host with no GPU", "us"),
+    (None, "not reproduced"): ("the same changed input run with the system's own command, "
+                               "outside our adapter", "us"),
+}  # fmt: skip
 # the line that opens the not-decided causes (a check not decided is never worded as a failure;
 # the standing words are chrome.not_passed's)
 CHECK_CAUSE_LEAD = (
@@ -918,7 +948,7 @@ SCOPE_WORD = {
     "setup": "setting up",
     "commit": "committing to the model",
     "prove.steady": "steady state, after the first release group",
-    "prove.session": "the whole session, start-up included",
+    "prove.session": "the whole session, from the start of the commit call to the last proof",
     "whole_wall": f"the whole session, {WHOLE_WALL_SPAN}",
     "verify": "verifying",
     "verify.single_thread": "verifying on one CPU thread",
@@ -986,6 +1016,7 @@ CONTROL_NAME = {"reference-2": "the original, run again",
 # copy or a damaged one (FI-2)
 FID_WHO = "Whose replies"
 FID_KIND = "Kind"
+KIND_TERM = "Honest and damaged copies"  # the glossary entry a control's kind links to
 # a check's record as its link reads, by the file's name (the path stands in the link's title)
 RECORD_WORD = {"run.json": "run record", "controls.json": "controls", "verify-trace": "verify traces",
                "reverify.json": "re-verify record", "fidelity.json": "fidelity record"}  # fmt: skip
@@ -1012,6 +1043,13 @@ FID_PLAIN_COPIES = (
     " The 8-bit copy (Q8_0) and the 4-bit copy (Q4_K_M) are the original with its weights "
     "rounded to 8 bits, and mostly to 4 bits, by llama.cpp; we run them without a proof, as "
     "yardsticks."
+)
+# which copies are yardsticks and which are damaged, and who fixed that (FI-2); its first words
+# link to the glossary (KIND_TERM)
+FID_KINDS = (
+    " The level file fixes, before any run, which copies are honest (the original run again and "
+    "its 8-bit and 4-bit copies) and which are damaged on purpose; the bar is the highest-scoring "
+    "damaged copy that every honest one scores above."
 )
 FID_WHY = (
     "Why top-token agreement: a greedy reply is the top token at each position, so this counts "

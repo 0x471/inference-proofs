@@ -21,6 +21,7 @@ from .chrome import (
     row_cost,
     rung_of,
 )
+from .glossary import term
 from .hexagon import glyph_svg
 from .words import (
     BASIS_BITS,
@@ -48,6 +49,7 @@ from .words import (
     STEADY_STATE,
     TF_INTERVAL,
     WHOLE_SESSIONS,
+    WHY_HEAD,
     WHY_TOP_TOKEN,
     architecture,
     e,
@@ -67,9 +69,9 @@ NOT_TESTED = (
 )
 # the binding-only gap (RFC-0018 SI-4, SI-4a), on the checks page beside NOT_TESTED
 BINDING_GAP = (
-    "The checks run the publisher's own prover honestly and try changes it should refuse. A hash "
-    "of the commitment, prompt and reply, computed from the weights the prover loads, would hold "
-    "all six. Level 1 keeps such a system from a position, not from the ladder: it would still "
+    "Three checks change one thing the verifier must refuse, and the other three test an honest "
+    "run. A hash of the commitment, prompt and reply, computed from the weights the prover loads, "
+    "would pass all six. Level 1 keeps such a system from a position, not from the ladder: it would still "
     "read passed. What keeps it from a position is its publisher's recorded statement that an "
     "accept is the committed model's own greedy reply, or our reading of one, not a test."
 )
@@ -126,7 +128,9 @@ def fig_html(f, n=None, sub=None, why=None, note=None, how=None):
     num, unit = number(f["value"], f["unit"])
     x = " x" if f["unit"] == "ratio" else ""
     line = sub if sub is not None else sub_words(f, n)
-    title = f"{how} {labels(f, n, note)}" if how else labels(f, n, note)
+    # the probe (words.js) prints a title's "key: value" parts, split at "; ", one row each: the
+    # method sentence keeps a key of its own and holds no "; "
+    title = f"how: {how.rstrip('.')}; {labels(f, n, note)}" if how else labels(f, n, note)
     return (f'<span class="fig" title="{e(title)}"><span class="n">{e(num)}</span>'
             f'<span class="u{x}">{e(unit)}</span></span>'
             + (f'<span class="sub">{sub_line(line)}</span>' if line else ""))  # fmt: skip
@@ -219,6 +223,15 @@ def multiple_html(row, parts=True, bare=False, to=None):
     return fig_html(f, counted(row), sub=steady_line(count), how=how) + split
 
 
+# a part's glossary entry, where it has one (D1: a term the surface prints is one click away)
+PART_TERM = {"generation": "Generation", "commit and proving": "Commit and proving"}
+
+
+def part_term(w):
+    """A part's name, linked to its glossary entry where it has one."""
+    return term(w, PART_TERM[w]) if w in PART_TERM else e(w)
+
+
 def split_html(row, key, bar=True, bare=False, to=None):
     """CO-7: under a multiple (`key`: the steady one or the whole sessions'), its two parts, each
     a figure with its scope and n (`bare`: the figure alone, where the whole above them says both
@@ -238,7 +251,7 @@ def split_html(row, key, bar=True, bare=False, to=None):
                f'<rect class="bg" x="{share:.2f}" width="{100 - share:.2f}" height="4"/>{nib}</svg>')  # fmt: skip
     n = counted(row)
     line, note = (BARE, whole_note(row, key)) if bare else (None, None)
-    out = "".join(f'<span class="part {c}"><span class="pl">{e(w)}</span>'
+    out = "".join(f'<span class="part {c}"><span class="pl">{part_term(w)}</span>'
                   f"{to_section(fig_html(f, n, sub=line, note=note), to)}</span>"
                   for c, w, f in (("pp", w1, f1), ("pg", w2, f2)))  # fmt: skip
     return f'<span class="split">{svg}{out}</span>'
@@ -268,23 +281,26 @@ def proved_words(row, long=False):
     """What the row proves, beside every Fidelity figure (RFC-0018 SI-9, amended 2026-11-16): its
     weight bits from the workload record and its number format from the properties file, where
     that records one (never inferred from a format's name). The ladder's short form: "proved:
-    4.84-bit integer weights"; `long` (the Figures row) adds the activations, a part of the
-    weights the bits cover, and "number format not stated" where the publisher states none. ""
+    4.84-bit integer weights", with the part of the weights the bits cover where they cover a
+    part; `long` (the Figures row, the Fidelity petal) adds the activations, and "number format
+    not stated" where the publisher states none. ""
     where the row has no precision record."""
     p = row.get("precision") or {}
     if not p:
         return ""
     fmt = p.get("number_format") or {}
-    w, a = (FORMAT_WORD.get(fmt.get(k, "")) for k in ("weights", "activations"))
+    w, a = (
+        FORMAT_WORD.get((fmt.get(k) or {}).get("value", "")) for k in ("weights", "activations")
+    )
     bits = p.get("bits")
     head = f"{bits_words(bits)}-bit " if isinstance(bits, int | float) else ""
     said = f"{PROVED_HEAD}: {head}{w + ' ' if w else ''}weights"
-    if not long:
-        return said + (", format not stated" if fmt and not w else "")
+    part = ", for part of the weights" if p.get("bits_covers") == "part" else ""
+    if not long:  # never more than the Figures row says: the part is kept
+        return said + part + (", format not stated" if fmt and not w else "")
     if a:
         said += f", {a} activations"
-    if p.get("bits_covers") == "part":
-        said += ", for part of the weights"
+    said += part
     if fmt and not (w and a):  # recorded, and the publisher states no format for a part
         said += ("; number format not stated" if not (w or a)
                  else f"; {'activations' if w else 'weights'}' format not stated")  # fmt: skip
@@ -324,9 +340,13 @@ def fidelity_word(row, page=None, against=True, long=False):
     spread = ([TF_INTERVAL.format(low=pct(low_high[0]), high=pct(low_high[1]))]
               if low_high else [])  # fmt: skip
     why = WHY_TOP_TOKEN.format(tokens=S.V["request"]["output_tokens"])
-    copies = [f"{COPY_WORD[i]}: {i.upper()}" for i in FIDELITY_AGAINST]
-    title = [f"{FIDELITY_FIG_TITLE}. {why.rstrip('.')}", mine["label"], f"n = {mine['n']:,} prompts",
-             *spread, *([proved_title(row)] if proved_title(row) else []), *copies,
+    # each part "key: value", so the probe gives each its row (fig_html)
+    copies = "copies: " + ", ".join(f"{COPY_WORD[i]} {i.upper()}" for i in FIDELITY_AGAINST)
+    title = [FIDELITY_FIG_TITLE, f"why: {why.removeprefix(WHY_HEAD).rstrip('.')}",
+             f"how: {mine['label']}", f"n = {mine['n']:,} prompts",
+             *(f"interval: 95\u00a0%, {pct(low_high[0])} to {pct(low_high[1])}\u202f%"
+               for _ in spread),
+             *([proved_title(row)] if proved_title(row) else []), copies,
              FIDELITY_CHECK_TITLE.format(state=STATE_WORD[check["state"]]),
              f"record: {tf['path']}"]  # fmt: skip
     at = href(row) if page is None else page
@@ -587,7 +607,8 @@ def lead_html(run):
     inference is, what the ladder holds and, from the board, on how many models a system passed
     and, on the largest of them, its figure (`board_words`). No figure of one model is set beside
     another model's."""
-    said = [PROOF_WORDS] + ([LADDER_WORDS, board_words()] if run else [])
+    proof = e(PROOF_WORDS).replace("committed model", term("committed model", "Commitment"), 1)
+    said = [proof] + ([e(LADDER_WORDS), board_words()] if run else [])
     return f'<p class="lede">{" ".join(said)}</p>{how_link()}'
 
 
@@ -618,15 +639,17 @@ def board_words():
     if len(rows) == 1:
         row = rows[0]
         _, f, key = lead_figure(row)
-        fig = fig_html(f, counted(row), sub=BARE, note=whole_note(row, key)) if has(f) else None
+        fig = (fig_html(f, counted(row), sub=BARE, note=whole_note(row, key),
+                        how=how_computed(row)) if has(f) else None)  # fmt: skip
         name = f'<a href="{e(href(row))}">{e(name_of(row))}</a>'
-        what = (f"a reply {name} proves with its verifier costs {fig} as much as serving it" if fig
-                else f"{name} passed")  # fmt: skip
+        # Q35: a reply a system "proves with its verifier", never one "proved by" it
+        what = (f"a reply that {name} proves with its verifier costs {fig} as much as serving it"
+                if fig else f"{name} passed")  # fmt: skip
     else:
         what = f"{len(rows)} systems passed"
     head = e(f"A system passed on {passed} of the {len(rungs)} models")
     if passed == 1:
-        return f"{head}: {where}, where {what}."
+        return f"{head}: {where}. There, {what}."
     return f"{head}; on the largest, {where}, {what}."
 
 
