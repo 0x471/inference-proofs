@@ -57,6 +57,8 @@ Controls act on honest proofs that the run's own `verify` step accepted. The har
 
 All are applied to honest proofs. `vocab_size` comes from the workload's model record ([RFC-0003](0003-workloads.md)).
 
+The harness issues each verifier-side control trial to the adapter as an ordinary counted verification: its `job.json` carries `control: false`, with the same fields as a counted `verify` call. The job file therefore does not tell a verifier that it is being tested, and a verifier that checks honestly only when the flag says so is caught by the control it accepts. This removes the declared signal, not every signal: in a level run a counted verification runs under the trace wrapper ([RFC-0018](0018-level-1-ladder.md)) and a control verification does not, so a verifier that looks for a tracer can still tell the two apart. Closing that is open work. The trial is still a control to the harness, which keeps it out of measured rows by its own record (INV-CTRL-4), not by a field the adapter reads. This applies to the verify step only; prover-side controls (P1, P2, `weakened_prover`) still carry `control: true`, since the adapter needs it to accept W′ and the weakening flags its own rule 4 otherwise refuses.
+
 | ID | Control | Expected set |
 |---|---|---|
 | C1 | change the claimed output token | {`reject`} |
@@ -218,6 +220,7 @@ An accepted control where rejection was expected is a possible soundness or adap
 - **INV-CTRL-6:** The commitment in every control verify call comes from the harness's commit records (the run's or the perturbed one), never from proof files.
 - **INV-CTRL-7:** A `controls.json` merged from parts (§Split suites) is byte for byte the one a single run of the suite with the same `control_seed` writes from the same verify results.
 - **INV-CTRL-8:** C5, C6 and C8 never mutate a part the adapter declares its verify step does not read, and their records list each such part with its reason (§Parts the verifier reads).
+- **INV-CTRL-9:** The `job.json` of a verifier-side control verification does not disclose that it is a control: it has `control: false` and the fields of a measured `verify` (§Shared controls, verifier side).
 
 ### Failure modes
 

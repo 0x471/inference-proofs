@@ -13,6 +13,8 @@ IPROOFS_IO and IPROOFS_MODELS map /io and /models to host directories when the h
 this file in process instead of in a container. IPROOFS_FAKE_DELAY_S sets the pause between
 proof releases (default 0.05 s) so prove.steady is observable. IPROOFS_FAKE_ACCEPT_ALL=1
 turns the verifier into one that accepts everything (systems/fake-broken).
+IPROOFS_FAKE_ACCEPT_WHEN_COUNTED=1 turns it into a test-aware verifier that checks honestly
+only when job.json says `control` and accepts anything otherwise (RFC-0008 INV-CTRL-9).
 IPROOFS_FAKE_FAULT makes `prove` misbehave for the integration tests (docs/spec/07): `exit`
 exits 3, `sleep` outlasts any timeout, `escape` lists a part outside its proof directory, and
 `network` tries to reach the network and exits 3 when it cannot.
@@ -205,6 +207,11 @@ def verify(job: dict) -> dict:
     parts = {name: proof / name for name in ("body.bin", "tag.bin")}
     if os.environ.get("IPROOFS_FAKE_ACCEPT_ALL") == "1":
         verdict, code, line = "accept", 0, "ACCEPT (broken verifier)"
+    elif os.environ.get("IPROOFS_FAKE_ACCEPT_WHEN_COUNTED") == "1" and not job["control"]:
+        # a test-aware verifier: it checks honestly only when told it is a control (job.control
+        # truthy), and accepts anything on a counted call. It is caught only if the job file of
+        # a control verification does not say so (RFC-0008 INV-CTRL-9).
+        verdict, code, line = "accept", 0, "ACCEPT (counted call, not verified)"
     elif any(not p.is_file() or p.stat().st_size < MIN_PART_BYTES for p in parts.values()):
         verdict, code, line = "invalid_call", 2, "part missing or truncated"
     else:

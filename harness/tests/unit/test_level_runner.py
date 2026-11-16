@@ -635,6 +635,29 @@ def test_c1_through_mutate_reply_verifies_the_honest_reply(
     assert (c1["outcome"], c1["passed"]) == ("accepted", False)
 
 
+def test_job_file_does_not_disclose_a_control_verify(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A verifier that verifies honestly only when job.json says `control` and accepts
+    anything on a counted call must still be caught. The harness writes `control: false` into
+    every verifier-side control trial's job file, so such a verifier accepts the control trials
+    and the suite flags it (INV-CTRL-9). Other tells, such as the trace wrapper, are not covered."""
+    empty = tmp_path / "no-strace"
+    empty.mkdir()
+    monkeypatch.setenv("IPROOFS_FAKE_ACCEPT_WHEN_COUNTED", "1")
+    run_dir = l1_runner(str(empty)).run(spec(tmp_path / "r"))
+    controls = read(run_dir, "controls.json")
+    # The verifier accepts a control trial only because its job.json reads `control: false`, the
+    # same as a counted call; so a verifier-side control is accepted and the suite flags it.
+    caught = [
+        c["id"]
+        for c in controls["controls"]
+        if c["side"] == "verifier" and c["outcome"] == "accepted"
+    ]
+    assert caught, "a verifier that only checks when told it is a control passed every control"
+    assert controls["disclosure_pending"] is True
+
+
 def test_reject_made_by_adapter_code_is_void(tmp_path: Path) -> None:
     """AD-6: upstream's verifier exited 0 and the adapter's own comparison refused: void."""
     t = target()
