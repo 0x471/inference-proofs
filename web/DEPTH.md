@@ -44,7 +44,7 @@ The shallowest depth where each kind of content may be printed, and its form the
 | cost, verify time | 0 | figure with its unit |
 | proof size | 1 (Scale), 2 | figure with its unit |
 | a unit | wherever its figure is | beside the figure, always |
-| fidelity | 1 | the Fidelity figure (the share of reply positions where the top token is the reply token, FI-10's mean as a percentage, SI-9) with the Q8_0 and Q4_K_M percentages under it; the check's state in its title |
+| fidelity | 1 | the Fidelity figure (the share of reply positions where the top token is the reply token, FI-10's mean as a percentage, SI-9) with what the row proves under it ("proved: 4.84-bit weights", the number format where the publisher states one), then the 8-bit and 4-bit copies' percentages; the copies' ids, the proved copy, why top-token agreement and the check's state in its title |
 | the fidelity metrics (matched leading tokens, the bar, p, the controls, KL) | 3 | the Fidelity table; in the surface word's title above that |
 | serving, the figure every multiple is over | 1 | figure with its unit, in the model's head |
 | how the model was served (engine, GPUs, concurrency) | 3 | one line under Cost |
