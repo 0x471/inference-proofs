@@ -632,7 +632,8 @@ FIGURE_RULE = {
         ("", "The share of reply positions where the system's top token is the original's reply "
          "token, when the system is fed the prompt and then that reply token by token. It is the "
          "mean over the prompts, as a percentage, with 0 for a prompt the system's own code "
-         "declines. The model's Q8_0 and Q4_K_M percentages are printed under it."),
+         "declines. The model's 8-bit and 4-bit copies' percentages (Q8_0, Q4_K_M) are printed "
+         "under it."),
         ("", "Computed by the system's own code on the reference reply, not by the proved "
          "computation. It sets no state."),
     ),

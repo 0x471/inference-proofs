@@ -247,7 +247,7 @@ The commitment the verifier checks is taken from the harness's own record of the
 
 ## Level 1, release v1.0
 
-Level 1 ([RFC-0018](rfcs/0018-level-1-ladder.md), [`levels/L1.yaml`](levels/L1.yaml), frozen 2026-11-11) is a ladder of three open-weights models: Llama 4 Maverick, Llama 3.1 8B and GPT-2. Release v1.0's board, [`releases/v1.0/board.json`](releases/v1.0/board.json), is computed from the run records in [`results/v1.0/`](results/v1.0/) by `iproofs release board v1.0`, on NVIDIA H200 141 GB hosted profiles. Every figure in it is at evidence tier `reported`: one runner, not reproduced. [docs/REPRODUCE.md](docs/REPRODUCE.md) rebuilds it.
+Level 1 ([RFC-0018](rfcs/0018-level-1-ladder.md), [`levels/L1.yaml`](levels/L1.yaml), frozen 2026-11-11) is a ladder of three open-weights models: Llama 4 Maverick, Llama 3.1 8B and GPT-2. Release v1.0's board, [`releases/v1.0/board.json`](releases/v1.0/board.json), is computed from the run records in [`results/v1.0/`](results/v1.0/) by `iproofs release board v1.0`, on NVIDIA H200 141 GB hosted profiles. Every figure in it is at evidence tier `reported`: our runs only, not rerun by anyone else. [docs/REPRODUCE.md](docs/REPRODUCE.md) rebuilds it.
 
 | System | Pinned upstream | Rung | Claim card |
 |---|---|---|---|
