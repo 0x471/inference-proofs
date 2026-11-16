@@ -725,6 +725,29 @@ def _replace_for_ch4(
     return out
 
 
+def gaps_note(gaps: Sequence[str]) -> str:
+    """The note of a Verify without weights check short of passing, from its gaps ("<run>/<proof>:
+    <why>"): the first session's run id, why its verdicts miss CH-4 and on how many requests'
+    verify calls; a visible GPU adds that none of them was verified again on a host with no GPU
+    (CH-4a); then how many more sessions miss it."""
+    by: dict[str, dict[str, int]] = {}
+    for g in gaps:
+        where, _, why = g.partition(": ")
+        run = where.rpartition("/")[0] or where
+        by.setdefault(run, {})
+        by[run][why] = by[run].get(why, 0) + 1
+    run, whys = next(iter(by.items()))
+    said = []
+    for why, k in whys.items():
+        calls = f"{k} request's verify call" if k == 1 else f"{k} requests' verify calls"
+        again = (", and none was verified again on a host with no GPU" if why == GPU_SEEN
+                 else "")  # fmt: skip
+        said.append(f"{why} on {calls}{again}")
+    more = len(by) - 1
+    tail = f"; {more} more {'session' if more == 1 else 'sessions'} too" if more else ""
+    return f"{run}: {'; '.join(said)}{tail}"
+
+
 def no_weight_file_state(sessions: RowSessions) -> CheckState:
     """Held when every counted verdict has a trace written by a trace tool, with no GPU
     visible, no model file present and no model file opened, its own or a re-verify's of the same
@@ -744,9 +767,8 @@ def no_weight_file_state(sessions: RowSessions) -> CheckState:
     if opened:
         return CheckState(FAILED, None, tuple(opened), "a verify call opened a model file")
     if gaps:
-        more = f" (and {len(gaps) - 1} more requests)" if len(gaps) > 1 else ""
         traced = not any(g.endswith((": no trace", ": no trace tool")) for g in gaps)
-        return _undecided(NOT_RESOLVED if traced else NOT_RUN, evidence, gaps[0] + more)
+        return _undecided(NOT_RESOLVED if traced else NOT_RUN, evidence, gaps_note(gaps))
     return _held(evidence)
 
 

@@ -573,8 +573,8 @@ def test_fm4_a_missing_rerun_is_named_by_its_recipe() -> None:
     tree = faithful_model("held", None, doc, SYSTEM, "exact_match").tree()
     assert "reference-2" not in str(tree["reason"]).replace("(reference-2 failed)", "")
     assert "between the original run again and the 8-bit copy" in str(tree["reason"])
-    assert tree["next"] == {"to": "amber_upper", "needs": [{"text": "the original run again run and scored",
-                                                         "by": "us"}]}  # fmt: skip
+    need = {"text": "the original run again run and scored", "by": "us"}
+    assert tree["next"] == {"to": "amber_upper", "needs": [need]}
     del doc["steps"]["green"]["controls"]  # type: ignore[index]
     tree = faithful_model("held", None, doc, SYSTEM, "exact_match").tree()
     assert "between the original run again and the 8-bit copy has no value" in str(tree["reason"])
