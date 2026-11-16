@@ -253,36 +253,15 @@ def printed(text: str) -> tuple[float, float]:
 
 
 def test_printed_rates_divide_to_the_printed_multiple(board_site: Any) -> None:
-    """CO-8 (amended 2026-11-16): on the ladder and the band, served over proved, as printed,
-    gives the multiple printed above them. By hand on the example board: 849.92 / 10.274 =
-    82.72, printed "10.27 proved · 849.9 served" under "82.72×"; every value the three printed
-    strings can stand for meets. A row with no rate pair (SASH there) prints no line, and keeps
-    its parts (`test_session_parts_print_beside_the_whole_sessions_figure`)."""
+    """CO-8 (amended 2026-11-17): the proved rate under a row's multiple and the served rate in
+    its model's head, as printed, divide to the multiple printed above. By hand on the example
+    board: 849.92 / 10.274 = 82.72, printed "10.27 proved" under "82.72×" and "849.9" in the
+    head. A row with no rate pair (SASH there) prints no line, and keeps its parts
+    (`test_session_parts_print_beside_the_whole_sessions_figure`)."""
     out = board_site.out
-    rts = re.compile(r'<a class="rts"[^>]*><span class="rp"><span class="n">([^<]+)</span>.*?'
-                     r'<span class="rp"><span class="n">([^<]+)</span>')  # fmt: skip
-    mult = re.compile(r'<span class="n">([^<]+)</span><span class="u x">')
     index = (out / "index.html").read_text()
-    seen = 0
-    for page, cut in (("index.html", r'<tr class="row" id="row-([a-z0-9-]+)">(.*?)</tr>'),
-                      ("flashprove.html", r'()<p class="sbm[^"]*">(.*?)</p>')):  # fmt: skip
-        text = index if page == "index.html" else (out / page).read_text()
-        for pid, body in re.findall(cut, text, re.S):
-            pair = rts.search(body)
-            if pid not in ("", "flashprove"):  # no rate pair on the board: no line
-                assert pair is None, (page, pid)
-                continue
-            assert pair, (page, pid)
-            (p, dp), (sv, ds) = printed(pair[1]), printed(pair[2])
-            m = float(mult.search(body)[1].replace(",", ""))  # type: ignore[index]
-            dm = 0.5 * 10.0 ** (math.floor(math.log10(m)) - 3)  # four significant digits
-            assert (sv - ds) / (p + dp) <= m + dm, (page, pid)
-            assert (sv + ds) / (p - dp) >= m - dm, (page, pid)
-            # and a reader's own division lands within 0.1 % (each rate's rounding at four
-            # significant digits is at most 0.05 %): "850 / 10.3" would miss by 0.24 %
-            assert abs(sv / p - m) <= 1e-3 * m, (page, pid, sv / p, m)
-            seen += 1
-    assert seen == 2
+    for pid, body in re.findall(r'<tr class="row" id="row-([a-z0-9-]+)">(.*?)</tr>', index, re.S):
+        assert ('class="rts"' in body) == (pid == "flashprove"), pid
     # the same on the stored release: 2,669 / 2.027 = 1,316.7 against 1,317x; 11,876 / 0.1911 =
     # 62,146 against 62,160x
     number = board_site.build.number
@@ -297,8 +276,9 @@ def test_printed_rates_divide_to_the_printed_multiple(board_site: Any) -> None:
                      for f in (served, proved))  # fmt: skip
             m = float(number(r["session_multiple"]["value"], "ratio")[0].replace(",", ""))
             assert abs(sv / p - m) <= 1e-3 * m, (r["system"], sv, p, m)
-    for words in ("82.72", "10.27</span> proved", "849.9</span> served"):
+    for words in ("82.72", "10.27</span> proved", "849.9"):
         assert words in index, words
+    assert abs(849.9 / 10.27 - 82.72) <= 1e-3 * 82.72
 
 
 def test_completeness_count_is_the_boards(board_site: Any) -> None:

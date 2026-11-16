@@ -47,10 +47,8 @@ from .words import (
     PROVED_HEAD,
     RATE_HOW,
     RATE_IS,
-    RATE_ON,
     RATE_PER,
     RATE_PROVED,
-    RATE_SERVED,
     REFERENCE_WORD,
     SCALE_NOT_RUN,
     SEP,
@@ -244,25 +242,20 @@ def multiple_html(row, parts=True, bare=False, to=None, rates=None):
 
 
 def rate_html(row, to):
-    """The two rates the multiple is made of, in one small line under it (CO-8, amended
-    2026-11-16): "2.027 proved · 2,669 served", then once for both their unit and GPU, "tokens/s
-    per H200"; each the request's reply tokens per GPU-second, linked to `to` (the Cost section's
-    line on them, where their scope, n, range and GPUs are printed: DEPTH law 3). Its title says
-    how they read against the multiple (served over proved is it) and carries each rate's labels
+    """The proved rate, in one small line under the multiple (CO-8, amended 2026-11-17):
+    "2.027 proved", then its unit and GPU, "tokens/s per H200"; the request's reply tokens per
+    GPU-second, linked to `to` (the Cost section's line on the two rates, where their scope, n,
+    range and GPUs are printed: DEPTH law 3). The served rate is not repeated here: the model's
+    head prints it once for all its rows (`served_html`), in the same unit. The title says how
+    the two read against the multiple (served over proved is it) and carries each rate's labels
     and record. Nothing where the row has no pair (`rate_pair`)."""
     pair = rate_pair(row)
     if pair is None:
         return ""
-    proved, served, gp, gs = pair
-    same = gp == gs
-    pn, sn = (number(f["value"], f["unit"])[0] for f in (proved, served))
-    pw = RATE_PROVED if same else f"{RATE_PROVED} {RATE_ON.format(gpu=gp)}"
-    sw = RATE_SERVED if same else f"{RATE_SERVED} {RATE_ON.format(gpu=gs)}"
-    unit = RATE_PER.format(gpu=gs if same else "GPU")
-    words = (f'<span class="rp"><span class="n">{e(pn)}</span> {e(pw)}</span>'
-             f'<span class="sep">{e(SEP)}</span>'
-             f'<span class="rp"><span class="n">{e(sn)}</span> {e(sw)}</span>'
-             f'<span class="sr">, </span><span class="ru">{e(unit)}</span>')  # fmt: skip
+    proved, served, gp, _ = pair
+    pn = number(proved["value"], proved["unit"])[0]
+    words = (f'<span class="rp"><span class="n">{e(pn)}</span> {e(RATE_PROVED)}</span>'
+             f'<span class="sr">, </span><span class="ru">{e(RATE_PER.format(gpu=gp))}</span>')  # fmt: skip
     _, lead, _ = lead_figure(row)
     count = proved["n"] if proved["n"] is not None else counted(row)
     whole = WHOLE_SESSIONS.format(n=rung_of(row)["requests_per_session"])

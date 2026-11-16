@@ -579,11 +579,10 @@ SERVING_GPU = "H200"  # CO-4: the serving baseline runs on the fewest H200 that 
 # CO-8 (adopted 2026-11-16): reply tokens per GPU-second under Cost (depth 3); amended 2026-11-16:
 # the proved and the served rate also print as one line under the multiple (`overview.rate_html`)
 REPLY_TOKENS_HEAD = "Tokens per second"
-# that line: each rate's word after its number ("2.027 proved · 2,669 served"), then once for both
-# their unit and the GPU both ran on ("tokens/s per H200"), or each rate's GPU after its word and
-# "tokens/s per GPU" where the two differ
-RATE_PROVED, RATE_SERVED = "proved", "served"
-RATE_PER, RATE_ON = "tokens/s per {gpu}", "on {gpu}"
+# that line (Q41): the proved rate's word after its number ("2.027 proved"), then its unit and
+# GPU ("tokens/s per H200"); a model's head prints its served rate in the same unit
+RATE_PROVED = "proved"
+RATE_PER = "tokens/s per {gpu}"
 # its title, first: how the two rates are read against the multiple above them
 RATE_HOW = ("how: the request's {tokens} reply tokens over the GPU-seconds one reply took, on "
             "one GPU")  # fmt: skip
