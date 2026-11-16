@@ -208,8 +208,11 @@ def vercel_json():
         "cleanUrls": True,
         "trailingSlash": False,
         "framework": None,
-        # every commit of the push, not only its last one
-        "ignoreCommand": "git diff --quiet ${VERCEL_GIT_PREVIOUS_SHA:-HEAD^} HEAD -- .",
+        # every commit of the push, not only its last one; a previous commit outside the
+        # deploy clone (a long push) makes git fail, which must build, not fail the deployment
+        "ignoreCommand": (
+            "git diff --quiet ${VERCEL_GIT_PREVIOUS_SHA:-HEAD^} HEAD -- . && exit 0 || exit 1"
+        ),
         "outputDirectory": "public",
         "redirects": [
             {"source": "/system", "destination": first, "permanent": False},
