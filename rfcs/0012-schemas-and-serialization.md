@@ -395,6 +395,7 @@ Amendment of 2026-11-16 (RFC-0018 Q37, GL-11, CO-8, SI-9). Additive, and the one
 
 - `quantity/1`: the unit `token/gpu_s` (reply tokens per GPU-second), in the unit enum and the INV-QTY-3 list.
 - `board/1`: per petal the optional `next` (GL-11: the step it would move to and each need with who acts; null at green); per row the optional `session_reply_tokens_per_gpu_second` (CO-8).
+- `board/1` (amended 2026-11-16, RFC-0018 Q39): per rung, in `baseline`, the optional `reply_tokens_per_gpu_second` (CO-8: the request's reply tokens over the baseline's GPU-seconds per reply) and `gpu_model` (the serving run's recorded GPU).
 - `properties/2`: the optional top-level `number_format` (SI-9: the proved copy's weights and activations, each `integer`, `fixed_point`, `floating_point` or `not_stated`, with its quotes).
 - `site-facts/1`: per system `paper`, the publisher's paper as a file of its repository at the row's pinned commit, where the repository carries one; the site refuses a link at another commit.
 
