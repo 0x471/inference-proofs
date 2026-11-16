@@ -231,18 +231,11 @@ html:has(.top.s-on) { overflow: hidden; }
 .lede .fig { display: inline; }
 .lede .fig .n, .lede .fig .u, .lede .fig .u.x { font: 600 16px/25px var(--mono); letter-spacing: 0; margin: 0; }
 /* the lines between the band and the ladder: what passed means, and while it holds, that no model has two systems */
-.lhd { margin-top: 40px; font: var(--f-meta); }
-.lhd p { margin: 0; max-width: 90ch; }
-.lhd p + p { margin-top: 4px; }
-.lhd a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: 3px; }
-.lhd + .rung { margin-top: 56px; }
 @media (max-width: 760px) {
   /* as the other title bands (.mast-t), so the title keeps its place from tab to tab */
   .home .mast-in { padding: 32px 0 30px; }
   .lede { margin-top: 18px; font-size: 14px; line-height: 22px; }
   .lede .fig .n, .lede .fig .u, .lede .fig .u.x { font-size: 14px; line-height: 22px; }
-  .lhd { margin-top: 24px; }
-  .lhd + .rung { margin-top: 32px; }
 }
 /* a name on its band (a system, a Learn page); a system's name morphs between the ladder and its page */
 .sysname { font: 900 clamp(56px, 7.4vw, 108px)/.84 var(--disp); letter-spacing: -.012em; padding-top: 4px; margin: 0; overflow-wrap: anywhere; }
@@ -400,6 +393,8 @@ html:not(.js) .shr:not(:has(a)) { display: none; }
 
 /* ---------------------------------------------------------------- the ladder: a section per model under a cobalt rule, its size in a tab */
 .rung { margin-top: 96px; }
+/* the first model starts close under the band, so its first row is on the first screen */
+.ladder > .rung:first-child { margin-top: 40px; }
 .rh { border-top: 4px solid var(--cobalt); }
 .rk { display: inline-block; margin: 0; padding: 5px 10px 6px; background: var(--cobalt); color: var(--ground); font: 600 14px/1 var(--mono); font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
 /* the frontier's rung says so beside its tab, in the frame's ink */
@@ -503,6 +498,14 @@ a.fig.fp:hover .n { text-decoration: underline; text-decoration-thickness: 1px; 
 /* Cost vs serving is the headline; the other figures of a row are secondary: smaller and lighter, in the same
    ink, their units at full size beside them */
 .lad :is(.cc, .ct, .ck) .fig .n, .lad .ck .fw { font-size: 17px; font-weight: 500; letter-spacing: -.01em; }
+/* the two rates the multiple is made of (CO-8, amended 2026-11-16): one small line under it, in two short lines
+   broken at its dot, each number in the paper ink; it leads to the Cost section's line on them */
+.rts { display: block; width: fit-content; margin-top: 12px; font: 400 12px/17px var(--mono); color: var(--paper); text-decoration: none; }
+.rts .n { font-weight: 600; color: var(--paper); font-variant-numeric: tabular-nums; }
+.rts:hover { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+:is(.lad, .figs) .rts .sep { display: block; height: 0; overflow: hidden; }
+.figs .rts { margin-top: 0; font-size: 13px; line-height: 20px; }
+.figs .rts .n { font-size: 22px; letter-spacing: -.02em; }
 .split { display: grid; grid-template-columns: minmax(0, max-content); justify-content: start; row-gap: 10px; margin-top: 14px; }
 .split .sbar { grid-column: 1 / -1; width: 100%; max-width: 168px; height: 4px; display: block; }
 .split .bp { fill: var(--paper); }
@@ -512,9 +515,9 @@ a.fig.fp:hover .n { text-decoration: underline; text-decoration-thickness: 1px; 
 .split .part { display: grid; grid-template-columns: max-content max-content; justify-content: start; align-items: baseline; column-gap: 8px; row-gap: 3px; }
 .split .pl { grid-column: 1 / -1; font: var(--f-label); color: var(--muted); text-transform: uppercase; letter-spacing: var(--track); white-space: nowrap; }
 .split .pp .pl { color: var(--paper); }
-.split .fig .n, .lad .cm .split .fig .n { font-size: 14px; letter-spacing: -.02em; }
-.split .fig .u.x, .lad .cm .split .fig .u.x { font-size: 12px; margin-left: -.1em; }
-.split .sub, .lad .cm .split .sub { margin: 0; font-size: 11px; line-height: 14px; white-space: nowrap; }
+.split .fig .n { font-size: 14px; letter-spacing: -.02em; }
+.split .fig .u.x { font-size: 12px; margin-left: -.1em; }
+.split .sub { margin: 0; font-size: 11px; line-height: 14px; white-space: nowrap; }
 /* on the band: the parts under its figure, set right with it, in the ground ink, no bar */
 .sbm .split { grid-template-columns: max-content max-content; justify-content: end; column-gap: 28px; margin-top: 18px; }
 .sbm .split .part { grid-template-columns: max-content; justify-content: end; justify-items: end; }
@@ -540,6 +543,8 @@ a.fig.fp:hover .n { text-decoration: underline; text-decoration-thickness: 1px; 
 }
 .sub { display: block; font: 400 12px/16px var(--mono); color: var(--muted); margin-top: 6px; }
 .lad .sub { white-space: nowrap; }
+/* what the row proves may take two lines rather than run past the table */
+.lad .sub.pv { white-space: normal; }
 .lad .st, .scl .st, .fid thead th, .fid td[data-l="Kind"] { text-wrap: balance; }
 /* a check not held and its state as one unit: it starts a line rather than break a check's name where the line has room */
 :is(.lad, .scl) .st .ckn { display: inline-block; max-width: 100%; text-wrap: wrap; }
@@ -597,15 +602,15 @@ a.fig.fp:hover .n { text-decoration: underline; text-decoration-thickness: 1px; 
   .lad .cc, .lad .ct, .lad .ck { min-width: 0; box-shadow: inset 0 1px 0 var(--line); }
 }
 /* a tablet: the multiple on the name's line at its right end from 761 px (its label over it, as
-   the thirds' are, its parts under it), so the multiples of a rung run down one edge; then cost, check
-   time and KL in thirds */
+   the thirds' are, its two rates under it), so the multiples of a rung run down one edge; then proof
+   size, verify time and Fidelity in thirds */
 @media (max-width: 1180px) and (min-width: 561px) {
   .lad .csys { flex: 1 1 200px; }
   .lad .cm { flex: 0 1 auto; display: grid; grid-template-columns: auto; grid-template-areas: "l" "f" "u" "s"; justify-items: start; }
   .lad .cm > .lbl { grid-area: l; margin: 0 0 6px; }
   .lad .cm > :is(.fig, .flk), .lad .cm > .na { grid-area: f; }
   .lad .cm > .sub { grid-area: u; margin: 0; }
-  .lad .cm > .split { grid-area: s; margin-top: 10px; }
+  .lad .cm > .rts { grid-area: s; margin-top: 10px; }
   .lad .cm .fig .n { font-size: 36px; }
   .lad .cm .fig .u.x { font-size: 22px; }
   /* an empty item ends the line, so the thirds always start their own (the multiple, when the
@@ -622,21 +627,19 @@ a.fig.fp:hover .n { text-decoration: underline; text-decoration-thickness: 1px; 
 /* up to 760 px a wide multiple (or a cold session's long scope) cannot always share the name's line, so
    every row gives its multiple a line of its own: the rows of a rung keep one arrangement */
 @media (max-width: 760px) and (min-width: 561px) {
-  /* on that line the multiple's two parts stand beside it, side by side under their bar, not under it: the line
-     holds no empty block at its right */
+  /* on that line the multiple's two rates stand beside it, not under it: the line holds no empty block at its
+     right */
   .lad .cm { flex-basis: 100%; grid-template-columns: max-content minmax(0, 1fr); grid-template-areas: "l l" "f s" "u s"; column-gap: 40px; align-items: start; }
-  .lad .cm > .split { grid-template-columns: max-content max-content; column-gap: 32px; margin-top: 6px; }
 }
 /* where one of the thirds' heads takes two lines, each head sits on the floor of two, so the values share a line */
 @media (max-width: 640px) and (min-width: 561px) {
   .lad :is(.cc, .ct, .ck) > .lbl { display: flex; align-items: flex-end; min-height: 28px; }
 }
-/* a phone: the ladder is still the table, a row bounded by a full rule. Its first line is its glyph (drawn with no
-   names, tall enough to stand beside the name's line and the two parts under it), its name with its standing, and
-   at the line's end its multiple (its position's square is left to a wide screen: the rows are in its order).
-   Where the multiple has two parts they stand under it, one over the other, each named before its figure, the
-   figures on the multiple's edge. Then a ruled list, one figure a line, its name at the line's start and the
-   figure at its end, on the multiple's edge: cost, verify time and fidelity. The heads System and Cost vs serving
+/* a phone: the ladder is still the table, a row bounded by a full rule. Its first line is its name with its
+   standing and at the line's end its multiple (its position's square is left to a wide screen: the rows are in its
+   order); under them its glyph, and beside the glyph the multiple's two rates, on the multiple's edge. Then a ruled
+   list, one figure a line, its name at the line's start and the figure at its end, on the multiple's edge: proof
+   size, verify time and fidelity. The heads System and Cost vs serving
    stay on screen with the model's band over them. A rung's head is its size, its name, its publisher and
    architecture on one line, and its serving figure on the next */
 @media (max-width: 560px) {
@@ -663,7 +666,7 @@ a.fig.fp:hover .n { text-decoration: underline; text-decoration-thickness: 1px; 
   /* the position is not drawn on a phone (the rows are in its order); a screen reader still reads it */
   .lad .cp { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
   /* the glyph under the name, its petals named as on a wide screen (narrowed with the column on the narrowest
-     phones), the multiple's parts beside it */
+     phones), the multiple's two rates beside it */
   .lad .cg { grid-area: 2 / 1; position: relative; z-index: 1; min-width: 0; padding: 12px 12px 14px 0; }
   .lad .csys { grid-area: 1 / 1; min-width: 0; padding: 0 12px 0 0; }
   /* the multiple's cell makes no box: its figure ends the name's line. A row with no multiple keeps the cell, the
@@ -672,15 +675,9 @@ a.fig.fp:hover .n { text-decoration: underline; text-decoration-thickness: 1px; 
   .lad .cm > :is(.fig, .flk) { grid-area: 1 / 2; justify-self: end; }
   .lad .cm:has(> .na) { display: block; grid-area: 1 / 2; max-width: 8.5rem; text-align: right; }
   .lad tr:has(> .cm > .na) .st .nw { white-space: normal; }
-  .lad .cm .lbl, .lad .cm .split .sbar { display: none; }
-  /* the multiple's two parts stand under it, one over the other, in two columns that end on its edge: each part's
-     name, then its figure, in the standing's small type, so they read as the multiple's own and never as two more
-     lines of the list (their names run left of the multiple's column, into the room beside the glyph) */
-  .lad .cm > .split { grid-area: 2 / 2; align-self: start; display: grid; grid-template-columns: max-content max-content; justify-content: end; align-items: baseline; column-gap: 10px; row-gap: 3px; margin: 14px 0 14px; padding: 0; }
-  .lad .cm .split .part { display: contents; }
-  .lad .cm .split .pl, .lad .cm .split .pp .pl { grid-column: 1; justify-self: end; font: 400 12px/16px var(--mono); letter-spacing: 0; text-transform: none; color: var(--muted); white-space: nowrap; }
-  .lad .cm .split :is(.fig, .flk) { grid-column: 2; justify-self: end; }
-  .lad .cm .split .fig .n { font-size: 13px; }
+  .lad .cm .lbl { display: none; }
+  /* the two rates stand under it, set right on its edge, beside the glyph */
+  .lad .cm > .rts { grid-area: 2 / 2; align-self: start; justify-self: end; margin: 14px 0; text-align: right; }
   /* the list: one figure a line, named at the line's start, the figure at its end */
   .lad :is(.cc, .ct, .ck) { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; column-gap: 12px; min-height: 32px; padding: 7px 0; }
   .lad :is(.cc, .ct, .ck) { grid-column: 1 / -1; }
@@ -833,8 +830,7 @@ html.js .scalepage .scl-panel { margin-top: 0; }
   .scl tr > .cp { display: none; }
   .scl tr > .csys { padding-left: 12px; }
   .scl .nrun > td { padding-left: 12px; }
-  /* a multiple in two parts, as the ladder's phone row sets them: the figure ends the name's line, and its two
-     parts stand under it, one over the other, each named before its figure, the figures on the multiple's edge
+  /* a multiple in two parts: the figure ends the name's line, and its two parts stand under it, one over the other, each named before its figure, the figures on the multiple's edge
      (no bar) */
   .scl tr.row:has(> .cf > .split) { grid-template-areas: "s f" "l l" "x x"; }
   .scl .cf:has(> .split) { display: contents; }
@@ -1184,9 +1180,11 @@ html.js .scalepage .scl-panel { margin-top: 0; }
 @media (max-width: 760px) {
   .fid .sub .nw { white-space: normal; }
 }
-/* the figures row in two columns once four cells cannot hold a figure and its unit on one line */
+/* the figures row in two columns once four cells cannot hold a figure and its unit on one line; the two rates
+   and Fidelity, each a figure with words beside it, take the row's width */
 @media (max-width: 1000px) {
   .figs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .figs > div:has(.rts), .figs > div:has(a.fp) { grid-column: 1 / -1; }
 }
 @media (max-width: 760px) {
   .parts { grid-template-columns: repeat(2, minmax(0, 1fr)); }

@@ -27,7 +27,7 @@ from .chrome import (
     link,
     page,
     pnav,
-    row_cost,
+    rate_pair,
     rung_of,
     share_words,
 )
@@ -37,6 +37,7 @@ from .overview import (
     BARE,
     BINDING_GAP,
     NOT_TESTED,
+    RATE_ANCHOR,
     defined,
     fidelity_word,
     fig_html,
@@ -48,6 +49,7 @@ from .overview import (
     nobreak,
     pct,
     proved_words,
+    rate_html,
     request_words,
     serving_words,
     split_html,
@@ -163,6 +165,7 @@ from .words import (
     PREFIX,
     PROVED_LINK,
     QUOTES_HEAD,
+    RATE_SERVING,
     REACH_GAP,
     REACH_LABEL,
     REACH_STATED,
@@ -1333,6 +1336,15 @@ def reply_tokens_html(row):
     # what the records do time apart (CO-7): the whole session's GPU time in its two parts, each a
     # stored figure, so the rate is not read as proving alone
     figs = row["figures"]
+    # the served rate beside it (amended 2026-11-16), where the row has both, and what the two
+    # make, so the ladder's line under the multiple has its labels in words (how it was served is
+    # the Serving line's, above; what it counts is in its title)
+    pair = rate_pair(row)
+    served = ""
+    if pair is not None:
+        lead_head, lead_tail = RATE_SERVING
+        served = (f" {e(lead_head)}: {fig_html(pair[1], sub=BARE, note=pair[1].get('note'))}. "
+                  f"{e(lead_tail.format(multiple=fig_words(lead_figure(row)[1])))}")  # fmt: skip
     whole, parts = figs.get("session_gpu_seconds_per_reply"), [
         (PART_WORD[w], figs.get(k)) for w, k in (("generation", "session_generation_gpu_seconds_per_reply"),
                                                 ("commit_and_proving",
@@ -1340,8 +1352,9 @@ def reply_tokens_html(row):
     split = (" " + e(SPLIT_PARTS.format(whole=amount(whole), parts=" and ".join(
         f"{w} {amount(p)}" for w, p in parts)))
              if has(whole) and all(has(p) for _, p in parts) else "")  # fmt: skip
-    return (f'<p class="rb rtk"><span class="k">{head}</span> <span>{fig_html(f, count, sub=BARE)} '
-            f"({', '.join(said)}).{split} {e(NOT_TIMED_APART)}</span></p>")  # fmt: skip
+    return (f'<p class="rb rtk" id="{RATE_ANCHOR}"><span class="k">{head}</span> <span>'
+            f"{fig_html(f, count, sub=BARE)} ({', '.join(said)}).{served}{split} "
+            f"{e(NOT_TIMED_APART)}</span></p>")  # fmt: skip
 
 
 def evidence_words(named):
@@ -1831,13 +1844,13 @@ def tf_title(head, tf):
 
 def figures_html(row):
     """The row's other figures (the band prints its one figure) as one ruled row of cells, each
-    figure with its unit and no more (SI-8): cost per reply at the multiple's own scope, verify
-    time and proof size per reply, then Fidelity. Each one's scope and n stand under Cost (and in
-    its title); the bar, the controls and KL under Fidelity."""
+    figure with its unit and no more (SI-8): the two rates the multiple is made of (amended
+    2026-11-16, in USD's place: USD is under Cost only), verify time and proof size per reply,
+    then Fidelity. Each one's scope and n stand under Cost (and in its title); the bar, the
+    controls and KL under Fidelity."""
     figs, n = row["figures"], counted(row)
-    cost = row_cost(row)  # its title names the whole sessions where it is theirs, and n (law 3)
-    note = whole_note(row, "session_multiple") if cost is figs["session_usd_per_reply"] else None
-    cells = [(defined(FIGURE_HEAD["cost"], "cost"), fig_html(cost, n, sub=BARE, note=note)),
+    rates = rate_html(row, f"#{RATE_ANCHOR}")
+    cells = [*([(defined(FIGURE_HEAD["rate"], "rate"), rates)] if rates else []),
              (defined(FIGURE_HEAD["check-time"], "check-time"),
               fig_html(figs["verify_seconds_per_reply"], n, sub=BARE)),
              (defined(FIGURE_HEAD["proof-size"], "proof-size"),

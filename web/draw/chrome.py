@@ -329,13 +329,13 @@ def cards_record():
 
 def card_alt(card):
     """The picture in words, from the same data the picture draws: the system and its model, the
-    band's figure, the standing, cost and verify time per reply, the petals. Each figure with its
+    band's figure, the standing, proof size and verify time per reply, the petals. Each figure with its
     unit, as the picture prints it."""
     if card == "home":
         return "Inference proofs."
     row = S.PAGE[card]
     lead = lead_words(row)
-    figs = [(FIGURE_HEAD["cost"], row_cost(row)),
+    figs = [(FIGURE_HEAD["proof-size"], row["figures"]["proof_bytes_per_reply"]),
             (FIGURE_HEAD["check-time"], row["figures"]["verify_seconds_per_reply"])]  # fmt: skip
     cells = ". ".join(f"{k}: {fig_words(v)}" for k, v in figs)
     states = "; ".join(
@@ -414,12 +414,17 @@ def parts_of(row, key):
     return parts if parts and all(has(f) for _, f in parts) else []
 
 
-def row_cost(row):
-    """The cost per reply at the printed multiple's scope (`lead_figure`): the whole sessions'
-    on every row that has one (SI-1), else the steady one, so one row never mixes two scopes."""
-    figs = row["figures"]
-    whole = has(figs["session_multiple"]) or not has(figs["multiple"])
-    return figs["session_usd_per_reply" if whole else "steady_usd_per_reply"]
+def rate_pair(row):
+    """The two rates the headline is made of (CO-8, amended 2026-11-16): the row's reply tokens
+    per GPU-second over whole sessions and its model's serving baseline's, as (proved, served,
+    proved GPU, served GPU); None where the row's figure is not the whole sessions' multiple or
+    either rate is missing, so served over proved is always the multiple printed above it."""
+    proved = row["figures"].get("session_reply_tokens_per_gpu_second")
+    b = rung_of(row)["baseline"] or {}
+    served = b.get("reply_tokens_per_gpu_second")
+    if lead_figure(row)[2] != "session_multiple" or not (has(proved) and has(served)):
+        return None
+    return proved, served, gpu_name(row), b.get("gpu") or SERVING_GPU
 
 
 def only_run(row):

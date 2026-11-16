@@ -9,7 +9,7 @@
   const typing = (t) => t && t.closest && t.closest('input, textarea, select, [contenteditable]');
   // a figure carrying labels (the probe, below), and the press under way: what it was made with and on what figure,
   // and whether that figure's labels were already shown. A tap's focus and its click are left to the probe's click
-  const FIG = '.fig[title], .fig[data-t], .na[title], .na[data-t], .part[title], .part[data-t]';
+  const FIG = '.fig[title], .fig[data-t], .rts[title], .rts[data-t], .na[title], .na[data-t], .part[title], .part[data-t]';
   let press = null;
 
   // ------------------------------------------------------------ search: a combobox over search.json (written by build.py)

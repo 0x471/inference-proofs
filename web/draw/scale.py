@@ -1,5 +1,6 @@
 """The scale page (`scale.html`, RFC-0018 SI-7): every row of the board on a decade axis, one
-figure at a time (the multiple of serving, cost, check time and proof size per reply).
+figure at a time (the multiple of serving, proof size and verify time per reply; USD is printed
+under Cost on a system's page only, amended 2026-11-16).
 
 Each figure is a section; the strip of sections picks the one drawn (words.js), and with no script
 all four are drawn. A section is one table with its axis once at the head and one group (lane) per
@@ -28,7 +29,6 @@ from .chrome import (
     lead_figure,
     page,
     pnav,
-    row_cost,
 )
 from .overview import (
     BARE,
@@ -59,9 +59,8 @@ from .words import (
 # the figures, in the strip's order (the first is drawn when the address names none): the section's
 # id, its name, and the stored unit its axis reads in
 DIMS = (("multiple", FIGURE_HEAD["multiple"], "ratio"),
-        ("cost", FIGURE_HEAD["cost"], "USD/request"),
-        ("check-time", FIGURE_HEAD["check-time"], "s/request"),
-        ("proof-size", FIGURE_HEAD["proof-size"], "B/request"))  # fmt: skip
+        ("proof-size", FIGURE_HEAD["proof-size"], "B/request"),
+        ("check-time", FIGURE_HEAD["check-time"], "s/request"))  # fmt: skip
 # a stored value in the unit `words.number` reads it in (bytes read as MB); 1 for the others
 READING = {"B/request": 1e-6}
 # Martian Mono's advance, in em, at the width the site sets it (87.5 %): every glyph alike,
@@ -85,34 +84,25 @@ def baseline_value(rung, key):
 
 
 def figure_of(row, dim):
-    """The row's one stored figure for this dimension, as the ladder prints it (the multiple and
-    the cost at the whole sessions' scope wherever the row has it: `lead_figure`, `row_cost`)."""
+    """The row's one stored figure for this dimension, as the ladder prints it (the multiple at
+    the whole sessions' scope wherever the row has it: `lead_figure`)."""
     figs = row["figures"]
     if dim == "multiple":
         return lead_figure(row)[1]
-    if dim == "cost":
-        return row_cost(row)
     return figs["verify_seconds_per_reply" if dim == "check-time" else "proof_bytes_per_reply"]
 
 
 def ticks_of(row, dim, rung):
-    """Where the counted sessions sit, in the axis's unit: the multiple and the cost from each
-    session's GPU time at the printed figure's scope (the whole session, or m where the row has
-    only a steady figure), placed by the rung's serving GPU time or by the row's own price (its
-    stored USD over its stored GPU time); none for check time and proof size, which store no
-    value per session."""
-    figs = row["figures"]
+    """Where the counted sessions sit, in the axis's unit: the multiple from each session's GPU
+    time at the printed figure's scope (the whole session, or m where the row has only a steady
+    figure), placed by the rung's serving GPU time; none for verify time and proof size, which
+    store no value per session."""
+    if dim != "multiple":
+        return []
     steady = lead_figure(row)[2] == "multiple"
     vals = [s.get("m" if steady else "session") for s in row["sessions"]]
-    vals = [v for v in vals if v is not None]
-    if dim == "multiple":
-        b = baseline_value(rung, "gpu_seconds_per_reply")
-        return [v / b for v in vals] if b else []
-    if dim == "cost":
-        usd = figs["steady_usd_per_reply" if steady else "session_usd_per_reply"]
-        gpu = figs["steady_gpu_seconds_per_reply" if steady else "session_gpu_seconds_per_reply"]
-        return [v * usd["value"] / gpu["value"] for v in vals] if has(usd) and has(gpu) else []
-    return []
+    b = baseline_value(rung, "gpu_seconds_per_reply")
+    return [v / b for v in vals if v is not None] if b else []
 
 
 def marks_of(row, dim, rung, unit):
@@ -132,13 +122,10 @@ def marks_of(row, dim, rung, unit):
 
 
 def serving_of(rung, dim):
-    """Where serving sits on this axis: 1× on the multiple's (serving over itself), the rung's
-    stored serving cost on the cost's; None where the figure has no serving counterpart or the
-    rung has no baseline."""
+    """Where serving sits on this axis: 1× on the multiple's (serving over itself); None where
+    the figure has no serving counterpart or the rung has no baseline."""
     if dim == "multiple":
         return 1.0 if baseline_value(rung, "gpu_seconds_per_reply") else None
-    if dim == "cost":
-        return baseline_value(rung, "usd_per_reply")
     return None
 
 
@@ -246,15 +233,14 @@ def figure_html(row, dim):
 
 def serving_html(rung, dim):
     """The stored serving figure a model's head prints: GPU time beside the multiple (its 1x),
-    named "Serving" as on the ladder; USD beside the cost, named "Serving cost", so each head names
-    one quantity; the state where the rung has no baseline; nothing for a figure with no serving
-    counterpart."""
-    if dim not in ("multiple", "cost"):
+    named "Serving" as on the ladder; the state where the rung has no baseline; nothing for a
+    figure with no serving counterpart."""
+    if dim != "multiple":
         return ""
     b = rung["baseline"]
-    key = "gpu_seconds_per_reply" if dim == "multiple" else "usd_per_reply"
+    key = "gpu_seconds_per_reply"
     fig = serving_missing(b) if b is None or not has(b[key]) else fig_html(b[key], sub=BARE)
-    head = SCALE_SERVING if dim == "multiple" else f"{SCALE_SERVING} {FIGURE_HEAD['cost'].lower()}"
+    head = SCALE_SERVING
     return f'<span class="lsv"><span class="k">{e(head)}</span>{fig}</span>'
 
 

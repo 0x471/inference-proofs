@@ -290,9 +290,6 @@ Whoever acts on a verifier's verdict, such as a customer, an auditor, a regulato
 
 Every proof covers all of the request's reply tokens, and with one changed (first, last or one inside) the verifier refuses it ([rule](/checks#reply)).
 
-### Reply tokens per GPU-second
-
-The request's reply tokens over the [[whole session]] GPU-seconds it took to prove that reply. It depends on the GPU, so it is printed only on a system's page, under Cost, with the GPU named, and never ranks a row ([RFC-0018](repo:rfcs/0018-level-1-ladder.md) CO-8).
 
 ### Request
 
@@ -354,6 +351,10 @@ A protocol that convinces a verifier of a polynomial's sum over exponentially ma
 
 The unit of text a model reads and writes, a word or part of one, stored as an integer.
 
+### Tokens per second
+
+The request's reply tokens over the GPU-seconds one reply took, on one GPU, printed in tokens/s per GPU with the GPU named. A row has two, on the same GPU type: proved, over [[whole session]]s, and served, by the [[serving baseline]] at full load. Served over proved is the row's [[cost vs serving|Cost vs serving]]. They depend on the GPU, so neither ranks a row ([RFC-0018](repo:rfcs/0018-level-1-ladder.md) CO-8).
+
 ### Trust assumptions
 
 Whether checking a proof relies on anyone's honesty besides the mathematics, such as a [[trusted setup|setup]] secret or a hardware maker's key ([petal](/checks#no_trusted_party)). It protects the customer.
@@ -384,7 +385,7 @@ The learned numbers a model is made of, about 8 billion in Llama 3.1 8B. For a c
 
 ### Whole session
 
-A figure that counts a [[session]]'s GPU time from the start of its commit call to its last proof (the commit, generation and proving; loading the model before the commit is not counted), divided by its replies. Cost vs serving, the session GPU time and reply tokens per GPU-second are figures of whole sessions.
+A figure that counts a [[session]]'s GPU time from the start of its commit call to its last proof (the commit, generation and proving; loading the model before the commit is not counted), divided by its replies. Cost vs serving, the session GPU time and the proved tokens per second are figures of whole sessions.
 
 ### Witness
 
