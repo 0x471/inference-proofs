@@ -1,0 +1,356 @@
+{
+  "harness": {
+    "git_commit": "09a9ee78cc476b0d04a51b786a988a7ec9ffa4c2",
+    "git_dirty": false
+  },
+  "host": {
+    "machine": {
+      "container": {
+        "cgroup_version": "2",
+        "execution": "hosted"
+      },
+      "cpu": {
+        "bound_prover": [],
+        "bound_verifier": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "bound_verifier_single": [
+          0
+        ],
+        "cgroup_quota_cpus": 16.0,
+        "logical_cpus": 64,
+        "model": "AMD EPYC 7R13 Processor",
+        "physical_cores": 32,
+        "smt_active": true,
+        "sockets": 1
+      },
+      "disk": {
+        "free_bytes_at_start": 812009189376
+      },
+      "kernel": {
+        "release": "6.12.113-138.209.amzn2023.x86_64"
+      },
+      "memory": {
+        "available_bytes_at_start": 414354305024,
+        "cgroup_limit_bytes": 133999996928,
+        "total_bytes": 529681702912
+      },
+      "numa": {
+        "bound_mems": [
+          0
+        ],
+        "nodes": 2
+      },
+      "os": {},
+      "provider": "Hugging Face Jobs",
+      "verifier_host": "separate"
+    },
+    "nonconforming": []
+  },
+  "image": {
+    "digest_kind": "manifest",
+    "ref": "ghcr.io/ai-verification-observatory/sash@sha256:14defac4f5635bf2665b9f320e81c1ad0b6c6512b644565e7b7a9c189d84d3a5"
+  },
+  "proofs": [
+    {
+      "host": {
+        "machine": {
+          "container": {
+            "cgroup_version": "2",
+            "execution": "hosted"
+          },
+          "cpu": {
+            "bound_prover": [],
+            "bound_verifier": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "bound_verifier_single": [
+              0
+            ],
+            "cgroup_quota_cpus": 16.0,
+            "logical_cpus": 64,
+            "model": "AMD EPYC 7R13 Processor",
+            "physical_cores": 32,
+            "smt_active": true,
+            "sockets": 1
+          },
+          "disk": {
+            "free_bytes_at_start": 812009189376
+          },
+          "kernel": {
+            "release": "6.12.113-138.209.amzn2023.x86_64"
+          },
+          "memory": {
+            "available_bytes_at_start": 414354305024,
+            "cgroup_limit_bytes": 133999996928,
+            "total_bytes": 529681702912
+          },
+          "numa": {
+            "bound_mems": [
+              0
+            ],
+            "nodes": 2
+          },
+          "os": {},
+          "provider": "Hugging Face Jobs",
+          "verifier_host": "separate"
+        },
+        "nonconforming": []
+      },
+      "proof_digest": "sha256:2e7c8c1fec1d92726963939f3dd0f48245c9ddffe0f4bf9f93bc5967a533f34b",
+      "proof_id": "req-0",
+      "seconds": 1983.046468236,
+      "trace": "reverify/verify-trace/req-0.json",
+      "verdict": "accept"
+    },
+    {
+      "host": {
+        "machine": {
+          "container": {
+            "cgroup_version": "2",
+            "execution": "hosted"
+          },
+          "cpu": {
+            "bound_prover": [],
+            "bound_verifier": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "bound_verifier_single": [
+              0
+            ],
+            "cgroup_quota_cpus": 16.0,
+            "logical_cpus": 64,
+            "model": "AMD EPYC 7R13 Processor",
+            "physical_cores": 32,
+            "smt_active": true,
+            "sockets": 1
+          },
+          "disk": {
+            "free_bytes_at_start": 812009189376
+          },
+          "kernel": {
+            "release": "6.12.113-138.209.amzn2023.x86_64"
+          },
+          "memory": {
+            "available_bytes_at_start": 414354305024,
+            "cgroup_limit_bytes": 133999996928,
+            "total_bytes": 529681702912
+          },
+          "numa": {
+            "bound_mems": [
+              0
+            ],
+            "nodes": 2
+          },
+          "os": {},
+          "provider": "Hugging Face Jobs",
+          "verifier_host": "separate"
+        },
+        "nonconforming": []
+      },
+      "proof_digest": "sha256:0b64a98fc1964a02abc9cc0a5aab0d5b0e0f4183f4fd8521cd3328f695ecba8c",
+      "proof_id": "req-1",
+      "seconds": 2164.023630995,
+      "trace": "reverify/verify-trace/req-1.json",
+      "verdict": "accept"
+    },
+    {
+      "host": {
+        "machine": {
+          "container": {
+            "cgroup_version": "2",
+            "execution": "hosted"
+          },
+          "cpu": {
+            "bound_prover": [],
+            "bound_verifier": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "bound_verifier_single": [
+              0
+            ],
+            "cgroup_quota_cpus": 16.0,
+            "logical_cpus": 64,
+            "model": "AMD EPYC 7R13 Processor",
+            "physical_cores": 32,
+            "smt_active": true,
+            "sockets": 1
+          },
+          "disk": {
+            "free_bytes_at_start": 812009189376
+          },
+          "kernel": {
+            "release": "6.12.113-138.209.amzn2023.x86_64"
+          },
+          "memory": {
+            "available_bytes_at_start": 414354305024,
+            "cgroup_limit_bytes": 133999996928,
+            "total_bytes": 529681702912
+          },
+          "numa": {
+            "bound_mems": [
+              0
+            ],
+            "nodes": 2
+          },
+          "os": {},
+          "provider": "Hugging Face Jobs",
+          "verifier_host": "separate"
+        },
+        "nonconforming": []
+      },
+      "proof_digest": "sha256:67bbec69d4c35acbaf4d49b64ca7e478ec4b718743db033b50c9a7f1490f69bc",
+      "proof_id": "req-2",
+      "seconds": 1929.950778495,
+      "trace": "reverify/verify-trace/req-2.json",
+      "verdict": "accept"
+    },
+    {
+      "host": {
+        "machine": {
+          "container": {
+            "cgroup_version": "2",
+            "execution": "hosted"
+          },
+          "cpu": {
+            "bound_prover": [],
+            "bound_verifier": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "bound_verifier_single": [
+              0
+            ],
+            "cgroup_quota_cpus": 16.0,
+            "logical_cpus": 64,
+            "model": "AMD EPYC 7R13 Processor",
+            "physical_cores": 32,
+            "smt_active": true,
+            "sockets": 1
+          },
+          "disk": {
+            "free_bytes_at_start": 812009189376
+          },
+          "kernel": {
+            "release": "6.12.113-138.209.amzn2023.x86_64"
+          },
+          "memory": {
+            "available_bytes_at_start": 414354305024,
+            "cgroup_limit_bytes": 133999996928,
+            "total_bytes": 529681702912
+          },
+          "numa": {
+            "bound_mems": [
+              0
+            ],
+            "nodes": 2
+          },
+          "os": {},
+          "provider": "Hugging Face Jobs",
+          "verifier_host": "separate"
+        },
+        "nonconforming": []
+      },
+      "proof_digest": "sha256:cf94cbac4b3ebdc89de5af9bac23a126733a5a2abfc87517ee97cabcf551f34c",
+      "proof_id": "req-3",
+      "seconds": 1584.309572697,
+      "trace": "reverify/verify-trace/req-3.json",
+      "verdict": "accept"
+    },
+    {
+      "host": {
+        "machine": {
+          "container": {
+            "cgroup_version": "2",
+            "execution": "hosted"
+          },
+          "cpu": {
+            "bound_prover": [],
+            "bound_verifier": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "bound_verifier_single": [
+              0
+            ],
+            "cgroup_quota_cpus": 16.0,
+            "logical_cpus": 64,
+            "model": "AMD EPYC 7R13 Processor",
+            "physical_cores": 32,
+            "smt_active": true,
+            "sockets": 1
+          },
+          "disk": {
+            "free_bytes_at_start": 812009189376
+          },
+          "kernel": {
+            "release": "6.12.113-138.209.amzn2023.x86_64"
+          },
+          "memory": {
+            "available_bytes_at_start": 414354305024,
+            "cgroup_limit_bytes": 133999996928,
+            "total_bytes": 529681702912
+          },
+          "numa": {
+            "bound_mems": [
+              0
+            ],
+            "nodes": 2
+          },
+          "os": {},
+          "provider": "Hugging Face Jobs",
+          "verifier_host": "separate"
+        },
+        "nonconforming": []
+      },
+      "proof_digest": "sha256:85103dbecf9f3056cbb649bb35850d8313d2bad1ae4f26aa715fe1230f98c2b9",
+      "proof_id": "req-4",
+      "seconds": 1538.693437219,
+      "trace": "reverify/verify-trace/req-4.json",
+      "verdict": "accept"
+    }
+  ],
+  "run_id": "2026-11-16-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1",
+  "run_manifest_digest": "sha256:9000b0200b5ee124ebd35d22d70557efc9f447e521debed04f08e838847134b5",
+  "schema": "reverify/1"
+}

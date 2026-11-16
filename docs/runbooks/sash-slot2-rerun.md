@@ -1,6 +1,6 @@
 # SASH slot 2 again, and its weakened-prover controls
 
-Prepared 2026-11-15; nothing on this page has run. It replaces SASH's Level 1 session in slot 2 on a host whose self-test passes, verifies it again on a host without a GPU, and then runs two of SASH's registered soundness switches as control jobs. Every job goes through [`hf-job.sh`](hf-job.sh) with the shell set up as in [`hf-jobs.md` §The job command](hf-jobs.md#the-job-command); the spend log and the stop rule of that page apply.
+Prepared 2026-11-15. Steps 1 to 3 ran on 2026-11-16: the session is `2026-11-16-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1` (self-test passed, 5 of 5 proofs accepted; the `h200` job ran 20,174 s, measured by the provider, n = 1), and its verify without a GPU took 1,539 to 2,164 s per proof (job log, n = 5, 8 CPUs of an AMD EPYC 7R13). Steps 4 and 5 have not run. It replaces SASH's Level 1 session in slot 2 on a host whose self-test passes, verifies it again on a host without a GPU, and then runs two of SASH's registered soundness switches as control jobs. Every job goes through [`hf-job.sh`](hf-job.sh) with the shell set up as in [`hf-jobs.md` §The job command](hf-jobs.md#the-job-command); the spend log and the stop rule of that page apply.
 
 ## Why slot 2
 
