@@ -69,10 +69,17 @@ from .words import (
     CONTROL_NAME,
     DOCS_READ,
     DTYPE_BITS,
+    FID_KIND,
     FID_LABEL,
+    FID_LEAD_CHECK,
     FID_LEAD_LOGITS,
     FID_LEAD_PREFIX,
     FID_LEAD_TF,
+    FID_PLAIN,
+    FID_PLAIN_COPIES,
+    FID_PLAIN_TF,
+    FID_WHO,
+    FID_WHY,
     FIGURE_ANCHOR,
     FIGURE_HEAD,
     FIGURE_NAME,
@@ -1236,12 +1243,16 @@ RULE_AT = re.compile(r"\s*\((?:RFC-\d+ )?[A-Z]{2}-\d+[a-z]?\)$")  # a note's clo
 
 
 def control_name(cid):
-    """A control's name as a row prints it: a quantized copy by its id in capitals, as the glyph's
-    reason and the checks page say it; another by its words (CONTROL_NAME). Returns (name, title:
-    the id where the name is not it)."""
-    if cid in CONTROL_NAME:
-        return CONTROL_NAME[cid], cid
-    return (cid.upper() if QUANT.match(cid) else cid), ""
+    """A control's name as a row prints it: its words (CONTROL_NAME: a quantized copy by its bits,
+    its id in parentheses), else a quantized copy by its id in capitals. Returns (name, title: the
+    id, and for a quantized copy the llama.cpp commit that made it, FI-2)."""
+    name = CONTROL_NAME.get(cid) or (cid.upper() if QUANT.match(cid) else cid)
+    if not QUANT.match(cid):
+        return name, (cid if cid in CONTROL_NAME else "")
+    engine = S.V["constants"].get("fidelity_engine") or {}
+    made = (f", made by {engine['tool']} at {str(engine['commit'])[:7]}"
+            if engine.get("tool") and engine.get("commit") else "")  # fmt: skip
+    return name, f"{cid}{made}"
 
 
 def control_th(cid):
@@ -1353,7 +1364,7 @@ def fid_tr(cls, th, kind, cells, heads, tf, entry, ink):
     tds = "".join(f'<td data-l="{e(FID_LABEL.get(h, h))}">{c}</td>'
                   for h, c in zip(heads[2:], cells, strict=True))  # fmt: skip
     at = f' class="{cls}"' if cls else ""
-    return f'<tr{at}>{th}<td data-l="Kind">{kind}</td>{track}{tds}</tr>'
+    return f'<tr{at}>{th}<td data-l="{e(FID_KIND)}">{kind}</td>{track}{tds}</tr>'
 
 
 def own_rows(row, tf, any_kl, heads):
@@ -1452,7 +1463,7 @@ def fidelity_html(row):
     any_kl = any(has((r.get("fidelity") or {}).get("kl")) for r in rung["rows"]) or any(
         has(c.get("kl")) for c in (fid or {}).get("controls") or []
     )
-    heads = ["Replies", "Kind", *([TF_AGREE] if tf else []), PREFIX, *([TF_KL] if tf else []),
+    heads = [FID_WHO, FID_KIND, *([TF_AGREE] if tf else []), PREFIX, *([TF_KL] if tf else []),
              *([kl_h] if any_kl else [])]  # fmt: skip
     body = own_rows(row, tf, any_kl, heads) + control_rows(fid, tf, any_kl, heads)
     if not body:
@@ -1464,7 +1475,7 @@ def fidelity_html(row):
         why, note = kl_why(row)
         lead += (f'<p class="flead">{e(kl_h)}: <span class="na" title="{e(note or "not measured")}">'
                  f"not measured</span>{f' ({e(why)})' if why else ''}</p>")  # fmt: skip
-    lead += f'<p class="flead">{e(fid_lead(rung, tf))}</p>'
+    lead = "".join(f'<p class="flead">{line}</p>' for line in fid_lead(row, rung, tf)) + lead
     ths = (f'<th scope="col">{e(heads[0])}</th><th scope="col">{e(heads[1])}</th>'
            + ('<th scope="col" class="trk" aria-hidden="true"></th>' if tf else "")
            + "".join(f'<th scope="col"{tf_title(h, tf)}>{e(h)}</th>' for h in heads[2:]))  # fmt: skip
@@ -1474,15 +1485,43 @@ def fidelity_html(row):
             f"<tbody>{body}</tbody></table>{limits}{tests}")  # fmt: skip
 
 
-def fid_lead(rung, tf):
-    """The line over the Fidelity table: which measure sets the check and the petal (the leading
-    tokens, FI-3), which is the surface figure (FI-10's share, SI-9), and that neither compares
+def fid_lead(row, rung, tf):
+    """The lines over the Fidelity table (SI-9, amended 2026-11-16), as HTML: in plain words what
+    is compared with what (the copy the row proves, from its workload record, against the
+    original), what 100 % means and what the 8-bit and 4-bit copies are; why the surface figure is
+    top-token agreement; then which measure sets the check and the petal (the leading tokens,
+    FI-3), what passes the check, that the figure sets no state, and that neither compares
     logits."""
     bits = DTYPE_BITS.get(rung["reference_dtype"], rung["reference_dtype"])
-    line = FID_LEAD_PREFIX.format(prefix=PREFIX, bits=bits)
+    p = row.get("precision") or {}
+    proved = (f"{p['proved']} ({p['proved_words']})" if p.get("proved_words")
+              else str(p.get("proved") or ""))  # fmt: skip
+    if proved and isinstance(p.get("bits"), int | float):
+        n = f"{p['bits']:,}" if float(p["bits"]).is_integer() else sig(p["bits"], 3)
+        part = " for part of the weights" if p.get("bits_covers") == "part" else ""
+        proved += f", {n} bits per weight{part}"
+    plain = FID_PLAIN.format(name=name_of(row), bits=bits, proved=proved)
+    if not proved:  # no workload record: the general sentence alone
+        plain = plain.partition(", and ")[0] + "."
+    controls = {c["id"] for c in ((rung.get("fidelity") or {}).get("controls") or [])}
     if tf:
-        line += FID_LEAD_TF.format(n=tf["n"])
-    return line + FID_LEAD_LOGITS
+        plain += FID_PLAIN_TF.format(n=tf["n"])
+    if {"q8_0", "q4_k_m"} <= controls | {c["id"] for c in (tf or {}).get("controls") or []}:
+        plain += FID_PLAIN_COPIES
+    out = [to_rule(e(plain), "Fidelity figure", "fidelity-figure")]
+    if tf:
+        out.append(e(FID_WHY.format(tokens=tf["positions"])))
+    exact = FID_LEAD_PREFIX.format(bits=bits) + FID_LEAD_CHECK + (FID_LEAD_TF if tf else "")
+    out.append(to_rule(e(exact + FID_LEAD_LOGITS), "Fidelity check", "fidelity"))
+    return out
+
+
+def to_rule(html, phrase, anchor):
+    """`html` with the first `phrase` in it linked to its rule on the checks page."""
+    head, found, tail = html.partition(phrase)
+    if not found:
+        return html
+    return f'{head}<a class="df" href="{CHECKS_PAGE}#{anchor}">{phrase}</a>{tail}'
 
 
 def fid_limits(rung, tf):

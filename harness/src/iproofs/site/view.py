@@ -471,6 +471,8 @@ def site_view(root: Path, board: Path | None = None) -> dict[str, Any]:
             # FI-4: where a test's p reaches its floor (2^-n exact, 1 / (1 + resamples) drawn)
             "fidelity_exact_up_to": level["fidelity"]["exact_up_to"],
             "fidelity_resamples": level["fidelity"]["resamples"],
+            # FI-1, FI-2: the llama.cpp pin that makes the quantized copies, in a copy's title
+            "fidelity_engine": dict(level["fidelity"].get("engine") or {}),
         },
         # what the prompts are cut from (RFC-0003), for the Fidelity section's limits
         "corpus": inputs.corpus(root),
