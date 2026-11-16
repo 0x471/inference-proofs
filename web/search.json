@@ -413,6 +413,16 @@
     {
       "group": "Glossary",
       "kind": "term",
+      "meta": "How a derived figure was obtained: code calculates it from the times and counts our harness recorded, and no one types it.",
+      "name": "Computed by our code from recorded numbers",
+      "pie": "",
+      "terms": "computed by our code from recorded numbers how a derived figure was obtained: code calculates it from the times and counts our harness recorded, and no one types it.",
+      "tier": 4.2,
+      "url": "/glossary#computed-by-our-code-from-recorded-numbers"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
       "meta": "Said of a soundness bound that rests on an unproved conjecture.",
       "name": "Conjectured",
       "pie": "",
@@ -429,6 +439,26 @@
       "terms": "control an input changed on purpose (a negative control), from which a working system gives no accepted proof.",
       "tier": 4.2,
       "url": "/glossary#control"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
+      "meta": "How many times the GPU time of serving the same reply without a proof, at full load on the same GPU type, a proved reply takes.",
+      "name": "Cost vs serving",
+      "pie": "",
+      "terms": "cost vs serving how many times the gpu time of serving the same reply without a proof, at full load on the same gpu type, a proved reply takes.",
+      "tier": 4.2,
+      "url": "/glossary#cost-vs-serving"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
+      "meta": "We measured it on our own sessions, and no one else has rerun them yet.",
+      "name": "Evidence: our runs only, not rerun by anyone else",
+      "pie": "",
+      "terms": "evidence: our runs only, not rerun by anyone else we measured it on our own sessions, and no one else has rerun them yet.",
+      "tier": 4.2,
+      "url": "/glossary#evidence-our-runs-only-not-rerun-by-anyone-else"
     },
     {
       "group": "Glossary",
@@ -489,6 +519,16 @@
       "terms": "glyph a five-petal figure of how close a system is to a perfect prover.",
       "tier": 4.2,
       "url": "/glossary#glyph"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
+      "meta": "One GPU busy for one second.",
+      "name": "GPU-second",
+      "pie": "",
+      "terms": "gpu-second one gpu busy for one second.",
+      "tier": 4.2,
+      "url": "/glossary#gpu-second"
     },
     {
       "group": "Glossary",
@@ -753,6 +793,16 @@
     {
       "group": "Glossary",
       "kind": "term",
+      "meta": "The request's reply tokens over the whole session GPU-seconds it took to prove that reply.",
+      "name": "Reply tokens per GPU-second",
+      "pie": "",
+      "terms": "reply tokens per gpu-second the request's reply tokens over the whole session gpu-seconds it took to prove that reply.",
+      "tier": 4.2,
+      "url": "/glossary#reply-tokens-per-gpu-second"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
       "meta": "One prompt and the reply checked for it: at Level 1, 512 prompt tokens and a 512-token greedy reply.",
       "name": "Request",
       "pie": "",
@@ -803,12 +853,22 @@
     {
       "group": "Glossary",
       "kind": "term",
-      "meta": "One cold-start run of a system on a model: setup, commit, then proofs for one slot's requests.",
+      "meta": "One run of a system from a cold start on one slot's prompts: it loads the model, commits to the weights, then proves every reply (120 replies on Llama 4 Maverick, 5 on Llama 3.1 8B).",
       "name": "Session",
       "pie": "",
-      "terms": "session one cold-start run of a system on a model: setup, commit, then proofs for one slot's requests.",
+      "terms": "session one run of a system from a cold start on one slot's prompts: it loads the model, commits to the weights, then proves every reply (120 replies on llama 4 maverick, 5 on llama 3.1 8b).",
       "tier": 4.2,
       "url": "/glossary#session"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
+      "meta": "One of three fixed sets of a model's prompts.",
+      "name": "Slot",
+      "pie": "",
+      "terms": "slot one of three fixed sets of a model's prompts.",
+      "tier": 4.2,
+      "url": "/glossary#slot"
     },
     {
       "group": "Glossary",
@@ -853,10 +913,10 @@
     {
       "group": "Glossary",
       "kind": "term",
-      "meta": "A session's state when enough release groups follow the first, each at an even time per reply.",
+      "meta": "The part of a session after its first group of proofs, when proofs come out at an even pace.",
       "name": "Steady state",
       "pie": "",
-      "terms": "steady state a session's state when enough release groups follow the first, each at an even time per reply.",
+      "terms": "steady state the part of a session after its first group of proofs, when proofs come out at an even pace.",
       "tier": 4.2,
       "url": "/glossary#steady-state"
     },
@@ -929,6 +989,16 @@
       "terms": "weights the learned numbers a model is made of, about 8 billion in llama 3.1 8b.",
       "tier": 4.2,
       "url": "/glossary#weights"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
+      "meta": "A figure that counts a session's GPU time from the start of its commit to its last proof, start-up included, divided by its replies.",
+      "name": "Whole session",
+      "pie": "",
+      "terms": "whole session a figure that counts a session's gpu time from the start of its commit to its last proof, start-up included, divided by its replies.",
+      "tier": 4.2,
+      "url": "/glossary#whole-session"
     },
     {
       "group": "Glossary",

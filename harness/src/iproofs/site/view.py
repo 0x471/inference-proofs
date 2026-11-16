@@ -189,7 +189,9 @@ ROW_FIGURES = ("multiple", "session_multiple", "steady_gpu_seconds_per_reply",
                "session_commit_and_proving_gpu_seconds_per_reply",
                "session_generation_multiple", "session_commit_and_proving_multiple",
                "session_gpu_seconds_per_reply", "steady_usd_per_reply", "session_usd_per_reply",
-               "verify_seconds_per_reply", "proof_bytes_per_reply")  # fmt: skip
+               "verify_seconds_per_reply", "proof_bytes_per_reply",
+               # CO-8 (adopted 2026-11-16): printed once, under Cost
+               "session_reply_tokens_per_gpu_second")  # fmt: skip
 
 
 def _row(raw: dict[str, Any], at: str, board: str | None, rung: dict[str, Any]) -> dict[str, Any]:

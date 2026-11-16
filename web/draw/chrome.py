@@ -17,9 +17,12 @@ from .words import (
     CHECK_NAME,
     FIGURE_HEAD,
     FIGURE_NAME,
+    HOW_MULTIPLE,
+    HOW_ON,
     OF_WHICH,
     PART_WORD,
     PETAL_NAME,
+    SERVING_GPU,
     STATE_WORD,
     WHOLE_SESSIONS,
     e,
@@ -386,6 +389,22 @@ def lead_figure(row):
         return (f"{FIGURE_NAME['multiple']}, {WHOLE_SESSIONS.format(n=n)}",
                 figs["session_multiple"], "session_multiple")  # fmt: skip
     return FIGURE_NAME["multiple"], figs["multiple"], "multiple"
+
+
+def gpu_name(row):
+    """The GPU the row's counted sessions ran on, as their manifests record it (the facts file's
+    short name); the serving GPU where no manifest is stored."""
+    seen = (row.get("machine") or {}).get("gpu_model") or []
+    return " or ".join(seen) if seen else SERVING_GPU
+
+
+def how_computed(row):
+    """The headline in one plain sentence (B5): what is divided by what, at which scope, on
+    which GPUs, at one GPU price, by the figure the row prints (`lead_figure`)."""
+    _, _, key = lead_figure(row)
+    gpu = gpu_name(row)
+    on = HOW_ON[gpu == SERVING_GPU].format(gpu=gpu, serving=SERVING_GPU)
+    return HOW_MULTIPLE[key].format(on=on)
 
 
 def parts_of(row, key):

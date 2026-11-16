@@ -34,6 +34,10 @@ A value computed from data, such as a model's weights, that fixes them for later
 
 The property that a verifier accepts every proof an honest prover makes of a true statement, often except with a small stated probability. It is the one of the three properties a test can show: on a system's page, completeness reads "tested by us on honest runs" with the count of honest replies whose proofs were accepted. In safeguards writing, a complete declaration leaves nothing out.
 
+### Computed by our code from recorded numbers
+
+How a derived figure was obtained: code calculates it from the times and counts our harness recorded, and no one types it. Its title names the records it is computed from ([RFC-0004](repo:rfcs/0004-metrics-timing-grades.md)).
+
 ### Conjectured
 
 Said of a soundness bound that rests on an unproved conjecture. On the [Unforgeable](/checks#unforgeable) petal, a conjectured bound reaches amber in lesser part at most.
@@ -41,6 +45,14 @@ Said of a soundness bound that rests on an unproved conjecture. On the [Unforgea
 ### Control
 
 An input changed on purpose (a negative control), from which a working system gives no accepted proof. A trial counts only if its honest twin, the trial unchanged, is accepted. The fidelity run's controls are runs beside the original, honest or [damaged](/checks#fidelity).
+
+### Cost vs serving
+
+How many times the GPU time of serving the same reply without a proof, at full load on the same GPU type, a proved reply takes. Both sides are GPU-seconds per reply, the proved side over [[whole session]]s (generation, commit and proving), so the GPU price is the same on both sides; [the rule](/checks#multiple) says how each side is timed.
+
+### Evidence: our runs only, not rerun by anyone else
+
+We measured it on our own [[session]]s, and no one else has rerun them yet. Every Level 1 figure has this evidence; a figure rerun by an unaffiliated team would say so ([RFC-0007](repo:rfcs/0007-evidence-tiers-and-reproduction.md)).
 
 ### Exact match
 
@@ -65,6 +77,10 @@ A protocol that shows committed values lie close to a Reed-Solomon codeword, the
 ### Glyph
 
 A five-petal figure of how close a system is to a perfect prover. Its [petals](/checks#glyph), all green for such a prover, are Unforgeable, Weights hidden, Close to the original, Machine-checked and No third party trusted. Nothing adds them up, and the glyph never changes a system's position.
+
+### GPU-second
+
+One GPU busy for one second. GPU-seconds add over every GPU a job holds, so two GPUs for one second are two GPU-seconds.
 
 ### Greedy decoding
 
@@ -170,6 +186,10 @@ Checking a claimed output by [running the computation again](/deployment) and co
 
 Whoever acts on a verifier's verdict, such as a customer, an auditor, a regulator or an inspectorate. It runs the [[verifier]] or trusts someone who does, and judges what a verdict is worth.
 
+### Reply tokens per GPU-second
+
+The request's reply tokens over the [[whole session]] GPU-seconds it took to prove that reply. It depends on the GPU, so it is printed only on a system's page, under Cost, with the GPU named, and never ranks a row ([RFC-0018](repo:rfcs/0018-level-1-ladder.md) CO-8).
+
 ### Request
 
 One prompt and the reply checked for it: at Level 1, 512 prompt tokens and a [512-token greedy reply](/checks#passed).
@@ -192,7 +212,11 @@ The GPU-seconds per reply that serving the request takes with no proof, on the m
 
 ### Session
 
-One cold-start run of a system on a model: setup, commit, then proofs for one slot's requests. Three complete sessions [count](/checks#run), one per slot (a fixed share of the prompts).
+One run of a system from a cold start on one [[slot]]'s prompts: it loads the model, commits to the weights, then proves every reply (120 replies on Llama 4 Maverick, 5 on Llama 3.1 8B). Three complete sessions [count](/checks#run), one per slot.
+
+### Slot
+
+One of three fixed sets of a model's prompts. Each slot counts its first complete [[session]], and a failed session is rerun in the same slot.
 
 ### SNARK and STARK
 
@@ -212,7 +236,7 @@ The proposition that an accepted proof establishes. For [an inference prover](/s
 
 ### Steady state
 
-A session's state when enough release groups follow the first, each at an even time per reply. A release group is a burst of proofs released together. A row is [steady](/checks#multiple) when its three sessions are.
+The part of a [[session]] after its first group of proofs, when proofs come out at an even pace. A release group is a burst of proofs released together. A row is [steady](/checks#multiple) when its three sessions are.
 
 ### Sumcheck
 
@@ -241,6 +265,10 @@ The program that checks a proof against the commitment and the prompt, and accep
 ### Weights
 
 The learned numbers a model is made of, about 8 billion in Llama 3.1 8B. For a closed model they are its owner's trade secret.
+
+### Whole session
+
+A figure that counts a [[session]]'s GPU time from the start of its commit to its last proof, start-up included, divided by its replies. Cost vs serving, the session GPU time and reply tokens per GPU-second are figures of whole sessions.
 
 ### Witness
 

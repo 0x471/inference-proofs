@@ -13,6 +13,7 @@ from .chrome import (
     footer,
     has,
     header,
+    how_computed,
     lead_figure,
     not_passed,
     page,
@@ -100,12 +101,13 @@ def href(row):
 BARE = ""  # `fig_html`'s `sub` for a figure with no line under it
 
 
-def fig_html(f, n=None, sub=None, why=None, note=None):
+def fig_html(f, n=None, sub=None, why=None, note=None, how=None):
     """One stored figure: the number in a reading unit, its labels in its title, and under it its
     scope in a word and its sample size (AGENTS.md rule 2). `sub` replaces the line under it
     (`BARE`: no line, as the ladder and the Scale page print a figure; its labels stay in its
     title, `n` and `note` among them, and stand in full on the system's page); `why` replaces a
-    null figure's reason (NO_STEADY_WORD on a row with no steady state)."""
+    null figure's reason (NO_STEADY_WORD on a row with no steady state); `how` opens the title
+    with how the figure is computed (the headline's, `how_computed`)."""
     if f is None:
         return '<span class="na">not recorded</span>'
     if f["value"] is None:
@@ -116,7 +118,8 @@ def fig_html(f, n=None, sub=None, why=None, note=None):
     num, unit = number(f["value"], f["unit"])
     x = " x" if f["unit"] == "ratio" else ""
     line = sub if sub is not None else sub_words(f, n)
-    return (f'<span class="fig" title="{e(labels(f, n, note))}"><span class="n">{e(num)}</span>'
+    title = f"{how} {labels(f, n, note)}" if how else labels(f, n, note)
+    return (f'<span class="fig" title="{e(title)}"><span class="n">{e(num)}</span>'
             f'<span class="u{x}">{e(unit)}</span></span>'
             + (f'<span class="sub">{sub_line(line)}</span>' if line else ""))  # fmt: skip
 
@@ -195,16 +198,17 @@ def multiple_html(row, parts=True, bare=False, to=None):
     figure and its parts each linked there."""
     _, f, key = lead_figure(row)
     split = split_html(row, key, bare=bare, to=to) if parts else ""
+    how = how_computed(row)
     if bare:
-        fig = fig_html(f, counted(row), sub=BARE, note=whole_note(row, key))
+        fig = fig_html(f, counted(row), sub=BARE, note=whole_note(row, key), how=how)
         return (to_section(fig, to) if has(f) else fig) + (split if has(f) else "")
     if key == "session_multiple":
         count = f["n"] if f["n"] is not None else counted(row)
-        return fig_html(f, counted(row), sub=whole_line(row, count)) + split
+        return fig_html(f, counted(row), sub=whole_line(row, count), how=how) + split
     if not has(f):
         return fig_html(f, counted(row))
     count = f["n"] if f["n"] is not None else counted(row)
-    return fig_html(f, counted(row), sub=steady_line(count)) + split
+    return fig_html(f, counted(row), sub=steady_line(count), how=how) + split
 
 
 def split_html(row, key, bar=True, bare=False, to=None):

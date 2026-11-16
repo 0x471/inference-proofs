@@ -25,17 +25,9 @@ import re
 from . import state as S
 from .chrome import LEARN_PAGE, footer, header, link, page
 from .figures import EXPLORERS, FIGURES, MEASURED, STAGE_WORD
+from .glossary import Halt, defs, glossary, glossary_entries, plain, slug, squeeze, term  # noqa: F401
 from .overview import nobreak
 from .words import curly, e, quoted
-
-
-class Halt(RuntimeError):
-    """A page's text is outside the subset: `iproofs site build` reports it as a config error."""
-
-
-def slug(text):
-    return re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")
-
 
 # ------------------------------------------------------------------ inline
 TOKEN = re.compile(
@@ -61,13 +53,6 @@ def address(url, where):
 
 HYPHENED = re.compile(r"[^\s<>]+-[^\s<>]+")  # a token that holds a hyphen ("512-token")
 ISO_DATE = re.compile(r"\b\d{4}-\d{2}-\d{2}\b")  # a date, which never breaks at its hyphens
-# the spaces a source line wraps at (str.split would eat a no-break one)
-LINE_SPACE = re.compile(r"[ \t\n]+")
-
-
-def squeeze(text):
-    """Lines of the source as one line: its own wrapping spaces joined, a no-break space kept."""
-    return LINE_SPACE.sub(" ", text).strip()
 
 
 def inline(text, ctx, keep=False):
@@ -295,10 +280,6 @@ def tracks():
     return S.V["learn"]["tracks"]
 
 
-def glossary():
-    return S.V["learn"]["glossary"]
-
-
 def entries():
     """Every Learn page under the hub, in reading order, then the glossary."""
     return [p for t in tracks() for p in t["pages"]] + [glossary()]
@@ -312,27 +293,6 @@ def slugs():
 def terms():
     """The glossary's entries: the id of each `### Term` of its text."""
     return {slug(m[1]) for m in re.finditer(r"^### (.+)$", glossary()["text"], re.M)}
-
-
-def plain(text):
-    """A text of the subset without its marks: for a line of the search index."""
-    text = re.sub(
-        r"\[\[(?:[^\]|]+\|)?([^\]]+)\]\]|\[([^\]]+)\]\([^)]+\)", lambda m: m[1] or m[2], text
-    )
-    return re.sub(r"[*`]", "", text)
-
-
-def glossary_entries():
-    """Each glossary term: its name, its id and the first sentence under it."""
-    found = re.finditer(r"^### (.+)\n+((?:.+\n?)+)", glossary()["text"], re.M)
-    return [(m[1], slug(m[1]), plain(squeeze(m[2])).split(". ")[0].rstrip(".") + ".")
-            for m in found]  # fmt: skip
-
-
-def defs():
-    """Each glossary term's name and first sentence, by its id: what a link to it carries, for
-    the reader who points at it or gives it focus (words.js)."""
-    return {tid: (name, first) for name, tid, first in glossary_entries()}
 
 
 def sections(entry):

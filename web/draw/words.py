@@ -408,6 +408,24 @@ FIGURE_HEAD = {"multiple": "Cost vs serving", "cost": "Cost", "check-time": "Ver
 # where a head links on the checks page, where its anchor is not its key: the Fidelity figure has
 # a rule of its own there, apart from the check it does not set (SI-9)
 FIGURE_ANCHOR = {"fidelity": "fidelity-figure"}
+# how the headline is computed, in one plain sentence (B5): at the Cost section's head and first
+# in the headline figure's title, by the figure printed (`chrome.lead_figure`); {on} the GPUs
+HOW_MULTIPLE = {
+    "session_multiple": "Cost vs serving divides the GPU-seconds a proved reply took over whole "
+    "sessions (commit, generation and proving, start-up included) by the GPU-seconds serving the "
+    "same reply took with no proof, at full load; {on}, at the same GPU price on both sides.",
+    "multiple": "Cost vs serving divides the GPU-seconds each further proved reply took in steady "
+    "state (generation included) by the GPU-seconds serving the same reply took with no proof, "
+    "at full load; {on}, at the same GPU price on both sides.",
+}
+HOW_ON = {True: "both on {gpu} GPUs", False: "proved on {gpu}, served on {serving}"}
+HOW_RULE = "How each side is timed"  # the link to the rule after it, on the system page
+SERVING_GPU = "H200"  # CO-4: the serving baseline runs on the fewest H200 that hold the model
+# CO-8 (adopted 2026-11-16): reply tokens per GPU-second, once, under Cost (depth 3)
+REPLY_TOKENS_HEAD = "Reply tokens per GPU-second"
+# what the records time apart: no record times the prompt side apart from the reply side
+NOT_TIMED_APART = ("Prompt side (prefill) and reply side (decode) are not timed apart in these "
+                   "records.")  # fmt: skip
 FIDELITY_TITLE = "leading tokens matching the original, mean"  # in a fidelity word's title
 # Fidelity as a figure (RFC-0018 SI-9, amended 2026-11-14): FI-10's mean as a percentage of the
 # reply's positions, beside the model's Q8_0 and Q4_K_M copies; it sets no state
@@ -757,13 +775,13 @@ SCOPE_WORD = {
 }
 GRADE_WORD = {
     "measured": "recorded by our harness",
-    "derived": "calculated from recorded numbers",
+    "derived": "computed by our code from recorded numbers",
     "projected": "projected, not measured",
     "external": "as the system publishes it",
     "asserted": "set in the reference file",
 }
 TIER_WORD = {
-    "reported": "one runner, not reproduced",
+    "reported": "our runs only, not rerun by anyone else",
     "peer-reviewed": "reviewed, not rerun",
     "reproduced": "rerun by an unaffiliated runner",
 }
@@ -898,6 +916,8 @@ def number(v, unit):  # noqa: PLR0911 (one return per stored unit)
         return sig(v), "GPU-s/reply token"
     if unit == "request/gpu_s":  # CO-4: a rung of the serving ladder
         return sig(v), "replies/GPU-s"
+    if unit == "token/gpu_s":  # CO-8: at 3 digits, the spread of its sessions' range
+        return sig(v, 3), "reply tokens/GPU-s"
     raise KeyError(f"no words for the unit {unit!r}")
 
 
