@@ -969,6 +969,7 @@ html.js .scalepage .scl-panel { margin-top: 0; }
 .fid tr.me :is(.sub, .na) { color: var(--ground); }
 .fid .sub sup { font-size: 10px; line-height: 0; }
 .fid tr.bar > * { border-bottom: 2px solid var(--paper); }
+.fid th .cid { font: var(--f-meta); color: var(--muted); white-space: nowrap; }
 .fid .trk { width: 18%; padding-top: 15px; padding-right: 24px; }
 /* the Fidelity column: its head (what the share is of) on a few lines, not one word a line */
 .fid th.fag { width: 20%; }
@@ -1255,11 +1256,15 @@ html.js .scalepage .scl-panel { margin-top: 0; }
    which session counts, the score, the bar) under it, on the page's term column. The held and failed terms are then the heads'.
    Narrower, the two cells would hold some 40 characters a line, and the table would be as tall as the blocks */
 .ckh { display: none; }
+/* a check's plain sentence, under its name, before its rule */
+.ckp { margin: 0 0 12px; max-width: 80ch; font: 400 var(--read)/var(--read-lh) var(--mono); color: var(--paper); text-wrap: pretty; }
 @media (min-width: 1181px) {
   .six > .ckh, .six > .chk { display: grid; grid-template-columns: 196px minmax(0, 1fr) minmax(0, 1fr); column-gap: 16px; }
   .six > .ckh { padding: 14px 16px 10px; border-bottom: 1px solid var(--rule); font: var(--f-label); color: var(--muted); text-transform: uppercase; letter-spacing: var(--track); }
   .six > .chk { row-gap: 10px; align-items: start; }
-  .six > .chk > .cn2 { grid-column: 1; grid-row: 1; margin-bottom: 0; }
+  .six > .chk > .chd { grid-column: 1; grid-row: 1; }
+  .six .chd > .cn2 { margin-bottom: 8px; }
+  .six .chd > .ckp { margin: 0; font: var(--f-meta); }
   .six > .chk > .cs { display: contents; }
   .six .cs > div:nth-child(-n+2) { display: block; grid-row: 1; padding: 0; }
   .six .cs > div:nth-child(1) { grid-column: 2; padding-right: 16px; }
@@ -1267,10 +1272,8 @@ html.js .scalepage .scl-panel { margin-top: 0; }
   .six .cs > div:nth-child(-n+2) > dt { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
   .six .cs > div:nth-child(n+3) { grid-column: 1 / -1; }
 }
-/* a check's or a petal's plain sentence and a petal's field term, under its name (checks page) */
-.chk > .cpl { max-width: 90ch; margin: 0 0 12px; font: 400 var(--read)/var(--read-lh) var(--mono); }
+/* a petal's field term, under its name (checks page) */
 .chk > .cterm { margin: -4px 0 12px; color: var(--muted); }
-@media (min-width: 1181px) { .six > .chk > .cpl { grid-column: 1 / -1; grid-row: 2; margin: 0; } }
 .cs dd .srl { margin: 0; padding-left: 1.2em; }
 .slg .schip { margin: 0 6px 6px 0; }
 /* a petal's cause, opened by the chip a system page prints for such a petal */

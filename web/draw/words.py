@@ -29,6 +29,21 @@ def quoted(text):
 # ------------------------------------------------------------------ the six checks (RFC-0018)
 CHECK_NAME = {"run": "Run", "model": "Model", "prompt": "Prompt", "reply": "Reply",
               "no_weight_file": "Verify without weights", "fidelity": "Fidelity"}  # fmt: skip
+# Each check in one plain sentence, printed first under its name on the checks page, before the
+# precise rule, and the title of a check's name on a system page and the ladder: what passes it (SPEC section 8; RFC-0018 SI-3, amended 2026-11-16). {slots} and
+# {reply_tokens} are the level file's constants, 0.05 its fidelity.alpha
+CHECK_PLAIN = {
+    "run": "The publisher's prover, as published at the pin, ran {slots} sessions from a cold "
+    "start, and every reply got an accepted proof.",
+    "model": "A proof made with one weight changed is not accepted against the original weights' "
+    "commitment.",
+    "prompt": "With one prompt token changed, the verifier refuses the proof.",
+    "reply": "Every proof covers all {reply_tokens} reply tokens, and with one changed (first, "
+    "last or one inside) the verifier refuses it.",
+    "no_weight_file": "The verifier reached every verdict with no copy of the model and no GPU.",
+    "fidelity": "The proved replies match the original's opening tokens better than the bar (a "
+    "damaged copy of the model) does, by a paired test at p\u00a0<\u00a00.05.",
+}
 # Each check's rule, RFC-0018's table ("Held when", "Failed when") in short, as a condition in the
 # present tense. {slots}, {attempts}, {reply_tokens} and {reference} are the level file's
 # constants (`overview.filled`); 3 of 3 and 0.05 (fidelity.alpha) are typed as the level's.
@@ -90,9 +105,9 @@ CHECK_MORE = {
          "publisher's release, at the publisher's precision, named with its commit on each "
          "system page: {reference}."),
         ("bar", "Among the damaged controls that every honest control scores above, the one with "
-         "the highest mean score. The honest controls are the original's second run and its Q8_0 "
-         "and Q4_K_M copies. A system's page lists the damaged ones. With none, the model has no "
-         "bar and the check is not decided (decided nothing) on every row."),
+         "the highest mean score. The honest controls are the original run again and its 8-bit "
+         "and 4-bit copies (Q8_0, Q4_K_M). A system's page lists the damaged ones. With none, the "
+         "model has no bar and the check is not decided (decided nothing) on every row."),
     ),
 }  # fmt: skip
 # a check in one line, for its search entry: the held rule with every condition kept, about 95
@@ -113,20 +128,6 @@ CHECK_LINE = {
 }
 # a check's stored state in words (RFC-0018 Terms, amended 2026-11-16); the ids stay
 STATE_WORD = {"held": "passed", "failed": "failed", "undecided": "not decided"}
-# each check in one plain sentence (D7): its name's title on a system page, and its first line on
-# the checks page; {reply_tokens} is the level file's
-CHECK_PLAIN = {
-    "run": "The publisher's prover, as published at the pin, ran three sessions from a cold start, "
-    "and every reply got an accepted proof.",
-    "model": "A proof made with one weight changed is not accepted against the original weights' "
-    "commitment.",
-    "prompt": "With one prompt token changed, the verifier refuses the proof.",
-    "reply": "Every proof covers all {reply_tokens} reply tokens, and with one changed (first, "
-    "last or one inside) the verifier refuses it.",
-    "no_weight_file": "The verifier reached every verdict with no copy of the model and no GPU.",
-    "fidelity": "The proved replies match the original's opening tokens better than the bar "
-    "does, by a paired test at p\u00a0<\u00a00.05.",
-}
 # under a system page's Checks head (depth 3): what a passed check is
 CHECKS_LEAD = (
     "Each check runs the publisher's own prover honestly and tries a change it should refuse. A "
@@ -969,13 +970,21 @@ def session_count(k):
     return f"{k:,} session" if k == 1 else f"{k:,} sessions"
 
 
-# the fidelity table (FI-5, FI-6): the replies' figure, a control's id as printed, the p line. A
-# control whose id is not its name: FI-2's words (a quarter of the blocks, both models; the
-# smaller model is named in the level file)
-PREFIX = "Leading tokens matching the original, mean"
-CONTROL_NAME = {"reference-2": "original, run again",
+# the fidelity table (FI-5, FI-6): the replies' figure, a control's name as the table prints it
+# (its id, with the llama.cpp pin that makes a quantized copy, in the title), the p line. FI-2's
+# words: a quantized copy by its bits, which llama.cpp's type names (Q8_0 is 8-bit, Q4_K_M mostly
+# 4-bit), the id kept in parentheses at this depth; a quarter of the blocks, both models; the
+# smaller model is named in the level file
+PREFIX = "Fidelity check: matched leading tokens, mean"
+CONTROL_NAME = {"reference-2": "the original, run again",
+                "q8_0": "8-bit copy (Q8_0)", "q4_k_m": "4-bit copy (Q4_K_M)",
+                "q3_k_s": "3-bit copy (Q3_K_S)", "q2_k": "2-bit copy (Q2_K)",
                 "drop-every-4th-block": "a quarter of blocks cut",
                 "smaller-model": "a smaller model"}  # fmt: skip
+# the table's first two heads: whose replies a row holds, and whether it is the system, an honest
+# copy or a damaged one (FI-2)
+FID_WHO = "Whose replies"
+FID_KIND = "Kind"
 # a check's record as its link reads, by the file's name (the path stands in the link's title)
 RECORD_WORD = {"run.json": "run record", "controls.json": "controls", "verify-trace": "verify traces",
                "reverify.json": "re-verify record", "fidelity.json": "fidelity record"}  # fmt: skip
@@ -983,22 +992,44 @@ P_ABOVE = "above the bar: {p}"  # {p} reads "p = 0.0058" or the floor's bound (`
 P_FLOOR = ", the test's floor"  # after a p at the lowest value its test can give (FI-4)
 # the reference's precision in words, where a line names the original (FI-1)
 DTYPE_BITS = {"bf16": "16-bit", "f16": "16-bit", "f32": "32-bit"}
-# the line that opens the table: which measure sets a state and which is the surface figure, and
-# that neither compares logits (the KL columns do); {prefix} the check's column head
+# the Fidelity section's lead (RFC-0018 SI-9, amended 2026-11-16): first in plain words what is
+# compared with what, what 100 % means and what the two yardstick copies are; then why the figure
+# is top-token agreement (SPEC 5.4); then which measure sets a state, and that neither compares
+# logits (the KL columns do). {name} the system, {proved} the copy it proves (its workload record),
+# {bits} the original's precision, {n} the prompts, {tokens} the reply's positions
+FID_PLAIN = (
+    "Fidelity asks whether the model {name} proves answers like the original, the {bits} model "
+    "its publisher released. Proving usually runs a copy whose numbers are stored in fewer bits "
+    "(quantization), and {name} proves {proved}."
+)
+FID_PLAIN_TF = (
+    " Each row below is fed the same {n:,} prompts, each followed by the original's reply. Its "
+    "Fidelity figure is the share of the reply's positions where its top token is the "
+    "original's next token: 100\u00a0% means the original's choice at every position."
+)
+FID_PLAIN_COPIES = (
+    " The 8-bit copy (Q8_0) and the 4-bit copy (Q4_K_M) are the original with its weights "
+    "rounded to 8 bits, and mostly to 4 bits, by llama.cpp; we run them without a proof, as "
+    "yardsticks."
+)
+FID_WHY = (
+    "Why top-token agreement: a greedy reply is the top token at each position, so this counts "
+    "how often the proved model makes the original's choice, at every one of the {tokens:,} "
+    "positions, not only up to the first difference."
+)
 FID_LEAD_PREFIX = (
-    "{prefix} sets the Fidelity check and the Close to the original petal: the tokens at the start of "
-    "each reply that equal the {bits} original's reply, counted up to the first difference."
+    "Matched leading tokens set the Fidelity check and the Fidelity petal: the tokens at the "
+    "start of each reply that equal the {bits} original's, counted up to the first difference."
 )
-FID_LEAD_TF = (
-    " Fidelity, the figure at the top of the page, sets no state: each row is fed the prompt, "
-    "then the original's reply, token by token, and Fidelity is the share of reply positions "
-    "where its top token is the original's token. n\u00a0=\u00a0{n:,} prompts in each row."
+FID_LEAD_CHECK = (
+    " The Fidelity check passes when the replies the system proved match more of them than the "
+    "bar, a damaged copy, by a paired test at p\u00a0<\u00a00.05."
 )
+FID_LEAD_TF = " The Fidelity figure sets no state."
 FID_LEAD_LOGITS = " Neither compares logits: the KL columns do."
 # what a column is called on a phone, where each card repeats it (the heads in full above)
-FID_LABEL = {"Fidelity: share of positions where the top token is the reply token, mean":
-             "Fidelity: top-token share",
-             "Leading tokens matching the original, mean": "Leading tokens matched, mean"}  # fmt: skip
+FID_LABEL = {"Fidelity figure: top-token agreement, mean": "Fidelity figure",
+             "Fidelity check: matched leading tokens, mean": "Matched leading tokens, mean"}  # fmt: skip
 TF_INTERVAL = "95\u00a0% interval {low} to {high}\u202f%"  # SI-9, under and in a percentage's title
 # the limits under the table (depth 3), each generated from the board, the level and its records
 LIM_ORIGINAL = "Original: {repo} at {rev}, {bits}."
@@ -1009,17 +1040,17 @@ LIM_ENGINES = "Engines: {parts}."
 LIM_PART = {None: "the original and the controls run with it", "controls": "the quantized controls"}
 LIM_VLLM = "{part} in vLLM, every prompt sent in one call"
 LIM_LLAMA = "{part} in llama.cpp, {slots} at a time"
-LIM_GREEN = (" Close to the original needs a fidelity run of one request at a time for green, "
-             "so it cannot be green until the original is run that way on this model.")  # fmt: skip
+LIM_GREEN = (" The Fidelity petal needs a fidelity run of one request at a time for Met, so it "
+             "cannot be Met until the original is run that way on this model.")  # fmt: skip
 LIM_PROMPTS = ("Prompts: {tokens}-token windows of {texts} texts from {hosts} ({licences}), with "
                "no chat template.")  # fmt: skip
-TF_AGREE = "Fidelity: share of positions where the top token is the reply token, mean"
+TF_AGREE = "Fidelity figure: top-token agreement, mean"
 TF_KL = "KL to the original, on its reply"
 # the summary of FI-11's tests: they are on top-token agreement and set nothing (the matched
 # leading tokens set the check and the petal)
 TF_TESTS_ON = "on top-token agreement; they set no state"
 # the two teacher-forced columns by name: the lead and FI-13's label say which columns they are about
-TF_BOTH = f"Fidelity and {TF_KL}"
+TF_BOTH = f"Fidelity figure and {TF_KL}"
 # the KL head's title (FI-12: the tokens both lists hold, every other token one outcome)
 TF_KL_TITLE = (
     "KL compares, at each position, each token that both lists of the {k:,} most probable tokens "

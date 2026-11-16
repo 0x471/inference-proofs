@@ -18,6 +18,10 @@ A model's layout and sizes: its layers, widths and heads. It is public for every
 
 A report, signed by hardware or an organisation, that a condition holds. In policy writing, an attestation is a formal declaration that a standard is met.
 
+### Bar
+
+The most faithful damaged copy that every honest copy scores above; a system's proved replies must score above it to pass the [[Fidelity check]]. Its rule is on the [checks page](/checks#fidelity).
+
 ### Bound
 
 Said of a link in the computation that the verifier's acceptance constrains, such as the weights to their commitment. A [[claim card]] records what is bound as the publisher states it, or reads "not stated". As a noun, a bound is a stated limit, such as on the probability that a false proof is accepted.
@@ -80,11 +84,15 @@ A transform that makes an interactive proof non-interactive by hashing the state
 
 ### Fidelity
 
-How closely the copy a system proves answers like the model its publisher released. The [Fidelity petal](/checks#faithful_model) and the [[fidelity check|Fidelity check]] count matched leading tokens: how many tokens at the start of a reply equal the original's, up to the first difference. The Fidelity figure counts top-token agreement: the share of reply positions where the system, fed the prompt and the original's reply (teacher forcing), picks the original's next token. The figure sets no state.
+How closely the copy a system proves answers like the model its publisher released. One name covers three things, told apart by a word: the [[Fidelity check]] and the Fidelity [petal](/checks#faithful_model) count [[matched leading tokens]], and the [[Fidelity figure]] counts top-token agreement. Beside a figure, the site prints the [[quantization]] the system proves.
 
 ### Fidelity check
 
-The proved replies match the original's opening tokens better than the bar does, by a paired test at p < 0.05 ([rule](/checks#fidelity)).
+One of the six [checks](/checks#fidelity): the proved replies match the original's opening tokens better than the [[bar]] does, by a paired test at p < 0.05.
+
+### Fidelity figure
+
+The share of reply positions where the system, fed the prompt and the original's reply, picks the original's next token (top-token agreement). It sets no state and is labelled "computed by the system's own code on the reference reply, not by the proved computation".
 
 ### Field
 
@@ -109,6 +117,10 @@ One GPU busy for one second. GPU-seconds add over every GPU a job holds, so two 
 ### Greedy decoding
 
 Choosing the highest-scoring token at every step. With exact arithmetic and a fixed rule for ties, the same model and prompt always give the same reply.
+
+### Halfway point
+
+The average of two copies' mean scores; a row is shown above it by a paired sign-flip test at p < 0.05. The Fidelity petal's steps are halfway points between the original run again, the 8-bit copy and the 4-bit copy.
 
 ### Harness
 
@@ -146,6 +158,10 @@ Said of a proof checked by a proof assistant's kernel, such as Lean's. What it t
 
 A petal's top step, the step below it, and the lowest step above Not met. Each petal's rule on the [checks page](/checks#glyph) says what each needs. The steps are drawn as inks; no printed word names an ink.
 
+### Matched leading tokens
+
+How many tokens at the start of a reply equal the original's, up to the first difference; the score of the [[Fidelity check]].
+
 ### Mixture of experts
 
 A model that runs only part of its weights for each token. Llama 4 Maverick runs about 17 billion of its 400 billion parameters.
@@ -181,6 +197,10 @@ A petal's step when the publisher's own facts fall below Partly met.
 ### Not stated
 
 A petal's step when the publisher's documents read at the pinned commit say nothing on it. A guarantee nobody states is graded as none.
+
+### Number format
+
+Whether the proved copy computes in integers, fixed point (integers with a fixed scale) or floating point, and with how many bits per weight.
 
 ### Operator
 
@@ -232,11 +252,11 @@ Sentences copied word for word from the publisher's documents at the pinned comm
 
 ### Q8_0 and Q4_K_M
 
-Two copies of the original model quantized by llama.cpp, two of the fidelity run's three honest controls. The ladder prints their [[fidelity]] under each system's.
+The 8-bit copy (Q8_0) and the 4-bit copy (Q4_K_M): the original model with its weights rounded to 8 bits, and mostly to 4 bits, by llama.cpp at the level's pinned commit. We run them without a proof, as yardsticks, and the ladder prints their [[Fidelity figure]] under each system's.
 
 ### Quantization
 
-Storing a model's weights, and often its activations, as low-precision integers in place of floating point. Each system on the ladder proves a [quantized copy](/statement#integer-arithmetic) of the original, whose replies can differ from the original's.
+Storing a model's numbers in fewer bits, which is cheaper to prove and can change replies. Each system on the ladder proves a [quantized copy](/statement#integer-arithmetic) of the original; the [[Fidelity figure]] shows how far its replies move.
 
 ### Random oracle
 
