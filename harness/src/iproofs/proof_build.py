@@ -48,10 +48,11 @@ LEAN_GAVE_UP = re.compile(
 CHECK_PASSED = "All steps passed: tree, words, imports, build (kernel replay, audit)."
 CHECK_FAILED = re.compile(r"Check failed: ([a-z]+(?:, [a-z]+)*)")
 LAKE_STEPS = frozenset({"build", "replay", "audit"})  # the steps that start Lake
-CHECK_NO_VERDICT = re.compile(
-    r"no step was run, and nothing was built"
-    r"|^Traceback \(most recent call last\):"
-    r"|^   TOO LITTLE MEMORY: |^   THE CONTROL FAILED: "
+CHECK_REFUSED = re.compile(  # check.py ran nothing, or stopped on a fault of its own
+    r"no step was run, and nothing was built|^Traceback \(most recent call last\):", re.M
+)
+CHECK_NO_VERDICT = re.compile(  # a Lake step it did not run: no verdict when no other step gave one
+    r"^   TOO LITTLE MEMORY: |^   THE CONTROL FAILED: "
     r"| not run: (?:another account could|Lake is not called|too little memory)"
     r"|^The Lake files are not the ones that this check\.py expects",
     re.M,
@@ -112,16 +113,18 @@ def toolchain_of(spelled: str) -> dict[str, str]:
 
 
 def publisher_command(argv: list[str]) -> list[str]:
-    """The publisher's command inside our wrapper: a leading `env NAME=value ...` and our time
-    limit `timeout -k N S` dropped (docs/runbooks/proof-build.sh writes both)."""
+    """What ran without our time limit, as a shell would spell it: `env A=1 timeout -k N S cmd`
+    becomes `A=1 cmd`. The settings stay (the publisher's LEAN_ABORT_ON_PANIC=1, and the
+    LEAN_NUM_THREADS the full check ran with); only `env` and `timeout -k N S` go."""
     rest = list(argv)
+    settings: list[str] = []
     if rest[:1] == ["env"]:
         rest = rest[1:]
         while rest and "=" in rest[0]:
-            rest = rest[1:]
+            settings.append(rest.pop(0))
     if rest[:2] == ["timeout", "-k"] and len(rest) > 4:
         rest = rest[4:]
-    return rest
+    return settings + rest
 
 
 def record_path(release: str, system: str) -> str:
@@ -191,13 +194,17 @@ def check_status_of(
     stop = _stop(exit_code, seconds, limit)
     if stop is not None:
         return "stopped", stop
-    if CHECK_NO_VERDICT.search(out) or exit_code != 1:
+    if exit_code != 1 or CHECK_REFUSED.search(out):
         raise IProofsError(ErrorKind.CONFIG, f"check.py exited {exit_code} with no verdict on the "
                            f"library ({last!r}): read build.log; no record is written")  # fmt: skip
     failed = CHECK_FAILED.search(last)
     if failed is None:
         raise IProofsError(ErrorKind.CONFIG, f"check.py exited 1 with last line {last!r}")
     steps = set(failed.group(1).split(", "))
+    verdicts = [ln for ln in lines if " FAILED" in ln and " not run: " not in ln]
+    if CHECK_NO_VERDICT.search(out) and steps <= LAKE_STEPS and not verdicts:
+        raise IProofsError(ErrorKind.CONFIG, f"check.py ran no Lake step to a verdict ({last!r}): "
+                           "read build.log; no record is written")  # fmt: skip
     killed = CHECK_KILLED.search(out) or CHILD_KILLED.search(out) or CHILD_KILLED.search(kept)
     if killed and steps <= LAKE_STEPS:
         detail = f"a process check.py started: {killed.group(0)!r}"
@@ -249,7 +256,10 @@ def build_record(folder: Path, system: str, formal: Mapping[str, object]) -> dic
         argv_raw = meta["argv"]
         if not isinstance(argv_raw, list) or not argv_raw:
             raise IProofsError(ErrorKind.CONFIG, "meta.jsonl's argv is not a list")
-        argv = [str(a) for a in argv_raw]
+        threads = str(meta.get("lean_num_threads") or "")
+        argv = (["env", f"LEAN_NUM_THREADS={threads}"] if threads else []) + [
+            str(a) for a in argv_raw
+        ]
     else:
         status, stop = status_of(exit_code, log, seconds, limit)
         found = axioms_of(log, theorem)

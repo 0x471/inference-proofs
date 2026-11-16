@@ -33,6 +33,7 @@ Build completed successfully (16057 jobs).
 
 
 def folder(tmp: Path, exit_code: int, log: str = LOG, seconds: int = 5400) -> Path:
+    tmp.mkdir(parents=True, exist_ok=True)
     rows = [
         {"started_at": "2026-11-15T21:30:00Z", "image": f"docker.io/library/ubuntu@{IMAGE}",
          "repo": "anthropics/FlashProve", "commit": PIN, "target": TARGET, "timeout_s": 25200,
@@ -132,6 +133,7 @@ LEAN_LINE = (
 def check_folder(
     tmp: Path, code: int, out: str, kept: str = LEAN_LINE, seconds: int = 16000
 ) -> Path:
+    tmp.mkdir(parents=True, exist_ok=True)
     rows = [
         {"started_at": "2026-11-16T00:00:00Z", "image": f"docker.io/library/ubuntu@{IMAGE}",
          "repo": "anthropics/FlashProve", "commit": PIN, "timeout_s": 23400, "mode": "check",
@@ -191,6 +193,24 @@ def test_full_check_built_reads_the_audit_axioms_and_keeps_the_job_argv(tmp_path
             "failed",
             None,
         ),  # a words failure is ours to show
+        (
+            1,
+            "   TOO LITTLE MEMORY: the build\n   FAILED: build not run: too little memory is free\n"
+            "   FAILED: words\nCheck failed: words, build, replay, audit\n",
+            "",
+            9000,
+            "failed",
+            None,
+        ),
+        (
+            1,
+            "   REPLAY FAILED (exit 1): x\n   TOO LITTLE MEMORY: the audit\n"
+            "Check failed: replay, audit\n",
+            "",
+            9000,
+            "failed",
+            None,
+        ),
         (124, "partial\n", "", 23400, "stopped", "timeout"),
         (137, "partial\n", "", 23460, "stopped", "timeout"),
     ],
@@ -210,6 +230,11 @@ def test_full_check_status(
         (3, "  - NOT RUN: the listing (not written)\nPassed so far, and not the full check\n"),
         (1, "   TOO LITTLE MEMORY: the build\nCheck failed: build\n"),
         (1, "check.py: no step was run, and nothing was built\n"),
+        (
+            1,
+            "   FAILED: build not run: too little memory is free\n"
+            "Check failed: build, replay, audit\n",
+        ),
         (2, "check.py: --jobs must be a whole number. Nothing was checked.\n"),
         (0, "Partial run passed (tree): only these steps were run\n"),
     ],
@@ -237,5 +262,51 @@ def test_publisher_command_drops_our_wrapper() -> None:
         "build",
         TARGET,
     ]
-    assert publisher_command(targeted) == ["lake", "build", TARGET]
+    assert publisher_command(targeted) == ["LEAN_ABORT_ON_PANIC=1", "lake", "build", TARGET]
     assert publisher_command(ARGV) == ["python3", "-B", "scripts/check.py", "--wide-jobs", "24"]
+
+
+def test_full_check_records_the_lean_threads_it_ran_with(tmp_path: Path) -> None:
+    folder_ = check_folder(tmp_path, 0, AUDIT + PASSED + "\n")
+    with (folder_ / "meta.jsonl").open("a") as f:
+        f.write(json.dumps({"lean_num_threads": "64"}) + "\n")
+    rec = build_record(folder_, "flashprove", FORMAL)
+    assert rec["argv"] == ["env", "LEAN_NUM_THREADS=64", *ARGV]
+    assert publisher_command(rec["argv"])[:2] == ["LEAN_NUM_THREADS=64", "python3"]
+
+
+# ---------------------------------------------------------------- which record stands (Q43)
+
+
+def _stored(tmp: Path, record: dict[str, object]) -> Path:
+    out = tmp / "results/v1.0/proof-build/flashprove/proof-build.json"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(record))
+    return out
+
+
+def test_replace_rules(tmp_path: Path) -> None:
+    from iproofs.commands.proof_build import replaces  # noqa: PLC0415
+
+    targeted = build_record(folder(tmp_path / "t", 0), "flashprove", FORMAL)
+    check = build_record(
+        check_folder(tmp_path / "c", 0, AUDIT + PASSED + "\n"), "flashprove", FORMAL
+    )
+    stopped = build_record(
+        check_folder(tmp_path / "s", 124, "partial\n", "", 23400), "flashprove", FORMAL
+    )
+    out = tmp_path / "repo" / "results/v1.0/proof-build/flashprove/proof-build.json"
+    replaces(out, stopped, False, tmp_path / "repo")  # none stored: any build is written
+    out = _stored(tmp_path / "repo", targeted)
+    before = out.read_bytes()
+    with pytest.raises(IProofsError, match="replaces no record"):
+        replaces(out, stopped, True, tmp_path / "repo")
+    with pytest.raises(IProofsError, match="give --replace"):
+        replaces(out, check, False, tmp_path / "repo")
+    with pytest.raises(IProofsError, match="only the publisher's full check"):
+        replaces(out, targeted, True, tmp_path / "repo")
+    replaces(out, check, True, tmp_path / "repo")  # a full check over a targeted build
+    out.write_text(json.dumps(check))
+    with pytest.raises(IProofsError, match="only the publisher's full check"):
+        replaces(out, check, True, tmp_path / "repo")  # never a second full check
+    assert before != out.read_bytes()

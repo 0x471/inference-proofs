@@ -1,7 +1,7 @@
 # Proof build (RFC-0018 MC-4a, MC-5)
 
 Machine-checked stays hollow until a build of the publisher's named theorem is recorded at the
-row's pin. This page runs that build on a CPU host of Hugging Face Jobs and records it.
+row's pin. This page runs that build on Hugging Face Jobs and records it.
 
 The build is the publisher's own command, unpatched. For FlashProve at `9e2bdd8`:
 `LEAN_ABORT_ON_PANIC=1 lake build Johnson.Goal.Skeleton.SoundOfVerifyAt`, then its line
@@ -64,6 +64,8 @@ with the theorem's axioms line; `failed` when Lean gave up on its own (a panic, 
 petal red; `stopped` at the build's own time limit or a SIGKILL or SIGTERM (out of memory among
 them), which leaves it hollow; `failed` otherwise. A job whose setup failed never started the
 build and gives no record, and so does a full check that reached no verdict on the library for
-a reason of its own (too little memory at a step's start, other Lake files, exit 2 or 3). With
-`--replace`, a build that reached a verdict, built or failed, replaces the stored record; a
-stopped build replaces none.
+a reason of its own: it ran nothing, or every step it failed starts Lake and was not run (too
+little memory at the step's start, no Lake call, other Lake files), or it exited 2 or 3. With
+`--replace`, the full check replaces a stored targeted build when it reached a verdict, built or
+failed; a stopped build, a targeted build over a full check, or a second full check replaces
+none.

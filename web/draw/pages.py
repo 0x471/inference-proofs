@@ -388,9 +388,11 @@ def formal_facts_html(formal):
     if formal is None:
         return ""
     if silent(formal):  # nothing stated: said once, not in every fact
-        return (
-            f'<p class="pvh">Tool, theorem, trusted base: {e(SCOPE_VALUE_WORD["not_stated"])}</p>'
-        )
+        said = f'<p class="pvh">Tool, theorem, trusted base: {e(SCOPE_VALUE_WORD["not_stated"])}</p>'
+        if formal.get("build"):  # a stored build is drawn even where nothing is stated
+            said += (f'<dl class="pf"><div><dt>{e(PROOF_BUILD_HEAD)}</dt>'
+                     f'<dd>{proof_build_html(formal["build"])}</dd></div></dl>')  # fmt: skip
+        return said
     theorem = formal["theorem"]
     code = (
         f"<code>{e(theorem).replace('.', '.<wbr>')}</code>" if theorem else None

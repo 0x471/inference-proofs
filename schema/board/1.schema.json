@@ -212,7 +212,7 @@
           "additionalProperties": false,
           "properties": {
             "command": {
-              "$comment": "the publisher's command, without our env prefix and time-limit wrapper",
+              "$comment": "what ran, without our time-limit wrapper: the publisher's command with its settings",
               "items": {
                 "minLength": 1,
                 "type": "string"
