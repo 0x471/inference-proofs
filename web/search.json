@@ -383,6 +383,16 @@
     {
       "group": "Glossary",
       "kind": "term",
+      "meta": "The most faithful damaged copy that every honest copy scores above; a system's proved replies must score above it to pass the Fidelity check.",
+      "name": "Bar",
+      "pie": "",
+      "terms": "bar the most faithful damaged copy that every honest copy scores above; a system's proved replies must score above it to pass the fidelity check.",
+      "tier": 4.2,
+      "url": "/glossary#bar"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
       "meta": "Said of a link in the computation that the verifier's acceptance constrains, such as the weights to their commitment.",
       "name": "Bound",
       "pie": "",
@@ -443,6 +453,16 @@
     {
       "group": "Glossary",
       "kind": "term",
+      "meta": "How a derived figure was obtained: code calculates it from the times and counts our harness recorded, and no one types it.",
+      "name": "Computed by our code from recorded numbers",
+      "pie": "",
+      "terms": "computed by our code from recorded numbers how a derived figure was obtained: code calculates it from the times and counts our harness recorded, and no one types it.",
+      "tier": 4.2,
+      "url": "/glossary#computed-by-our-code-from-recorded-numbers"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
       "meta": "Said of a soundness bound that rests on an unproved conjecture.",
       "name": "Conjectured",
       "pie": "",
@@ -459,6 +479,26 @@
       "terms": "control an input changed on purpose (a negative control), from which a working system gives no accepted proof.",
       "tier": 4.2,
       "url": "/glossary#control"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
+      "meta": "How many times the GPU time of serving the same reply without a proof, at full load on the same GPU type, a proved reply takes.",
+      "name": "Cost vs serving",
+      "pie": "",
+      "terms": "cost vs serving how many times the gpu time of serving the same reply without a proof, at full load on the same gpu type, a proved reply takes.",
+      "tier": 4.2,
+      "url": "/glossary#cost-vs-serving"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
+      "meta": "We measured it on our own sessions, and no one else has rerun them yet.",
+      "name": "Evidence: our runs only, not rerun by anyone else",
+      "pie": "",
+      "terms": "evidence: our runs only, not rerun by anyone else we measured it on our own sessions, and no one else has rerun them yet.",
+      "tier": 4.2,
+      "url": "/glossary#evidence-our-runs-only-not-rerun-by-anyone-else"
     },
     {
       "group": "Glossary",
@@ -513,12 +553,22 @@
     {
       "group": "Glossary",
       "kind": "term",
-      "meta": "The proved replies match the original's opening tokens better than the bar does, by a paired test at p < 0.05 (rule).",
+      "meta": "One of the six checks: the proved replies match the original's opening tokens better than the bar does, by a paired test at p < 0.05.",
       "name": "Fidelity check",
       "pie": "",
-      "terms": "fidelity check the proved replies match the original's opening tokens better than the bar does, by a paired test at p < 0.05 (rule).",
+      "terms": "fidelity check one of the six checks: the proved replies match the original's opening tokens better than the bar does, by a paired test at p < 0.05.",
       "tier": 4.2,
       "url": "/glossary#fidelity-check"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
+      "meta": "The share of reply positions where the system, fed the prompt and the original's reply, picks the original's next token (top-token agreement).",
+      "name": "Fidelity figure",
+      "pie": "",
+      "terms": "fidelity figure the share of reply positions where the system, fed the prompt and the original's reply, picks the original's next token (top-token agreement).",
+      "tier": 4.2,
+      "url": "/glossary#fidelity-figure"
     },
     {
       "group": "Glossary",
@@ -563,12 +613,32 @@
     {
       "group": "Glossary",
       "kind": "term",
+      "meta": "One GPU busy for one second.",
+      "name": "GPU-second",
+      "pie": "",
+      "terms": "gpu-second one gpu busy for one second.",
+      "tier": 4.2,
+      "url": "/glossary#gpu-second"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
       "meta": "Choosing the highest-scoring token at every step.",
       "name": "Greedy decoding",
       "pie": "",
       "terms": "greedy decoding choosing the highest-scoring token at every step.",
       "tier": 4.2,
       "url": "/glossary#greedy-decoding"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
+      "meta": "The average of two copies' mean scores; a row is shown above it by a paired sign-flip test at p < 0.05.",
+      "name": "Halfway point",
+      "pie": "",
+      "terms": "halfway point the average of two copies' mean scores; a row is shown above it by a paired sign-flip test at p < 0.05.",
+      "tier": 4.2,
+      "url": "/glossary#halfway-point"
     },
     {
       "group": "Glossary",
@@ -663,6 +733,16 @@
     {
       "group": "Glossary",
       "kind": "term",
+      "meta": "How many tokens at the start of a reply equal the original's, up to the first difference; the score of the Fidelity check.",
+      "name": "Matched leading tokens",
+      "pie": "",
+      "terms": "matched leading tokens how many tokens at the start of a reply equal the original's, up to the first difference; the score of the fidelity check.",
+      "tier": 4.2,
+      "url": "/glossary#matched-leading-tokens"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
       "meta": "A model that runs only part of its weights for each token.",
       "name": "Mixture of experts",
       "pie": "",
@@ -749,6 +829,16 @@
       "terms": "not stated a petal's step when the publisher's documents read at the pinned commit say nothing on it.",
       "tier": 4.2,
       "url": "/glossary#not-stated"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
+      "meta": "Whether the proved copy computes in integers, fixed point (integers with a fixed scale) or floating point, and with how many bits per weight.",
+      "name": "Number format",
+      "pie": "",
+      "terms": "number format whether the proved copy computes in integers, fixed point (integers with a fixed scale) or floating point, and with how many bits per weight.",
+      "tier": 4.2,
+      "url": "/glossary#number-format"
     },
     {
       "group": "Glossary",
@@ -873,20 +963,20 @@
     {
       "group": "Glossary",
       "kind": "term",
-      "meta": "Two copies of the original model quantized by llama.cpp, two of the fidelity run's three honest controls.",
+      "meta": "The 8-bit copy (Q8_0) and the 4-bit copy (Q4_K_M): the original model with its weights rounded to 8 bits, and mostly to 4 bits, by llama.cpp at the level's pinned commit.",
       "name": "Q8_0 and Q4_K_M",
       "pie": "",
-      "terms": "q8_0 and q4_k_m two copies of the original model quantized by llama.cpp, two of the fidelity run's three honest controls.",
+      "terms": "q8_0 and q4_k_m the 8-bit copy (q8_0) and the 4-bit copy (q4_k_m): the original model with its weights rounded to 8 bits, and mostly to 4 bits, by llama.cpp at the level's pinned commit.",
       "tier": 4.2,
       "url": "/glossary#q8-0-and-q4-k-m"
     },
     {
       "group": "Glossary",
       "kind": "term",
-      "meta": "Storing a model's weights, and often its activations, as low-precision integers in place of floating point.",
+      "meta": "Storing a model's numbers in fewer bits, which is cheaper to prove and can change replies.",
       "name": "Quantization",
       "pie": "",
-      "terms": "quantization storing a model's weights, and often its activations, as low-precision integers in place of floating point.",
+      "terms": "quantization storing a model's numbers in fewer bits, which is cheaper to prove and can change replies.",
       "tier": 4.2,
       "url": "/glossary#quantization"
     },
@@ -939,6 +1029,16 @@
       "terms": "reply check every proof covers all of the request's reply tokens, and with one changed (first, last or one inside) the verifier refuses it (rule).",
       "tier": 4.2,
       "url": "/glossary#reply-check"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
+      "meta": "The request's reply tokens over the whole session GPU-seconds it took to prove that reply.",
+      "name": "Reply tokens per GPU-second",
+      "pie": "",
+      "terms": "reply tokens per gpu-second the request's reply tokens over the whole session gpu-seconds it took to prove that reply.",
+      "tier": 4.2,
+      "url": "/glossary#reply-tokens-per-gpu-second"
     },
     {
       "group": "Glossary",
@@ -1003,12 +1103,22 @@
     {
       "group": "Glossary",
       "kind": "term",
-      "meta": "One cold-start run of a system on a model: setup, commit, then proofs for one slot's requests.",
+      "meta": "One run of a system from a cold start on one slot's prompts: it loads the model, commits to the weights, then proves every reply (120 replies on Llama 4 Maverick, 5 on Llama 3.1 8B).",
       "name": "Session",
       "pie": "",
-      "terms": "session one cold-start run of a system on a model: setup, commit, then proofs for one slot's requests.",
+      "terms": "session one run of a system from a cold start on one slot's prompts: it loads the model, commits to the weights, then proves every reply (120 replies on llama 4 maverick, 5 on llama 3.1 8b).",
       "tier": 4.2,
       "url": "/glossary#session"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
+      "meta": "One of three fixed sets of a model's prompts.",
+      "name": "Slot",
+      "pie": "",
+      "terms": "slot one of three fixed sets of a model's prompts.",
+      "tier": 4.2,
+      "url": "/glossary#slot"
     },
     {
       "group": "Glossary",
@@ -1053,10 +1163,10 @@
     {
       "group": "Glossary",
       "kind": "term",
-      "meta": "A session's state when enough release groups follow the first, each at an even time per reply.",
+      "meta": "The part of a session after its first group of proofs, when proofs come out at an even pace.",
       "name": "Steady state",
       "pie": "",
-      "terms": "steady state a session's state when enough release groups follow the first, each at an even time per reply.",
+      "terms": "steady state the part of a session after its first group of proofs, when proofs come out at an even pace.",
       "tier": 4.2,
       "url": "/glossary#steady-state"
     },
@@ -1149,6 +1259,16 @@
       "terms": "weights the learned numbers a model is made of, about 8 billion in llama 3.1 8b.",
       "tier": 4.2,
       "url": "/glossary#weights"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
+      "meta": "A figure that counts a session's GPU time from the start of its commit to its last proof, start-up included, divided by its replies.",
+      "name": "Whole session",
+      "pie": "",
+      "terms": "whole session a figure that counts a session's gpu time from the start of its commit to its last proof, start-up included, divided by its replies.",
+      "tier": 4.2,
+      "url": "/glossary#whole-session"
     },
     {
       "group": "Glossary",
