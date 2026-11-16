@@ -281,6 +281,7 @@ html:has(.top.s-on) { overflow: hidden; }
   .sbm .fig { justify-content: flex-start; }
   .sbm .fig .n { font-size: 44px; }
   .sbm .fig .u.x { font-size: 26px; }
+  .sbm .rts { margin-left: 0; }
   .sysname.nm1 { font-size: 80px; }
   .sysname.nm2 { font-size: 56px; }
   .sysname.nm3 { font-size: 46px; }
@@ -311,12 +312,14 @@ html:has(.top.s-on) { overflow: hidden; }
   .sysb .sbm > .na + .sub { display: block; flex-basis: 100%; margin: 0; white-space: normal; }
   .sysb .sbm > .fig .n { font-size: 40px; }
   .sysb .sbm > .fig .u.x { font-size: 24px; }
+  .sysb .sbm > .rts { flex-basis: 100%; margin: 0; }
 }
 /* a narrow tablet and paper: the name's column would split a long name inside its word, so the figure goes under it */
 @media (max-width: 860px) and (min-width: 761px), print {
   .sb { grid-template-columns: minmax(0, 1fr); row-gap: 20px; }
   .sbm { grid-area: 2 / 1; max-width: none; text-align: left; }
   .sbm .fig { justify-content: flex-start; }
+  .sbm .rts { margin-left: 0; }
 }
 /* a page's band (the checks, the mandate, the 404): its title at the home title's size */
 .mast-t .mast-in { padding: 48px 0; }
