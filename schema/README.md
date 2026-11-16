@@ -46,7 +46,7 @@ Schemas in the RFC-0012 catalogue that have landed, with their Python model in `
 | `level/1` | `levels/L<k>.yaml` (RFC-0018) | none (read by `iproofs.level`) |
 | `beacon/1` | `levels/L<k>-beacon.json`, the drand round the prompts are drawn from (RFC-0018 PR-2) | none (read as a tree) |
 | `verify-trace/1` | `<run-dir>/verify-trace/<proof-id>.json`, the file opens of one verify call (RFC-0018 CH-4) | none (read as a tree) |
-| `fidelity/1` | `results/<release>/fidelity/<rung>/fidelity.json` (RFC-0018 FI-8), with the run's slot count, Close to the original's two step thresholds and each row's tests over them (optional, 2026-11-13) | none (read as a tree) |
+| `fidelity/1` | `results/<release>/fidelity/<rung>/fidelity.json` (RFC-0018 FI-8), with the run's slot count, the Fidelity petal's two step thresholds and each row's tests over them (optional, 2026-11-13) | none (read as a tree) |
 | `fidelity-run/1` | `results/<release>/fidelity/<rung>/fidelity-run.json`, the record of one fidelity run | none (read as a tree) |
 | `board/1` | `releases/<release>/board.json`, what the site reads (RFC-0018 §The board file); each row's five petals carry step, cause, basis, the checks that lowered them and `reading` when a fact the decision read is the reader's reading (changed in place 2026-11-13, before any release froze; `ineligible_sessions` added in place 2026-11-15) | none (read as a tree) |
 | `properties/1` | `systems/<name>/properties.yaml`, the statement petals of the glyph as typed states; replaced by `properties/2` (2026-11-13) | none (read as a tree) |
