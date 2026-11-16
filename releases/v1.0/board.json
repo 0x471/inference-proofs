@@ -549,6 +549,23 @@
               "cause": null,
               "id": "unforgeable",
               "lowered_by": [],
+              "next": {
+                "needs": [
+                  {
+                    "by": "publisher",
+                    "text": "stated or proved for cp_verify, the verifier this row runs"
+                  },
+                  {
+                    "by": "publisher",
+                    "text": "stated for each reply of a 24-reply batch checked alone"
+                  },
+                  {
+                    "by": "publisher",
+                    "text": "its conditions shown to hold for this row's files"
+                  }
+                ],
+                "to": "amber_upper"
+              },
               "notes": [
                 "classical adversaries only (THEOREM.md L394-L395); the files-fixed-before-the-hash condition is counted under conditions_shown"
               ],
@@ -615,7 +632,7 @@
                 }
               ],
               "reading": true,
-              "reason": "at most q/2^124 + 2^-101 per proof, stated for the Lean verifier; none stated for cp_verify, which this row runs; stated for proofs checked together, not for our separate checks of 24-reply batches; its conditions not shown to hold for the row's files",
+              "reason": "not shown to cover this row: none stated for cp_verify, which this row runs; stated for proofs checked together, not for our separate checks of 24-reply batches; its conditions not shown to hold for the row's files; stated bound: at most q/2^124 + 2^-101 per proof, stated for the Lean verifier",
               "state": "amber",
               "step": "amber_lower"
             },
@@ -689,6 +706,27 @@
               ],
               "id": "weights_hidden",
               "lowered_by": [],
+              "next": {
+                "needs": [
+                  {
+                    "by": "publisher",
+                    "text": "proved for the configuration this row runs, its 24-reply batches included"
+                  },
+                  {
+                    "by": "publisher",
+                    "text": "stated for the programs this row runs"
+                  },
+                  {
+                    "by": "publisher",
+                    "text": "no listed visible value that depends on the weights (3 now)"
+                  },
+                  {
+                    "by": "publisher",
+                    "text": "a sentence of the publisher's that says it, in place of our reading"
+                  }
+                ],
+                "to": "green"
+              },
               "notes": [
                 "the publisher expects the programs to hide the weights, but says the expectation does not reach a real model's weights or the files fitted to them; the row commits a real model's weights"
               ],
@@ -853,8 +891,17 @@
               "cause": null,
               "id": "faithful_model",
               "lowered_by": [],
+              "next": {
+                "needs": [
+                  {
+                    "by": "publisher",
+                    "text": "replies shown above 48.0 leading tokens on average, halfway between the 8-bit copy and the 4-bit copy; this row has 29.7"
+                  }
+                ],
+                "to": "amber_upper"
+              },
               "quotes": [],
-              "reason": "29.7 leading reply tokens match the 16-bit original, on average; the 8-bit copy 65.7, the 4-bit copy 30.3; not shown above their midpoint, 48.0",
+              "reason": "not shown above 48.0, halfway between the 8-bit copy (65.7) and the 4-bit copy (30.3); this row matches 29.7 leading tokens of the 16-bit original's replies, on average",
               "state": "amber",
               "step": "amber_lower"
             },
@@ -987,6 +1034,15 @@
               },
               "id": "machine_checked",
               "lowered_by": [],
+              "next": {
+                "needs": [
+                  {
+                    "by": "us",
+                    "text": "our recorded build of VerifierAndGoals.AtTheName.sound_of_verify_at at 9e2bdd8 with leanprover/lean4 v4.29.1, reporting only Lean's standard axioms"
+                  }
+                ],
+                "to": null
+              },
               "notes": [
                 "the theorem covers the Lean protocol and states the model as an integer program (THEOREM.md L231-233); the C++ verifier the row runs is tested, not proved (what-is-proved.md L7-8), so the reach stops short of verifier_run; the model statement is the publisher's Lean integer model, and its tables and its reach at a given scale file are not proved (THEOREM.md L229-L231, L242-L243)",
                 "read 2026-11-15: the conclusion is about the publisher's integer model, a reference definition of the model's computation, at the weights the extractor reads; no theorem ties those weights to the ones cp_commit committed (THEOREM.md L227-L228), and at files other than the stored examples the theorem may hold only because verify rejects everything (L314-L315, under Unforgeable's conditions_shown); and the system in the soundness theorem's statement has a constant committer, which commits to nothing, so of that system none of it can be stated with any content (L700-L704): the theorem's model is the extractor's weights, not a committed model's"
@@ -1046,7 +1102,7 @@
                 }
               ],
               "reading": true,
-              "reason": "no proof build of the named theorem is recorded yet; it is stated for the Lean verifier, not for cp_verify, which this row runs; once built: amber in part at most, on our reading that its conclusion is about the model; statement not reviewed by an outside Lean reader",
+              "reason": "no build of the named proof is recorded yet; it is stated for the Lean verifier, not for cp_verify, which this row runs; once built: Mostly met at most, on our reading that its conclusion is about the model; statement not reviewed by an outside Lean reader",
               "state": "hollow",
               "step": null
             },
@@ -1055,6 +1111,15 @@
               "cause": null,
               "id": "no_trusted_party",
               "lowered_by": [],
+              "next": {
+                "needs": [
+                  {
+                    "by": "publisher",
+                    "text": "a sentence of the publisher's, at the pinned commit, that soundness rests on cryptography alone and no setup produced a secret"
+                  }
+                ],
+                "to": "green"
+              },
               "notes": [
                 "the publisher states soundness at every public setup of three public files, against any committer and prover, with the random-oracle model as its assumption; no sentence says in words that no setup produced a secret, so the petal is read as transparent and drawn amber in part at most (GL-10, amended 2026-11-15)"
               ],
@@ -1089,7 +1154,7 @@
                 }
               ],
               "reading": true,
-              "reason": "resting on cryptographic assumptions alone, with no setup that produced a secret; no quote says so, so amber in part at most",
+              "reason": "cryptography only, as we read the publisher: no setup produced a secret; no quoted sentence says so in words, so Mostly met at most",
               "state": "amber",
               "step": "amber_upper"
             }
@@ -2463,6 +2528,31 @@
               "cause": null,
               "id": "unforgeable",
               "lowered_by": [],
+              "next": {
+                "needs": [
+                  {
+                    "by": "publisher",
+                    "text": "stated or proved for boundary-grid --verify, the verifier this row runs"
+                  },
+                  {
+                    "by": "publisher",
+                    "text": "proved, not conjectured"
+                  },
+                  {
+                    "by": "publisher",
+                    "text": "said to hold against any prover"
+                  },
+                  {
+                    "by": "publisher",
+                    "text": "stated per reply, or per proof with one reply a proof"
+                  },
+                  {
+                    "by": "publisher",
+                    "text": "its conditions shown to hold for this row's files"
+                  }
+                ],
+                "to": "amber_upper"
+              },
               "quotes": [
                 {
                   "text": "stwo's own conjectured-soundness accounting is security_bits = pow_bits + log_blowup_factor * n_queries so blowup 2 (log_blowup_factor = 1) at 100 conjectured bits means exactly 100 FRI queries and no grinding.",
@@ -2477,7 +2567,7 @@
                   "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/src/util.rs#L26"
                 }
               ],
-              "reason": "100 conjectured bits per part of a proof; not stated for boundary-grid --verify, the verifier this row runs; conjectured, not proved; not said which provers it holds against; not per reply; its conditions not shown to hold for the row's files",
+              "reason": "not shown to cover this row: not stated for boundary-grid --verify, the verifier this row runs; conjectured, not proved; not said which provers it holds against; not per reply; its conditions not shown to hold for the row's files; stated bound: 100 conjectured bits per part of a proof",
               "state": "amber",
               "step": "amber_lower"
             },
@@ -2486,6 +2576,15 @@
               "cause": "not_stated",
               "id": "weights_hidden",
               "lowered_by": [],
+              "next": {
+                "needs": [
+                  {
+                    "by": "publisher",
+                    "text": "a statement that the weights stay hidden from the verifier, with a verifier that is not given them"
+                  }
+                ],
+                "to": "amber_lower"
+              },
               "quotes": [
                 {
                   "text": "The model root is not derivable -- it is the publisher's commitment to weights the verifier does not hold",
@@ -2520,8 +2619,17 @@
               "cause": null,
               "id": "faithful_model",
               "lowered_by": [],
+              "next": {
+                "needs": [
+                  {
+                    "by": "publisher",
+                    "text": "replies shown above 55.7 leading tokens on average, halfway between the 8-bit copy and the 4-bit copy; this row has 31.0"
+                  }
+                ],
+                "to": "amber_upper"
+              },
               "quotes": [],
-              "reason": "31.0 leading reply tokens match the 16-bit original, on average; the 8-bit copy 106, the 4-bit copy 5.27; not shown above their midpoint, 55.7",
+              "reason": "not shown above 55.7, halfway between the 8-bit copy (106) and the 4-bit copy (5.27); this row matches 31.0 leading tokens of the 16-bit original's replies, on average",
               "state": "amber",
               "step": "amber_lower"
             },
@@ -2598,6 +2706,19 @@
               },
               "id": "machine_checked",
               "lowered_by": [],
+              "next": {
+                "needs": [
+                  {
+                    "by": "publisher",
+                    "text": "a named machine-checked soundness theorem of part of the protocol at least, with its tool and toolchain pinned"
+                  },
+                  {
+                    "by": "us",
+                    "text": "then our recorded build of it"
+                  }
+                ],
+                "to": "amber_lower"
+              },
               "quotes": [],
               "reason": "not stated in the publisher's documents read at the pinned commit",
               "sources_read": [
@@ -2626,6 +2747,15 @@
               "cause": null,
               "id": "no_trusted_party",
               "lowered_by": [],
+              "next": {
+                "needs": [
+                  {
+                    "by": "publisher",
+                    "text": "a sentence of the publisher's, at the pinned commit, that soundness rests on cryptography alone and no setup produced a secret"
+                  }
+                ],
+                "to": "green"
+              },
               "notes": [
                 "by the test FlashProve's row meets (GL-10, amended 2026-11-15): a petal is read as transparent when a sentence among its quotes says what soundness rests on and none of it is a setup that produced a secret. SASH states its soundness as stwo's conjectured accounting over the FRI parameters (util.rs L9-L12), and says the setup's two trees are a shape tree the verifier derives from the public parameters and a model tree compared with the published model commitment (prover/README.md L117-L119, docs/statement.md L127-L129). The Fixed statement it calls trusted by the verifier is those parameters and roots (compose.rs L7-L11). No sentence says in words that no setup produced a secret, so read as transparent and drawn amber in part at most, as FlashProve's is"
               ],
@@ -2656,7 +2786,7 @@
                 }
               ],
               "reading": true,
-              "reason": "resting on cryptographic assumptions alone, with no setup that produced a secret; no quote says so, so amber in part at most",
+              "reason": "cryptography only, as we read the publisher: no setup produced a secret; no quoted sentence says so in words, so Mostly met at most",
               "state": "amber",
               "step": "amber_upper"
             }
