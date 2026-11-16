@@ -124,7 +124,7 @@ Three vocabularies label it. Each is normative in the RFC named beside it.
 
 | Tier | Meaning |
 |---|---|
-| `reported` | one runner, not yet checked |
+| `reported` | our runs only, not rerun by anyone else |
 | `peer-reviewed` | checked by someone from another organisation |
 | `reproduced` | rerun by an unaffiliated runner within tolerance |
 

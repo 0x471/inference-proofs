@@ -39,22 +39,23 @@ The shallowest depth where each kind of content may be printed, and its form the
 | the headline figure (cost vs serving) | 0 | figure with its unit |
 | its two parts (generation, commit and proving) | 0, with the headline | figures with their units (see Exceptions) |
 | the glyph | 0 | drawn, with its petals' names; on the ladder each petal's hover title is its name, its step word and its plain sentence; each petal's step in words at 2; plain sentence, reason, next step and the publisher's words at 3 |
-| a petal's field term ("soundness") and what it rests on ("tested by us", "stated", "read as") | 2 | words under its name and its step, on the system page; Confidentiality's "Architecture: visible" and Formally verified's "stated: <what is verified>" under its step |
+| a petal's field term ("soundness") and what it rests on ("tested by us", "stated", "read as") | 2 | words under its name and its step, on the system page; Confidentiality's "Architecture: visible", Formally verified's "stated: <what is verified>" ("read as:" on a reading) and Fidelity's "proved: <bits and number format>" under its step; a Not decided petal has no basis word |
 | a petal's next step (what the row lacks for the step above, and who acts) | 3 | one line under its reason |
-| soundness, zero knowledge and completeness for the row, in that order; the stated security; the scope card | 3 | three lines, each with where it is graded or tested and whom it protects, the publisher's security words verbatim, then the card with one bound per row, at the head of the Glyph section |
+| soundness, zero knowledge and completeness for the row, in that order; the stated security; the scope card | 3 | three lines, each with where it is graded or tested and whom it protects, the publisher's security words verbatim, then the card with one bound per row, under the five petals (plain first) |
 | cost, verify time | 0 | figure with its unit |
 | proof size | 1 (Scale), 2 | figure with its unit |
 | a unit | wherever its figure is | beside the figure, always |
-| fidelity | 1 | the Fidelity figure (the share of reply positions where the top token is the reply token, FI-10's mean as a percentage, SI-9) with what the row proves under it ("proved: 4.84-bit weights", the number format where the publisher states one), then the 8-bit and 4-bit copies' percentages; the copies' ids, the proved copy, why top-token agreement and the check's state in its title |
+| fidelity | 1 | the Fidelity figure (the share of reply positions where the top token is the reply token, FI-10's mean as a percentage, SI-9) with what the row proves under it ("proved: 4.84-bit integer weights", the number format as the publisher states it, and "for part of the weights" where the bits cover a part), then the 8-bit and 4-bit copies' percentages; the copies' ids, the proved copy, why top-token agreement and the check's state in its title |
 | the fidelity metrics (matched leading tokens, the bar, p, the controls, KL) | 3 | the Fidelity table, opened by a plain lead (what is compared with what, what 100 % means, what the 8-bit and 4-bit copies are, why top-token agreement), its rows named in words with the copy ids in parentheses; in the surface word's title above that |
 | serving, the figure every multiple is over | 1 | figure with its unit, in the model's head |
 | how the model was served (engine, GPUs, concurrency) | 3 | one line under Cost |
 | what the proving ran on (the GPUs the counted sessions bound, SE-2) | 3 | the Proving line under Cost, with the whole sessions |
 | a change to the publisher's code the row runs (a pull request, not merged upstream) | 2 | one line in the band, its record linked |
 | what the verifier is given (from our commit record, the request, the proof), the decoding rule, what no call checks | 3 | the Statement block, the claim card's words linked |
-| how the verify time was taken (the program, the verifier's CPUs, the host, a GPU visible), the proved precision, the serving ladder | 3 | one line each under Cost |
+| how the verify time was taken (the program, the verifier's CPUs, the host, a GPU visible), the serving ladder | 3 | one line each under Cost |
+| the proved copy: its bits, how they were found, and its number format with the publisher's words | 3 | the Proved line at the head of Fidelity; Cost's Serving line links to it |
 | the evidence tier ("our runs only, not rerun by anyone else") | 3 | one line under Cost (Evidence), once for the block, linked to the glossary; in every figure's title |
-| reply tokens per GPU-second (CO-8) | 3 | one line under Cost, beside the session GPU time, with the GPUs named and what was not timed apart; never at 0 to 2, never on the Scale page |
+| reply tokens per GPU-second (CO-8) | 3 | one line under Cost, beside the session GPU time, with the GPUs named, the session's generation and commit-and-proving parts where they are timed apart, and what was not timed apart; never at 0 to 2, never on the Scale page |
 | what was counted (scope: "whole sessions of N replies", steady, verify) | 2 | once, under the band's figure (a phone's band leaves it to the Cost block); at 3 once for the Cost block, and under a figure whose scope differs |
 | sample size (n) | 2 | once, beside the scope; at 3 beside the Cost block's scope, and under the system's own Fidelity figure (in replies) |
 | pass thresholds, petal steps | 3 as the bar's row; 4 as rules | |

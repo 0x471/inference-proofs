@@ -8,6 +8,7 @@ Every pull request that changes the public API, a schema or the methodology adds
 
 ### Added
 
+- `properties/2`: optional top-level `number_format` (RFC-0018 SI-9, Q38): the proved copy's weights and activations, each `integer`, `fixed_point`, `floating_point` or `not_stated`, with the publisher's words at the pin; recorded for FlashProve (integer weights, fixed-point activations) and SASH (integer weights, bf16 activations). It sets no state.
 - RFC-0018 CO-8 (adopted 2026-11-16): reply tokens per GPU-second over whole sessions, `iproofs.derive.reply_tokens_per_gpu_second` (D-L1-REPLY-TOKENS), stored per row as `session_reply_tokens_per_gpu_second` in `board/1`, unit `token/gpu_s` in `quantity/1`. FlashProve 2.03 reply tokens/GPU-s (2.01 to 2.04, n = 3 whole sessions, 1 × H200), SASH 0.186 (0.183 to 0.188, n = 3 whole sessions); derived, our runs only. Printed once, on the system page under Cost.
 - `site-facts/1`: optional per-system `paper` (the publisher's paper at the pinned commit), linked from a system page's band; FlashProve's `paper/paper.pdf` at 9e2bdd8.
 - Schema `refusal/1` for SE-5 refusal records, with the upstream commit a refusal was made at (`upstream.commit`); `iproofs validate` checks `results/**/refusals/slot-*.json` against it. In `board/1`, changed in place: a row's `ineligible_sessions` (run, slot, RFC-0014 reason codes) and `level_statement` (SI-4a), and a check's `trials` (CH-1c). In `properties/2`: the optional `level_statement.accept_is_model_reply` fact with its quotes and `sources_read`.
