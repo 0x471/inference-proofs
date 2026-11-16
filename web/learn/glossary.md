@@ -240,7 +240,7 @@ Whoever acts on a verifier's verdict, such as a customer, an auditor, a regulato
 
 ### Reply check
 
-Every proof covers all 512 reply tokens, and with one changed (first, last or one inside) the verifier refuses it ([rule](/checks#reply)).
+Every proof covers all of the request's reply tokens, and with one changed (first, last or one inside) the verifier refuses it ([rule](/checks#reply)).
 
 ### Request
 

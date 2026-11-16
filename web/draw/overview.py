@@ -24,6 +24,7 @@ from .hexagon import glyph_svg
 from .words import (
     CAUSE_WORD,
     CHECK_NAME,
+    CHECK_PLAIN,
     FIDELITY_AGAINST,
     FIDELITY_CHECK_TITLE,
     FIDELITY_FIG_TITLE,
@@ -325,7 +326,8 @@ def standing_html(row, page=None):
     if row["passed"]:
         return defined("Passed", "passed")
     at = href(row) if page is None else page
-    missing = [f'<span class="ckn"><a class="df" href="{e(at)}#ck-{c["id"]}">'
+    missing = [f'<span class="ckn"><a class="df" href="{e(at)}#ck-{c["id"]}" '
+               f'title="{e(filled(CHECK_PLAIN[c["id"]]))}">'
                f'{e(CHECK_NAME[c["id"]])} check</a> {e(STATE_WORD[c["state"]])}</span>'
                for c in row["checks"] if c["state"] != "held"]  # fmt: skip
     state = f'<span class="nw">{e(not_passed(row))}{":" if missing else ""}</span>'
