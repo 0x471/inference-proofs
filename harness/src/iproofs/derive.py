@@ -552,6 +552,8 @@ FORMULAS = {
     "generation phase's GPU-seconds / N / the request's reply tokens",
     "D-L1-REPLY-TOKENS": "CO-8: the request's output_tokens / the mean over counted sessions of "
     "the session cost per reply (CO-1); range output_tokens / max and / min",
+    "D-L1-SERVED-TOKENS": "CO-8 (amended 2026-11-16): the request's output_tokens / the serving "
+    "baseline's GPU-seconds per reply at full load (CO-4)",
     "D-L1-MULTIPLE": "CO-5: row GPU-seconds per reply / baseline GPU-seconds per reply",
     "D-L1-USD": "GPU-seconds per reply * price per GPU-hour / 3600",
 }
@@ -931,6 +933,17 @@ def reply_tokens_per_gpu_second(per_reply: Sequence[float], tokens: int) -> Repl
                            "per reply and a request with reply tokens")  # fmt: skip
     return ReplyTokenRate(tokens / statistics.mean(per_reply), tokens / max(per_reply),
                           tokens / min(per_reply), len(per_reply))  # fmt: skip
+
+
+def served_reply_tokens_per_gpu_second(tokens: int, gpu_seconds_per_reply: float) -> float:
+    """CO-8 (amended 2026-11-16): the serving baseline's reply tokens per GPU-second, the
+    request's reply tokens over the baseline's GPU-seconds per reply at full load (CO-4). Over a
+    row's own rate (`reply_tokens_per_gpu_second`) it is the row's whole sessions' multiple:
+    (T / b) / (T / s) = s / b."""
+    if tokens < 1 or gpu_seconds_per_reply <= 0:
+        raise IProofsError(ErrorKind.INTERNAL, "CO-8 needs a baseline with a positive GPU time "
+                           "per reply and a request with reply tokens")  # fmt: skip
+    return tokens / gpu_seconds_per_reply
 
 
 def overhead_formula(scope: Scope, *, high: bool = False, warm: bool = False) -> str:

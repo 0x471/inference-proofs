@@ -18,6 +18,7 @@ from iproofs.derive import (
     release_groups,
     reply_tokens_per_gpu_second,
     scope_seconds,
+    served_reply_tokens_per_gpu_second,
     session_per_reply,
     steady_per_reply,
 )
@@ -491,6 +492,18 @@ def test_reply_tokens_per_gpu_second_is_the_tokens_over_the_mean_session() -> No
     assert (r.low, r.high, r.n) == (1.0, 2.0, 2)
     with pytest.raises(IProofsError):
         reply_tokens_per_gpu_second([], 512)
+
+
+def test_served_rate_over_the_proved_rate_is_the_multiple() -> None:
+    """CO-8 (amended 2026-11-16), by hand: a baseline at 0.25 GPU-seconds per reply serves
+    512 / 0.25 = 2,048 reply tokens per GPU-second. Sessions at 256 and 512 GPU-seconds per reply
+    prove 512 / 384 = 1.333; 2,048 / 1.333 = 1,536 = 384 / 0.25, the whole sessions' multiple."""
+    served = served_reply_tokens_per_gpu_second(512, 0.25)
+    assert served == 2048.0
+    proved = reply_tokens_per_gpu_second([256.0, 512.0], 512).value
+    assert math.isclose(served / proved, 1536.0)
+    with pytest.raises(IProofsError):
+        served_reply_tokens_per_gpu_second(512, 0.0)
 
 
 def groups_at(*spec: tuple[float, int]) -> list[Group]:

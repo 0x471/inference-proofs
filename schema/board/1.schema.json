@@ -20,6 +20,13 @@
         "gpu_seconds_per_reply": {
           "$ref": "#/$defs/value"
         },
+        "gpu_model": {
+          "$comment": "CO-8 (amended 2026-11-16): the GPU model the serving run's manifest records (machine.gpu.model); null with no baseline; optional, added in place (Q14 precedent)",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "gpus": {
           "minimum": 1,
           "type": [
@@ -56,6 +63,10 @@
               "$ref": "../quantity/1.schema.json#/$defs/runId"
             }
           ]
+        },
+        "reply_tokens_per_gpu_second": {
+          "$comment": "CO-8 (amended 2026-11-16): the request's reply tokens over the baseline's GPU-seconds per reply at full load, unit token/gpu_s, the baseline's scope; one rate over one run's timed batches, no range; over a row's session_reply_tokens_per_gpu_second it is the row's session_multiple; optional, added in place (Q14 precedent)",
+          "$ref": "#/$defs/value"
         },
         "serving": {
           "minLength": 1,
