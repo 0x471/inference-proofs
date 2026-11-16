@@ -542,6 +542,28 @@ def test_group_gap_is_inclusive() -> None:
     assert [g.size for g in release_groups([0, NS + 1], 1.0)] == [1, 1]
 
 
+@pytest.mark.xfail(
+    strict=True,
+    reason="CO-3 reads m from release times alone, which the adapter chooses (RFC-0018)",
+)
+def test_release_schedule_does_not_change_the_steady_rate() -> None:
+    """Two sessions do the same work: 6 replies, 3 s of GPU time each, finished at 3, 6, ...,
+    18 s. One releases each proof as it is finished: m = (18 - 3) / 5 = 3.0 GPU-s per reply.
+    The other holds every proof and releases them 1.1 s apart from 18 s on, each after it was
+    finished: m = (23.5 - 18) / 5 = 1.1. Both pass the steady-state conditions, so the second
+    ranks ahead on the same work. The rate should not depend on when a finished proof is
+    released; this test fails until CO-3 reads something the adapter does not choose."""
+    as_finished = groups_at((3, 1), (6, 1), (9, 1), (12, 1), (15, 1), (18, 1))
+    held = groups_at((18, 1), (19.1, 1), (20.2, 1), (21.3, 1), (22.4, 1), (23.5, 1))
+    m_finished, cause_finished = steady_per_reply(as_finished, 1, STEADY)
+    m_held, cause_held = steady_per_reply(held, 1, STEADY)
+    assert (cause_finished, cause_held) == (None, None)
+    assert m_finished is not None
+    assert m_held is not None
+    assert math.isclose(m_finished, 3.0)
+    assert m_held >= m_finished  # fails today: m_held is 1.1
+
+
 def test_generation_phase_adds_to_m() -> None:
     """CO-3: groups of 2, 4, 4, 4 at 0, 10, 20, 30 s on two GPUs plus a 60 s generation phase:
     m = (30.003 - 0.001) x 2 / 12 + 60 x 2 / 14."""
