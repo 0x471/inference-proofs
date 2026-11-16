@@ -15,6 +15,11 @@ tracks:
         summary: >-
           A proof shows a reply is the committed model's greedy reply to its prompt, not whose
           model it is or that the reply was served.
+      - slug: how-a-check-works
+        title: How a check works
+        summary: >-
+          One request for every system, a commitment, a proof and a verifier without the weights,
+          six checks drawn one by one, and the fraction behind the headline figure.
       - slug: deployment
         title: Deployments and treaties
         summary: >-
