@@ -519,7 +519,19 @@ def lead_html(run):
     and, on the largest of them, its figure (`board_words`). No figure of one model is set beside
     another model's."""
     said = [PROOF_WORDS] + ([LADDER_WORDS, board_words()] if run else [])
-    return f'<p class="lede">{" ".join(said)}</p>'
+    return f'<p class="lede">{" ".join(said)}</p>{how_link()}'
+
+
+# the Learn page that draws the request, the flow, the six checks and the headline figure: one
+# click from the lead, for a reader with no context (web/learn/how-a-check-works.md)
+HOW_PAGE = ("how-a-check-works", "How a check works")
+
+
+def how_link(cls="lto"):
+    """A link to the page that draws how a check works; nothing in a tree without it."""
+    slug, words = HOW_PAGE
+    pages = [p["slug"] for t in (S.V.get("learn") or {}).get("tracks", ()) for p in t["pages"]]
+    return f'<p class="{cls}"><a href="/{slug}">{e(words)}</a></p>' if slug in pages else ""
 
 
 def board_words():

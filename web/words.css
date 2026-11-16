@@ -226,6 +226,8 @@ html:has(.top.s-on) { overflow: hidden; }
 .band-h { margin: 0; font: 900 min(var(--title), calc((100vw - 2 * var(--gut)) / 12.8))/.92 var(--disp); letter-spacing: -.012em; white-space: nowrap; }
 .lede { max-width: 68ch; margin: 24px 0 0; font: 400 16px/25px var(--mono); text-wrap: pretty; }
 .lede a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+.lto { margin: 16px 0 0; font: 600 14px/22px var(--mono); }
+.lto a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: 3px; }
 .lede .fig { display: inline; }
 .lede .fig .n, .lede .fig .u, .lede .fig .u.x { font: 600 16px/25px var(--mono); letter-spacing: 0; margin: 0; }
 /* the lines between the band and the ladder: what passed means, and while it holds, that no model has two systems */
