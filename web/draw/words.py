@@ -905,6 +905,7 @@ FIGURE_RULE = {
          "load, on the same GPU type. Served over proved is Cost vs serving."),
         ("", "Both depend on the GPU, so neither ranks a row: the order reads m, the steady "
          "multiple (OR-3), never a rate."),
+        ("", "Prompt side (prefill) and reply side (decode) are not timed apart in the records."),
     ),
     "cost": (
         ("steady", "m in USD, at the release's price for one H200 GPU-hour."),
@@ -928,6 +929,8 @@ FIGURE_RULE = {
          "mean over the prompts, as a percentage, with 0 for a prompt the system's own code "
          "declines. The model's 8-bit and 4-bit copies' percentages (Q8_0, Q4_K_M) are printed "
          "under it."),
+        ("", "100\u00a0% is the original's choice at every position. It counts chosen tokens "
+         "and compares no probabilities: KL does."),
         ("", "Computed by the system's own code on the reference reply, not by the proved "
          "computation. It sets no state."),
         ("", WHY_TOP_TOKEN.replace("{tokens:,}", "{reply_tokens}")),
