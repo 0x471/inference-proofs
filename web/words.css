@@ -1092,8 +1092,6 @@ html.js .scalepage .scl-panel { margin-top: 0; }
 .ckt.gbig .rs { max-width: 90ch; }
 .ckt .pnx, .ckt .pxl, .ckt .pdr, .ckt .psc, .ckt .ppl { max-width: 90ch; margin: 8px 0 0; }
 .ckt .pnx.pns { margin-top: 2px; color: var(--muted); }
-/* an open petal: its two short lines step aside, the disclosure holds them in full */
-.ckt td.prs:has(> details[open]) > :is(.rs, .pns) { display: none; }
 .ckt .pnx .k { margin-right: 6px; font-weight: 600; }
 .ckt .pns .k { color: var(--paper); }
 .ckt .pdr .k { margin-right: 6px; font-weight: 600; }
@@ -1107,38 +1105,48 @@ html.js .scalepage .scl-panel { margin-top: 0; }
 .ckt .pvis .vt { display: block; padding-left: 2ch; color: var(--muted); }
 .ckt .pvis a { color: var(--muted); text-decoration-color: var(--rule); }
 .ckt .pvis a:hover { color: var(--paper); }
-/* a petal on a system page (amended 2026-11-17): the section's lead, then each petal's question, grade and what it
-   comes from, one Has line and one Missing line; Details holds Met needs, Has, how it is graded, Missing, Evidence */
-.glede { max-width: 160ch; margin: 0; }
+/* a petal on a system page (amended 2026-11-17): the section's one-line lead and its key behind one disclosure, then each
+   petal's question, grade and what it comes from, and three short lines (Needs, Has, Missing) that open the petal; the
+   disclosure's label keeps its place at the end of the lines, closed or open */
+.glede { margin: 0; }
 .glede + .checks { padding-top: 14px; }
 .glede .glead { margin: 0 0 6px; }
-.glede .gwords { font-size: 12px; line-height: 18px; color: var(--muted); }
+.glede .gkey > summary { margin-top: 2px; }
+.glede .gwords { max-width: 110ch; padding: 6px 0 2px; font-size: 12px; line-height: 18px; color: var(--muted); }
+.glede .gwords p { margin: 0 0 6px; }
 .ckt.gpl tbody th { width: 236px; padding-right: 12px; }
 .ckt.gpl tbody :is(th, td) { padding-top: 7px; padding-bottom: 7px; }
 .ckt.gpl th a.sl { width: 208px; }
 .ckt.gpl th a.sl.cut { width: 179px; }
 .ckt.gpl th .pst { max-width: 228px; font-size: 12px; line-height: 16px; color: var(--paper); }
-.ckt.gpl .cst { width: 206px; padding-right: 12px; white-space: normal; }
-.ckt.gpl .cst .pfr { display: block; margin-top: 4px; max-width: 206px; font-size: 12px; line-height: 16px; color: var(--muted); }
-.ckt.gpl td.prs > p { max-width: 130ch; margin: 0 0 2px; }
-.ckt.gpl td.prs > .plm { color: var(--muted); }
-.ckt.gpl td.prs .k { margin-right: 6px; font-weight: 600; }
-.ckt.gpl .pms { color: var(--muted); }
-.ckt.gpl .pms .k { color: var(--paper); }
-.ckt.gpl .pbd { max-width: 110ch; padding: 4px 0 6px; }
-/* on a wide screen a closed petal's Details sits at the end of its Missing line, so five petals fit one screen */
-@media (min-width: 1181px) {
-  .ckt.gpl td.prs { position: relative; }
-  .ckt.gpl td.prs > .pms { padding-right: 13ch; }
-  .ckt.gpl .pdt:not([open]) > summary { position: absolute; right: 0; bottom: 7px; margin: 0; }
-}
+.ckt.gpl .cst { width: 180px; padding-right: 12px; white-space: normal; }
+.ckt.gpl .cst .pfr { display: block; margin-top: 4px; max-width: 180px; font-size: 12px; line-height: 16px; color: var(--muted); }
+/* the three lines are the disclosure's summary: plain text, not a boxed label */
+.ckt.gbig.gpl .more.pdt > summary { position: relative; display: block; width: auto; max-width: 118ch; margin: 0; padding: 0 0 0 0; font: inherit; letter-spacing: 0; text-transform: none; white-space: normal; color: var(--paper); box-shadow: none; cursor: pointer; }
+.ckt.gbig.gpl .more.pdt > summary:after { content: none; }
+.ckt.gbig.gpl .more.pdt > summary:hover, .ckt.gbig.gpl .more.pdt[open] > summary { color: var(--paper); box-shadow: none; }
+.ckt.gpl .pln { display: grid; grid-template-columns: 9ch minmax(0, 1fr); column-gap: 8px; margin: 0 0 2px; }
+.ckt.gpl .pln .k { font: var(--f-label); letter-spacing: var(--track); text-transform: uppercase; color: var(--muted); padding-top: 3px; }
+.ckt.gpl .pln.pnd { color: var(--muted); }
+.ckt.gpl .pln.pms { padding-right: 23ch; }
+/* the label: boxed, at the end of the Missing line, in the same place closed or open */
+.ckt.gpl .pdl { position: absolute; right: 0; bottom: 0; padding: 3px 7px 2px; font: var(--f-label); letter-spacing: var(--track); text-transform: uppercase; white-space: nowrap; color: var(--muted); box-shadow: inset 0 0 0 1px var(--line); }
+.ckt.gpl .pdl:after { content: "+" / ""; margin-left: 10px; font: 600 13px/1 var(--mono); }
+.ckt.gpl .pdt[open] .pdl:after { content: "\2212" / ""; }
+.ckt.gbig.gpl .more.pdt > summary:hover .pdl, .ckt.gpl .pdt[open] .pdl { color: var(--paper); box-shadow: inset 0 0 0 1px var(--muted); }
+.ckt.gbig.gpl .more.pdt > summary:focus-visible { outline: 2px solid var(--cobalt); outline-offset: 4px; }
+/* an opened petal: four blocks in the owner's order, each under a head set in paper with a rule beside it */
+.ckt.gpl .pbd { max-width: 110ch; padding: 6px 0 6px; }
 .ckt.gpl .pbd p { margin: 0 0 8px; }
-.ckt.gpl .pbh { margin: 18px 0 6px; font: var(--f-label); letter-spacing: var(--track); text-transform: uppercase; color: var(--muted); }
-.ckt.gpl .pbd > .pbh:first-child { margin-top: 10px; }
-.ckt.gpl .pbd .pwy { padding-left: 12px; box-shadow: inset 2px 0 0 var(--rule); }
-.ckt.gpl .pbd .phere { font-weight: 600; }
+.ckt.gpl .pbk { margin: 14px 0 0; padding-left: 12px; box-shadow: inset 2px 0 0 var(--line); }
+.ckt.gpl .pbh { margin: 0 0 6px; font: var(--f-label); letter-spacing: var(--track); text-transform: uppercase; color: var(--paper); }
+.ckt.gpl .pbd .pwy { margin: 0; }
+.ckt.gpl .pbd .prd { color: var(--paper); }
+.ckt.gpl .pbd .phere { font-weight: 600; white-space: nowrap; }
+.ckt.gpl .pbd .pme { color: var(--paper); }
 .ckt.gpl .pbd .plc { padding-left: 2ch; }
 .ckt.gpl .pbd .pgh { margin: 10px 0 4px; }
+.ckt.gpl .pbd .pgh:first-child { margin-top: 0; }
 .ckt.gpl .pbd ol.pmi { margin: 0 0 8px; padding-left: 3ch; }
 .ckt.gpl .pbd ol.pmi li + li, .ckt.gpl .pbd ul.pls li + li { margin-top: 6px; }
 .ckt.gpl .pbd ul.pls { margin: 0 0 8px; padding-left: 2ch; }
@@ -1146,6 +1154,7 @@ html.js .scalepage .scl-panel { margin-top: 0; }
 .ckt.gpl .pbd a.iq:hover { color: var(--paper); }
 .ckt.gpl .pbd .pel { margin: 6px 0; }
 .ckt.gpl .pbd .ptm { color: var(--muted); }
+.ckt.gpl .pmore { margin-top: 14px; }
 .ckt.gpl .pev { margin: 6px 0; }
 .ckt.gpl .pev > summary { width: fit-content; list-style: none; cursor: pointer; text-decoration: underline; text-decoration-color: var(--rule); text-underline-offset: 3px; }
 .ckt.gpl .pev > summary::-webkit-details-marker { display: none; }
@@ -1154,6 +1163,21 @@ html.js .scalepage .scl-panel { margin-top: 0; }
 .ckt.gpl .pev > summary:hover { text-decoration-color: var(--paper); }
 .ckt.gpl .pev[open] { padding: 0 0 4px 12px; box-shadow: inset 2px 0 0 var(--line); }
 .ckt.gpl .pev[open] > summary { margin-left: -12px; padding-left: 12px; margin-bottom: 4px; }
+/* from 961 to 1180 px the petal keeps two columns: its name and grade, then its lines */
+@media (max-width: 1180px) and (min-width: 961px) {
+  .ckt.gbig.gpl > tbody > tr { grid-template-columns: 220px minmax(0, 1fr); column-gap: 16px; }
+  .ckt.gbig.gpl > tbody > tr > th { grid-column: 1; grid-row: 1; }
+  .ckt.gbig.gpl > tbody > tr > td.cst { grid-column: 1; grid-row: 2; width: auto; }
+  .ckt.gbig.gpl > tbody > tr > td.prs { grid-column: 2; grid-row: 1 / span 2; margin-top: 0; padding-left: 0; }
+}
+/* on a phone the label goes under the lines, a finger's width */
+@media (max-width: 760px) {
+  .ckt.gpl .pln { grid-template-columns: minmax(0, 1fr); }
+  .ckt.gpl .pln .k { padding-top: 0; }
+  .ckt.gpl .pln.pms { padding-right: 0; }
+  .ckt.gpl .pdl { position: static; display: inline-block; margin-top: 6px; padding: 11px 8px 10px; }
+  .ckt.gpl .pbk { padding-left: 10px; }
+}
 /* the petal in hand: its card keeps its own inks while the other rows dim */
 .ckt.dim tbody tr.lit .scard tr > * { color: var(--muted); }
 .ckt.dim tbody tr.lit .scard tr > * a.sv, .ckt.dim tbody tr.lit .scard tbody td:not(.not_stated) { color: var(--paper); }

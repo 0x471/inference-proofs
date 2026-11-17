@@ -147,6 +147,10 @@ def _formal(pid: str, raw: dict[str, Any] | None) -> dict[str, Any] | None:
         "conclusion": raw.get("conclusion"),
         "limits": [{"plain": str(i["plain"]), "quotes": _quotes(i["quotes"])}
                    for i in raw.get("limits") or []],  # amended 2026-11-17
+        # each fact's own quotes, printed with it (amended 2026-11-17); absent from an older board
+        "said": {k: {"quotes": _quotes(v.get("quotes")),
+                     **({"plain": str(v["plain"])} if v.get("plain") else {})}
+                 for k, v in (raw.get("said") or {}).items()},
     }  # fmt: skip
 
 

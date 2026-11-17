@@ -65,6 +65,7 @@ def test_uf9_to_met_follows_the_failing_conditions() -> None:
     assert tree["why"] == {"floor": 80, "first": 1, "last": 3, "exps": [124, 101], "least": 101,
                            "q": False, "unit": "reply", "unit_item": None}  # fmt: skip
     assert [f["fact"] for f in tree["read_facts"]] == ["adversary"]  # type: ignore[attr-defined]
+    assert tree["read_facts"][0]["used"] is True  # type: ignore[index]
     conjectured = uf(basis="conjectured", unit="part", terms=[100]).tree()
     assert conjectured["why"]["floor"] == 100  # type: ignore[index]
     assert conjectured["why"]["unit_item"] == 2  # type: ignore[index]
@@ -103,9 +104,46 @@ def test_a_check_failed_petal_lists_its_repair() -> None:
 
 
 def test_sources_count_is_the_facts_read() -> None:
+    """`sources_count` counts the noted facts the step read (`used`), not those only Met's rule
+    reads; each of those is named by the `reading` item to Met."""
     for row in ROWS.values():
         for p in row["glyph"]:
-            assert p["sources_count"] == len(p.get("read_facts", [])), p["id"]
+            facts: list[dict[str, object]] = p.get("read_facts", [])
+            assert p["sources_count"] == sum(1 for f in facts if f["used"]), p["id"]
+            unused = [f["fact"] for f in facts if not f["used"]]
+            if unused:
+                reading = [i for g in p["to_met"] for i in g["items"] if i["need"] == "reading"]
+                assert reading, p["id"]
+                assert set(unused) <= set(reading[0]["facts"]), p["id"]
+    fp = petal("flashprove", "unforgeable")
+    read: list[dict[str, object]] = fp["read_facts"]  # type: ignore[assignment]
+    assert [(f["fact"], f["used"]) for f in read] == [("adversary", True), ("parameters", False)]
+    assert petal("sash", "unforgeable")["sources_count"] == 0
+
+
+def test_a_fact_only_met_reads_is_not_used() -> None:
+    """UF-9 stops at the first failing condition: a noted fact past it is only Met's (GL-11)."""
+    read = fact("any_prover", commit=PIN) | {"note": "read"}
+    row = fact("row", commit=PIN) | {"note": "read"}
+    tree = uf(Coverage("request", 24), batch="together", conditions_shown=False,
+              program="not_stated", terms=[124, 101], adversary=read,
+              parameters=row).tree()  # fmt: skip
+    assert [(f["fact"], f["used"]) for f in tree["read_facts"]] == [  # type: ignore[attr-defined]
+        ("adversary", True),
+        ("parameters", False),
+    ]
+    assert tree["sources_count"] == 1
+
+
+def test_one_at_a_time_names_the_engine() -> None:
+    """FM-5 counts slots in llama.cpp only: the item names it, and whether a part ran in vLLM."""
+    item = petal("flashprove", "faithful_model")["to_met"][1]["items"][1]  # type: ignore[index]
+    assert (item["need"], item["by"], item["engine"], item["vllm"]) == (
+        "one_at_a_time",
+        "us",
+        "llama.cpp",
+        True,
+    )
 
 
 def test_v10_to_met_counts_and_actors() -> None:

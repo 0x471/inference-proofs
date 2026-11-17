@@ -53,10 +53,10 @@
     {
       "group": "Glyph",
       "kind": "petal",
-      "meta": "The bound the publisher states on a false reply being accepted: whether it is proved, and whether it covers what the row runs.",
+      "meta": "The bound the publisher states on a false reply being accepted: whether it is proved, and whether it covers what we run.",
       "name": "Integrity",
       "pie": "",
-      "terms": "integrity the bound the publisher states on a false reply being accepted: whether it is proved, and whether it covers what the row runs. soundness",
+      "terms": "integrity the bound the publisher states on a false reply being accepted: whether it is proved, and whether it covers what we run. soundness",
       "tier": 2,
       "url": "/checks#unforgeable"
     },

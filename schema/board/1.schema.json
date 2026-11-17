@@ -553,6 +553,10 @@
           },
           "type": "object"
         },
+        "said": {
+          "$comment": "each fact's quotes and plain words, by fact, as the page prints them (amended 2026-11-17); it sets nothing",
+          "type": "object"
+        },
         "limits": {
           "$comment": "the limits the publisher states that no rule reads, each in plain words with its quotes (amended 2026-11-17); printed, they set nothing",
           "items": {
@@ -1132,7 +1136,7 @@
           ]
         },
         "sources_count": {
-          "$comment": "the number of `read_facts`, printed with a reading; no state reads it",
+          "$comment": "the number of `read_facts` the step read (`used`), printed with a reading; no state reads it",
           "minimum": 0,
           "type": "integer"
         },
@@ -1153,12 +1157,17 @@
                   "string",
                   "null"
                 ]
+              },
+              "used": {
+                "$comment": "whether the decision that set the step read the fact (N1); false: only Met's rule reads it, and Met needs the publisher's words in its place (GL-11, amended 2026-11-17)",
+                "type": "boolean"
               }
             },
             "required": [
               "fact",
               "note",
-              "plain"
+              "plain",
+              "used"
             ],
             "type": "object"
           },

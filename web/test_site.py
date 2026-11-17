@@ -121,7 +121,7 @@ def test_petal_rows_count_the_boards_items_for_met(board_site: Any) -> None:
         trs = re.findall(r'<tr class="pt [^"]*"[^>]*>(.*?)</tr>', page, re.S)
         assert len(trs) == len(row["glyph"]), row["system"]
         for tr, p in zip(trs, row["glyph"], strict=True):
-            line = re.search(r'<p class="pms">(.*?)</p>', tr, re.S)
+            line = re.search(r'<span class="pln pms">(.*?)<span class="pdl">', tr, re.S)
             assert line, (row["system"], p["id"])
             said = html.unescape(re.sub(r"<[^>]+>", "", line[1]))
             groups = p.get("to_met")
@@ -132,7 +132,7 @@ def test_petal_rows_count_the_boards_items_for_met(board_site: Any) -> None:
                 )
             items = [i for g in groups for i in g["items"]]
             if not items:
-                assert said.endswith("nothing."), (row["system"], p["id"])
+                assert said.lower().endswith("nothing."), (row["system"], p["id"])
             elif groups[0]["kind"] == "up" and len(items) > 1:
                 assert f"{len(items)} items" in said, (row["system"], p["id"])
                 us = sum(1 for i in items if i["by"] == "us")

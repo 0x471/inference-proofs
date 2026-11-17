@@ -14,7 +14,7 @@ Every function here is pure except `load_properties` and `load_proof_build`.
 
 import json
 import re
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Collection, Mapping, Sequence
 from dataclasses import dataclass, replace
 from pathlib import Path
 
@@ -170,7 +170,7 @@ class Petal:
             "next": None if self.next_step is None else dict(self.next_step),
             "to_met": self.met_groups(),
             "sources": self.came_from,
-            "sources_count": len(self.read_facts),
+            "sources_count": sum(1 for f in self.read_facts if f.get("used")),
         }
         if self.read_facts:
             out["read_facts"] = [dict(f) for f in self.read_facts]
@@ -276,15 +276,19 @@ def _groups(*found: tuple[str | None, Sequence[Mapping[str, object]]]) -> tuple[
     return tuple(_group(to, items) for to, items in found if items)
 
 
-def _read_facts(group: Mapping[str, object], keys: Sequence[str]) -> tuple[dict[str, object], ...]:
-    """The facts of `keys` that carry a note, in the order given, each once: the note and its
-    plain words (`plain`, where the properties file gives them)."""
+def _read_facts(group: Mapping[str, object], keys: Sequence[str],
+                used: Collection[str] | None = None) -> tuple[dict[str, object], ...]:  # fmt: skip
+    """The facts of `keys` that carry a note, in the order given, each once: the note, its plain
+    words (`plain`, where the properties file gives them) and `used`, whether the decision that
+    set the step read it (N1; `used` None: every key was read). A fact the step did not read is
+    one only Met's rule reads: Met needs the publisher's words in its place (GL-11)."""
     out: list[dict[str, object]] = []
     for k in dict.fromkeys(keys):
         fact = _m(group.get(k))
         if note := fact.get("note"):
             plain = fact.get("plain")
-            out.append({"fact": k, "note": str(note), "plain": str(plain) if plain else None})
+            out.append({"fact": k, "note": str(note), "plain": str(plain) if plain else None,
+                        "used": used is None or k in used})  # fmt: skip
     return tuple(out)
 
 
@@ -646,7 +650,8 @@ def unforgeable(  # noqa: PLR0911 (one return per line of the table)
         reason = "; ".join((*why, f"stated bound: {head}"))
         return Petal(pid, step, cause, STATEMENT, reason, quotes, reading=v.noted, notes=v.notes,
                      next_step=to, to_met=to_met, facts=facts,
-                     read_facts=_read_facts(b, _ordered(_UF_MET, v.keys, passing)))  # fmt: skip
+                     read_facts=_read_facts(b, _ordered(_UF_MET, v.keys, passing),
+                                            v.keys))  # fmt: skip
 
     def met_items(least: int) -> list[dict[str, object]]:
         """Met's own conditions above Mostly met: every term at most 2^-128, the publisher's
@@ -790,6 +795,7 @@ def _formal_tree(formal: Mapping[str, object], stated: str, top: str) -> dict[st
         # quotes (amended 2026-11-17); printed, they set nothing
         "limits": [{"plain": str(i.get("plain")), "quotes": [_quote(q) for q in _quotes(i)]}
                    for i in _list(formal.get("limits"))],
+        "said": said(formal),  # each fact's own quotes, printed with it; it sets nothing
     }  # fmt: skip
 
 
@@ -1088,7 +1094,7 @@ def weights_hidden(  # noqa: PLR0911, PLR0912, PLR0915 (one return per line of t
         return Petal(pid, step, cause, STATEMENT, reason, quotes, visible=visible,
                      reading=v.noted, notes=v.notes, forms=forms, visible_at_least=at_least,
                      next_step=_next(to, *needs) if needs else None, to_met=to_met,
-                     read_facts=_read_facts(h, _ordered(_WH_MET, v.keys, passing)), why=why,
+                     read_facts=_read_facts(h, _ordered(_WH_MET, v.keys, passing), v.keys), why=why,
                      facts=facts)  # fmt: skip
 
     def met_items() -> list[dict[str, object]]:
@@ -1289,6 +1295,7 @@ def _scores(found: object) -> list[int] | None:
 
 
 _THRESHOLD_NAMES = (("green", "T_green"), ("upper", "T_upper"))
+FM5_ENGINE = "llama.cpp"  # FM-5: the engine whose slot count can make a fidelity run one at a time
 # FM (amended 2026-11-15): a control as a reason names it, by its type or recipe
 _CONTROL_WORDS = {"q8_0": "the 8-bit copy", "q4_k_m": "the 4-bit copy",
                   "rerun": "the original run again"}  # fmt: skip
@@ -1503,7 +1510,10 @@ def faithful_model(  # noqa: PLR0911, PLR0912, PLR0915 (one return per line of t
     facts.update(alpha=alpha, method=g.get("method"))
     above = {k: _item("above", PUBLISHER, key=k, value=facts[k]["display"])  # type: ignore[index]
              for k in ("upper", "green")}  # fmt: skip
-    one_item = [_item("one_at_a_time", US, slots=slots)] if slots != 1 else []
+    # FM-5: every part of the run in llama.cpp, one request at a time; a vLLM part counts no slot
+    vllm = facts.get("rerun_engine") == "vllm"
+    one_item = [_item("one_at_a_time", US, slots=slots, engine=FM5_ENGINE, vllm=vllm)] \
+        if slots != 1 else []  # fmt: skip
 
     def counted(p: Petal, *groups: tuple[str | None, list[dict[str, object]]]) -> Petal:
         return replace(p, to_met=_groups(*groups), facts=facts)

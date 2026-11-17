@@ -406,7 +406,7 @@ Amendment of 2026-11-16 (RFC-0018 MC-4a, GL-5, SI-3, Q42, Q43). Additive, and th
 
 Amendment of 2026-11-17 (RFC-0018 Q44, GL-5, GL-11, SI-3). Additive, and the one stored board is recomputed in the same change (RFC-0018 Q14), so no stored run record changes:
 
-- `board/1`: each petal's optional `to_met`, `sources`, `sources_count`, `read_facts` and `why`, and its facts as the page words them (`bound`, `hiding`, `fidelity`, `trust`); in `formal`, the optional `limits` and `build.axioms`.
+- `board/1`: each petal's optional `to_met`, `sources`, `sources_count`, `read_facts` and `why`, and its facts as the page words them (`bound`, `hiding`, `fidelity`, `trust`); in `formal`, the optional `limits`, `said` and `build.axioms`; each of `read_facts` with `used`.
 - `properties/2`: on a fact, the optional `plain`, `named`, `described` and `check`; the optional `bound.after` (checked offline against its quote) and `formal.limits`.
 
 ## Testing Strategy
