@@ -191,6 +191,8 @@ def render(view, out, *, write_json, write_text):
         block = re.search(r'<script type="application/ld\+json">(.*?)</script>', html)
         data = json.loads(block[1])
         guide.append(f"- [{data['name']}]({data['url']}): {data['description']}")
+        for part in data.get("hasPart", []):
+            guide.append(f"  - [{part['name']}]({part['@id']})")
     guide.extend(
         [
             "",

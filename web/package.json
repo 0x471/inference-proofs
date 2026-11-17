@@ -5,6 +5,7 @@
   "name": "inference-proofs-site",
   "private": true,
   "scripts": {
-    "assets": "esbuild words.css words.js --minify --outdir=public --legal-comments=none"
+    "assets": "node assets.mjs",
+    "styles": "node styles.mjs"
   }
 }
