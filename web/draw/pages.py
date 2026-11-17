@@ -1625,8 +1625,10 @@ def on_point(html, whole, frac):
     widest whole and fractional parts in the column, in characters of the mono face."""
     num = re.search(r'<span class="n">([^<]*)</span>', html)[1]
     a, dot, b = num.partition(".")
-    pad = f"--pl:{whole - len(a)}ch;--pr:{frac - len(dot + b)}ch"
-    return f'<span class="np" style="{pad}">{html}</span>'
+    left, right = whole - len(a), frac - len(dot + b)
+    if not (0 <= left <= 9 and 0 <= right <= 9):  # the classes words.css has (no inline style: CSP)
+        raise ValueError(f"a figure's padding out of range: {left}, {right}")
+    return f'<span class="np pl{left} pr{right}">{html}</span>'
 
 
 def rates_tile(row):

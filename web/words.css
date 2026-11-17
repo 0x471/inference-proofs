@@ -2183,6 +2183,8 @@ ol.ls > li:before { counter-increment: n; content: counter(n); position: absolut
 .tiles .usd .tf .fig { flex-wrap: nowrap; white-space: nowrap; }
 /* the two rates on their decimal point: the whole digits right-aligned, the fraction after them */
 .tiles .rts .np .n { padding-left: var(--pl); padding-right: var(--pr); }
+.np.pl0 { --pl: 0ch; } .np.pl1 { --pl: 1ch; } .np.pl2 { --pl: 2ch; } .np.pl3 { --pl: 3ch; } .np.pl4 { --pl: 4ch; } .np.pl5 { --pl: 5ch; } .np.pl6 { --pl: 6ch; } .np.pl7 { --pl: 7ch; } .np.pl8 { --pl: 8ch; } .np.pl9 { --pl: 9ch; }
+.np.pr0 { --pr: 0ch; } .np.pr1 { --pr: 1ch; } .np.pr2 { --pr: 2ch; } .np.pr3 { --pr: 3ch; } .np.pr4 { --pr: 4ch; } .np.pr5 { --pr: 5ch; } .np.pr6 { --pr: 6ch; } .np.pr7 { --pr: 7ch; } .np.pr8 { --pr: 8ch; } .np.pr9 { --pr: 9ch; }
 /* the rates start where every tile's figure starts, one step under the label */
 .tiles .rts { margin-top: 0; }
 /* the Cost block's first tile holds the two rates on one line each, so it takes the widest column */
