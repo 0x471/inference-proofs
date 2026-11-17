@@ -835,6 +835,7 @@ def build_board(root: Path, release: str, level: object) -> dict[str, object]:
                 _policy(root, system, configuration),
                 level_alpha,
                 str(field_of(field_of(rung, "reference"), "dtype")),
+                _weight_bits(root, str(workload)),
             )
             rows.append(_Row(
                 system, str(workload), sessions,
@@ -895,6 +896,13 @@ def _granularity(root: Path, system: str) -> str | None:
     """How much one proof covers (`proofs.granularity` of system.yaml), the glyph's Coverage."""
     found = _key(root / "systems" / system / "system.yaml", "proofs", "granularity")
     return found if isinstance(found, str) else None
+
+
+def _weight_bits(root: Path, workload: str) -> float | None:
+    """The proved copy's weight bits (`precision.weight_bits.bits` of the workload): a printed
+    sentence of the Fidelity petal reads it, no step does."""
+    found = _key(root / "workloads" / f"{workload}.yaml", "precision", "weight_bits", "bits")
+    return float(found) if isinstance(found, int | float) and not isinstance(found, bool) else None
 
 
 def _batch_size(root: Path, workload: str) -> int | None:

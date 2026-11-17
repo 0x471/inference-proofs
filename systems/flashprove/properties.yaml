@@ -23,9 +23,11 @@ level_statement:
 verifiers:
   run:
     value: "cp_verify"
+    described: "the publisher's C++ verifier"
     quotes: [{text: "Anyone can check the proof on an ordinary CPU in seconds with `cp_verify`, without the weights.", url: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/README.md#L15-L16"}]
   stated:
     value: "the Lean verifier"
+    described: "a verifier the publisher wrote in Lean and proves things about"
     quotes:
       - {text: "The Lean verifier accepts a proof of a false claim with probability at most about q/2^124 + 2^-101 after q hash queries (about 124 bits per query; not \"128 bits\")", url: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/what-is-proved.md#L46-L47"}
       - {text: "Neither figure, 124 bits per query or 128 bits per round, is claimed for the C++ programs.", url: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/what-is-proved.md#L70"}
@@ -59,6 +61,10 @@ petals:
           - text: "The Lean verifier accepts a proof of a false claim with probability at most about q/2^124 + 2^-101 after q hash queries (about 124 bits per query; not \"128 bits\")"
             url: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/what-is-proved.md#L46-L47"
       terms: [124, 101]
+      # what the bound counts (its q), read 2026-11-17; printed with the first term's crossings, it sets no step
+      after:
+        value: "q hash queries"
+        quotes: [{text: "The Lean verifier accepts a proof of a false claim with probability at most about q/2^124 + 2^-101 after q hash queries (about 124 bits per query; not \"128 bits\")", url: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/what-is-proved.md#L46-L47"}]
       basis:
         value: "proved"
         quotes: [{text: "Lean's kernel has checked the proof.", url: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/what-is-proved.md#L51"}]
@@ -78,14 +84,17 @@ petals:
           - {text: "against a committer and a prover who may both cheat", url: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L142"}
           - {text: "so nothing is claimed against a quantum adversary", url: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L394-L395"}
         note: "classical adversaries only (THEOREM.md L394-L395); the files-fixed-before-the-hash condition is counted under the conditions clause"
+        plain: "The publisher states the limit \"against a committer and a prover who may both cheat\" (the committer publishes the commitment; the prover makes the proofs). We read that as what our rule calls any cheating prover: one that controls its own machine, with no hardware or outside party assumed honest. The publisher claims nothing against quantum computers, and our rule does not ask about them."
       parameters:
         value: "row"
         quotes:
           - {text: "**One proof format and model size:** full size, not the small examples", url: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/what-is-proved.md#L62"}
           - {text: "Neither figure, 124 bits per query or 128 bits per round, is claimed for the C++ programs.", url: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/what-is-proved.md#L70"}
         note: "the row runs the full-size format at exact match; whether its own files are in scope is the conditions clause; the bound is stated for the Lean verifier and not claimed for cp_verify, which the row runs (the program clause)"
+        plain: "It states the limit for \"full size, not the small examples\", and we run the full size."
       conditions_shown:
         value: false
+        plain: "The condition, in the publisher's words: \"public files that are fixed before the hash function is sampled (a provider that tunes them to the real hash function is outside the statement)\". In plain words: the theorem covers only public files chosen before the hash function was picked; a provider who chose them to suit the hash function is not covered. Today no file of ours shows when they were fixed, and the publisher says the reader must grant it. The publisher also warns that at files other than its stored examples, nothing is known about whether the verifier accepts honest proofs. A verifier that accepted no proof would never accept a fake, so there the theorem could be true and still say nothing."
         quotes:
           - {text: "At all other files in scope nothing is known, so there the theorem may hold only because `verify` rejects everything.", url: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L314-L315"}
           - {text: "The proofs from the runs on real weights were checked by `cp_verify` alone; none has been put to the Lean verifier", url: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/what-is-proved.md#L227-L228"}
@@ -110,6 +119,7 @@ petals:
           - {text: "No theorem describes the five constant look-up tables in the Lean text (cosine, sine, the exponential, SiLU and the sigmoid).", url: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L242-L243"}
           - {text: "the kernel checks proofs, not what a definition means", url: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/what-is-proved.md#L83"}
         note: "the theorem covers the Lean protocol and states the model as an integer program (THEOREM.md L231-233); the C++ verifier the row runs is tested, not proved (what-is-proved.md L7-8), so the reach stops short of the verifier code this row runs; the model statement is the publisher's Lean integer model, and its tables and its reach at a given scale file are not proved (THEOREM.md L229-L231, L242-L243)"
+        plain: "The theorem covers the whole method, the model's computation included."
       tool:
         value: "Lean 4, kernel 4.29.1"
         quotes:
@@ -125,6 +135,7 @@ petals:
           - {text: "\"The model\" means the extracted weights, which no theorem says are the ones `cp_commit` put in", url: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L227-L228"}
           - {text: "the system in the statement of the soundness theorem on `verify` has a constant committer (a committer that returns one constant whatever the weights, and so commits to nothing; the committer of the six lines is another: the one that `compile` makes (`lean/Johnson/Face/Compiler.lean`), which encodes the weights and hashes the key) where its honest committer goes, so of that system itself none of it can be stated with any content", url: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L700-L704"}
         note: "read 2026-11-15: the conclusion is about the publisher's integer model, a reference definition of the model's computation, at the weights the extractor reads; no theorem ties those weights to the ones cp_commit committed (THEOREM.md L227-L228), and at files other than the stored examples the theorem may hold only because verify rejects everything (L314-L315, under Integrity's conditions clause); and the system in the soundness theorem's statement has a constant committer, which commits to nothing, so of that system none of it can be stated with any content (L700-L704). So the conclusion is about a reference definition of the model, as a step above Partly met needs, and it is not tied to the weights this row commits"
+        plain: "Its conclusion is about the model: precisely, about the publisher's integer model (a written-out definition of what the model computes) at the weights read from the files. No theorem ties those weights to the ones cp_commit committed (the first limit below). Our rules count a conclusion about such a definition as about the model; they do not ask for that tie."
       theorem: "VerifierAndGoals.AtTheName.sound_of_verify_at"
       theorem_url: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/Johnson/Goal/Skeleton/SoundOfVerifyAt.lean#L69"
       trusted_base:
@@ -134,6 +145,21 @@ petals:
       input_code_unverified:
         value: true
         quotes: [{text: "Five of the files that this function takes come from a parser outside Lean, of which nothing is proved", url: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L64-L65"}]
+      # the limits the publisher states that no rule reads, each a plain summary and the publisher's words (read
+      # 2026-11-17); printed under Formally verified, they set no step
+      limits:
+        - plain: "The theorem speaks of the weights read from the files. No theorem ties them to the weights cp_commit committed (cp_commit: the publisher's program that publishes the commitment)."
+          quotes: [{text: "\"The model\" means the extracted weights, which no theorem says are the ones `cp_commit` put in", url: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L227-L228"}]
+        - plain: "Where the honest committer goes, the soundness theorem's statement uses a placeholder that outputs one constant whatever the weights, so it commits to nothing. The committer of the publisher's six theorems is another one, made by its compiler, which encodes the weights and hashes the key. The publisher writes that of the placeholder system itself, nothing can be stated with any content."
+          quotes: [{text: "the system in the statement of the soundness theorem on `verify` has a constant committer (a committer that returns one constant whatever the weights, and so commits to nothing; the committer of the six lines is another: the one that `compile` makes (`lean/Johnson/Face/Compiler.lean`), which encodes the weights and hashes the key) where its honest committer goes, so of that system itself none of it can be stated with any content", url: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L700-L704"}]
+        - plain: "Scale files, which the theorem allows as inputs, can switch off any of the model's blocks, up to all of them. The publisher worked this out by hand; it is not proved."
+          quotes: [{text: "Scale files in scope can switch off any of the model's blocks, up to all of them (worked out by hand, not proved).", url: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L229-L231"}]
+        - plain: "No theorem describes the five fixed look-up tables in the Lean text."
+          quotes: [{text: "No theorem describes the five constant look-up tables in the Lean text (cosine, sine, the exponential, SiLU and the sigmoid).", url: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L242-L243"}]
+        - plain: "The pinned Lean version, 4.29.1, is older than fixes of publicly known soundness bugs in Lean."
+          quotes: [{text: "the pinned version, 4.29.1, is older than fixes of publicly known soundness bugs in it", url: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L382-L383"}]
+        - plain: "Lean checks that a proof is correct, not that a definition means what it is meant to."
+          quotes: [{text: "the kernel checks proofs, not what a definition means", url: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/what-is-proved.md#L83"}]
       scope_card:
         soundness:
           protocol: {value: "machine_checked", quotes: [{text: "**Soundness** is proved, in Lean, for the verifier written in Lean", url: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/what-is-proved.md#L3"}]}
@@ -174,6 +200,7 @@ petals:
           - {text: "we expect, rather than know, that the programs hide the weights at the default setting, in honest runs, if the provider keeps its duties (this does not reach any real model's weights, or the parameter file and scales fitted to them", url: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/weight-hiding.md#L3"}
           - {text: "Anything else is outside it, and so is any real model, the example's too, because it needs a parameter file fitted to it", url: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/weight-hiding.md#L37"}
         note: "the publisher expects the programs to hide the weights, but says the expectation does not reach a real model's weights or the files fitted to them; the row commits a real model's weights"
+        plain: "For its programs (the C++ and CUDA code we run), the publisher states an expectation, not a theorem, and says the expectation does not reach a real model's weights or the files fitted to them. We run a real model, so we count no statement for the programs we run."
       visible_listed:
         value: true
         quotes: [{text: "At least eleven things are visible", url: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/docs/what-is-not-hidden.md#L5"}]
@@ -223,6 +250,7 @@ petals:
           - {text: "**The random-oracle model** for the hash, with a second, fixed hash function, built on BLAKE2b's compression function, assumed independent of it, against classical adversaries.", url: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/what-is-proved.md#L57-L58"}
           - {text: "the random oracle and the second hash function belong to the statement, not to the proof's axioms.", url: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L159-L160"}
         note: "the publisher states soundness at every public setup of three public files, against any committer and prover, with the random-oracle model as its assumption; no sentence says in words that no setup produced a secret, so the petal is read as transparent and graded Mostly met at most (GL-10, amended 2026-11-15)"
+        plain: "The publisher proves its theorems at every public setup (three public files it names), against any committer and prover, with one assumption: the random-oracle model, which treats the hash function as perfectly random. That is an idealization of the hash function, not a proved property of it. It needs no secret and no trusted party, and we count it among cryptographic assumptions (our reading)."
       publicly_checkable:
         value: true
         quotes: [{text: "Anyone can check the proof on an ordinary CPU in seconds with `cp_verify`, without the weights.", url: "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/README.md#L15-L16"}]

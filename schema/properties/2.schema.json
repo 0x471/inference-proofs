@@ -49,14 +49,34 @@
       ],
       "properties": {
         "note": {
-          "$comment": "the reviewer's reading when the value is read rather than said in words; printed nowhere (RFC-0018 §Conflicts of Interest)",
+          "$comment": "the reviewer's reading when the value is read rather than said in words; printed nowhere (RFC-0018 \u00a7Conflicts of Interest)",
           "minLength": 1,
           "type": "string"
         },
         "quotes": {
           "$ref": "#/$defs/quotes"
         },
-        "value": true
+        "value": true,
+        "plain": {
+          "$comment": "the note, or the fact, in plain words for the system page (amended 2026-11-17); checked by a reviewer against the quotes, it sets no step: the presence of `note` decides a reading",
+          "minLength": 1,
+          "type": "string"
+        },
+        "named": {
+          "$comment": "the publisher's name for the thing the value is about (a library, a part of a proof), printed with it; it sets no step",
+          "minLength": 1,
+          "type": "string"
+        },
+        "described": {
+          "$comment": "what the named thing is, in plain words, printed beside it; it sets no step",
+          "minLength": 1,
+          "type": "string"
+        },
+        "check": {
+          "$comment": "verifiers.run: the publisher's check the program runs, as a quote names it; printed, it sets no step",
+          "minLength": 1,
+          "type": "string"
+        }
       },
       "required": [
         "value",
@@ -75,7 +95,27 @@
         "quotes": {
           "$ref": "#/$defs/quotes"
         },
-        "value": true
+        "value": true,
+        "plain": {
+          "$comment": "the note, or the fact, in plain words for the system page (amended 2026-11-17); checked by a reviewer against the quotes, it sets no step: the presence of `note` decides a reading",
+          "minLength": 1,
+          "type": "string"
+        },
+        "named": {
+          "$comment": "the publisher's name for the thing the value is about (a library, a part of a proof), printed with it; it sets no step",
+          "minLength": 1,
+          "type": "string"
+        },
+        "described": {
+          "$comment": "what the named thing is, in plain words, printed beside it; it sets no step",
+          "minLength": 1,
+          "type": "string"
+        },
+        "check": {
+          "$comment": "verifiers.run: the publisher's check the program runs, as a quote names it; printed, it sets no step",
+          "minLength": 1,
+          "type": "string"
+        }
       },
       "required": [
         "value",
@@ -217,7 +257,7 @@
   "$id": "https://inference-proofs.org/schema/properties/2.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
-  "description": "systems/<name>/properties.yaml: the facts each statement petal of the glyph is computed from, copied by a reviewer from the publisher's documents at the pin with their deciding quotes (RFC-0018 §The glyph, GL-1). No state, step or reason is typed: iproofs.glyph computes them. Faithful model is measured and has no entry here.",
+  "description": "systems/<name>/properties.yaml: the facts each statement petal of the glyph is computed from, copied by a reviewer from the publisher's documents at the pin with their deciding quotes (RFC-0018 \u00a7The glyph, GL-1). No state, step or reason is typed: iproofs.glyph computes them. Faithful model is measured and has no entry here.",
   "properties": {
     "configuration": {
       "$ref": "../quantity/1.schema.json#/$defs/configurationId"
@@ -528,6 +568,31 @@
                       ]
                     }
                   }
+                },
+                "limits": {
+                  "$comment": "limits of the theorem the publisher states and no rule reads, each a plain summary and the publisher's words (amended 2026-11-17); printed under Formally verified, they set no step",
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "plain": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "quotes": {
+                        "items": {
+                          "$ref": "#/$defs/quote"
+                        },
+                        "minItems": 1,
+                        "type": "array"
+                      }
+                    },
+                    "required": [
+                      "plain",
+                      "quotes"
+                    ],
+                    "type": "object"
+                  },
+                  "type": "array"
                 }
               },
               "required": [
@@ -850,6 +915,10 @@
                       ]
                     }
                   }
+                },
+                "after": {
+                  "$comment": "what the stated bound counts, as the publisher writes it (\"q hash queries\"), copied from its quote; printed with the first term's crossings, it sets no step (amended 2026-11-17)",
+                  "$ref": "#/$defs/fact"
                 }
               },
               "required": [
@@ -1139,7 +1208,7 @@
       "type": "object"
     },
     "verifier_inputs": {
-      "$comment": "RFC-0018 SI-3 (amended 2026-11-15): the system page's Statement block. Each row names the fields of the claim card that say it; the page prints their text, linked to their source, or \"not stated\". `program` is the verifier this configuration runs and times; `untimed` names the publisher's other verifiers, which no session times; `reply` says where that verifier takes the reply from: the harness record (the adapter passes the claimed reply) or the proof itself. It lives here, not in the claim card, because the v1.0 runs record the card's digest (RFC-0014 §Eligibility)",
+      "$comment": "RFC-0018 SI-3 (amended 2026-11-15): the system page's Statement block. Each row names the fields of the claim card that say it; the page prints their text, linked to their source, or \"not stated\". `program` is the verifier this configuration runs and times; `untimed` names the publisher's other verifiers, which no session times; `reply` says where that verifier takes the reply from: the harness record (the adapter passes the claimed reply) or the proof itself. It lives here, not in the claim card, because the v1.0 runs record the card's digest (RFC-0014 \u00a7Eligibility)",
       "additionalProperties": false,
       "properties": {
         "architecture": {
@@ -1295,6 +1364,6 @@
     "read",
     "petals"
   ],
-  "title": "Glyph facts (RFC-0018 §The glyph)",
+  "title": "Glyph facts (RFC-0018 \u00a7The glyph)",
   "type": "object"
 }
