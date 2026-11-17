@@ -95,6 +95,21 @@ def version(name):
     return f"/{name}?v={hashlib.sha256((S.HERE / name).read_bytes()).hexdigest()[:12]}"
 
 
+def page_styles(cls):
+    """Inline the page's existing rules, preserving their cascade and all responsive states."""
+    styles = json.loads((S.HERE / "styles.json").read_text())
+    if styles["source"] != hashlib.sha256((S.HERE / "words.css").read_bytes()).hexdigest():
+        raise RuntimeError("styles.json is stale: run npm run styles in web/ before site build")
+    excluded = set()
+    if "learnpage" not in cls.split():
+        excluded.add("learn")
+    if "scalepage" not in cls.split():
+        excluded.add("scale")
+    if cls == "home":
+        excluded.add("details")
+    return "".join(part["css"] for part in styles["sections"] if part["scope"] not in excluded)
+
+
 # The one inline script, before the first paint: it marks that script runs (html.js) and that
 # motion is welcome (html.anim). On a page reached by a view transition (none under reduced
 # motion), it also names the row the reader came back from (its name morphs back into
@@ -290,9 +305,9 @@ def page(title, desc, body, cls, path, card):
     )
     return (
         f'<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">'
-        # the stylesheet before the inline script: its @view-transition rule is then known when the
+        # the styles before the inline script: the @view-transition rule is then known when the
         # page is revealed, so a transition into it is not skipped
-        f'{preloads()}<link rel="stylesheet" href="{version("words.css")}">'
+        f"{preloads()}<style>{page_styles(cls)}</style>"
         f"<script>{HEAD_SCRIPT}</script>"
         f'<title>{e(full_title(title))}</title><meta name="description" content="{e(desc)}">'
         f'<meta name="color-scheme" content="dark"><meta name="theme-color" content="{GROUND}">'

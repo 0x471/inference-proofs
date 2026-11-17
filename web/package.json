@@ -5,6 +5,7 @@
   "name": "inference-proofs-site",
   "private": true,
   "scripts": {
-    "assets": "node assets.mjs"
+    "assets": "node assets.mjs",
+    "styles": "node styles.mjs"
   }
 }

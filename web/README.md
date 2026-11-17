@@ -98,6 +98,11 @@ hash is allowed by the deployment CSP. Descriptions and figures come from the ex
 
 Vercel installs the locked esbuild development dependency. `assets.mjs` minifies CSS,
 JavaScript and the search index into `public/`. Source assets stay readable, and committed
-JSON keeps its canonical format. Run `npm ci --include=dev --ignore-scripts` in `web/` before
+JSON keeps its canonical format. `npm run styles` prepares the minified CSS sections
+in `styles.json` after a CSS change, before `iproofs site build`. The renderer checks
+the CSS source hash, inlines the page's rules and hashes them into its CSP. Learn and
+Scale rules are included on their pages, and detail rules are omitted on the ladder.
+The first paint needs no external stylesheet request, with or without JavaScript.
+Run `npm ci --include=dev --ignore-scripts` in `web/` before
 `npm run assets` locally. Asset URLs retain the source content hash, which changes whenever
 their content changes. Fonts use swap on pages so readers see text while they load.
