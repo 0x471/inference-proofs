@@ -6,6 +6,7 @@ its hash. `version` names words.css, words.js and search.json by the first 12 he
 """
 
 import hashlib
+import html
 import json
 import re
 
@@ -282,7 +283,11 @@ def page(title, desc, body, cls, path, card):
     """One page. path: its address under the site ("" for the home); card: its preview card's name,
     or None for a page that is never shared (the 404)."""
     title, desc = SEARCH_COPY.get(path, (title, desc))
-    meta = share_meta(title, desc, path, card) if card else '<meta name="robots" content="noindex">'
+    meta = (
+        share_meta(title, desc, path, card, body)
+        if card
+        else '<meta name="robots" content="noindex">'
+    )
     return (
         f'<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">'
         # the stylesheet before the inline script: its @view-transition rule is then known when the
@@ -292,7 +297,7 @@ def page(title, desc, body, cls, path, card):
         f'<title>{e(full_title(title))}</title><meta name="description" content="{e(desc)}">'
         f'<meta name="color-scheme" content="dark"><meta name="theme-color" content="{GROUND}">'
         f'{meta}{icon_links()}</head><body class="{cls}">{new_tab(body)}'
-        f'<p class="sr" aria-live="polite" id="live"></p><script src="{version("words.js")}" defer></script>'
+        f'<p class="sr" role="status" aria-atomic="true" id="live"></p><script src="{version("words.js")}" defer></script>'
         f'<script defer src="https://cdn.vercel-insights.com/v1/script.js"></script></body></html>'
     )
 
@@ -534,7 +539,7 @@ PAGE_TOPICS = {
 }
 
 
-def share_meta(title, desc, path, card):
+def share_meta(title, desc, path, card, body):
     url = f"{SITE_URL}/{path}"
     if card != "home" and not card_current(card):
         card = "home"
@@ -579,6 +584,17 @@ def share_meta(title, desc, path, card):
     topics = PAGE_TOPICS.get(path, ("Proof of inference", "Model fidelity", "Proving cost"))
     data["about"] = [{"@type": "Thing", "name": topic} for topic in topics]
     data["keywords"] = list(topics)
+    # Section names and citation anchors come from the rendered headings, never a second outline.
+    parts = [
+        {
+            "@type": "WebPageElement",
+            "@id": f"{url}#{anchor}",
+            "name": html.unescape(re.sub(r"<[^>]+>", "", label)),
+        }
+        for anchor, label in re.findall(r'<h2\b[^>]*\bid="([^"]+)"[^>]*>(.*?)</h2>', body, re.S)
+    ]
+    if parts:
+        data["hasPart"] = parts
     data["isPartOf"]["sameAs"] = S.REPO_URL
     data["primaryImageOfPage"] = {
         "@type": "ImageObject",

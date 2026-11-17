@@ -24,7 +24,7 @@ REDIRECTS = {
 }
 HEADERS = [(re.compile(f"^{h['source']}$"), h["headers"]) for h in VERCEL["headers"]]
 DEPLOYED = re.compile(
-    r"^(words\.css|words\.js|search\.json|robots\.txt|sitemap\.xml|og/[^/]+\.(png|svg)|fonts/[^/]+\.woff2|[^/]+\.html)$"
+    r"^(words\.css|words\.js|search\.json|robots\.txt|sitemap\.xml|llms\.txt|og/[^/]+\.(png|svg)|fonts/[^/]+\.woff2|[^/]+\.html)$"
 )
 
 
