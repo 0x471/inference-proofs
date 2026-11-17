@@ -128,11 +128,6 @@ CHECK_LINE = {
 }
 # a check's stored state in words (RFC-0018 Terms, amended 2026-11-16); the ids stay
 STATE_WORD = {"held": "passed", "failed": "failed", "undecided": "not decided"}
-# under a system page's Checks head (depth 3): what a passed check is
-CHECKS_LEAD = (
-    "Three checks change one thing the verifier must refuse (Model, Prompt, Reply). Run, Verify "
-    "without weights and Fidelity test an honest run. No check tries to forge a proof."
-)
 # what a control's counted trials sent, from the board's `trials` (RFC-0018 CH-1c), by control
 # and C1's position; printed with a check's records
 TRIAL_WHAT = {("P1", None): "proved with one weight changed",
@@ -159,9 +154,6 @@ KEPT_MEANS = {"other_session_commitment": "So a refusal against the changed weig
               "commitment does not by itself show that the verifier tells weights apart: it also "
               "refuses a second commitment of the same weights."}  # fmt: skip
 KEPT_TIME = "the trial script's wall clock"
-# the Level 1 statement on a system page (RFC-0018 SI-4a): the label, and the line by whether
-# the publisher's documents state it at the pin
-LEVEL_STATEMENT_HEAD = "Level 1 statement"  # SI-4a; the page's Statement section is SI-3's
 STATEMENT_WORD = {
     "stated": "the publisher states that an accept means the reply is the committed model's own "
     "greedy reply to the prompt",
@@ -212,8 +204,6 @@ PETAL_PROTECTS = {"unforgeable": "the customer", "weights_hidden": "the provider
                   "no_trusted_party": "the customer"}  # fmt: skip
 # a reading's notes, in a petal's disclosure (GL-10, amended 2026-11-15): our words, not a quote
 READING_HEAD = "Our reading"
-# the disclosure that holds a petal's quotes: the publisher's own words at the pinned commit
-QUOTES_HEAD = "The publisher's words ({n})"
 # a petal's stored (step, cause) in words (RFC-0018 §The glyph, step table, amended 2026-11-16):
 # one word set for all five petals, keyed by the step, and by the cause where red splits; the
 # inks are drawn, never printed (SI-6)
@@ -817,7 +807,6 @@ HOW_MULTIPLE = {
     "at full load, {on}, at the same GPU price on both sides.",
 }
 HOW_ON = {True: "both on {gpu} GPUs", False: "proved on {gpu}, served on {serving}"}
-HOW_RULE = "How each side is timed"  # the link to the rule after it, on the system page
 SERVING_GPU = "H200"  # CO-4: the serving baseline runs on the fewest H200 that hold the model
 # CO-8 (adopted 2026-11-16): reply tokens per GPU-second under Cost (depth 3); amended 2026-11-16:
 # the proved and the served rate also print as one line under the multiple (`overview.rate_html`)
@@ -830,14 +819,6 @@ RATE_PER = "tokens/s per {gpu}"
 RATE_HOW = ("how: the request's {tokens} reply tokens over the GPU-seconds one reply took, on "
             "one GPU")  # fmt: skip
 RATE_IS = "ratio: served ÷ proved = {multiple}, Cost vs serving"
-# the Cost block's line: the served rate beside the proved one, and what the two make
-RATE_SERVING = ("Serving the same reply at full load", "Served ÷ proved is {multiple}, Cost vs "
-                "serving.")  # fmt: skip
-# what the records time apart: a session's GPU time per reply in its two parts (CO-7), where a
-# system generates in a phase of its own; the prompt side never apart from the reply side
-SPLIT_PARTS = "It counts the whole session: of its {whole}, {parts}."
-NOT_TIMED_APART = ("Prompt side (prefill) and reply side (decode) are not timed apart in these "
-                   "records.")  # fmt: skip
 FIDELITY_TITLE = "leading tokens matching the original, mean"  # in a fidelity word's title
 # Fidelity as a figure (RFC-0018 SI-9, amended 2026-11-14): FI-10's mean as a percentage of the
 # reply's positions, beside the model's Q8_0 and Q4_K_M copies; it sets no state
@@ -1303,48 +1284,6 @@ P_ABOVE = "above the bar: {p}"  # {p} reads "p = 0.0058" or the floor's bound (`
 P_FLOOR = ", the test's floor"  # after a p at the lowest value its test can give (FI-4)
 # the reference's precision in words, where a line names the original (FI-1)
 DTYPE_BITS = {"bf16": "16-bit", "f16": "16-bit", "f32": "32-bit"}
-# the Fidelity section's lead (RFC-0018 SI-9, amended 2026-11-16): first in plain words what is
-# compared with what, what 100 % means and what the two yardstick copies are; then why the figure
-# is top-token agreement (SPEC 5.4); then which measure sets a state, and that neither compares
-# logits (the KL columns do). {name} the system, {proved} the copy it proves (its workload record),
-# {bits} the original's precision, {n} the prompts, {tokens} the reply's positions
-FID_PLAIN = (
-    "Fidelity asks whether the model {name} proves answers like the original, the {bits} model "
-    "its publisher released. Proving usually runs a copy whose numbers are stored in fewer bits "
-    "(quantization), and {name} proves {proved}."
-)
-FID_PLAIN_TF = (
-    " Each row below is fed the same {n:,} prompts, each followed by the original's reply. Its "
-    "Fidelity figure is the share of the reply's positions where its top token is the "
-    "original's next token: 100\u00a0% means the original's choice at every position."
-)
-FID_PLAIN_COPIES = (
-    " The 8-bit copy (Q8_0) and the 4-bit copy (Q4_K_M) are the original with its weights "
-    "rounded to 8 bits, and mostly to 4 bits, by llama.cpp; we run them without a proof, as "
-    "yardsticks."
-)
-# which copies are yardsticks and which are damaged, and who fixed that (FI-2); its first words
-# link to the glossary (KIND_TERM)
-FID_KINDS = (
-    " The level file fixes, before any run, which copies are honest (the original run again and "
-    "its 8-bit and 4-bit copies) and which are damaged on purpose; the bar is the highest-scoring "
-    "damaged copy that every honest one scores above."
-)
-FID_WHY = (
-    "Why top-token agreement: a greedy reply is the top token at each position, so this counts "
-    "how often the proved model makes the original's choice, at every one of the {tokens:,} "
-    "positions, not only up to the first difference."
-)
-FID_LEAD_PREFIX = (
-    "Matched leading tokens set the Fidelity check and the Fidelity petal: the tokens at the "
-    "start of each reply that equal the {bits} original's, counted up to the first difference."
-)
-FID_LEAD_CHECK = (
-    " The Fidelity check passes when the replies the system proved match more of them than the "
-    "bar, a damaged copy, by a paired test at p\u00a0<\u00a00.05."
-)
-FID_LEAD_TF = " The Fidelity figure sets no state."
-FID_LEAD_LOGITS = " Neither compares logits: the KL columns do."
 # what a column is called on a phone, where each card repeats it (the heads in full above)
 FID_LABEL = {"Fidelity figure: top-token agreement, mean": "Fidelity figure",
              "Fidelity check: matched leading tokens, mean": "Matched leading tokens, mean"}  # fmt: skip
@@ -1358,8 +1297,6 @@ LIM_ENGINES = "Engines: {parts}."
 LIM_PART = {None: "the original and the controls run with it", "controls": "the quantized controls"}
 LIM_VLLM = "{part} in vLLM, every prompt sent in one call"
 LIM_LLAMA = "{part} in llama.cpp, {slots} at a time"
-LIM_GREEN = (" The Fidelity petal needs a fidelity run of one request at a time for Met, so it "
-             "cannot be Met until the original is run that way on this model.")  # fmt: skip
 LIM_PROMPTS = ("Prompts: {tokens}-token windows of {texts} texts from {hosts} ({licences}), with "
                "no chat template.")  # fmt: skip
 TF_AGREE = "Fidelity figure: top-token agreement, mean"

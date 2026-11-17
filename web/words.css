@@ -2174,3 +2174,66 @@ ol.ls > li:before { counter-increment: n; content: counter(n); position: absolut
   .psb .pf > div { grid-template-columns: minmax(0, 1fr); gap: 0; padding: 3px 0; }
   .psb .pf dd, .psb .scard td { font: var(--f-meta); }
 }
+/* a system page's body, block by block, as the ladder (amended 2026-11-17): the figures lead, in the Figures row's
+   cells; what they share in one quiet line over them; the block's own data behind one disclosure under them */
+.syspage .blk > .scope { margin: 0; padding: 12px 0 12px 13px; font: var(--f-meta); color: var(--muted); border-bottom: 1px solid var(--line); }
+.scope .sep { color: var(--rule); }
+.tiles { border-top: 0; }
+.tiles > div { display: flex; flex-direction: column; }
+.tiles dt a { color: inherit; }
+.tiles .mean { display: block; margin-top: 10px; font: 400 12px/16px var(--mono); color: var(--muted); }
+.tiles .sub { margin-top: 8px; }
+.tiles .tls { display: grid; grid-template-columns: max-content minmax(0, max-content); column-gap: 12px; row-gap: 8px; align-items: baseline; }
+.tiles .tf { min-width: 0; }
+.tiles .tf .fig { flex-wrap: wrap; }
+.tiles .tf .fig .n { font-size: 22px; }
+.tiles .tlw { font: 400 12px/16px var(--mono); color: var(--muted); }
+.tiles .pw { font: 600 15px/21px var(--mono); }
+.tiles .schip { align-self: flex-start; margin-bottom: 12px; }
+.tiles .usd .tls { row-gap: 4px; }
+.tiles .usd .tf .fig .n { font-size: 14px; letter-spacing: 0; }
+.kvt .na { font: inherit; color: var(--muted); }
+.tiles .split { grid-template-columns: max-content max-content; column-gap: 22px; row-gap: 8px; margin-top: 14px; }
+.tiles .split .fig .n { font-size: 15px; letter-spacing: -.01em; }
+.tiles .split .fig .u.x { font-size: 12px; }
+/* the Statement block: what the verifier is given, a label, its value and its source on one ruled line */
+.kvt { table-layout: fixed; }
+.kvt tbody th { width: 24%; font: var(--f-label); color: var(--muted); text-transform: uppercase; letter-spacing: var(--track); padding-top: 14px; }
+.kvt td { font: 400 13px/20px var(--mono); color: var(--paper); }
+.kvt td.src { width: 16%; color: var(--muted); white-space: nowrap; }
+.kvt .qs { color: var(--muted); }
+/* one disclosure per block, under its last rule */
+.dig { margin-top: 14px; }
+.dig > .dig-in { padding-top: 6px; }
+.dig > .dig-in > .rb:first-child, .dig > .dig-in > p:first-child { margin-top: 10px; }
+.dig .rb { display: grid; grid-template-columns: minmax(8ch, max-content) minmax(0, 1fr); column-gap: 12px; padding: 4px 0 0 12px; }
+.dig .rb .k { margin-right: 0; }
+.dig .sub-h { margin-top: 24px; padding-left: 12px; }
+.dig > .dig-in > .rt, .dig > .dig-in > .cbars, .dig > .dig-in > .parts { margin-top: 14px; }
+dl.fts { margin: 8px 0 0 12px; }
+dl.fts > div { display: grid; grid-template-columns: 26ch minmax(0, 1fr); column-gap: 16px; padding: 2px 0; }
+.ckr { margin: 8px 0 0; }
+.ckr > div { display: grid; grid-template-columns: 24% minmax(0, 1fr); column-gap: 16px; padding: 10px 0 10px 12px; border-bottom: 1px solid var(--line); }
+.ckr dt { font: 800 17px/21px var(--disp); }
+.ckr dd { margin: 0; font: var(--f-meta); color: var(--muted); }
+.ckr .cn { margin: 0 0 6px; }
+.ckr .ev { display: block; width: fit-content; padding-block: 1px; }
+.cks td.cev .ev { color: var(--muted); }
+@media (max-width: 760px) {
+  .tiles .tf .fig .n { font-size: 18px; }
+  .tiles .split { grid-template-columns: max-content; }
+  .kvt, .kvt tbody, .kvt tr { display: block; }
+  .kvt tr { display: grid; grid-template-columns: minmax(0, 1fr) max-content; column-gap: 12px; padding: 10px 0 10px 12px; border-bottom: 1px solid var(--line); }
+  .kvt tbody tr > * { display: block; width: auto; padding: 0; border: 0; }
+  .kvt tbody tr > :first-child { padding-left: 0; grid-column: 1 / -1; margin-bottom: 4px; }
+  .kvt td.src { width: auto; align-self: start; }
+  .ckr > div { grid-template-columns: minmax(0, 1fr); row-gap: 4px; }
+  dl.fts > div { grid-template-columns: minmax(0, 1fr); }
+  .dig .rb { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 560px) {
+  .tiles { grid-auto-flow: row dense; }
+  .tiles > div#tokens { grid-column: 1 / -1; }
+  #fidelity .tiles > div:last-child:nth-child(odd) { grid-column: 1 / -1; }
+}
+.ckr .k { color: var(--paper); margin-right: .6em; }
