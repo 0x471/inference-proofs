@@ -24,6 +24,7 @@ Register = Callable[["argparse._SubParsersAction[argparse.ArgumentParser]", Comm
 
 def registrars() -> list[Register]:
     """The modules' `register` functions, in a fixed order."""
-    from iproofs.commands import board, fidelity, level, results  # noqa: PLC0415
+    from iproofs.commands import board, fidelity, level, proof_build, results  # noqa: PLC0415
 
-    return [level.register, fidelity.register, board.register, results.register]
+    return [level.register, fidelity.register, board.register, results.register,
+            proof_build.register]  # fmt: skip

@@ -925,8 +925,27 @@
             },
             {
               "basis": "statement",
-              "cause": "proof_build_not_run",
+              "cause": null,
               "formal": {
+                "build": {
+                  "command": [
+                    "LEAN_NUM_THREADS=64",
+                    "python3",
+                    "-B",
+                    "scripts/check.py",
+                    "--wide-jobs",
+                    "24"
+                  ],
+                  "exit_code": 0,
+                  "record": "results/v1.0/proof-build/flashprove/proof-build.json",
+                  "seconds": 68494.0,
+                  "started_at": "2026-11-16T07:47:47Z",
+                  "status": "built",
+                  "toolchain": {
+                    "name": "leanprover/lean4",
+                    "version": "v4.29.1"
+                  }
+                },
                 "ceiling": "amber_upper",
                 "conclusion": "model",
                 "input_code_unverified": true,
@@ -1055,11 +1074,15 @@
               "next": {
                 "needs": [
                   {
-                    "by": "us",
-                    "text": "our recorded build of VerifierAndGoals.AtTheName.sound_of_verify_at at 9e2bdd8 with leanprover/lean4 v4.29.1, reporting only Lean's standard axioms"
+                    "by": "publisher",
+                    "text": "a theorem covering cp_verify, the verifier code this row runs, from the bytes it reads to its verdict, with its trusted base listed and no input-reading code outside the proof"
+                  },
+                  {
+                    "by": "publisher",
+                    "text": "a sentence of the publisher's that says it, in place of our reading"
                   }
                 ],
-                "to": null
+                "to": "green"
               },
               "notes": [
                 "the theorem covers the Lean protocol and states the model as an integer program (THEOREM.md L231-233); the C++ verifier the row runs is tested, not proved (what-is-proved.md L7-8), so the reach stops short of the verifier code this row runs; the model statement is the publisher's Lean integer model, and its tables and its reach at a given scale file are not proved (THEOREM.md L229-L231, L242-L243)",
@@ -1120,9 +1143,9 @@
                 }
               ],
               "reading": true,
-              "reason": "no build of the named proof is recorded yet; it is stated for the Lean verifier, not for cp_verify, which this row runs; once built: Mostly met at most, on our reading that its conclusion is about the model; statement not reviewed by an outside Lean reader",
-              "state": "hollow",
-              "step": null
+              "reason": "built at 9e2bdd8: the protocol, model included; it is stated for the Lean verifier, not for cp_verify, which this row runs; statement not reviewed by an outside Lean reader",
+              "state": "amber",
+              "step": "amber_upper"
             },
             {
               "basis": "statement",

@@ -166,6 +166,7 @@ from .words import (
     PETAL_STEPS_FOOT,
     PETAL_TERM,
     PREFIX,
+    PROOF_BUILD_HEAD,
     PROVED_LINK,
     QUOTES_HEAD,
     RATE_SERVING,
@@ -369,6 +370,17 @@ def quote_links(quotes):
                    for q in quotes)  # fmt: skip
 
 
+def proof_build_html(b):
+    """The stored proof build (GL-5): the toolchain as the toolchain file spells it, linked to the
+    record, the publisher's command, then what it did: status, day, seconds and exit code."""
+    tool = f"{b['toolchain']['name']}:{b['toolchain']['version']}"
+    tool = f'<a href="{e(link(b["record"]))}" title="{e(b["record"])}"><code>{e(tool)}</code></a>'
+    command = f"<code>{e(' '.join(b['command']))}</code>"
+    did = (f"{e(b['status'])} on {e(b['started_at'][:10])} in {b['seconds']:,.0f}\u00a0s, exit "
+           f"code {b['exit_code']}")  # fmt: skip
+    return f"{tool}, {command}, {did}"
+
+
 def formal_facts_html(formal):
     """Machine-checked's recorded facts, inside its disclosure: the tool, the theorem (linked at
     the pin) and the trusted base as the publisher lists it. The scope card is printed at the
@@ -376,9 +388,13 @@ def formal_facts_html(formal):
     if formal is None:
         return ""
     if silent(formal):  # nothing stated: said once, not in every fact
-        return (
+        said = (
             f'<p class="pvh">Tool, theorem, trusted base: {e(SCOPE_VALUE_WORD["not_stated"])}</p>'
         )
+        if formal.get("build"):  # a stored build is drawn even where nothing is stated
+            said += (f'<dl class="pf"><div><dt>{e(PROOF_BUILD_HEAD)}</dt>'
+                     f'<dd>{proof_build_html(formal["build"])}</dd></div></dl>')  # fmt: skip
+        return said
     theorem = formal["theorem"]
     code = (
         f"<code>{e(theorem).replace('.', '.<wbr>')}</code>" if theorem else None
@@ -387,9 +403,11 @@ def formal_facts_html(formal):
         theorem = f'<a href="{e(formal["theorem_url"])}">{code}</a>'
     elif theorem:
         theorem = code
-    lines = (("Tool", e(formal["tool"]) if formal["tool"] else None), ("Theorem", theorem),
+    lines = [("Tool", e(formal["tool"]) if formal["tool"] else None), ("Theorem", theorem),
              ("Trusted base", e(", ".join(formal["trusted_base"])) if formal["trusted_base"]
-              else None))  # fmt: skip
+              else None)]  # fmt: skip
+    if formal.get("build"):
+        lines.insert(1, (PROOF_BUILD_HEAD, proof_build_html(formal["build"])))
     facts = "".join(f"<div><dt>{e(k)}</dt><dd>{v or e(SCOPE_VALUE_WORD['not_stated'])}</dd></div>"
                     for k, v in lines)  # fmt: skip
     return f'<dl class="pf">{facts}</dl>'

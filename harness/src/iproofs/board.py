@@ -55,6 +55,7 @@ from iproofs.glyph import (
     statement_petals,
 )
 from iproofs.model import card_path
+from iproofs.proof_build import record_path
 from iproofs.quantity import Grade, NullReason, Scope, SourceKind, Tier, Unit
 from iproofs.release import RunView
 from iproofs.serialize import load_yaml
@@ -819,10 +820,11 @@ def build_board(root: Path, release: str, level: object) -> dict[str, object]:
             configuration = first.run.get("manifest", "claim", "configuration")
             coverage = Coverage(_granularity(root, system), _batch_size(root, str(workload)))
             props = load_properties(root, system)
+            build = load_proof_build(root, release, system)
             petals = statement_petals(
                 props, {k: v.state for k, v in states.items()},
-                str(commit) if isinstance(commit, str) else None, coverage,
-                load_proof_build(root, release, system),
+                str(commit) if isinstance(commit, str) else None, coverage, build,
+                record_path(release, system) if build is not None else None,
             )  # fmt: skip
             fid = states["fidelity"]
             petals["faithful_model"] = faithful_model(

@@ -250,7 +250,7 @@ CAUSE_WORD = {"not_stated": "not stated",
               "check_failed": "a check failed, or the proof build failed",
               "not_read": "not read yet",
               "not_decided": "Fidelity check not decided or not recorded",
-              "proof_build_not_run": "waits on our build of the publisher's machine-checked proof"}  # fmt: skip
+              "proof_build_not_run": "waits on our finished build of the publisher's machine-checked proof"}  # fmt: skip
 # each cause in a line, on the checks page (#cause-<id>), opened by its word and how it is drawn:
 # the checks page draws that opening as the chip a system page prints for the petal
 # (PETAL_CAUSE_DRAW), the words kept for a screen reader
@@ -270,7 +270,8 @@ PETAL_CAUSE_RULE = {
     "or the row has no fidelity record or no scores.",
     "proof_build_not_run": "Not decided (drawn hollow), Formally verified only: the publisher "
     "states a machine-checked proof, and no build of the named theorem is recorded at the pinned "
-    "commit with the publisher's toolchain. None can match where the publisher names no "
+    "commit with the publisher's toolchain, or the one recorded was stopped at its time limit or "
+    "by a kill before it reached a verdict. None can match where the publisher names no "
     "toolchain.",
 }
 # how a cause's opening words are drawn: (state, form) of the chip, its word the cause's step's
@@ -297,6 +298,8 @@ SCOPE_ROW_WORD = {"soundness": "Soundness", "zero_knowledge": "Zero knowledge",
                   "completeness": "Completeness"}  # fmt: skip
 SCOPE_COL_WORD = {"protocol": "Protocol", "verifier_run": "Verifier code this row runs",
                   "prover_run": "Prover code this row runs"}  # fmt: skip
+# Formally verified's stored build (GL-5), a fact beside the tool in the petal's details
+PROOF_BUILD_HEAD = "Proof build"
 # "tested" is the publisher's word for its own tests ("tested, not proved"), never ours: our runs are
 # the Completeness line above the card
 SCOPE_VALUE_WORD = {"machine_checked": "machine-checked", "paper": "on paper",
@@ -419,8 +422,8 @@ PETAL_RULE = {
         (("red", "check_failed"), "Our build of the named theorem failed or reported axioms "
          "other than the declared ones; or our Model, Prompt or Reply check failed where the "
          "stated step is Met."),
-        (None, "A machine-checked proof is stated, and our build of it is not recorded yet; or "
-         "not read at this row's commit."),
+        (None, "A machine-checked proof is stated, and our build of it is not recorded yet, or "
+         "the recorded one stopped before a verdict; or not read at this row's commit."),
     ),
     # NT-4 comes before NT-5 and NT-6; Q12's line is printed under the steps (PETAL_MORE)
     "no_trusted_party": (
@@ -458,8 +461,9 @@ PETAL_MORE = {
     ),
     "machine_checked": (
         ("build", "Each step above Not met needs a matching build of the named theorem: one "
-         "recorded at the pinned commit with the publisher's toolchain. Level 1 reads that record "
-         "and makes none."),
+         "recorded at the pinned commit with the publisher's toolchain. We run the publisher's own "
+         "command for it, unpatched, and record what it reports. We do not review what the theorem "
+         "states: the step is read from the publisher's words, printed with the petal."),
         ("above Partly met", "Needs a theorem whose conclusion is about a reference definition of "
          "the model, and a build that reports only its tool's standard axioms (for Lean, propext, "
          "Classical.choice and Quot.sound), so no sorry. The petal's reason prints the most a "

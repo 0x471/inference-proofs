@@ -230,6 +230,35 @@ def test_mc4_build_failed_or_axioms_differ() -> None:
     assert got(mc(build(status="crashed"))) == lowered
 
 
+def test_mc4a_stopped_build_is_hollow() -> None:
+    stopped = {**build(status="stopped", axioms=(), exit_code=124),
+               "stop": {"cause": "timeout", "detail": "the build's own limit"}}  # fmt: skip
+    petal = mc(stopped)
+    assert got(petal) == (None, "proof_build_not_run", "statement", ())
+    assert petal.reason == (
+        "the recorded proof build stopped before a verdict (timeout, exit code 124); it is stated "
+        "for fake-verify, which this row runs; once built: Met at most; statement not reviewed by "
+        "an outside Coq reader"
+    )
+    assert needs(petal) == (None, [("our build of the named theorem, run to a verdict", "us")])
+
+
+def test_formal_carries_the_stored_build_without_our_wrapper() -> None:
+    path = "results/v1.0/proof-build/fake/proof-build.json"
+    stored = {**build(), "argv": ["env", "X=1", "timeout", "-k", "60", "9", "make", "check"],
+              "started_at": "2026-11-15T21:09:43Z", "seconds": 6388.0}  # fmt: skip
+    petal = machine_checked(properties2(), HELD, PIN, stored, path)
+    assert petal.formal is not None
+    assert petal.formal["build"] == {
+        "record": path, "toolchain": {"name": TOOLCHAIN["name"], "version": TOOLCHAIN["version"]},
+        "command": ["X=1", "make", "check"], "started_at": "2026-11-15T21:09:43Z",
+        "seconds": 6388.0,
+        "exit_code": 0, "status": "built"}  # fmt: skip
+    absent = machine_checked(properties2(), HELD, PIN, None, None).formal
+    assert absent is not None
+    assert "build" not in absent
+
+
 def test_mc5_no_matching_build_is_hollow() -> None:
     hollow = (None, "proof_build_not_run", "statement", ())
     assert got(mc(None)) == hollow
