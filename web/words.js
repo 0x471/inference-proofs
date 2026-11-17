@@ -619,19 +619,23 @@
   const named = (el, r) => {
     const cell = el.closest('.meta > div, td, .sb, .parts > div, dd');
     if (!cell) return r.top;
-    const t = (cell.matches('dd') && cell.previousElementSibling ? cell.previousElementSibling : cell).getBoundingClientRect().top;
+    // a table cell's name is its label where one shows (the ladder on a phone), not the cell's padding
+    const lbl = cell.matches('td') ? $$('.lbl', cell).find((l) => l.getBoundingClientRect().width) : null;
+    if (cell.matches('td') && !lbl) return r.top;
+    const t = (lbl || (cell.matches('dd') && cell.previousElementSibling ? cell.previousElementSibling : cell)).getBoundingClientRect().top;
     return t <= r.top && r.top - t < 120 ? t : r.top;
   };
   let col = [12, 12];  // the column's sides, read once when the probe is filled
   let near = [];  // the page's other labelled things, read once when the probe is filled
   let titles = [];  // the models' names and size tabs (the ladder, the Scale page), read with them
-  // under the figure and the line under it, so the probe hides neither; over the figure and its name when the
-  // window ends first and there is room under what is pinned. Where that would cover another figure, the first of
-  // these places that covers none: under, over its name, over it, beside it on the right, then on the left (so a
-  // pointer can move onto the labels without reaching another figure). A petal's labels go by its whole glyph, so
-  // they cover none of its petals. With room on neither side (a short window, a large zoom) it takes the larger side
-  // and scrolls inside, and focus from the keyboard first brings the figure up under what is pinned (`bring`, on
-  // focus only: a scroll is never undone). A figure scrolled out of the window takes its labels with it
+  // Next to the figure, inside the window, never over it: under the figure and the line under it, over its name,
+  // over the figure, beside it on the right, then on the left. The first of these places that covers no other figure
+  // and no model's name; else the first that covers no model's name; else the first that covers only neighbours (a
+  // label is never sent across the window to find empty ground). A name is measured by its words, not its block,
+  // which spans the column. A petal's labels go by its whole glyph, so they cover none of its petals. With room on
+  // neither side (a short window, a large zoom) it takes the larger side and scrolls inside, and focus from the
+  // keyboard first brings the figure up under what is pinned (`bring`, on focus only: a scroll is never undone). A
+  // figure scrolled out of the window takes its labels with it
   const place = (el, bring) => {
     const box = el.matches('.glyph .sl') ? el.closest('svg') : el;
     const next = box.nextElementSibling;
@@ -642,25 +646,22 @@
     const sub = next && next.classList.contains('sub') ? next.getBoundingClientRect() : null;
     const low = sub ? sub.bottom : r.bottom;
     const head = named(box, r);
-    const below = innerHeight - low - 16; const over = head - top - 16; const above = r.top - top - 16;
+    const below = innerHeight - low - 16; const above = r.top - top - 16;
     const x = Math.max(col[0], Math.min(r.left, col[1] - w));
-    let y = low + 8;
-    if (h > below && h <= over) y = head - h - 8;
-    else if (h > below && h <= above) y = r.top - h - 8;
-    else if (h > below && above > below) y = top + 8;
-    const seen = (els) => els.map((e) => e.getBoundingClientRect()).filter((o) => o.width && o.bottom > top && o.top < innerHeight);
-    const others = seen(near);
-    if (sub) others.push(sub);
+    const shown = (o) => o.width && o.bottom > top && o.top < innerHeight;
+    const others = near.map((e) => e.getBoundingClientRect()).filter(shown);
+    const names = titles.map((e) => {
+      if (!e.matches('.rm, .ln')) return e.getBoundingClientRect();
+      const g = document.createRange(); g.selectNodeContents(e); return g.getBoundingClientRect();
+    }).filter(shown);
+    const own = sub ? [r, sub] : [r];
     const side = Math.max(top + 8, Math.min(r.top - 11, innerHeight - 8 - h));
     const spots = [[x, low + 8], [x, head - h - 8], [x, r.top - h - 8], [r.right + 12, side], [r.left - 12 - w, side]];
     const fits = ([cx, cy]) => cx >= col[0] && cx + w <= col[1] && cy >= top + 8 && cy + h <= innerHeight - 8;
     const clear = (os) => ([cx, cy]) => !os.some((o) => cx < o.right && cx + w > o.left && cy < o.bottom && cy + h > o.top);
-    // where every place covers something, the first that covers no model's name, the window's top and foot among them
-    const names = seen(titles);
-    const free = spots.find((p) => fits(p) && clear([...others, ...names])(p))
-      || [...spots, [x, top + 8], [x, innerHeight - 8 - h]].find((p) => fits(p) && clear([...names, r])(p));
-    let px = x;
-    if (free) [px, y] = free;
+    const free = [[...own, ...others, ...names], [...own, ...names], own].reduce((f, os) => f || spots.find((q) => fits(q) && clear(os)(q)), null);
+    let [px, y] = free || [x, h <= below || below >= above ? low + 8 : top + 8];
+    if (!free && h > below && h <= above) y = r.top - h - 8;
     probe.style.setProperty('max-height', !free && h > Math.max(below, above) ? `${Math.max(0, below, above)}px` : 'none');
     probe.style.setProperty('transform', `translate(${Math.round(px)}px, ${Math.round(y)}px)`);
     probe.hidden = r.bottom <= top || r.top >= innerHeight;
@@ -691,7 +692,7 @@
     titles = $$('.rm, .ln, .rk', main);
     // nor the name and petals of the figure's own row
     const own = el.closest('.row');
-    if (own) titles.push(...$$('.sname, .cg', own));
+    if (own) titles.push(...$$('.sname, .cg .glyph', own));
     place(el);
   };
   const labelled = (el) => show(el, () => {
@@ -765,7 +766,7 @@
       const p = ev.target.closest('.glyph .sl');
       if (p) { stay(); clearPetal(); petal(p); return; }
       // on the ground between two petals of a glyph the one last pointed at stays
-      if (at && at.matches('.sl') && ev.target.closest('.glyph') === at.closest('.glyph')) { stay(); return; }
+      if (at && at.matches('.glyph .sl') && ev.target.closest('.glyph') === at.closest('.glyph')) { stay(); return; }
       const el = tipOf(ev.target);
       // a figure taken from a petal: the petal's edge goes with its labels
       if (el && main.contains(el)) { stay(); if (el !== at) { clearPetal(); labelled(el); } } else later();
