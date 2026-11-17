@@ -39,7 +39,6 @@ from .overview import (
     NOT_TESTED,
     RATE_ANCHOR,
     defined,
-    fidelity_word,
     fig_html,
     filled,
     how_link,
@@ -94,7 +93,6 @@ from .words import (
     KEPT_CHANGE,
     KEPT_HEAD,
     KEPT_MEANS,
-    KEPT_SETS,
     KEPT_TIME,
     KIND_TERM,
     KNOW_COLS,
@@ -160,7 +158,6 @@ from .words import (
     SCOPE_CARD_HEAD,
     SCOPE_CARD_WORD,
     SCOPE_COL_WORD,
-    SCOPE_GRADED,
     SCOPE_ROW_WORD,
     SCOPE_SHORT,
     SCOPE_TERMS,
@@ -357,16 +354,14 @@ def scope_head_html(row):
     parts = []
     for slug_, name, pid in SCOPE_TERMS:
         term = f'<a class="df" href="/glossary#{slug_}">{e(name)}</a>'
-        if pid is not None:
-            to = f'<a href="#petal-{pid}">{e(PETAL_NAME[pid])}</a>'
-            said = e(SCOPE_GRADED).format(petal=to)
-        else:
-            run = f'<a href="{CHECKS_PAGE}#run">{e(CHECK_NAME["run"])} check</a>'
-            said = e(SCOPE_TESTED.format(n=f"{n:,}", run="\x00")).replace(" of ", "\u00a0of\u00a0")
-            said = said.replace("\x00", run)
-            if row["incomplete"]:
-                said += e(f", {counted_words(len(row['incomplete']), 'incomplete session')} "
-                          "not counted")  # fmt: skip
+        if pid is not None:  # graded by its petal above; the glossary says which
+            continue
+        run = f'<a href="{CHECKS_PAGE}#run">{e(CHECK_NAME["run"])} check</a>'
+        said = e(SCOPE_TESTED.format(n=f"{n:,}", run="\x00")).replace(" of ", "\u00a0of\u00a0")
+        said = said.replace("\x00", run)
+        if row["incomplete"]:
+            said += e(f", {counted_words(len(row['incomplete']), 'incomplete session')} "
+                      "not counted")  # fmt: skip
         parts.append(f'<span class="szt">{term}: {said}</span>')
     line = f'<p class="szc">{"".join(parts)}</p>'
     sec = row.get("security") or {}
@@ -555,7 +550,7 @@ def kept_html(row, place):
         rec = (
             f'<a class="ev" href="{e(link(t["record"]))}" title="{e(t["record"])}">trial record</a>'
         )
-        out.append(f'<p class="cn"><span class="k">{e(KEPT_HEAD)}, {e(KEPT_SETS)}</span> '
+        out.append(f'<p class="cn"><span class="k">{e(KEPT_HEAD)}</span> '
                    f"{e(words)} {rec}</p>")  # fmt: skip
     return "".join(out)
 
@@ -1383,23 +1378,6 @@ def tf_title(head, tf):
     return ' class="fag"' if head == TF_AGREE else ""
 
 
-def figures_html(row):
-    """The row's other figures (the band prints its one figure) as one ruled row of cells, each
-    figure with its unit and no more (SI-8): verify time and proof size per reply, then Fidelity
-    (USD is under Cost only, and the two rates the multiple is made of stand under it on the band,
-    amended 2026-11-16). Each one's scope and n stand under Cost (and in its title); the bar, the
-    controls and KL under Fidelity."""
-    figs, n = row["figures"], counted(row)
-    cells = [(defined(FIGURE_HEAD["check-time"], "check-time"),
-              fig_html(figs["verify_seconds_per_reply"], n, sub=BARE)),
-             (defined(FIGURE_HEAD["proof-size"], "proof-size"),
-              fig_html(figs["proof_bytes_per_reply"], n, sub=BARE)),
-             (defined(FIGURE_HEAD["fidelity"], FIGURE_ANCHOR["fidelity"]),
-              fidelity_word(row, "", long=True))]  # fmt: skip
-    return '<dl class="figs">' + "".join(f"<div><dt>{k}</dt><dd>{v}</dd></div>"
-                                         for k, v in cells) + "</dl>"  # fmt: skip
-
-
 def band_figure(row):
     """The band's one figure (`multiple_html` without its parts); of the whole sessions, its title
     names them and n, as the line under it does (law 3)."""
@@ -1461,11 +1439,12 @@ def mean(words):
 # the Statement block's lines, by the board's row ids (SI-3, amended 2026-11-17)
 STATEMENT_LINE = {"commit_record": "From our commit record", "request": "From the request",
                   "proof": "From the proof", "decoding": "Decoding",
-                  "unchecked": "Checked by no call", "architecture": "Architecture"}  # fmt: skip
+                  "unchecked": "Not checked by any call", "architecture": "Architecture"}  # fmt: skip
 # what an accept says, by whether the publisher states Level 1's statement at the pin (SI-4a)
 ACCEPT_HEAD = "An accept means"
 ACCEPT_SAYS = "the committed model's own greedy reply to the prompt"
-ACCEPT_STATE = {"stated": "stated", "read": "stated", "not": "not stated: no position"}
+ACCEPT_STATE = {"stated": "stated", "read": "no single sentence states it",
+                "not": "not stated: no position"}  # fmt: skip
 
 
 def given_short(st, rid):
@@ -1482,7 +1461,12 @@ def given_short(st, rid):
         return e(said)
     if rid == "proof":
         said = counted_words(st["proof_files"], "file")
-        return e(said + ("; the reply is read from it" if st["reply"] == "proof" else ""))
+        said = e(said + ("; the reply is read from it" if st["reply"] == "proof" else ""))
+        if st.get("proof_caveat"):  # a gap in our own verdict stays in view (law 2)
+            cav = st["proof_caveat"]
+            said += (f'<span class="sub cav">{e(cav[:1].upper() + cav[1:])}. '
+                     '<a href="/statement#the-seams">The seams ↗</a></span>')  # fmt: skip
+        return said
     if rid == "decoding":
         return e(f"{S.V['request']['decoding']}, at every reply position")
     if rid == "architecture":
@@ -1522,7 +1506,7 @@ def statement_block(row):
     ls = row.get("level_statement")
     if ls is not None:
         if ls["reading"]:
-            said = (f'<a class="df" href="{CHECKS_PAGE}#reading">{e(READ_AS)}</a> '
+            said = (f'<a class="df" href="{CHECKS_PAGE}#reading">{e(READ_AS)}</a>: '
                     f"{e(ACCEPT_STATE['read'])}")  # fmt: skip
         elif ls["stated"]:
             said = e(ACCEPT_STATE["stated"])
@@ -1533,7 +1517,7 @@ def statement_block(row):
     for r in st["rows"]:
         given = given_short(st, r["id"])
         if not given:  # nothing given: the publisher's words name it, or it is not stated
-            given = (e("the publisher lists it") if r["said"]
+            given = (e("listed by the publisher") if r["said"]
                      else f'<span class="na">{e(SCOPE_VALUE_WORD["not_stated"])}</span>')  # fmt: skip
         src = sources_html(r["said"]) if r["said"] or r["id"] != "unchecked" else ""
         lines.append((STATEMENT_LINE[r["id"]], given, src))
@@ -1602,22 +1586,35 @@ def checks_block(row):
 
 
 # what each figure of the Cost block means, in a few words under it
-COST_MEAN = {"multiple": "a proved reply's GPU time over a served one's",
+COST_MEAN = {"rate": "served over proved is the cost vs serving",
              "check-time": "verifier wall time", "proof-size": "every proof file, as written"}  # fmt: skip
 
 
+def on_point(html, whole, frac):
+    """A figure padded so figures in one column line up on the decimal point ("2.027" over
+    "2,669" reads as two and two thousand, not as two equal widths): `whole` and `frac` are the
+    widest whole and fractional parts in the column, in characters of the mono face."""
+    num = re.search(r'<span class="n">([^<]*)</span>', html)[1]
+    a, dot, b = num.partition(".")
+    pad = f"--pl:{whole - len(a)}ch;--pr:{frac - len(dot + b)}ch"
+    return f'<span class="np" style="{pad}">{html}</span>'
+
+
 def rates_tile(row):
-    """The two rates the multiple divides (CO-8): proved and served, in one unit, the GPU named;
-    None where the row has no pair."""
+    """The two rates the multiple divides (CO-8): proved and served, in one unit, aligned on their
+    decimal point, each with its unit and GPU; None where the row has no pair."""
     pair = rate_pair(row)
     if pair is None:
         return None
     proved, served, gp, sg = pair
     n = counted(row)
     lines = [(proved, RATE_PROVED, gp, n), (served, "served", sg, None)]
-    return lines_html(
-        [(e(w), fig_html(f, k, sub=BARE, unit=RATE_PER.format(gpu=g))) for f, w, g, k in lines]
-    )
+    shown = [fig_html(f, k, sub=BARE, unit=RATE_PER.format(gpu=g)) for f, _, g, k in lines]
+    nums = [re.search(r'<span class="n">([^<]*)</span>', h)[1].partition(".") for h in shown]
+    whole, frac = max(len(a) for a, _, _ in nums), max(len(d + b) for _, d, b in nums)
+    figs = [(e(w), on_point(h, whole, frac)) for (_, w, _, _), h in zip(lines, shown, strict=True)]
+    tile = f'<span class="rts">{lines_html(figs)}</span>' + mean(COST_MEAN["rate"])
+    return tile
 
 
 def cost_block(row):
@@ -1636,10 +1633,7 @@ def cost_block(row):
     shown = [(k, f) for k, f in (("multiple", lead), ("verify", figs["verify_seconds_per_reply"]),
                                  ("size", figs["proof_bytes_per_reply"])) if has(f)]  # fmt: skip
     tier = evidence_words(shown) if shown else ""
-    mult = (fig_html(lead, n, sub=BARE, note=whole_note(row, key), how=how_computed(row))
-            if has(lead) else fig_html(lead, n))  # fmt: skip
-    mult += split_html(row, key, bar=True, bare=True) + mean(COST_MEAN["multiple"])
-    cells = [(defined(FIGURE_HEAD["multiple"], "multiple"), mult, "")]
+    cells = []
     rates = rates_tile(row)
     if rates:
         cells.append((defined(FIGURE_HEAD["rate"], "rate"), rates, RATE_ANCHOR))
@@ -1701,7 +1695,7 @@ def fidelity_block(row):
         if bar is not None and bar["control"] in ids:
             i = ids.index(bar["control"])
             at = f"{fid['record']}/controls/{i}/mean_prefix"
-            lines.append(("the bar", plain(bar["mean_prefix"], "tokens", at)))
+            lines.append(("pass bar", plain(bar["mean_prefix"], "tokens", at)))
         said += lines_html(lines) + mean("matched leading tokens, mean")
     cells.append((defined("Fidelity check", "fidelity"), said, ""))
     kl = (row["fidelity"] or {}).get("kl")
@@ -1782,18 +1776,20 @@ def share_html(row):
 
 
 def pin_html(pin, name):
-    """A row that runs a change to the publisher's code, in one line (SI-3, amended 2026-11-15):
-    the pull request, whether upstream merged it, who wrote it, and what the publisher's own
-    commit did on the level's request, linked to its record."""
+    """A row that runs a change to the publisher's code, in label-and-fact form (SI-3(c), amended
+    2026-11-15): the pull request, whether upstream merged it, who wrote it (linked to the
+    mandate's ties), and what the publisher's own commit did on the level's request, linked to
+    its record."""
+    sep = f'<span class="sep">{SEP}</span>'
     merged = "merged upstream" if pin["merged"] else "not merged upstream"
-    who = ", by this project's owner" if pin["by_owner"] else ""
+    who = '<a href="/mandate#ties">by this project\'s owner</a>' if pin["by_owner"] else ""
     record = (f' (<a href="{e(link(pin["record"]))}" title="{e(pin["record"])}">record</a>)'
               if pin.get("record") else "")  # fmt: skip
-    return (
-        f'<a href="{e(pin["url"])}">Pull request #{pin["pull"]:,}</a>, '
-        f"{merged}{who}. At upstream <code>{e(pin['upstream_commit'][:7])}</code>, "
-        f"{e(pin['upstream_outcome'])}{record}."
-    )
+    facts = [f'<a href="{e(pin["url"])}">PR #{pin["pull"]:,}</a>', e(merged), who,
+             f"upstream <code>{e(pin['upstream_commit'][:7])}</code>: "
+             f"{e(pin['upstream_outcome'])}{record}"]  # fmt: skip
+    return sep.join(f'<span class="nw">{f}</span>' if i < 3 else f
+                    for i, f in enumerate(facts) if f)  # fmt: skip
 
 
 def system_page(row):
@@ -1834,7 +1830,7 @@ def system_page(row):
     band_ = (
         f'<section class="mast mast-sys sysb" aria-labelledby="h-name"><div class="mast-in">'
         f'<div class="sb"><h1 id="h-name" class="sysname nm{size}">{e(name)}</h1>'
-        f'<p class="sbm{unranked}"><span class="sbl">{e(label)}</span>{lead}</p></div>'
+        f'<p class="sbm{unranked}"><span class="sbl">{defined(label, "multiple")}</span>{lead}</p></div>'
         '<dl class="facts">'
         + "".join(f'<div class="{c}"><dt>{k}</dt><dd>{v}</dd></div>' for c, k, v in facts)
         + "</dl></div></section>"
@@ -1850,7 +1846,7 @@ def system_page(row):
     )
     # the share group at the strip's end on a wide screen
     share_strip = f'<div class="shr" role="group" aria-label="{e(SHARE[0])}">{share}</div>'
-    parts = (("figures", "Figures"), ("glyph", "Glyph"), ("statement", "Statement"),
+    parts = (("glyph", "Glyph"), ("statement", "Statement"),
              ("checks", "Checks"), ("cost", "Cost"), ("fidelity", "Fidelity"),
              ("sessions", "Sessions"))  # fmt: skip
     body = f"""
@@ -1859,7 +1855,6 @@ def system_page(row):
   {band_}
   {pnav(name, parts, share_strip)}
   <div class="wrap">
-    {section("figures", "Figures", figures_html(row))}
     {section("glyph", "Glyph", glyph_block(row))}
     {section("statement", "Statement", statement_block(row))}
     {section("checks", "Checks", checks_block(row))}

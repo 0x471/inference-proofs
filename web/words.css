@@ -882,9 +882,9 @@ html.js .scalepage .scl-panel { margin-top: 0; }
 .sect { font: var(--f-label); color: var(--muted); text-transform: uppercase; letter-spacing: var(--track); margin: 0; padding-bottom: 12px; border-bottom: 1px solid var(--rule); }
 /* a section's heading (the system, checks, mandate and 404 pages, the systems not run): a modest
    display size over its rule (the strip above marks the section); the first one, right under the
-   strip, is for screen readers only, so no word is printed twice in a row */
+   strip on the checks page, is for screen readers only; a system page prints Glyph, its first */
 .nrh, :is(.syspage, .checkspage, .mandatepage, .notfound) .blk > .sect { margin: 0; padding-bottom: 14px; border-bottom: 1px solid var(--rule); font: 900 28px/1 var(--disp); letter-spacing: 0; text-transform: none; color: var(--paper); }
-:is(.syspage, .checkspage) .wrap > .blk:first-child > .sect { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; padding: 0; border: 0; }
+.checkspage .wrap > .blk:first-child > .sect { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; padding: 0; border: 0; }
 :is(.syspage, .checkspage) .wrap > .blk:first-child { margin-top: 24px; }
 
 /* ---------------------------------------------------------------- the systems not run, by their reason: each reason once, the names in display type */
@@ -1127,7 +1127,8 @@ a.pvd:hover { text-decoration: underline 2px; text-underline-offset: 4px; }
 .gscale { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; margin: 14px 0 0; }
 .gscale .k { margin-right: 6px; font: var(--f-label); letter-spacing: var(--track); text-transform: uppercase; color: var(--muted); }
 .gscale .pvd { font-size: 15px; line-height: 20px; }
-.gscale .gsep { font: 400 13px/20px var(--mono); color: var(--rule); }
+.gscale .gw { white-space: nowrap; }
+.gscale .gsep { margin-right: 10px; font: 400 13px/20px var(--mono); color: var(--rule); }
 .gscale + .checks { padding-top: 16px; }
 .ckt.gpl tbody th { width: 256px; padding-right: 16px; }
 .ckt.gpl tbody :is(th, td) { padding-top: 13px; padding-bottom: 13px; }
@@ -1173,15 +1174,13 @@ a.pvd:hover { text-decoration: underline 2px; text-underline-offset: 4px; }
 .ckt.gpl .pfull[open] { max-width: 96ch; }
 .ckt.gpl .pevs .pfrm { margin-left: 12px; font: 400 12px/16px var(--mono); letter-spacing: 0; text-transform: none; color: var(--muted); }
 .ckt.gpl .pevs .pel .k { margin-right: 8px; font: var(--f-label); letter-spacing: var(--track); text-transform: uppercase; color: var(--muted); }
-/* one click down: the publisher's words, our notes, and this system's facts in full */
-.ckt.gpl .pev > summary { width: fit-content; list-style: none; cursor: pointer; text-decoration: underline; text-decoration-color: var(--rule); text-underline-offset: 3px; }
-.ckt.gpl .pev > summary::-webkit-details-marker { display: none; }
-.ckt.gpl .pev > summary:after { content: " \25B8" / ""; color: var(--muted); }
-.ckt.gpl .pev[open] > summary:after { content: " \25BE" / ""; }
-.ckt.gpl .pev > summary:hover { text-decoration-color: var(--paper); }
-.ckt.gpl .pev[open] { max-width: 110ch; padding: 0 0 6px 12px; box-shadow: inset 2px 0 0 var(--line); }
-.ckt.gpl .pev[open] > summary { margin-left: -12px; padding-left: 12px; margin-bottom: 6px; }
+/* one click down: the publisher's words, our notes, and this system's facts in full, each with the
+   page's one control (a label and its sign); an arrow marks only a link that leaves the place */
+.ckt.gbig.gpl .more.pev > summary, .ckt.gbig.gpl .more.pfull > summary { margin-top: 0; padding: 3px 0 2px; }
+.ckt.gpl .more.pev[open] { max-width: 110ch; padding: 0 0 8px; }
 .ckt.gpl .pev .qt { max-width: 100ch; }
+.ckt.gpl .pevs .pfm { color: var(--muted); }
+.ckt.gpl sup, .psb sup { font-size: 0.72em; line-height: 0; vertical-align: 0.5em; }
 .ckt.gpl .pfull .pbk { margin: 12px 0 0; }
 .ckt.gpl .pfull .pbk:first-of-type { margin-top: 4px; }
 .ckt.gpl .pfull p + p, .ckt.gpl .pfull .pel + .pel { margin-top: 6px; }
@@ -1239,7 +1238,6 @@ a.pvd:hover { text-decoration: underline 2px; text-underline-offset: 4px; }
 .figs { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); margin: 0; overflow: hidden; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
 .figs > div { min-width: 0; margin: 0 0 -1px -1px; padding: 14px 20px 16px 13px; border-left: 1px solid var(--line); border-bottom: 1px solid var(--line); transition: background-color var(--quick); }
 .figs > div:hover { background: var(--lift); }
-.syspage #figures .figs { border-top: 0; }
 .figs dt { display: flex; align-items: flex-end; min-height: 28px; margin-bottom: 10px; font: var(--f-label); letter-spacing: var(--track); text-transform: uppercase; color: var(--muted); }
 .figs dd { margin: 0; }
 .figs .fig { flex-wrap: wrap; }
@@ -2229,6 +2227,14 @@ ol.ls > li:before { counter-increment: n; content: counter(n); position: absolut
 .tiles .schip, .tiles .pvd.sw { align-self: flex-start; margin-bottom: 10px; }
 .tiles .usd .tls { row-gap: 4px; }
 .tiles .usd .tf .fig .n { font-size: 14px; letter-spacing: 0; }
+.tiles .usd .tf .fig { flex-wrap: nowrap; white-space: nowrap; }
+/* the two rates on their decimal point: the whole digits right-aligned, the fraction after them */
+.tiles .rts .np .n { padding-left: var(--pl); padding-right: var(--pr); }
+/* the Cost block's first tile holds the two rates on one line each, so it takes the widest column */
+@media (min-width: 761px) { .syspage #cost .tiles { grid-template-columns: minmax(0, 1.6fr) repeat(3, minmax(0, 1fr)); } }
+.kvt .sub.cav { display: block; max-width: 80ch; margin-top: 4px; font-size: 12px; line-height: 17px; color: var(--muted); }
+.tiles .rts .fig { flex-wrap: nowrap; white-space: nowrap; }
+.tiles .rts .tf .fig .n { font-size: 18px; }
 .kvt .na { font: inherit; color: var(--muted); }
 .tiles .split { grid-template-columns: max-content max-content; column-gap: 22px; row-gap: 8px; margin-top: 14px; }
 .tiles .split .fig .n { font-size: 15px; letter-spacing: -.01em; }

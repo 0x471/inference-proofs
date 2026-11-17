@@ -312,7 +312,8 @@ def test_surface_figures_are_whole_sessions(board_site: Any) -> None:
     pages_ = {"index.html": tr[1]}
     for page in ("flashprove.html", "og/flashprove.html"):
         text = html.unescape((out / page).read_text())
-        pages_[page] = text.split('class="figs"')[0]  # the band (all of a card)
+        band = re.search(r'<section class="mast.*?</section>', text, re.S)
+        pages_[page] = band[0] if band else text  # the band (all of a card)
     for page, text in pages_.items():
         pointers = set(re.findall(r"record: [^#]+#(/[^;\"]+)", text))
         assert f"{at}session_multiple" in pointers, page
@@ -363,47 +364,42 @@ def test_gpt2_prints_the_model_card_count() -> None:
 
 
 def test_cost_block_figures_share_the_bands_scope(board_site: Any) -> None:
-    """CO-5 (amended 2026-11-17): the figures that lead a system page's Cost block (the multiple,
-    the two rates, the cost in USD) are of the scope the band prints, so the block never sets a
-    steady figure beside a whole-session one. In the example board FlashProve has both scopes: its
-    Cost tiles name session_multiple, the proved rate and session_usd_per_reply, never multiple or
-    steady_usd_per_reply."""
+    """CO-5 (amended 2026-11-17): the figures that lead a system page's Cost block (the two rates
+    and the cost in USD; the multiple is the band's alone) are of the scope the band prints, so
+    the block never sets a steady figure beside a whole-session one. In the example board
+    FlashProve has both scopes: its Cost tiles name the proved rate and session_usd_per_reply,
+    never multiple or steady_usd_per_reply."""
     text = html.unescape((board_site.out / "flashprove.html").read_text())
     block = re.search(r'<section class="blk" id="cost".*?<dl class="figs tiles">(.*?)</dl>', text,
                       re.S)  # fmt: skip
     assert block
     pointers = set(re.findall(r"record: [^#]+#(/[^;\"]+)", block[1]))
     at = "/rungs/0/rows/0/"
-    assert {f"{at}session_multiple", f"{at}session_reply_tokens_per_gpu_second",
-            f"{at}session_usd_per_reply"} <= pointers  # fmt: skip
+    assert {f"{at}session_reply_tokens_per_gpu_second", f"{at}session_usd_per_reply"} <= pointers
     assert not {f"{at}multiple", f"{at}steady_usd_per_reply"} & pointers
 
 
-def test_fidelity_row_sentence_prints_its_average_and_the_next_bar() -> None:
-    """GL-11, SI-3 (amended 2026-11-17, Q45): where the first item a Fidelity petal lacks is an
-    average, its row's sentence prints the row's own average and that item's threshold, both the
-    board's, and its second line prints the copies' averages under "Copies", not the row's own
-    again. On the stored release by hand: FlashProve 29.7 against 48.0 (8-bit 65.7, 4-bit 30.3);
-    SASH 31.0 against 55.7 (8-bit 106.1, 4-bit 5.3)."""
+def test_fidelity_row_figures_are_the_boards(board_site: Any) -> None:
+    """GL-11, SI-3 (amended 2026-11-17): a Fidelity petal's row prints the row's mean matched
+    leading tokens and the 8-bit and 4-bit copies' means at the Fidelity check's precision (four
+    significant digits), and the first threshold missing for Met with the step it reaches, at the
+    board's one decimal; none at Met. On the stored release by hand: FlashProve 29.66 (8-bit
+    65.71, 4-bit 30.29), Mostly met at 48.0; SASH 31.00 (8-bit 106.1, 4-bit 5.267), Mostly met at
+    55.7."""
+    figures = board_site.build.draw.petal.fidelity_figures
     board = json.loads((WEB.parent / "releases/v1.0/board.json").read_text())
-    seen = 0
-    for row in rows(board):
-        p = next(p for p in row["glyph"] if p["id"] == "faithful_model")
-        items = [i for g in p.get("to_met") or () for i in g["items"]]
-        if not items or items[0]["need"] != "above":
-            continue
-        page = html.unescape((WEB / f"{row['system']}.html").read_text())
-        tr = re.search(r'id="petal-faithful_model">(.*?)</tr>', page, re.S)
-        assert tr, row["system"]
-        said = re.sub(r"<[^>]+>", "", re.search(r'<span class="pgap">(.*?)</span>', tr[1])[1])
-        own, bar = p["fidelity"]["display"], items[0]["value"]
-        assert said.startswith(f"{own:,.1f} matched tokens on average;"), (row["system"], said)
-        assert said.endswith(f"needs above {bar:,.1f}."), (row["system"], said)
-        mini = re.sub(r"<[^>]+>", " ", re.search(r'<span class="pmini">(.*?)</span></span>',
-                                                 tr[1])[1])  # fmt: skip
-        c = p["fidelity"]["controls"]
-        assert f"Copies 8-bit {c['q8_0']['display']:,.1f}, 4-bit {c['q4_k_m']['display']:,.1f}" \
-            in " ".join(mini.split()), (row["system"], mini)  # fmt: skip
-        assert f"{own:,.1f}" not in mini, (row["system"], mini)
-        seen += 1
-    assert seen == 2
+    petals = {row["system"]: next(p for p in row["glyph"] if p["id"] == "faithful_model")
+              for row in rows(board)}  # fmt: skip
+    # the view's `facts` is the board's petal record (iproofs.site.view)
+    got = {k: figures({**p, "facts": p["fidelity"]}) for k, p in petals.items()}
+    assert got == {
+        "flashprove": {
+            "own": "29.66",
+            "q8": "65.71",
+            "q4": "30.29",
+            "next": ("Mostly met", "48.0"),
+        },
+        "sash": {"own": "31.00", "q8": "106.1", "q4": "5.267", "next": ("Mostly met", "55.7")},
+    }
+    met = petals["flashprove"]
+    assert figures({**met, "facts": met["fidelity"], "to_met": []})["next"] is None
