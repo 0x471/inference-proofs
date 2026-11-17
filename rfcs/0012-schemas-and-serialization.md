@@ -404,6 +404,11 @@ Amendment of 2026-11-16 (RFC-0018 MC-4a, GL-5, SI-3, Q42, Q43). Additive, and th
 - `proof-build/1`: `status` takes `stopped` (a build we stopped before a verdict), with `stop` (`cause` `timeout` or `signal`, and `detail`), required when the status is `stopped` and absent otherwise. One record is stored, FlashProve's (`results/v1.0/proof-build/flashprove/proof-build.json`, the publisher's full check, built).
 - `board/1`: in Formally verified's `formal`, the optional `build` (the record's path, the toolchain's name and version, the publisher's command without our time-limit wrapper, its start, seconds, exit code and status).
 
+Amendment of 2026-11-17 (RFC-0018 Q44, GL-5, GL-11, SI-3). Additive, and the one stored board is recomputed in the same change (RFC-0018 Q14), so no stored run record changes:
+
+- `board/1`: each petal's optional `to_met`, `sources`, `sources_count`, `read_facts` and `why`, and its facts as the page words them (`bound`, `hiding`, `fidelity`, `trust`); in `formal`, the optional `limits` and `build.axioms`.
+- `properties/2`: on a fact, the optional `plain`, `named`, `described` and `check`; the optional `bound.after` (checked offline against its quote) and `formal.limits`.
+
 ## Testing Strategy
 
 Unit tests in `harness/tests/unit/`:

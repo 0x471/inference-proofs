@@ -496,7 +496,7 @@ PETAL_NOT_GRADED = {
     "knowledge; the scope card prints what is verified for it, and it sets no step.",
 }
 # once for the checks page's glyph section, after the steps
-PETAL_STEPS_FOOT = "Each system page prints its next step, computed from this table."
+PETAL_STEPS_FOOT = "Each system page prints what each petal misses for Met, and who acts, computed from this table."
 # Confidentiality's steps as a scale of what was proved or stated (§4, amended 2026-11-16),
 # printed beside the step at depth 3: what the publisher proved, never a result for the row.
 # Mostly met splits by its path: WH-6's missing conditions, or WH-5 capped by our reading (GL-10)
