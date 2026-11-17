@@ -647,7 +647,7 @@ FIGURE_RULE = {
         # CO-4; FP8 on Maverick is the level file's serving record (the original is 16-bit, FI-1)
         ("b", "GPU-seconds per reply when the same request is served without a proof. The model "
          "publisher's own release (FP8 on Llama 4 Maverick) runs on the pinned engine and the "
-         "fewest H200 GPUs that hold it, at full load. Full load is the lowest concurrency, "
+         "fewest NVIDIA H200 GPUs that hold it, at full load. Full load is the lowest concurrency, "
          "doubling from 1 to {top}, whose rate reaches {full} of the highest. If that is {top}, the "
          "model has no b (not saturated)."),
         ("whole sessions", "A row has m when each of its {slots} sessions has at least 3 groups "

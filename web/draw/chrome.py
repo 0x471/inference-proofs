@@ -281,6 +281,7 @@ def new_tab(html):
 def page(title, desc, body, cls, path, card):
     """One page. path: its address under the site ("" for the home); card: its preview card's name,
     or None for a page that is never shared (the 404)."""
+    title, desc = SEARCH_COPY.get(path, (title, desc))
     meta = share_meta(title, desc, path, card) if card else '<meta name="robots" content="noindex">'
     return (
         f'<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">'
@@ -490,6 +491,49 @@ def card_current(card):
     )
 
 
+# Search copy describes the existing page; it never changes the visible heading or lead.
+SEARCH_COPY = {
+    "": (
+        "Provable inference benchmark",
+        "Compare proof-of-inference systems on open-weights models: six checks, proving cost vs serving, proof size, verification time and fidelity.",
+    ),
+    "deployment": (
+        "AI treaty verification and deployments",
+        "How proofs of inference could support a hypothetical US-China AI agreement: model commitments, sampled replies, trusted traffic records and verification limits.",
+    ),
+    "glossary": (
+        "Provable inference glossary",
+        "Definitions for proof of inference, zero knowledge, soundness, model commitments, quantization, fidelity and trusted execution environments.",
+    ),
+    "learn": (
+        "Learn about proofs of inference",
+        "Learn what a proof of inference shows, how verification works, and how to interpret benchmark costs, model fidelity and AI treaty proposals.",
+    ),
+}
+
+# Topics are local to pages that discuss them, not claims about a system's guarantees.
+PAGE_TOPICS = {
+    "": ("Proof of inference", "Verifiable inference", "LLM inference benchmarks", "NVIDIA H200"),
+    "scale": ("Proving cost", "Proof size", "Verification time", "NVIDIA H200"),
+    "checks": ("Inference verification", "Negative controls", "Model fidelity", "NVIDIA H200"),
+    "mandate": ("Benchmark methodology", "Reproducible research"),
+    "learn": ("Proof of inference", "AI verification"),
+    "proof-of-inference": ("Proof of inference", "Model commitments", "Verification limits"),
+    "how-a-check-works": ("Inference verification", "Model commitments", "Proving cost"),
+    "deployment": (
+        "AI treaty verification",
+        "International AI agreements",
+        "Hypothetical US-China AI agreement",
+        "Trusted execution environments",
+        "Traffic sampling",
+    ),
+    "method": ("Benchmark methodology", "Proving cost", "Model fidelity"),
+    "statement": ("Verifiable computation", "Quantization", "Soundness"),
+    "forward-pass": ("Verifiable computation", "Sumcheck", "Matrix multiplication"),
+    "glossary": ("Proof of inference", "Zero knowledge", "Soundness", "Model fidelity"),
+}
+
+
 def share_meta(title, desc, path, card):
     url = f"{SITE_URL}/{path}"
     if card != "home" and not card_current(card):
@@ -499,6 +543,8 @@ def share_meta(title, desc, path, card):
     full = full_title(title)
     alt = card_alt(card)
     tags = [
+        ("name", "robots", "index, follow, max-image-preview:large"),
+        ("property", "og:locale", "en_US"),
         ("property", "og:type", "website"),
         ("property", "og:site_name", "Inference proofs"),
         ("property", "og:title", full),
@@ -530,8 +576,32 @@ def share_meta(title, desc, path, card):
             "name": "Inference proofs",
         },
     }
-    structured = json.dumps(data, ensure_ascii=False).replace("<", "\\u003c")
+    topics = PAGE_TOPICS.get(path, ("Proof of inference", "Model fidelity", "Proving cost"))
+    data["about"] = [{"@type": "Thing", "name": topic} for topic in topics]
+    data["keywords"] = list(topics)
+    data["isPartOf"]["sameAs"] = S.REPO_URL
+    data["primaryImageOfPage"] = {
+        "@type": "ImageObject",
+        "url": img,
+        "caption": alt,
+        "width": CARD_W * CARD_SCALE,
+        "height": CARD_H * CARD_SCALE,
+    }
+    if path:
+        crumbs = [("Inference proofs", f"{SITE_URL}/")]
+        if learn_page(path) or path == "glossary":
+            crumbs.append(("Learn", f"{SITE_URL}/learn"))
+        crumbs.append((title, url))
+        data["breadcrumb"] = {
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+                {"@type": "ListItem", "position": i, "name": name, "item": address}
+                for i, (name, address) in enumerate(crumbs, 1)
+            ],
+        }
+    structured = json.dumps(data, ensure_ascii=False, separators=(",", ":")).replace("<", "\\u003c")
     return (
         f'<script type="application/ld+json">{structured}</script>'
         f'<link rel="canonical" href="{e(url)}">'
+        '<link rel="help" type="text/plain" href="/llms.txt" title="Site guide for agents">'
     ) + "".join(f'<meta {k}="{v}" content="{e(c)}">' for k, v, c in tags)

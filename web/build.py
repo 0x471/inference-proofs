@@ -27,7 +27,9 @@ table). Every name of those modules reads as `build.<name>` too.
 
 import importlib
 import importlib.util
+import json
 import pathlib
+import re
 import sys
 import types
 
@@ -168,6 +170,40 @@ def render(view, out, *, write_json, write_text):
         S.HERE / "robots.txt",
         f"User-agent: *\nAllow: /\n\nSitemap: {draw.chrome.SITE_URL}/sitemap.xml\n",
     )
+    # Reuse the actual page metadata so the agent index cannot advertise absent pages.
+    guide = [
+        "# Inference proofs",
+        "",
+        "> An open benchmark for provable inference on open-weights models.",
+        "",
+        "Systems are compared within one model rung. Passing the six checks does not "
+        "certify AI safety. Read each system's scope, sample sizes, grades, evidence "
+        "tiers and source records before citing a result.",
+        "",
+        "The deployment article discusses hypothetical agreements, not an enacted treaty.",
+        "",
+        "## Pages",
+        "",
+    ]
+    for path, html in sorted(pages.items()):
+        if path.stem == "404":
+            continue
+        block = re.search(r'<script type="application/ld\+json">(.*?)</script>', html)
+        data = json.loads(block[1])
+        guide.append(f"- [{data['name']}]({data['url']}): {data['description']}")
+    guide.extend(
+        [
+            "",
+            "## Records",
+            "",
+            f"- [Source repository]({S.REPO_URL})",
+            f"- [Level rules]({draw.chrome.link('levels/L1.yaml')})",
+            f"- [Specification]({draw.chrome.link('docs/SPEC.md')})",
+            f"- [Sitemap]({draw.chrome.SITE_URL}/sitemap.xml)",
+            "",
+        ]
+    )
+    write_text(S.HERE / "llms.txt", "\n".join(guide))
     write_json(S.HERE / "vercel.json", draw.outputs.vercel_json(pages.values()))
     draw.outputs.write_readme()
     return sorted(pages)
