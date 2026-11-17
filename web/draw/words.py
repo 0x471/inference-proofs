@@ -600,7 +600,8 @@ GAP = {
     "one_at_a_time": "Our fidelity run did not send one request at a time.",
     "reach_stated": "The {tool} theorem stops at {stated}, short of {run}, which we run.",
     "reach_none": "No theorem reaches {run}, the verifier we run.",
-    "rests_sentence": "No sentence of the publisher's says soundness rests on cryptography only.",
+    "rests_sentence": "No single sentence of the publisher's says soundness rests on cryptography "
+    "only.",
     "no_setup_secret": "A setup made a secret, in an open ceremony.",
     "hide_statement": "The publisher does not say whether a proof keeps the weights secret.",
     "zk_theorem": "The publisher proves no zero-knowledge theorem.",

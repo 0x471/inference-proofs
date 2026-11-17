@@ -303,12 +303,11 @@ def has_short(p, row, petals):  # noqa: PLR0911, PLR0912 (one clause per rule pa
     if pid == "weights_hidden":
         if cause == "not_stated":
             tail = (
-                "; they say the verifier does not hold them"
+                "; they say the verifier is not given them"
                 if f.get("verifier_gets_weights") is False
                 else ""
             )
-            return (f"nothing in the {count(k_docs, 'document')} we read on whether a proof hides "
-                    f"the weights{tail}")  # fmt: skip
+            return f"nothing on whether a proof hides the weights{tail}"
         if f.get("verifier_gets_weights") is True:
             return "the verifier is given the weights"
         if cause == "stated":
@@ -392,6 +391,8 @@ def item_short(it, p, row):  # noqa: PLR0911 (one phrase per item key)
         return "our rebuild of that new theorem" if it.get("new") else "our rebuild of it"
     if need == "reach_run":
         return f"a theorem that reaches {run}, which we run"
+    if need == "conditions":
+        return f"its condition{'' if it.get('proved') else 's'} shown to hold for our files"
     if need == "exponent":
         return f"every part of the limit at most 2^-{it['floor']}"
     if need == "above":
@@ -405,12 +406,11 @@ def item_short(it, p, row):  # noqa: PLR0911 (one phrase per item key)
 SHORT = {
     "basis": "a theorem, not a conjecture",
     "adversary": "the limit against any cheating prover",
-    "unit": "a limit for a whole reply",
+    "unit": "a limit per whole reply",
     "granularity": "a record of how many replies one proof covers",
     "batch": "a limit for each reply checked on its own",
     "batch_size": "a record of our batch size",
     "parameters": "a statement that the limit is for the settings we run",
-    "conditions": "a record that its condition holds for our files",
     "reading": "the publisher's words in place of our reading",
     "programs": "a statement that its programs keep the weights secret",
     "visible_list": "a published list of what stays visible",
@@ -1288,11 +1288,7 @@ def evidence_short(p, row, petals):
     else:
         out.append(p_(e(EVIDENCE["none_short"]), "pel"))
     src = came_from(p)
-    src = (
-        f' <span class="pfrm">{e(src.replace(FROM_WORD + " ", "graded from ", 1))}</span>'
-        if src
-        else ""
-    )
+    src = f' <span class="pfrm">{e(src)}</span>' if src else ""
     return f'<h5 class="pbh">{e(EVIDENCE["head"])}{src}</h5>' + "".join(out)
 
 
