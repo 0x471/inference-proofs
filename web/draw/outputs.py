@@ -211,7 +211,7 @@ def vercel_json(pages=()):
             gone[f"/{sid}"] = "/"
     return {
         "$schema": "https://openapi.vercel.sh/vercel.json",
-        "buildCommand": "rm -rf public && mkdir -p public/og public/fonts && cp *.html search.json robots.txt sitemap.xml public/ && cp og/*.png og/*.svg public/og/ && cp fonts/*.woff2 public/fonts/ && npm ci --include=dev --ignore-scripts && npm run assets",
+        "buildCommand": "rm -rf public && mkdir -p public/og public/fonts && cp *.html search.json robots.txt sitemap.xml llms.txt public/ && cp og/*.png og/*.svg public/og/ && cp fonts/*.woff2 public/fonts/ && npm ci --include=dev --ignore-scripts && npm run assets",
         "cleanUrls": True,
         "trailingSlash": False,
         "framework": None,
@@ -225,7 +225,7 @@ def vercel_json(pages=()):
             {"source": "/system", "destination": first, "permanent": False},
             {"source": "/system.html", "destination": first, "permanent": False},
             *(
-                {"source": src, "destination": dst, "permanent": False}
+                {"source": src, "destination": dst, "permanent": src in GONE}
                 for src, dst in sorted(gone.items())
             ),
             # clients that ask for /favicon.ico get the PNG icon

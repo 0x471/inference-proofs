@@ -25,7 +25,7 @@ A proof is checked against inputs the verifier does not check. For each system o
 
 ## In an agreement
 
-A hypothetical rule: declared data centres in States A and B serve only models whose [[commitment|commitments]] are in a shared register. An inspectorate holds the register and checks State A's [[operator]], which keeps its weights.
+Consider a hypothetical bilateral AI agreement between the United States (US) and China: declared data centres in both countries serve only models whose [[commitment|commitments]] are in a shared register. A jointly agreed inspectorate holds the register and checks an [[operator]] in either country, which keeps its weights. This is an illustrative scenario, not a description of an existing deal.
 
 Given accepted proofs and a trusted traffic record, the inspectorate could sign one finding: each sampled reply is what the registered quantized copy gives for its recorded prompt.
 
@@ -38,7 +38,7 @@ Proved against one commitment, evaluation replies and served replies are what th
 :::
 
 :::stage proposed A sample stands for the traffic
-A certifier at the data centre's boundary, in State A, records a fingerprint of every prompt and reply, and must be trusted. [SASH's publisher](https://www.aisafety.sg/research/what-proving-llm-inference-actually-costs-research-note) writes: "Nothing yet ties a proof to what the certifier recorded."
+A certifier at the inspected data centre's boundary, in either country, records a fingerprint of every prompt and reply, and must be trusted. [SASH's publisher](https://www.aisafety.sg/research/what-proving-llm-inference-actually-costs-research-note) writes: "Nothing yet ties a proof to what the certifier recorded."
 
 The inspectorate later draws replies for the operator to prove. SASH's publisher adds that "the draw must be unpredictable to the provider, and the provider must commit to its answers before the draw." By our arithmetic, when both hold, 300 draws catch an unregistered model serving 1 reply in 100 about 95 % of the time, and 1 in 10,000 about 3 %.
 
