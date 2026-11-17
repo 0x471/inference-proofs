@@ -1177,8 +1177,8 @@ FULL_LOAD_WORD = "full load"
 # of its own. A session's second part holds commit as well (most of it), so it is never "proving"
 PART_WORD = {"proving": "proving", "generation": "generation",
              "commit_and_proving": "commit and proving"}  # fmt: skip
-# before a part's name where it stands beside its whole in a sentence or a table's head (a card's
-# alt text, the sessions table); under its whole, a part's name stands alone
+# before a part's name where it stands beside its whole in a table's head (the sessions table);
+# under its whole, a part's name stands alone
 OF_WHICH = "of which"
 # the Cost block's head over the multiple's two parts (CO-7, amended 2026-11-17: printed only there)
 PARTS_HEAD = "Cost vs serving, in two parts"
