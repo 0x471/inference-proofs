@@ -1150,9 +1150,13 @@ def agree_html(entry, tf, sub):
     if entry is None or entry["status"] != "ok":
         why = (entry or {}).get("cause") or "not run"
         return f'<span class="na" title="{e(why)}">not run</span>'
-    said = f"mean {sig(entry['mean'])} of {tf['positions']:,} positions; n = {entry['n']:,} prompts"
+    # each part with its label, so the title's lines keep one column (the ladder's Fidelity title does the same)
+    said = (
+        f"mean: {sig(entry['mean'])} of {tf['positions']:,} positions; n = {entry['n']:,} prompts"
+    )
     if entry.get("percent_interval"):
-        said += "; " + interval_words(entry)
+        low, high = entry["percent_interval"]
+        said += f"; interval: 95\u00a0%, {pct(low)} to {pct(high)}\u202f%"
     return (f'<span class="fig" title="{e(said)}; record: {e(tf["path"])}">'
             f'<span class="n">{e(pct(entry["percent"]))}</span><span class="u">%</span></span>'
             + "".join(f'<span class="sub">{e(line)}</span>' for line in sub if line))  # fmt: skip
