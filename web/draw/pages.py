@@ -1621,19 +1621,14 @@ def rates_tile(row):
 
 def parts_tile(row):
     """CO-7 (amended 2026-11-17): the band's multiple in its two parts, commit and proving then
-    generation, each with its unit, aligned on the decimal point; printed only here, on the system
-    page, and only for a row that times them apart. None otherwise."""
+    generation, each with its unit; printed only here, on the system page, and only for a row that
+    times them apart. None otherwise."""
     _, _, key = lead_figure(row)
     parts = parts_of(row, key)
     if not parts:
         return None
     n = counted(row)
-    shown = [fig_html(f, n, sub=BARE, note=whole_note(row, key)) for _, f in parts]
-    nums = [re.search(r'<span class="n">([^<]*)</span>', h)[1].partition(".") for h in shown]
-    whole, frac = max(len(a) for a, _, _ in nums), max(len(d + b) for _, d, b in nums)
-    figs = [
-        (part_term(w), on_point(h, whole, frac)) for (w, _), h in zip(parts, shown, strict=True)
-    ]
+    figs = [(part_term(w), fig_html(f, n, sub=BARE, note=whole_note(row, key))) for w, f in parts]
     return f'<span class="rts">{lines_html(figs)}</span>' + mean(COST_MEAN["parts"])
 
 
