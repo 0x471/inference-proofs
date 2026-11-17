@@ -313,28 +313,16 @@ CARD_ERRATUM = "Erratum: the card's {fields} describe {says}. At Level 1:"
 SCOPE_CARD_HEAD = (
     "What is verified, and for which code, as the publisher states it; it sets no state"
 )
-# the three properties a proof system is read for, in priority order (RFC-0018, the paragraph
-# after MC-7, amended 2026-11-16): (name, what it means, the petal that grades it or None, whom
-# it protects, what our checks do about it). Soundness and zero knowledge print whether the
-# publisher states them; completeness prints our Run check's count
-SCOPE_HEAD = (
-    ("soundness", "Soundness", "a false reply is refused", "unforgeable",
-     "whoever relies on the reply",
-     "No check of ours tries to forge a proof."),
-    ("zero_knowledge", "Zero knowledge", "a proof reveals nothing of the weights", "weights_hidden",
-     "the provider, who keeps the weights", "No check of ours tries to recover the weights."),
-    ("completeness", "Completeness", "an honest reply is accepted", None,
-     "the provider, whose honest replies must pass", ""),
-)  # fmt: skip
-# what the property means stays apart from the verdict: the publisher states it (or not), and the
-# petal grades how far the statement reaches this row
-SCOPE_BLOCK_HEAD = "Soundness, zero knowledge, completeness"  # under the five petals
-SCOPE_CARD_WORD = "scope card"  # with the stated security, behind one disclosure under the three
-SCOPE_STATED = {"stated": "The publisher states it; {petal}, above, grades how far that reaches what we run.",
-                "not_stated": "The publisher does not state it; {petal}, above, grades that."}  # fmt: skip
-SCOPE_TESTED = "Tested by us on honest runs: {n} of {n} replies accepted"
-SCOPE_NOT_GRADED = "Not graded as a petal; our Run check tests it."
-SCOPE_PROTECTS = "Protects {whom}."
+# the one line under the five petals (RFC-0018, the paragraph after MC-7, amended 2026-11-17, owner
+# decision): the three properties a proof system is read for, in priority order, each its
+# glossary entry, then where it is graded or tested; what each means and whom it protects is the
+# glossary's. (glossary id, name, the petal that grades it or None)
+SCOPE_TERMS = (("soundness", "Soundness", "unforgeable"),
+               ("zero-knowledge", "Zero knowledge", "weights_hidden"),
+               ("completeness", "Completeness", None))  # fmt: skip
+SCOPE_GRADED = "graded under {petal}"
+SCOPE_TESTED = "{n} of {n} replies accepted, our {run}"
+SCOPE_CARD_WORD = "scope card"  # with the stated security, behind one disclosure under the line
 STATED_SECURITY = "Stated security"
 NOTION_HEAD = "Its notion, as the publisher names it"
 # Weights hidden: what kind of value a proof leaves visible (only fitted_to_weights sets a step)
@@ -552,36 +540,21 @@ REASON_HEAD = "Reason"
 # ------------------------------------------------------------------ a petal on a system page (RFC-0018 SI-3, GL-11,
 # amended 2026-11-17, owner decision): what full marks need, what the system has, what it misses and who acts,
 # and where to check. Every line is worded here from the board's keys; nothing is typed per system.
-# the section's lead, above the five petals, one line; the grades and the words used sit in one
-# disclosure under it (GLYPH_KEY)
-GLYPH_LEAD = ("Five properties, each graded on its own: what full marks need, what {system} has, "
-              "what is missing and who must act. The evidence is one click down.")  # fmt: skip
-GLYPH_KEY_HEAD = "How to read the grades, and words used"
-GLYPH_KEY = (
-    "Grades, best first: Met (full marks), Mostly met, Partly met. Three grades are drawn red, and "
-    "none of them ranks above another: Not met (the publisher states something that rules the "
-    "property out, or a limit too weak to count); Not stated (the documents we read say nothing, "
-    "and a guarantee nobody states is one nobody can rely on); Failed (one of our tests failed). "
-    "Not decided is not a grade: our part is not done yet.",
-    "Beside each grade, what it comes from: our test, our rebuild of the publisher's proof, the "
-    "publisher's words, or our reading. Our reading means that no single sentence of the "
-    "publisher's says the point, so we read it from several passages, each linked in the petal. "
-    "A grade that rests on our reading can reach Mostly met, never Met.",
-    "Words used. The publisher: the team that makes the system. A proof: the file the system "
-    "sends with each reply. A verifier: the program that checks a proof. A commitment: a short "
-    "value computed from the model's weights and published; every proof is checked against it. "
-    "A theorem: a mathematical result the publisher proves. Lean: a program that checks every "
-    "step of a mathematical proof. A token: the unit a model writes in, a word or part of one. A "
-    "chance written 2^-128 is 1 in 2^128 (about 3 in 10^39); 2^-128 is a smaller chance than "
-    "2^-100.",
-)
+# the grade scale, the one line over the five petals (amended 2026-11-17, owner decision): each
+# grade in its ink, best first, linked to its definition in the glossary; no paragraph
+GRADE_SCALE = (("green", "Met", "met-mostly-met-partly-met"),
+               ("amber", "Mostly met", "met-mostly-met-partly-met"),
+               ("amber cut", "Partly met", "met-mostly-met-partly-met"),
+               ("red", "Not met", "not-met"), ("red open", "Not stated", "not-stated"),
+               ("red", "Failed", "failed"), ("hollow", "Not decided", "not-decided"))  # fmt: skip
+GRADE_SCALE_HEAD = "Grades, best first"
 # each petal's plain question, beside its name in the default row
 PETAL_ASK = {
     "unforgeable": "Can a fake reply pass the check?",
     "weights_hidden": "Does a proof keep the weights secret?",
     "faithful_model": "Does the proved model answer like the original?",
-    "machine_checked": "Has a computer checked a theorem that fake replies are refused?",
-    "no_trusted_party": "Does checking need a secret setup or a trusted party?",
+    "machine_checked": "Has a computer checked that fake replies are refused?",
+    "no_trusted_party": "Does checking trust a setup or a party?",
 }
 # what a grade comes from (the board's `sources`), beside the grade
 CAME_FROM = {
@@ -593,149 +566,79 @@ CAME_FROM = {
 }
 FROM_WORD = "from"
 # the default row's three labels, then the disclosure's label
-NEEDS_HEAD, HAS_HEAD, MISSING_HEAD = "Needs", "Has", "Missing"
-DETAILS_WORD = "Details and evidence"
+NEEDS_HEAD, HAS_HEAD = "Needs", "Has"
+# the opened petal's three blocks, side by side; Needs links to the petal's rule on the checks page
+PANEL_HEAD = {"needs": "Met needs", "has": "Has", "missing": "Missing"}
+# the disclosure's label: how many items Met lacks and who acts ("5 missing · publisher"); at Met,
+# the evidence alone
+MISSING_TAG = "{n} missing"
+WHO_TAG = {"publisher": "publisher", "us": "us"}
+EVIDENCE_TAG = "Evidence"
+# the one more click down in an opened petal: this system's own facts in full
+IN_FULL = "In full"
+# what full marks need, per petal, in a few words for the closed row ({green}: Fidelity's Met
+# threshold)
+NEEDS_TINY = {
+    "unforgeable": "a proved limit of 2^-128 for the verifier we run",
+    "weights_hidden": "a zero-knowledge theorem for exactly what we run",
+    "faithful_model": "an average above {green} tokens, one request at a time",
+    "machine_checked": "a rebuilt theorem reaching the verifier we run",
+    "no_trusted_party": "the publisher's words: cryptography only, no setup secret",
+}
+# the row's one sentence: the first item missing for Met, in plain words (amended 2026-11-17),
+# by the item's `need`; GAP_ANY words an item with no sentence of its own
+GAP = {
+    "none": "Nothing missing.",
+    "decide": "To decide: {need}.",
+    "repair": "To repair: {need}.",
+    "program_proved": "The limit is proved for {stated}, not {run}, which we run.",
+    "program_stated": "The limit is stated for {stated}, not {run}, which we run.",
+    "program_none": "The limit names no verifier; we run {run}.",
+    "zk_batch": "The theorem covers one request per proof, not our {n}-reply batches.",
+    "zk_run": "The theorem is not shown for exactly what we run.",
+    "above": "{to} needs an average above {value} tokens.",
+    "one_at_a_time": "Our fidelity run did not send one request at a time.",
+    "reach_stated": "The {tool} theorem stops at {stated}, short of {run}, which we run.",
+    "reach_none": "No theorem reaches {run}, the verifier we run.",
+    "rests_sentence": "No sentence of the publisher's says soundness rests on cryptography only.",
+    "no_setup_secret": "A setup made a secret, in an open ceremony.",
+    "hide_statement": "The publisher does not say whether a proof keeps the weights secret.",
+    "zk_theorem": "The publisher proves no zero-knowledge theorem.",
+    "named_theorem": "The publisher names no computer-checked theorem.",
+    "basis_conjectured": "The limit is a conjecture, not a theorem.",
+    "basis": "The documents we read do not say whether the limit is proved.",
+    "exponent": "A part of the limit is above 2^-{floor}.",
+    "reading": "Met needs the publisher's own words {topics}; today that is our reading.",
+}
+GAP_ANY = "Missing: {need}."
 # what full marks need, per petal, in one short line for the default row ({green}: Fidelity's
 # Met threshold)
 NEEDS_SHORT = {
-    "unforgeable": "a proved chance of at most 2^-128 that a fake reply passes the verifier we run",
+    "unforgeable": "a proved limit of 2^-128 on a fake reply passing the verifier we run",
     "weights_hidden": "a theorem that proofs of exactly what we run reveal nothing about the "
     "weights",
-    "faithful_model": "replies that match the original's for more than {green} tokens on "
-    "average, shown by our test, in a run of one request at a time",
+    "faithful_model": "an average above {green} matched tokens, shown by our test, in a run of one "
+    "request at a time",
     "machine_checked": "a computer-checked theorem that the verifier we run refuses fake "
     "replies, rebuilt by us",
     "no_trusted_party": "the publisher's own sentence that checking needs no secret setup and no "
     "trusted party",
 }
-# the blocks of an opened petal, in order: the owner's four, then the grade's reasons
-PETAL_BLOCK = {"needs": "Full marks (Met) need", "has": "What it has",
-               "missing": "What is missing, and who must act", "evidence": "Evidence",
-               "why": "Why this grade", "how": "Every grade, and how it is set",
-               "not_graded": "Not graded here",
+# the blocks one click down in an opened petal (IN_FULL), in order: this system's own facts
+PETAL_BLOCK = {"needs": "Met needs, in full", "has": "What it has", "missing": "What is missing, "
+               "and who acts", "records": "Our records", "why": "Why this grade",
                "terms": "In the field's terms (for specialists)",
                "limits": "Limits the publisher states, which the grade does not count"}  # fmt: skip
-# what full marks need, per petal, in full
-MET_NEEDS = {
-    "unforgeable": "A theorem, in the publisher's own words, that the verifier we run accepts a "
-    "fake reply with a chance of at most 2^-128. It must hold for each reply as we check it, "
-    "against any cheating prover (one that runs its own machine as it likes, with a limit that "
-    "does not rely on trusted hardware or an honest outside party), at the settings and on the "
-    "files we run. If the limit is a sum of parts, each part must be at most 2^-128, so the whole "
-    "stays within a few times 2^-128.",
-    "weights_hidden": "A theorem that a proof reveals nothing about the weights (zero knowledge: "
-    "everything a verifier sees could have been produced without them), for exactly what we run, "
-    "batches included; the publisher's statement that its programs do this; and a published list "
-    "of what stays visible, with nothing on it that, by its own words, depends on the weights.",
-    "faithful_model": "Replies that stay close to the original model's. Our score counts how many "
-    "tokens a reply shares with the original's reply, from the first token to the first "
-    "difference ({tokens} at most), averaged over the prompts. Met needs that average shown "
-    "above the halfway point between the original run a second time and our 8-bit copy, in a run "
-    "of ours that sends one request at a time. “Shown above” means our statistical "
-    "test finds the average above the threshold at the usual 5% level (p < {alpha}).",
-    "machine_checked": "A theorem that the verifier we run refuses fake replies, from the bytes "
-    "it reads to its verdict, checked step by step by a proof-checking program such as Lean, "
-    "with everything it relies on listed and no input-reading code left outside it; and our own "
-    "rebuild of it, with only the tool's standard axioms.",
-    "no_trusted_party": "The publisher's own sentence that a proof's soundness rests on "
-    "cryptographic assumptions only: no setup step produced a secret someone must be trusted to "
-    "destroy, no hardware maker's key, no trusted party; and nothing that limits who can check a "
-    "proof.",
-}
-# how each petal is graded: (step key, words, joins the line before); the line of the petal's
-# step, or of its case on Trust's Mostly met, is marked by HERE. Trust's Mostly met is two cases
-# (LADDER_CASES)
-LADDER = {
-    "unforgeable": (
-        ("green", "Met: a theorem for the verifier we run, for each reply as we check it, against "
-         "any cheating prover, at our settings and on our files, every part at most 2^-128, all in "
-         "the publisher's words.", False),
-        ("amber_upper", "Mostly met: the same, but every part at most 2^-100 is enough, and a "
-         "point may rest on our reading.", False),
-        ("amber_lower", "Partly met: a stated limit not yet shown to cover what we run. A theorem "
-         "needs every part at most 2^-80. A limit that is not a theorem (a conjecture, or not "
-         "said) needs every part at most 2^-100.", False),
-        (("red", "stated"), "Not met: a limit stated only against a weaker cheater; a theorem "
-         "with a part above 2^-80; or a limit that is not a theorem with a part above 2^-100.",
-         False),
-        (("red", "not_stated"), "Not stated: no limit in the documents we read.", False),
-        (("red", "check_failed"), "Failed: our Model, Prompt or Reply test failed.", False),
-    ),
-    "weights_hidden": (
-        ("green", "Met: a zero-knowledge theorem for exactly what we run, the publisher's statement "
-         "for its programs, and a published list of what stays visible with nothing on it that "
-         "depends on the weights.", False),
-        ("amber_upper", "Mostly met: a zero-knowledge theorem, at least for the method.", False),
-        ("amber_lower", "Partly met: a statement that a proof hides the weights, with no theorem.",
-         False),
-        (("red", "stated"), "Not met: the verifier is given the weights, or the publisher states "
-         "proofs do not hide them.", False),
-        (("red", "not_stated"), "Not stated: nothing in the documents we read.", False),
-        (("red", "check_failed"), "Failed: our Verify without weights test failed.", False),
-    ),
-    "faithful_model": (
-        ("green", "Met: shown above the halfway point between the original run a second time and "
-         "our 8-bit copy, in a run of one request at a time.", False),
-        ("amber_upper", "Mostly met: shown above the halfway point between our 8-bit and 4-bit "
-         "copies.", False),
-        ("amber_lower", "Partly met: replies beat the bar, a copy we damaged on purpose (our "
-         "Fidelity test passed).", False),
-        (("red", "check_failed"), "Failed: the bar beat the replies.", False),
-        (None, "Not decided: no fidelity result yet.", False),
-    ),
-    "machine_checked": (
-        ("green", "Met: a theorem reaching the verifier we run, from bytes to verdict, everything "
-         "it relies on listed, no input code outside, rebuilt by us.", False),
-        ("amber_upper", "Mostly met: a theorem of the whole method, the model's computation "
-         "included, its conclusion about the model, rebuilt by us with only the tool's standard "
-         "axioms.", False),
-        ("amber_lower", "Partly met: a theorem of part of the method, or one whose conclusion is not "
-         "about the model, rebuilt by us.", False),
-        (("red", "stated"), "Not met: the publisher states nothing is checked.", False),
-        (("red", "not_stated"), "Not stated: none named.", False),
-        (None, "Not decided: not rebuilt yet.", False),
-        (("red", "check_failed"), "Failed: our rebuild failed.", False),
-    ),
-    "no_trusted_party": (
-        ("green", "Met: cryptographic assumptions only and no setup secret, in the publisher's "
-         "words.", False),
-        ("amber_upper", "Mostly met, in either of two cases:", False),
-        ("amber_lower", "Partly met: one honest party among a fixed set of parties (or a challenger "
-         "who may dispute a result within a fixed window); or proofs only a named party can "
-         "check.", False),
-        (("red", "stated"), "Not met: a setup run by one party, a hardware maker's key, or a trusted "
-         "key.", False),
-        (("red", "not_stated"), "Not stated: nothing in the documents we read.", False),
-    ),
-}  # fmt: skip
-# Trust's two Mostly met cases, by the board's `trust.clause`
-LADDER_CASES = {"reading": "(a) cryptographic assumptions only, on our reading;",
-                "ceremony": "(b) a setup that produced a secret in an open ceremony with a public "
-                "record, whose secret stays unknown if one participant was honest."}  # fmt: skip
-# Fidelity's cap, printed in the ladder only where it applies (`fidelity.policy_cap`)
-LADDER_CAP = ("{system} accepts tokens other than the model's top choice, so it stays at Partly "
-              "met at most.")  # fmt: skip
-HERE = "{system} is here."
 # an open question in our rules, linked to the RFC
 OPEN_QUESTION = "an open question in our rules"
-# what each statement petal leaves to another place, in an opened petal ({q}: OPEN_QUESTION,
-# linked)
-NOT_GRADED_HERE = {
-    "weights_hidden": "What stays visible includes the model's architecture{arch}. Every Level 1 "
-    "model is open-weights, so its architecture is public anyway. This is not graded at Level 1; "
-    "it would be at a level with closed-weights models.",
-    "no_trusted_party": "Three things are not graded here. How strong soundness is, a theorem or a "
-    "conjecture: that is graded under Integrity. Whether the public files were fixed before the hash "
-    "function was drawn: where a publisher's theorem has this as a condition, it is counted under "
-    "Integrity. And which model a commitment names: {q}, for a later level.",
-}
 # the Missing line of the default row and the Missing block: counts, who acts, the group heads
 WHO = {"publisher": "for the publisher", "us": "for us"}
 MISSING_NONE = "nothing."
-MISSING_DECIDE = "to decide: {need}. For us."
-MISSING_REPAIR = "to repair: {need}. For the publisher."
 MISSING_GROUP = {"first": "To reach {to}", "then": "Then, to reach {to}", "decide": "To decide",
                  "repair": "To repair"}  # fmt: skip
+# the opened petal's Missing block: each group's head, who acts in parentheses where one acts
+MISSING_STEP = {"first": "For {to}", "then": "Then for {to}", "decide": "To decide",
+                "repair": "To repair"}  # fmt: skip
 OURS_NOTHING = "Our run already sends one request at a time, so nothing is missing on our side."
 # the topics our reading covers, per fact: (subject, predicate), so two that share a subject
 # read "that the limit holds ... and is ..."
@@ -756,14 +659,18 @@ READING_TOPIC = {
     "conclusion": ("its conclusion", "is about the model"),
     "rests_on": ("soundness", "rests on cryptographic assumptions only"),
 }  # fmt: skip
-# the Evidence block's lines
+# the opened petal's evidence lines, then the heads one click down
 EVIDENCE = {
-    "quotes": "The publisher's own words, at the version we ran ({pin}): {n}",
-    "notes": "Our reviewer's notes, as recorded in our rules' terms: {n}",
+    "quotes": "The publisher's words at {pin} ({n})",
+    "notes": "Our reviewer's notes ({n})",
     "docs": "Documents we read ({n})",
-    "forms": "Zero knowledge, as the publisher states it: {n}",
-    "visible": "What stays visible, as the publisher lists it: {n}",
-    "records": "Our records:",
+    "forms": "Zero knowledge, as stated ({n})",
+    "visible": "What stays visible, as listed ({n})",
+    "head": "Evidence",
+    "checks_short": "Our {names} check{s} {state} ↓",
+    "rebuild_short": "Our rebuild in {tc}: exit code {code}, {t}.",
+    "fidelity_short": "Our fidelity run, {n} ↓",
+    "none_short": "No test of ours bears on this property.",
     "rebuild": "Our rebuild:",
     "outside": "Outside the grade:",
     "not_used": "Today's grade does not rest on {this}{why}; Met needs the publisher's words in "
@@ -780,9 +687,7 @@ RECORDS = {
     "this property Failed.",
     "no_trusted_party": "no test of ours bears on this property.",
 }
-CHECKS_LINK = "Our checks, on this page ↓"
 RECORD_LINK = "Record ↗"
-FIDELITY_LINK = "Every copy and its score: the Fidelity section of this page ↓"
 SCOPE_LINK = "the scope table further down this page ↓"
 # the checks whose failure a petal's red names (PETAL_RULE), so a petal and its checks light
 # together on a system page

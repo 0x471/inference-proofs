@@ -164,17 +164,14 @@ from .words import (
     REASON_LINK,
     RECORD_WORD,
     REPLY_TOKENS_HEAD,
-    SCOPE_BLOCK_HEAD,
     SCOPE_BOUND_HEAD,
     SCOPE_CARD_HEAD,
     SCOPE_CARD_WORD,
     SCOPE_COL_WORD,
-    SCOPE_HEAD,
-    SCOPE_NOT_GRADED,
-    SCOPE_PROTECTS,
+    SCOPE_GRADED,
     SCOPE_ROW_WORD,
     SCOPE_SHORT,
-    SCOPE_STATED,
+    SCOPE_TERMS,
     SCOPE_TESTED,
     SCOPE_VALUE_WORD,
     SCOPE_WORD,
@@ -361,35 +358,26 @@ def scope_card_html(formal):
 
 
 def scope_head_html(row):
-    """The head of the Glyph section (the paragraph after MC-7, amended 2026-11-16): soundness,
-    zero knowledge and completeness, in that order, each with what it means, whether the publisher
-    states it or we test it, computed for the row (soundness from Integrity's step, zero knowledge
-    from Confidentiality's, completeness from the counted sessions' accepted replies), where it
-    is graded and whom it protects; the publisher's stated security, verbatim with its link; then
-    the scope card."""
-    petal = {p["id"]: p for p in row["glyph"]}
-
-    def stated(pid):
-        p = petal[pid]
-        silent_ = p["step"] is None or (p["step"] == "red" and p["cause"] == "not_stated")
-        return SCOPE_STATED["not_stated" if silent_ else "stated"]
-
+    """Under the five petals (the paragraph after MC-7, amended 2026-11-17, owner decision):
+    soundness, zero knowledge and completeness on one line, in that order, each linked to its
+    definition, with the petal that grades it or our Run check's count of accepted replies; the
+    publisher's stated security, verbatim with its link, and the scope card one click down."""
     n = row["honest_accepted"]
-    lines = []
-    for _, name, means, pid, whom, ours in SCOPE_HEAD:
-        head = e(means[0].upper() + means[1:])
+    parts = []
+    for slug_, name, pid in SCOPE_TERMS:
+        term = f'<a class="df" href="/glossary#{slug_}">{e(name)}</a>'
         if pid is not None:
-            to = f'<a href="{CHECKS_PAGE}#{pid}">{e(PETAL_NAME[pid])}</a>'
-            said = (f"{head}. {e(stated(pid)).format(petal=to)} "
-                    f"{e(SCOPE_PROTECTS.format(whom=whom))} {e(ours)}")  # fmt: skip
+            to = f'<a href="#petal-{pid}">{e(PETAL_NAME[pid])}</a>'
+            said = e(SCOPE_GRADED).format(petal=to)
         else:
-            tested = e(SCOPE_TESTED.format(n=f"{n:,}").replace(" of ", "\u00a0of\u00a0"))
-            run = f'(<a href="{CHECKS_PAGE}#run">{e(CHECK_NAME["run"])} check</a>)'
-            more = (f", {counted_words(len(row['incomplete']), 'incomplete session')} not counted"
-                    if row["incomplete"] else "")  # fmt: skip
-            said = (f"{head}. {tested} {run}{e(more)}. {e(SCOPE_NOT_GRADED)} "
-                    f"{e(SCOPE_PROTECTS.format(whom=whom))}")  # fmt: skip
-        lines.append((name, said.strip()))
+            run = f'<a href="{CHECKS_PAGE}#run">{e(CHECK_NAME["run"])} check</a>'
+            said = e(SCOPE_TESTED.format(n=f"{n:,}", run="\x00")).replace(" of ", "\u00a0of\u00a0")
+            said = said.replace("\x00", run)
+            if row["incomplete"]:
+                said += e(f", {counted_words(len(row['incomplete']), 'incomplete session')} "
+                          "not counted")  # fmt: skip
+        parts.append(f'<span class="szt">{term}: {said}</span>')
+    line = f'<p class="szc">{"".join(parts)}</p>'
     sec = row.get("security") or {}
     security = ""
     if sec.get("words"):
@@ -403,10 +391,7 @@ def scope_head_html(row):
         if notion:  # the publisher's own name for the notion, verbatim (SI-3)
             words += f" {e(NOTION_HEAD)}: " + quote_links(notion)
         security = f"<div><dt>{e(STATED_SECURITY)}</dt><dd>{words}</dd></div>"
-    facts = "".join(f"<div><dt>{e(k)}</dt><dd>{v}</dd></div>" for k, v in lines)
-    formal = petal["machine_checked"]["formal"]
-    # the three lines stay in view; the stated security and the scope card one click down
-    # (amended 2026-11-16)
+    formal = {p["id"]: p for p in row["glyph"]}["machine_checked"]["formal"]
     card = scope_card_html(formal)
     held = [w for w, part in ((STATED_SECURITY, security), (SCOPE_CARD_WORD, card)) if part]
     more = ""
@@ -414,8 +399,7 @@ def scope_head_html(row):
         security = f'<dl class="pf">{security}</dl>' if security else ""
         more = (f'<details class="more"><summary>{e(", ".join(held))}</summary>{security}{card}'
                 "</details>")  # fmt: skip
-    return (f'<div class="psb"><h3 class="sub-h">{e(SCOPE_BLOCK_HEAD)}</h3>'
-            f'<dl class="pf">{facts}</dl>{more}</div>')  # fmt: skip
+    return f'<div class="psb">{line}{more}</div>'
 
 
 def counted_words(k, one):

@@ -113,31 +113,29 @@ def test_glyphs_draw_the_board_states(board_site: Any) -> None:
 
 
 def test_petal_rows_count_the_boards_items_for_met(board_site: Any) -> None:
-    """SI-3 (amended 2026-11-17): a petal's default row counts the board's items missing for Met
-    (`to_met`) and the publisher's and ours among them, never typed."""
+    """SI-3 (amended 2026-11-17): a petal's row counts the board's items missing for Met
+    (`to_met`) and who acts on them, never typed; at Met it counts none."""
     text = pages(board_site.out)
     for row in rows(board_site.board):
         page = text[f"{row['system']}.html"]
         trs = re.findall(r'<tr class="pt [^"]*"[^>]*>(.*?)</tr>', page, re.S)
         assert len(trs) == len(row["glyph"]), row["system"]
         for tr, p in zip(trs, row["glyph"], strict=True):
-            line = re.search(r'<span class="pln pms">(.*?)<span class="pdl">', tr, re.S)
-            assert line, (row["system"], p["id"])
-            said = html.unescape(re.sub(r"<[^>]+>", "", line[1]))
+            tag = re.search(r'<span class="pdl">(.*?)<span class="sr">', tr, re.S)
+            assert tag, (row["system"], p["id"])
+            said = html.unescape(re.sub(r"<[^>]+>", "", tag[1]))
             groups = p.get("to_met")
             if groups is None:  # a board from before 2026-11-17: its next step's needs
                 nx = p.get("next")
-                groups = (
-                    [{"kind": "up" if nx["to"] else "decide", "items": nx["needs"]}] if nx else []
-                )
+                groups = [{"items": nx["needs"]}] if nx else []
             items = [i for g in groups for i in g["items"]]
             if not items:
-                assert said.lower().endswith("nothing."), (row["system"], p["id"])
-            elif groups[0]["kind"] == "up" and len(items) > 1:
-                assert f"{len(items)} items" in said, (row["system"], p["id"])
-                us = sum(1 for i in items if i["by"] == "us")
-                if us and us < len(items):
-                    assert f"{len(items) - us} for the publisher and {us} for us" in said
+                assert "missing" not in said, (row["system"], p["id"])
+                continue
+            us = sum(1 for i in items if i["by"] == "us")
+            pub = len(items) - us
+            who = "publisher" if not us else "us" if not pub else f"{pub} publisher, {us} us"
+            assert said == f"{len(items)} missing \u00b7 {who}", (row["system"], p["id"], said)
 
 
 def test_order_and_positions_are_the_boards(board_site: Any) -> None:
