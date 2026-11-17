@@ -88,3 +88,15 @@ The glossary restates the benchmark's own terms in plain words with the meaning 
 - `learn/`: the Learn pages' words, `index.yaml` and one `.md` file per page (CC BY 4.0, as the documents are).
 - `conftest.py`, `test_site.py`, `test_learn.py`: the site built from `harness/tests/fixtures/board/v1.0-example.json` (invented values) and with no board; the Learn pages' subset, links, words and worked examples.
 - `words.css`, `words.js`: style and behaviour, no data. `fonts/`: the font files, their licences, `faces.json` and the wordmark's outlines. `wordmark.py`: writes those outlines. `og/`: the card sources, their pictures and `cards.json`. The home card holds the stacked lockup and the address only. A system's card is its page in brief: the top bar's lockup, a cobalt band with the name (one line as large as fits, a long name on two) and its model with its size, the band's one figure on the right (set light with no position, as on the page), then the standing as large as a name, cost and verify time per reply, the glyph with its names, the release and the page's address; every figure with its unit alone, under its plain name (a card is shallower than the ladder, `DEPTH.md`). The band prints the multiple's two parts under the figure. The picture's alt text says what it shows: the system, its model, the band's figure, the standing, cost and verify time per reply and the petals, each figure with its unit. `og.mjs` renders each source to its picture, records both sha256 in `cards.json`, and stops on a card whose words run past their box or whose blocks overlap. A page whose picture is missing, or was rendered from another source than the one the build just wrote, names the home card and offers no card download. After a board change: `uv run iproofs site build`, then `OG_CHANNEL=chrome PLAYWRIGHT_MODULE=<path to playwright/index.mjs> node og.mjs`, then `uv run iproofs site build` again. A system page's share group (the strip's right end; the band's facts on a phone) holds the card as a plain download and Copy link, which `words.js` shows and which copies the page's canonical address. `og/members.html`, a picture for posts with the members' names, is written once `credit.members` lists any. `_data/`: `facts.json`.
+
+## Search discovery and production assets
+
+Public pages allow indexing. The 404 keeps its `noindex` metadata. The build writes
+`robots.txt` and `sitemap.xml` from the same page set, excluding the 404 and redirects.
+Every public page has canonical, social and WebPage structured metadata; its JSON-LD
+hash is allowed by the deployment CSP. Descriptions and figures come from the existing view.
+
+Vercel installs the locked esbuild development dependency and minifies CSS and JavaScript
+into `public/`. Source assets stay readable. Run `npm ci --include=dev --ignore-scripts` in `web/` before
+`npm run assets` locally. Asset URLs retain the source content hash, which changes whenever
+their content changes. Fonts use swap on pages so readers see text while they load.

@@ -1,15 +1,11 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "rm -rf public && mkdir -p public/og public/fonts && cp *.html words.css words.js search.json public/ && cp og/*.png og/*.svg public/og/ && cp fonts/*.woff2 public/fonts/",
+  "buildCommand": "rm -rf public && mkdir -p public/og public/fonts && cp *.html search.json robots.txt sitemap.xml llms.txt public/ && cp og/*.png og/*.svg public/og/ && cp fonts/*.woff2 public/fonts/ && npm ci --include=dev --ignore-scripts && npm run assets",
   "cleanUrls": true,
   "framework": null,
   "headers": [
     {
       "headers": [
-        {
-          "key": "X-Robots-Tag",
-          "value": "noindex"
-        },
         {
           "key": "X-Content-Type-Options",
           "value": "nosniff"
@@ -20,7 +16,7 @@
         },
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'sha256-BvfZjEgH5q5tQ8fzRtC/NtSi5j+O9wxUdXmwLgOx10w=' https://cdn.vercel-insights.com; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self' https://*.vercel-insights.com; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
+          "value": "default-src 'self'; script-src 'self' 'sha256-BvfZjEgH5q5tQ8fzRtC/NtSi5j+O9wxUdXmwLgOx10w=' 'sha256-+DGU9CcbiQfB6nFgXkpLxKiJOdDU2D7dwKN7elACtNE=' 'sha256-9sXGWoNN5wn5KRt5ehrkpL1xoQ/L8Tc+lI72PQd9LqM=' 'sha256-Im5gCxT+7BhUAK2FRB6UlXINZBcm20XPd83vy1Ecpco=' 'sha256-QQ8VovcIWDTfCsEHKjiyLniZQDWpmRtXSG0rxUxAH4A=' 'sha256-Qk8akgyhYuxo2D62iFxrjBFPmy9J+/3Q+xfwt8TFpjg=' 'sha256-UCrLB7FzADVfFSUdr2DF+9yQ50cUblsTrIJQFi6b84E=' 'sha256-aiYlRoQa9NJ6uVpgIaGBwt5PwuE2faeP5Sr/XkBJe+M=' 'sha256-canrwEY1LuVgyKVKPAVR2ZDnzQE80a1+CEbJji8OWaE=' 'sha256-gy/xWxXTejv4k3kVzc6Yn4Zq2BK72LsQVRSOT/D0U60=' 'sha256-kFTuyn2PK6Uyp947mrTv0h97IqBiRMf9ndyAKVvkpp8=' 'sha256-l1eNwya/1519WCm5sx1ZaiDJZ5JhDfCHOS9/uAf2mY8=' 'sha256-lU05xDgOnM2Ssdm4Re5bP62XgqpGtb9SwfCV9HmolG4=' 'sha256-nf91rH5AQlDHUALh/bMqQ6G5sd5eOb3yekb8TGXXUKM=' 'sha256-sDmLof+8iLxwY5pIjUaEV6m9uGoOSNtFVBmCSo4Cjho=' https://cdn.vercel-insights.com; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self' https://*.vercel-insights.com; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
         },
         {
           "key": "X-Frame-Options",
@@ -76,22 +72,22 @@
     },
     {
       "destination": "/statement",
-      "permanent": false,
+      "permanent": true,
       "source": "/architectures"
     },
     {
       "destination": "/proof-of-inference",
-      "permanent": false,
+      "permanent": true,
       "source": "/before-you-rely"
     },
     {
       "destination": "/method",
-      "permanent": false,
+      "permanent": true,
       "source": "/cost"
     },
     {
       "destination": "/checks",
-      "permanent": false,
+      "permanent": true,
       "source": "/criteria"
     },
     {
@@ -101,42 +97,42 @@
     },
     {
       "destination": "/forward-pass",
-      "permanent": false,
+      "permanent": true,
       "source": "/inference"
     },
     {
       "destination": "/forward-pass",
-      "permanent": false,
+      "permanent": true,
       "source": "/proof-systems"
     },
     {
       "destination": "/",
-      "permanent": false,
+      "permanent": true,
       "source": "/reference"
     },
     {
       "destination": "/",
-      "permanent": false,
+      "permanent": true,
       "source": "/release"
     },
     {
       "destination": "/",
-      "permanent": false,
+      "permanent": true,
       "source": "/targets"
     },
     {
       "destination": "/deployment",
-      "permanent": false,
+      "permanent": true,
       "source": "/three-ways"
     },
     {
       "destination": "/deployment",
-      "permanent": false,
+      "permanent": true,
       "source": "/treaty"
     },
     {
       "destination": "/proof-of-inference",
-      "permanent": false,
+      "permanent": true,
       "source": "/why-verify"
     },
     {

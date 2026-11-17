@@ -1,0 +1,10 @@
+{
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  },
+  "name": "inference-proofs-site",
+  "private": true,
+  "scripts": {
+    "assets": "esbuild words.css words.js --minify --outdir=public --legal-comments=none"
+  }
+}

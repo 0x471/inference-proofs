@@ -178,12 +178,20 @@ GONE = {
 
 # Headers, redirects and cache rules depend on the build's own output (the inline script's hash,
 # the pages written), so the build writes the whole file. Canonical JSON (iproofs fmt).
-def vercel_json():
+def vercel_json(pages=()):
     script = hashlib.sha256(HEAD_SCRIPT.encode()).digest()
+    hashes = sorted(
+        {
+            base64.b64encode(hashlib.sha256(block.encode()).digest()).decode()
+            for page in pages
+            for block in re.findall(r'<script type="application/ld\+json">(.*?)</script>', page)
+        }
+    )
+    structured = "".join(f" 'sha256-{h}'" for h in hashes)
     csp = "; ".join(
         [
             "default-src 'self'",
-            f"script-src 'self' 'sha256-{base64.b64encode(script).decode()}' https://cdn.vercel-insights.com",
+            f"script-src 'self' 'sha256-{base64.b64encode(script).decode()}'{structured} https://cdn.vercel-insights.com",
             "style-src 'self'",
             "img-src 'self'",
             "font-src 'self'",
@@ -203,7 +211,7 @@ def vercel_json():
             gone[f"/{sid}"] = "/"
     return {
         "$schema": "https://openapi.vercel.sh/vercel.json",
-        "buildCommand": "rm -rf public && mkdir -p public/og public/fonts && cp *.html words.css words.js search.json public/ && cp og/*.png og/*.svg public/og/ && cp fonts/*.woff2 public/fonts/",
+        "buildCommand": "rm -rf public && mkdir -p public/og public/fonts && cp *.html search.json robots.txt sitemap.xml llms.txt public/ && cp og/*.png og/*.svg public/og/ && cp fonts/*.woff2 public/fonts/ && npm ci --include=dev --ignore-scripts && npm run assets",
         "cleanUrls": True,
         "trailingSlash": False,
         "framework": None,
@@ -217,7 +225,7 @@ def vercel_json():
             {"source": "/system", "destination": first, "permanent": False},
             {"source": "/system.html", "destination": first, "permanent": False},
             *(
-                {"source": src, "destination": dst, "permanent": False}
+                {"source": src, "destination": dst, "permanent": src in GONE}
                 for src, dst in sorted(gone.items())
             ),
             # clients that ask for /favicon.ico get the PNG icon
@@ -227,8 +235,6 @@ def vercel_json():
             {
                 "source": "/(.*)",
                 "headers": [
-                    # noindex: the site is not announced (README)
-                    {"key": "X-Robots-Tag", "value": "noindex"},
                     {"key": "X-Content-Type-Options", "value": "nosniff"},
                     {"key": "Referrer-Policy", "value": "strict-origin-when-cross-origin"},
                     {"key": "Content-Security-Policy", "value": csp},
