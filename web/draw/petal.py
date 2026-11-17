@@ -1431,7 +1431,8 @@ def terms_html(p, row, petals):  # noqa: PLR0912, PLR0915 (one sentence per fact
         fid = rung_of(row).get("fidelity") or {}
         slots = []
         for run in fid.get("runs") or ():
-            who = "the copies" if run.get("part") else "the original and its rerun"
+            who = ("the copies" if run.get("part") else "the original and its rerun") \
+                if len(fid.get("runs") or ()) > 1 else "the whole run"  # fmt: skip
             slots.append(f"no count for {who} (vLLM, one call)" if run.get("engine") == "vllm"
                          else f"{run.get('slots')} for {who} ({run.get('engine')})")  # fmt: skip
         out.append(f"Requests at a time (slots): {'; '.join(slots) or yes_no(None)}.")
