@@ -404,14 +404,14 @@ def position_html(row, rung):
     """A row's position as a square, position 1 solid paper, the others an outline; the count run
     under it. A row with no position keeps the square, a dash in it and no count (the dash is
     drawn, not read out: a screen reader reads "no position"), so every row starts alike. The
-    only system run on its model (OR-4, amended 2026-11-15) holds position 1 against nothing: its
-    square is an outline and says so in place of a count."""
+    only system run on its model (OR-4, amended 2026-11-17) holds position 1 against nothing: its
+    square is an outline with no count under it; its title and a screen reader say why."""
     if row["position"] is None:
         return ('<span class="pos p0"><span class="pn" aria-hidden="true">\u2013</span>'
                 '<span class="sr">no position</span></span>')  # fmt: skip
     if rung["systems_run"] == 1:
-        return (f'<span class="pos solo"><span class="pn">{row["position"]}</span>'
-                f'<span class="of">{e(ONLY_RUN)}</span></span>')  # fmt: skip
+        return (f'<span class="pos solo" title="{e(ONLY_RUN)}"><span class="pn">{row["position"]}'
+                f'</span><span class="sr">, {e(ONLY_RUN)}</span></span>')  # fmt: skip
     lead = " p1" if row["position"] == 1 else ""
     return (f'<span class="pos{lead}"><span class="pn">{row["position"]}</span>'
             f'<span class="of">of {rung["systems_run"]}</span></span>')  # fmt: skip
