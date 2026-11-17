@@ -61,7 +61,7 @@ from .overview import (
     whole_line,
     whole_note,
 )
-from .petal import chip, glyph_section, quote_links
+from .petal import chip, glyph_section, quote_links, state_word
 from .plots import fid_svg, hbar
 from .words import (
     BASIS_BITS,
@@ -1588,7 +1588,7 @@ def checks_block(row):
             f'<tr class="ck {c["state"]}" id="ck-{c["id"]}"><th scope="row">'
             f'<a href="{CHECKS_PAGE}#{c["id"]}"{to} title="{e(filled(CHECK_PLAIN[c["id"]]))}">'
             f"{e(CHECK_NAME[c['id']])}</a></th>"
-            f'<td class="cst">{chip(c["state"], STATE_WORD[c["state"]])}</td>'
+            f'<td class="cst">{state_word(c["state"], STATE_WORD[c["state"]])}</td>'
             + (f"<td>{cause}</td>" if caused else "")
             + f'<td class="cev">{rec}</td></tr>'
         )
@@ -1691,7 +1691,7 @@ def fidelity_block(row):
         if copies:
             cells.append((term("Copies", "Q8_0 and Q4_K_M"), lines_html(copies), ""))
     check = next(c for c in row["checks"] if c["id"] == "fidelity")
-    said = chip(check["state"], STATE_WORD[check["state"]])
+    said = state_word(check["state"], STATE_WORD[check["state"]])
     own, bar = row["fidelity"], (fid or {}).get("bar")
     if own is not None and own.get("mean_prefix") is not None:
         mine_n = f"n = {own['n']:,} replies"

@@ -1069,7 +1069,11 @@ html.js .scalepage .scl-panel { margin-top: 0; }
 .rt.ckt .scard tbody td.not_stated { color: var(--muted); }
 /* under a system's petals (MC-6, amended 2026-11-16): the three properties, the stated security, then the scope
    card; the card's head stands clear of the last quote, and the card scrolls in its own box on a phone */
-.psb { margin: 20px 0 0; }
+/* soundness, zero knowledge, completeness on one line, the stated security and scope card's control at its end;
+   opened, the card takes the whole width under it */
+.psb { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; column-gap: 28px; margin: 20px 0 0; }
+.psb > .more[open] { flex-basis: 100%; }
+.psb > .more[open] > summary { margin-left: auto; }
 .psb > .sub-h { margin: 0 0 6px; }
 .psb .pvh { margin: 14px 0 4px; color: var(--muted); }
 .psb .pf { max-width: calc(90ch + 148px); margin: 0; }
@@ -1077,7 +1081,7 @@ html.js .scalepage .scl-panel { margin-top: 0; }
 .psb .pf dt { color: var(--muted); }
 .psb .pf dd { margin: 0; overflow-wrap: anywhere; }
 .psb .qt { max-width: 90ch; }
-.psb .more > summary { margin-top: 10px; }
+.psb .more > summary { margin-top: 0; }
 .psb .more > .pf { margin-top: 6px; }
 .psb .scard { display: block; position: relative; max-width: 100%; overflow-x: auto; margin-top: 14px; border-collapse: collapse; font: inherit; }
 .psb .scard caption { caption-side: top; text-align: left; padding-bottom: 4px; color: var(--muted); }
@@ -1118,14 +1122,18 @@ html.js .scalepage .scl-panel { margin-top: 0; }
 .pvd.red { color: var(--red); }
 .pvd.hollow { color: var(--muted); }
 a.pvd:hover { text-decoration: underline 2px; text-underline-offset: 4px; }
-.gscale { display: flex; flex-wrap: wrap; gap: 2px 20px; margin: 14px 0 0; }
+/* a check's state, beside the petals' grades: the same word in its ink, a size down */
+.pvd.sw { font-size: 17px; line-height: 22px; }
+.gscale { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; margin: 14px 0 0; }
+.gscale .k { margin-right: 6px; font: var(--f-label); letter-spacing: var(--track); text-transform: uppercase; color: var(--muted); }
 .gscale .pvd { font-size: 15px; line-height: 20px; }
+.gscale .gsep { font: 400 13px/20px var(--mono); color: var(--rule); }
 .gscale + .checks { padding-top: 16px; }
-.ckt.gpl tbody th { width: 236px; padding-right: 16px; }
+.ckt.gpl tbody th { width: 256px; padding-right: 16px; }
 .ckt.gpl tbody :is(th, td) { padding-top: 13px; padding-bottom: 13px; }
 .ckt.gpl th a.sl { width: 208px; }
 .ckt.gpl th a.sl.cut { width: 179px; }
-.ckt.gpl th .pst { max-width: 216px; margin-top: 6px; font-size: 12px; line-height: 16px; color: var(--muted); }
+.ckt.gpl th .pst { max-width: 236px; margin-top: 6px; font-size: 12px; line-height: 16px; color: var(--muted); }
 .ckt.gpl .cst { width: 152px; padding-right: 16px; white-space: normal; }
 .ckt.gpl .cst .pfr { display: block; margin-top: 6px; font-size: 11px; line-height: 15px; color: var(--muted); }
 .ckt.gbig.gpl .more.pdt > summary { display: grid; grid-template-columns: minmax(0, 1fr) max-content; grid-template-areas: "gap tag" "mini tag"; column-gap: 32px; row-gap: 6px; width: auto; max-width: none; margin: 0; padding: 0; font: inherit; letter-spacing: 0; text-transform: none; white-space: normal; color: var(--paper); box-shadow: none; cursor: pointer; }
@@ -1133,18 +1141,20 @@ a.pvd:hover { text-decoration: underline 2px; text-underline-offset: 4px; }
 .ckt.gbig.gpl .more.pdt > summary:hover, .ckt.gbig.gpl .more.pdt[open] > summary { color: var(--paper); box-shadow: none; }
 .ckt.gbig.gpl .more.pdt > summary:focus-visible { outline: 2px solid var(--cobalt); outline-offset: 4px; }
 .ckt.gpl .pgap { grid-area: gap; max-width: 84ch; font: 500 14px/24px var(--mono); text-wrap: pretty; }
-.ckt.gpl .pmini { grid-area: mini; display: grid; grid-template-columns: max-content minmax(0, 1fr); column-gap: 12px; max-width: 90ch; font: 400 12px/18px var(--mono); color: var(--muted); }
-.ckt.gpl .pmini .k { font: var(--f-label); letter-spacing: var(--track); text-transform: uppercase; padding-top: 2px; color: var(--rule); }
-.ckt.gpl .pdt[open] .pmini { display: none; }
-.ckt.gpl .pdl { grid-area: tag; align-self: start; margin-top: 1px; padding: 4px 8px 3px; font: var(--f-label); letter-spacing: var(--track); text-transform: uppercase; white-space: nowrap; color: var(--muted); box-shadow: inset 0 0 0 1px var(--line); }
-.ckt.gpl .pdl:after { content: "+" / ""; margin-left: 10px; font: 600 13px/1 var(--mono); }
+.ckt.gpl .pmini { grid-area: mini; display: grid; grid-template-columns: max-content minmax(0, 1fr); column-gap: 12px; max-width: 90ch; font: 400 12px/18px var(--mono); color: #bdb9b0; }
+.ckt.gpl .pmini .k { font: var(--f-label); letter-spacing: var(--track); text-transform: uppercase; padding-top: 2px; color: var(--muted); }
+/* the row's control: the count missing, who acts beside it, its sign; no box, its right edge on the row's */
+.ckt.gpl .pdl { grid-area: tag; align-self: start; justify-self: end; margin-top: 4px; font: var(--f-label); letter-spacing: var(--track); text-transform: uppercase; white-space: nowrap; color: var(--muted); }
+.ckt.gpl .pdl b { font-weight: 500; color: var(--paper); }
+.ckt.gpl .pdl .pwt { white-space: pre; }
+.ckt.gpl .pdl:after { content: "+" / ""; margin-left: 10px; font: 600 13px/1 var(--mono); color: var(--paper); }
 .ckt.gpl .pdt[open] .pdl:after { content: "\2212" / ""; }
-.ckt.gbig.gpl .more.pdt > summary:hover .pdl, .ckt.gpl .pdt[open] .pdl { color: var(--paper); box-shadow: inset 0 0 0 1px var(--muted); }
+.ckt.gbig.gpl .more.pdt > summary:hover .pdl, .ckt.gpl .pdt[open] .pdl { color: var(--paper); }
 .ckt.gpl .pbd { padding: 16px 0 2px; }
 /* opened, the blocks take the grade's column too, under its words */
 @media (min-width: 1181px) { .ckt.gpl .pbd { margin-left: -152px; } }
 .ckt.gpl .pbd p { margin: 0; }
-.ckt.gpl .pqs { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.25fr); column-gap: 28px; }
+.ckt.gpl .pqs { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); column-gap: 40px; }
 .ckt.gpl .pq { padding-top: 8px; box-shadow: inset 0 1px 0 var(--line); }
 .ckt.gpl .pbh { margin: 0 0 6px; font: var(--f-label); letter-spacing: var(--track); text-transform: uppercase; color: var(--muted); }
 .ckt.gpl .pbh a { text-decoration: underline dotted 1px var(--rule); text-underline-offset: 3px; }
@@ -1153,9 +1163,14 @@ a.pvd:hover { text-decoration: underline 2px; text-underline-offset: 4px; }
 .ckt.gpl .pqm .pgh + ol { margin-top: 2px; }
 .ckt.gpl .pqm ol.pmi { margin: 0 0 8px; padding-left: 3ch; }
 .ckt.gpl .pqm ol.pmi li + li { margin-top: 2px; }
-.ckt.gpl .pwho { margin-left: 4px; font: var(--f-label); letter-spacing: var(--track); text-transform: uppercase; color: var(--muted); }
-.ckt.gpl .pevs { margin-top: 14px; padding-top: 8px; box-shadow: inset 0 1px 0 var(--line); }
+/* each item missing, who acts at the line's end */
+.ckt.gpl .pqm ol.pmi li > span:first-child { display: inline; }
+.ckt.gpl .pqm ol.pmi li { position: relative; max-width: 62ch; }
+.ckt.gpl .pqm ol.pmi li:has(.pwho) { padding-right: 12ch; }
+.ckt.gpl .pwho { position: absolute; top: 3px; right: 0; font: var(--f-label); letter-spacing: var(--track); text-transform: uppercase; color: var(--muted); }
 .ckt.gpl .pevs > .pel, .ckt.gpl .pevs > .pev { margin: 0 0 3px; }
+.ckt.gpl .pqs + .pfull { margin-top: 12px; }
+.ckt.gpl .pfull[open] { max-width: 96ch; }
 .ckt.gpl .pevs .pfrm { margin-left: 12px; font: 400 12px/16px var(--mono); letter-spacing: 0; text-transform: none; color: var(--muted); }
 .ckt.gpl .pevs .pel .k { margin-right: 8px; font: var(--f-label); letter-spacing: var(--track); text-transform: uppercase; color: var(--muted); }
 /* one click down: the publisher's words, our notes, and this system's facts in full */
@@ -1198,7 +1213,7 @@ a.pvd:hover { text-decoration: underline 2px; text-underline-offset: 4px; }
   .ckt.gpl .cst .pfr { display: inline; margin: 0 0 0 10px; }
   .ckt.gbig.gpl .more.pdt > summary { grid-template-columns: minmax(0, 1fr); grid-template-areas: "gap" "mini" "tag"; }
   .ckt.gpl .pgap { font-size: 13px; line-height: 20px; }
-  .ckt.gpl .pdl { justify-self: start; margin-top: 4px; padding: 11px 8px 10px; }
+  .ckt.gpl .pdl { justify-self: start; margin-top: 4px; padding: 11px 0 10px; }
   .gscale { gap: 0 14px; }
   .gscale .pvd { font-size: 14px; }
 }
@@ -1239,11 +1254,11 @@ a.pvd:hover { text-decoration: underline 2px; text-underline-offset: 4px; }
 .syspage .wrap > .blk { margin-top: 32px; }
 /* what a petal or a check holds besides its line (quotes, scope card, visible list, basis; records, a long
    note): a native disclosure, its summary the count, opened under the line; any number open at once */
-.more > summary { display: block; width: fit-content; padding: 7px 8px 6px; list-style: none; font: var(--f-label); letter-spacing: var(--track); text-transform: uppercase; white-space: nowrap; color: var(--muted); box-shadow: inset 0 0 0 1px var(--line); cursor: pointer; }
+.more > summary { display: block; width: fit-content; padding: 7px 0 6px; list-style: none; font: var(--f-label); letter-spacing: var(--track); text-transform: uppercase; white-space: nowrap; color: var(--muted); cursor: pointer; }
 .more > summary::-webkit-details-marker { display: none; }
-.more > summary:after { content: "+" / ""; margin-left: 10px; font: 600 13px/1 var(--mono); }
+.more > summary:after { content: "+" / ""; margin-left: 10px; font: 600 13px/1 var(--mono); color: var(--paper); }
 .more[open] > summary:after { content: "\2212" / ""; }
-.more > summary:hover, .more[open] > summary { color: var(--paper); box-shadow: inset 0 0 0 1px var(--muted); }
+.more > summary:hover, .more[open] > summary { color: var(--paper); }
 .more[open] > summary { margin-bottom: 4px; }
 /* on paper a disclosure cannot open: its count stands as a label, not a control */
 @media print {
@@ -1259,7 +1274,7 @@ a.pvd:hover { text-decoration: underline 2px; text-underline-offset: 4px; }
    summary opens takes the row's width */
 .ckt.gbig td.prs > .bs { display: grid; grid-template-columns: max-content minmax(0, 1fr); column-gap: 8px; align-items: baseline; max-width: none; margin-top: 8px; white-space: normal; }
 .ckt.gbig td.prs > .bs a.df { white-space: nowrap; }
-.ckt.gbig .more > summary { margin-top: 6px; padding: 4px 7px 3px; }
+.ckt.gbig .more > summary { margin-top: 6px; padding: 4px 0 3px; }
 .ckt.gbig .more[open] { padding-bottom: 6px; }
 /* a petal's summary wraps between its counts (never inside one) when they outgrow a phone's cell */
 .ckt.gbig .more > summary { max-width: 100%; white-space: normal; }
@@ -1326,8 +1341,8 @@ a.pvd:hover { text-decoration: underline 2px; text-underline-offset: 4px; }
   /* every card repeats its columns' labels (short names, data-l): a card read alone says what each figure is */
   .syspage .rt.stk tr { padding-right: 12px; }
   /* a finger's targets: 40 px */
-  .more > summary { padding: 13px 10px; }
-  .ckt.gbig .more > summary { padding: 11px 8px 10px; }
+  .more > summary { padding: 13px 0; }
+  .ckt.gbig .more > summary { padding: 11px 0 10px; }
   .syspage .ckt .ev { padding-block: 11px; }
   .rt.stk .rid { display: inline-block; padding-block: 13px; margin-block: -13px; }
   .ckt .cst a.cc { display: inline-block; margin-top: 6px; }
@@ -2211,7 +2226,7 @@ ol.ls > li:before { counter-increment: n; content: counter(n); position: absolut
 .tiles .tf .fig .n { font-size: 22px; }
 .tiles .tlw { font: 400 12px/16px var(--mono); color: var(--muted); }
 .tiles .pw { font: 600 15px/21px var(--mono); }
-.tiles .schip { align-self: flex-start; margin-bottom: 12px; }
+.tiles .schip, .tiles .pvd.sw { align-self: flex-start; margin-bottom: 10px; }
 .tiles .usd .tls { row-gap: 4px; }
 .tiles .usd .tf .fig .n { font-size: 14px; letter-spacing: 0; }
 .kvt .na { font: inherit; color: var(--muted); }
@@ -2226,6 +2241,8 @@ ol.ls > li:before { counter-increment: n; content: counter(n); position: absolut
 .kvt .qs { color: var(--muted); }
 /* one disclosure per block, under its last rule */
 .dig { margin-top: 14px; }
+/* the control sits in line with the cells over it */
+.dig > summary { padding-left: 12px; }
 .dig > .dig-in { padding-top: 6px; }
 .dig > .dig-in > .rb:first-child, .dig > .dig-in > p:first-child { margin-top: 10px; }
 .dig .rb { display: grid; grid-template-columns: minmax(8ch, max-content) minmax(0, 1fr); column-gap: 12px; padding: 4px 0 0 12px; }

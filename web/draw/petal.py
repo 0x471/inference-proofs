@@ -2,10 +2,11 @@
 
 Each petal answers four questions in the owner's order: what full marks (Met) need, what the
 system has, what it misses and who acts, and where to check. The default row prints the plain
-question, the grade and what it comes from, and three short lines, Needs, Has and Missing; the
-three lines are the toggle of one native disclosure, which holds the four answers in full, then
-why the grade is what it is, every grade of the petal, the limits no rule counts, what is not
-graded here and the field's terms. Every line is worded here and in words.py from the board's
+question, the grade as a word in its ink, one sentence (the first item missing), Met needs and
+Has in a few words, and the count missing with who acts, the toggle of one native disclosure.
+Opened, it prints the items missing beside the evidence and the grading rule; one click more,
+"Why this grade, in full": what the grade comes from, why, Met needs and Has in full, each item
+with what it is today, our records, the limits no rule counts and the field's terms (Q45). Every line is worded here and in words.py from the board's
 keys (`to_met`, `read_facts`, `why`, the petal's facts) and the stored records; nothing is typed
 per system, and nothing here sets a state. The page does not print a petal's `reason` or scale
 label: both stay on the board.
@@ -19,6 +20,7 @@ from .overview import bits_words, name_of, proved_words
 from .words import (
     CAME_FROM,
     CAUSE_WORD,
+    COPIES_HEAD,
     EVIDENCE,
     EVIDENCE_TAG,
     FORMAT_WORD,
@@ -27,6 +29,7 @@ from .words import (
     GAP_ANY,
     GRADE_SCALE,
     GRADE_SCALE_HEAD,
+    GRADE_SCALE_SEP,
     HAS_HEAD,
     IN_FULL,
     MISSING_GROUP,
@@ -47,6 +50,7 @@ from .words import (
     READING_TOPIC,
     RECORD_LINK,
     RECORDS,
+    RULE_LINK,
     SCOPE_LINK,
     STEP_WORD,
     VISIBLE_KINDS,
@@ -68,6 +72,15 @@ def chip(state, word, form=""):
     in lesser part notched (cut), a silent red an outline in the red ink (open)."""
     tok = f"{state} {form}".strip()
     return f'<span class="schip {tok}">{e(word)}</span>'
+
+
+CHECK_INK = {"held": "green", "failed": "red", "undecided": "hollow"}
+
+
+def state_word(state, word):
+    """A check's state on a system page as the petals print their grades: a word in its ink, set
+    in display type (passed green, failed red, not decided muted)."""
+    return f'<span class="pvd sw {CHECK_INK.get(state, "hollow")}">{e(word)}</span>'
 
 
 # a publisher's Markdown and source-comment marks, which a quote prints without: **strong**, a
@@ -382,7 +395,7 @@ def item_short(it, p, row):  # noqa: PLR0911 (one phrase per item key)
     if need == "text":
         return it["text"]
     if need == "program":
-        return f"the limit for {run}, which we run"
+        return f"a limit for {run}"
     if need == "zk_run":
         n = it.get("n")
         return f"the theorem for our {n}-reply batches" if it.get("unit") == "request" \
@@ -392,7 +405,7 @@ def item_short(it, p, row):  # noqa: PLR0911 (one phrase per item key)
     if need == "reach_run":
         return f"a theorem that reaches {run}, which we run"
     if need == "conditions":
-        return f"its condition{'' if it.get('proved') else 's'} shown to hold for our files"
+        return f"its condition{'' if it.get('proved') else 's'} shown for our files"
     if need == "exponent":
         return f"every part of the limit at most 2^-{it['floor']}"
     if need == "above":
@@ -411,7 +424,7 @@ SHORT = {
     "batch": "a limit for each reply checked on its own",
     "batch_size": "a record of our batch size",
     "parameters": "a statement that the limit is for the settings we run",
-    "reading": "the publisher's words in place of our reading",
+    "reading": "the publisher's words, not our reading",
     "programs": "a statement that its programs keep the weights secret",
     "visible_list": "a published list of what stays visible",
     "fitted": "nothing on that list that depends on the weights",
@@ -611,6 +624,18 @@ def item_long(it, p, row, petals, mixed):  # noqa: PLR0912, PLR0915 (one sentenc
     return said
 
 
+def first_item(p):
+    """The first item missing for Met, the one the row's sentence words; None at Met."""
+    items = items_of(p)
+    return items[0] if items else None
+
+
+def own_in_sentence(p):
+    """Whether the row's sentence holds the system's own Fidelity average (its first item missing
+    is an average), so its Has line gives the copies' averages instead, under "Copies"."""
+    return p["id"] == "faithful_model" and (first_item(p) or {}).get("need") == "above"
+
+
 def first_above(p):
     for g in p["to_met"]:
         for it in g["items"]:
@@ -666,8 +691,10 @@ def has_tiny(p, row, petals):  # noqa: PLR0911, PLR0912 (one phrase per rule pat
         return "a zero-knowledge theorem for the method"
     if pid == "faithful_model" and f:
         c = f["controls"]
-        return (f"{tenth(f['display'])} matched tokens on average; 8-bit copy {tenth(c['q8_0']['display'])}, "
-                f"4-bit {tenth(c['q4_k_m']['display'])}")  # fmt: skip
+        if own_in_sentence(p):  # the row prints the copies' averages under their own head
+            return f"8-bit {tenth(c['q8_0']['display'])}, 4-bit {tenth(c['q4_k_m']['display'])}"
+        return (f"{tenth(f['display'])} matched tokens on average; 8-bit copy "
+                f"{tenth(c['q8_0']['display'])}, 4-bit {tenth(c['q4_k_m']['display'])}")  # fmt: skip
     if pid == "machine_checked":
         formal = p.get("formal") or {}
         tool = str(formal.get("tool") or "").split(" ")[0]
@@ -682,7 +709,7 @@ def has_tiny(p, row, petals):  # noqa: PLR0911, PLR0912 (one phrase per rule pat
         if step == "green":
             return "cryptography only, in the publisher's words"
         if f.get("clause") == "reading":
-            return "cryptography only, on our reading"
+            return ""  # the row's sentence says it: cryptography only, on our reading
         if f.get("clause") == "ceremony":
             return "a setup secret from an open ceremony"
     return has_short(p, row, petals)
@@ -712,11 +739,12 @@ def gap_sentence(p, row, petals):  # noqa: PLR0911, PLR0912 (one sentence per it
             return GAP["zk_batch"].format(n=n)
         return GAP["zk_run"]
     if need == "above":
-        return GAP["above"].format(to=STEP_WORD[g["to"]], value=tenth(it["value"]))
+        return GAP["above"].format(
+            has=tenth(f["display"]), to=STEP_WORD[g["to"]], value=tenth(it["value"])
+        )
     if need == "reach_run":
-        tool = str((p.get("formal") or {}).get("tool") or "").split(" ")[0]
-        if tool and stated:
-            return GAP["reach_stated"].format(tool=tool, stated=stated, run=run)
+        if (p.get("formal") or {}).get("tool") and stated:
+            return GAP["reach_stated"].format(stated=stated, run=run)
         return GAP["reach_none"].format(run=run)
     if need == "basis":
         return GAP["basis_conjectured" if it.get("basis") == "conjectured" else "basis"]
@@ -1235,13 +1263,14 @@ def evidence_short(p, row, petals):
     our reading's notes, and our test or rebuild in a few words, linked to its record."""
     out, pid = [], p["id"]
     if p["quotes"]:
-        out.append(details_list(EVIDENCE["quotes"].format(pin=pin7(row), n=count(len(p["quotes"]), "quote")),
+        out.append(details_list(EVIDENCE["quotes"].format(pin=pin7(row), n=f"{len(p['quotes']):,}"),
                                 quote_links(p["quotes"])))  # fmt: skip
     if p["sources"] and p["cause"] == "not_stated":
-        docs = ", ".join(f'<a href="{e(d["url"])}">{e(d["path"])}</a>' for d in p["sources"])
-        out.append(p_(f"{e(EVIDENCE['docs'].format(n=len(p['sources'])))}: {docs}", "pel"))
+        docs = "".join(f'<p class="pel"><a href="{e(d["url"])}">{e(d["path"])}</a></p>'
+                       for d in p["sources"])  # fmt: skip
+        out.append(details_list(EVIDENCE["docs"].format(n=len(p["sources"])), docs))
     if pid == "weights_hidden" and p.get("forms"):
-        out.append(details_list(EVIDENCE["forms"].format(n=count(len(p["forms"]), "sentence")),
+        out.append(details_list(EVIDENCE["forms"].format(n=f"{len(p['forms']):,}"),
                                 headless(forms_html(p["forms"]))))  # fmt: skip
     if pid == "weights_hidden" and p.get("visible"):
         k = sum(1 for v in p["visible"] if v["tag"] == FITTED)
@@ -1268,15 +1297,14 @@ def evidence_short(p, row, petals):
             formal = p.get("formal") or {}
             build = formal.get("build") or {}
             if build:
-                tc = f"{build['toolchain']['name']} {build['toolchain']['version']}"
-                said = EVIDENCE["rebuild_short"].format(tc=tc, code=build["exit_code"],
-                                                        t=secs(build["seconds"]))  # fmt: skip
-                out.append(p_(e(said) + f' <a href="{e(link(build["record"]))}">'
-                              f"{e(RECORD_LINK)}</a>", "pel"))  # fmt: skip
+                tool = build["toolchain"]["name"].rsplit("/", 1)[-1]
+                tc = f"{tool} {build['toolchain']['version']}"
+                said = EVIDENCE["rebuild_short"].format(tc=tc, code=build["exit_code"])
+                out.append(p_(f'<a href="{e(link(build["record"]))}">{e(said)} ↗</a>', "pel"))
         cids = ("no_weight_file",) if pid == "weights_hidden" else ("model", "prompt", "reply")
         states = {check_state(row, c) for c in cids}
         word = "passed" if states == {"held"} else "failed" if "failed" in states else "not decided"
-        said = EVIDENCE["checks_short"].format(names=and_list(CHECK_WORD[c] for c in cids),
+        said = EVIDENCE["checks_short"].format(names=", ".join(CHECK_WORD[c] for c in cids),
                                                s="" if len(cids) == 1 else "s", state=word)  # fmt: skip
         out.append(p_(f'<a href="#checks">{e(said)}</a>', "pel"))
     elif pid == "faithful_model":
@@ -1286,10 +1314,9 @@ def evidence_short(p, row, petals):
         recl = f' <a href="{e(link(fid["path"]))}">{e(RECORD_LINK)}</a>' if fid.get("path") else ""
         out.append(p_(f'<a href="#fidelity">{e(said)}</a>{recl}', "pel"))
     else:
-        out.append(p_(e(EVIDENCE["none_short"]), "pel"))
-    src = came_from(p)
-    src = f' <span class="pfrm">{e(src)}</span>' if src else ""
-    return f'<h5 class="pbh">{e(EVIDENCE["head"])}{src}</h5>' + "".join(out)
+        out.append(p_(e(cap(EVIDENCE["none_short"])), "pel"))
+    out.append(p_(f'<a href="{CHECKS_PAGE}#{e(pid)}">{e(RULE_LINK)}</a>', "pel"))
+    return f'<h5 class="pbh">{e(EVIDENCE["head"])}</h5>' + "".join(out)
 
 
 def records_full(p, row):
@@ -1520,12 +1547,14 @@ def in_full(p, row, petals):
     """One click down in an opened petal: this system's own facts in full (what it has, every
     item missing with what it is today, our records, why the grade, the limits the publisher
     states, the field's terms). How a grade is set is the checks page's."""
-    why = why_html(p, row, petals)
+    src = came_from(p)
+    why = (p_(e(EVIDENCE["came"].format(src=src))) if src else "") + why_html(p, row, petals)
     records = "".join(records_full(p, row))
-    body = (block("has", "".join(HAS[p["id"]](p, row, petals)))
+    body = ((block("why", why) if why else "")
+            + block("needs", p_(e(cap(needs_short(p)) + ".")))
+            + block("has", "".join(HAS[p["id"]](p, row, petals)))
             + block("missing", missing_html(p, row, petals))
-            + (block("records", records) if records else "")
-            + (block("why", why) if why else "") + limits_html(p)
+            + (block("records", records) if records else "") + limits_html(p)
             + terms_html(p, row, petals))  # fmt: skip
     return f'<details class="pev pfull"><summary>{e(IN_FULL)}</summary>{body}</details>'
 
@@ -1546,25 +1575,22 @@ def missing_list(p, row):
         lis = []
         for it in g["items"]:
             k += 1
-            who = f' <span class="pwho">{e(WHO_TAG[it["by"]])}</span>' if mixed else ""
-            lis.append(f'<li value="{k}">{e(cap(item_short(it, p, row)))}{who}</li>')
+            who = f'<span class="pwho">{e(WHO_TAG[it["by"]])}</span>' if mixed else ""
+            lis.append(f'<li value="{k}"><span>{e(cap(item_short(it, p, row)))}</span>{who}</li>')
         out.append(f'<p class="pgh">{e(head)}</p><ol class="pmi">{"".join(lis)}</ol>')
     return "".join(out)
 
 
 def panel(p, row, petals):
-    """The petal opened: what Met needs, what it has, what is missing, side by side; then the
-    evidence, and its facts in full one click down."""
-    rule = f'<a href="{CHECKS_PAGE}#{e(p["id"])}">{e(PANEL_HEAD["needs"])}</a>'
-    needs = f'<div class="pq"><h5 class="pbh">{rule}</h5>{p_(e(cap(needs_short(p)) + "."))}</div>'
-    has = (f'<div class="pq"><h5 class="pbh">{e(PANEL_HEAD["has"])}</h5>'
-           f"{p_(e(cap(has_short(p, row, petals)) + '.'))}</div>")  # fmt: skip
-    bys = {it["by"] for it in items_of(p)}
-    who = f", {WHO[bys.pop()]}" if len(bys) == 1 else ""
-    miss = (f'<div class="pq pqm"><h5 class="pbh">{e(PANEL_HEAD["missing"] + who)}</h5>'
+    """The petal opened, under the row's Met needs and Has: what is missing, each item with who
+    acts, beside the evidence and the grading rule; then why the grade, and this system's facts in
+    full, one click down."""
+    miss = (f'<div class="pq pqm"><h5 class="pbh">{e(PANEL_HEAD["missing"])}</h5>'
             f"{missing_list(p, row)}</div>")  # fmt: skip
-    return (f'<div class="pqs">{needs}{has}{miss}</div>'
-            f'<div class="pevs">{evidence_short(p, row, petals)}{in_full(p, row, petals)}</div>')  # fmt: skip
+    return (
+        f'<div class="pqs">{miss}<div class="pq pevs">{evidence_short(p, row, petals)}</div></div>'
+        f"{in_full(p, row, petals)}"
+    )
 
 
 def missing_tag(p):
@@ -1572,12 +1598,12 @@ def missing_tag(p):
     "Evidence"."""
     items = items_of(p)
     if not items:
-        return EVIDENCE_TAG
+        return EVIDENCE_TAG, ""
     pub = sum(1 for it in items if it["by"] == "publisher")
     us = len(items) - pub
     who = (WHO_TAG["publisher"] if not us else WHO_TAG["us"] if not pub
            else f"{pub} {WHO_TAG['publisher']}, {us} {WHO_TAG['us']}")  # fmt: skip
-    return f"{MISSING_TAG.format(n=len(items))} · {who}"
+    return MISSING_TAG.format(n=len(items)), who
 
 
 def verdict(p):
@@ -1597,13 +1623,19 @@ def petal_row(i, p, row, petals):
     data = f' data-step="{e(p["step"] or "none")}"'
     if p["cause"] is not None:
         data += f' data-cause="{e(p["cause"])}"'
-    mini = (f'<span class="pmini"><span class="k">{e(NEEDS_HEAD)}</span>'
-            f'<span>{nobreak(e(needs_tiny(p)), row)}</span>'
-            f'<span class="k">{e(HAS_HEAD)}</span>'
-            f'<span>{nobreak(e(has_tiny(p, row, petals)), row)}</span></span>')  # fmt: skip
+    has = has_tiny(p, row, petals)
+    head = COPIES_HEAD if own_in_sentence(p) else HAS_HEAD
+    has = (f'<span class="k">{e(head)}</span><span>{nobreak(e(has), row)}</span>'
+           if has else "")  # fmt: skip
+    mini = (
+        f'<span class="pmini"><span class="k">{e(NEEDS_HEAD)}</span>'
+        f"<span>{nobreak(e(needs_tiny(p)), row)}</span>{has}</span>"
+    )
     owner = f'<span class="sr">, {e(PETAL_NAME[p["id"]])}</span>'
+    n, who = missing_tag(p)
+    tag = f'<b>{e(n)}</b><span class="pwt"> \u00b7 {e(who)}</span>' if who else f"<b>{e(n)}</b>"
     summary = (f'<span class="pgap">{nobreak(e(gap_sentence(p, row, petals)), row)}</span>{mini}'
-               f'<span class="pdl">{e(missing_tag(p))}{owner}</span>')  # fmt: skip
+               f'<span class="pdl">{tag}{owner}</span>')  # fmt: skip
     details = (f'<details class="more pdt"><summary>{summary}</summary>'
                f'<div class="pbd">{nobreak(panel(p, row, petals), row)}</div></details>')  # fmt: skip
     return (f'<tr class="pt {tok}" id="petal-{e(p["id"])}"><th scope="row">'
@@ -1631,9 +1663,11 @@ def nobreak(html, row):
 def grade_scale():
     """The one line over the five petals: the grades, best first, each in its ink, each linked to
     its definition."""
+    seps = (*GRADE_SCALE_SEP, "")
     words = "".join(f'<a class="pvd {tok}" href="/glossary#{slug}">{e(w)}</a>'
-                    for tok, w, slug in GRADE_SCALE)  # fmt: skip
-    return f'<p class="gscale"><span class="sr">{e(GRADE_SCALE_HEAD)}: </span>{words}</p>'
+                    + (f'<span class="gsep" aria-hidden="true">{e(sep)}</span>' if sep else "")
+                    for (tok, w, slug), sep in zip(GRADE_SCALE, seps, strict=True))  # fmt: skip
+    return f'<p class="gscale"><span class="k">{e(GRADE_SCALE_HEAD)}</span>{words}</p>'
 
 
 def glyph_section(row, scope_head):

@@ -537,7 +537,11 @@ GRADE_SCALE = (("green", "Met", "met-mostly-met-partly-met"),
                ("amber cut", "Partly met", "met-mostly-met-partly-met"),
                ("red", "Not met", "not-met"), ("red open", "Not stated", "not-stated"),
                ("red", "Failed", "failed"), ("hollow", "Not decided", "not-decided"))  # fmt: skip
-GRADE_SCALE_HEAD = "Grades, best first"
+GRADE_SCALE_HEAD = "Grades"
+# between two grades on the scale line: an angle quote (U+203A) where the left one is higher, a
+# slash between the three reds, which are not ranked among themselves, a middle dot before Not
+# decided, which is on no rank
+GRADE_SCALE_SEP = ("\u203a", "\u203a", "\u203a", "/", "/", "\u00b7")
 # each petal's plain question, beside its name in the default row
 PETAL_ASK = {
     "unforgeable": "Can a fake reply pass the check?",
@@ -556,16 +560,20 @@ CAME_FROM = {
 }
 FROM_WORD = "from"
 # the default row's three labels, then the disclosure's label
-NEEDS_HEAD, HAS_HEAD = "Needs", "Has"
-# the opened petal's three blocks, side by side; Needs links to the petal's rule on the checks page
-PANEL_HEAD = {"needs": "Met needs", "has": "Has", "missing": "Missing"}
+NEEDS_HEAD, HAS_HEAD = "Met needs", "Has"
+# in place of Has on Fidelity, where the row's sentence holds its own average: the copies' averages
+COPIES_HEAD = "Copies"
+# the opened petal's head over its items missing
+PANEL_HEAD = {"missing": "Missing"}
 # the disclosure's label: how many items Met lacks and who acts ("5 missing · publisher"); at Met,
 # the evidence alone
 MISSING_TAG = "{n} missing"
 WHO_TAG = {"publisher": "publisher", "us": "us"}
 EVIDENCE_TAG = "Evidence"
 # the one more click down in an opened petal: this system's own facts in full
-IN_FULL = "In full"
+IN_FULL = "Why this grade, in full"
+# the opened petal's link to the rule that sets its grade, on the checks page
+RULE_LINK = "Grading rule"
 # what full marks need, per petal, in a few words for the closed row ({green}: Fidelity's Met
 # threshold)
 NEEDS_TINY = {
@@ -586,12 +594,12 @@ GAP = {
     "program_none": "The limit names no verifier; we run {run}.",
     "zk_batch": "The theorem covers one request per proof, not our {n}-reply batches.",
     "zk_run": "The theorem is not shown for exactly what we run.",
-    "above": "{to} needs an average above {value} tokens.",
+    "above": "{has} matched tokens on average; {to} needs above {value}.",
     "one_at_a_time": "Our fidelity run did not send one request at a time.",
-    "reach_stated": "The {tool} theorem stops at {stated}, short of {run}, which we run.",
+    "reach_stated": "The theorem stops at {stated}, short of {run}, which we run.",
     "reach_none": "No theorem reaches {run}, the verifier we run.",
-    "rests_sentence": "No single sentence of the publisher's says soundness rests on cryptography "
-    "only.",
+    "rests_sentence": "Cryptography only, on our reading; the publisher does not say it in one "
+    "sentence.",
     "no_setup_secret": "A setup made a secret, in an open ceremony.",
     "hide_statement": "The publisher does not say whether a proof keeps the weights secret.",
     "zk_theorem": "The publisher proves no zero-knowledge theorem.",
@@ -628,7 +636,7 @@ MISSING_NONE = "nothing."
 MISSING_GROUP = {"first": "To reach {to}", "then": "Then, to reach {to}", "decide": "To decide",
                  "repair": "To repair"}  # fmt: skip
 # the opened petal's Missing block: each group's head, who acts in parentheses where one acts
-MISSING_STEP = {"first": "For {to}", "then": "Then for {to}", "decide": "To decide",
+MISSING_STEP = {"first": "For {to}", "then": "For {to}", "decide": "To decide",
                 "repair": "To repair"}  # fmt: skip
 OURS_NOTHING = "Our run already sends one request at a time, so nothing is missing on our side."
 # the topics our reading covers, per fact: (subject, predicate), so two that share a subject
@@ -652,16 +660,17 @@ READING_TOPIC = {
 }  # fmt: skip
 # the opened petal's evidence lines, then the heads one click down
 EVIDENCE = {
-    "quotes": "The publisher's words at {pin} ({n})",
-    "notes": "Our reviewer's notes ({n})",
+    "quotes": "The publisher's words ({n}), at {pin}",
+    "notes": "Our notes ({n})",
     "docs": "Documents we read ({n})",
     "forms": "Zero knowledge, as stated ({n})",
-    "visible": "What stays visible, as listed ({n})",
+    "visible": "What stays visible ({n})",
     "head": "Evidence",
-    "checks_short": "Our {names} check{s} {state} ↓",
-    "rebuild_short": "Our rebuild in {tc}: exit code {code}, {t}.",
+    "checks_short": "Our {names} check{s}: {state} ↓",
+    "rebuild_short": "Our rebuild, {tc}: exit code {code}",
     "fidelity_short": "Our fidelity run, {n} ↓",
-    "none_short": "No test of ours bears on this property.",
+    "none_short": "no test of ours bears on it",
+    "came": "This grade comes {src}.",
     "rebuild": "Our rebuild:",
     "outside": "Outside the grade:",
     "not_used": "Today's grade does not rest on {this}{why}; Met needs the publisher's words in "
