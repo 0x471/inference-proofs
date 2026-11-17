@@ -10,6 +10,10 @@
   // a figure carrying labels (the probe, below), and the press under way: what it was made with and on what figure,
   // and whether that figure's labels were already shown. A tap's focus and its click are left to the probe's click
   const FIG = '.fig[title], .fig[data-t], .rts[title], .rts[data-t], .na[title], .na[data-t], .part[title], .part[data-t]';
+  // any other title in the page's main column: the probe shows it too, so every tooltip sits beside its element by
+  // one rule (the browser's own appears wherever the pointer stops, over the words it explains). A tap leaves these
+  // to their element (a link leads on); a pointer or the keyboard shows them
+  const TIP = '[title], [data-t]';
   let press = null;
 
   // ------------------------------------------------------------ search: a combobox over search.json (written by build.py)
@@ -578,7 +582,7 @@
   requestAnimationFrame(() => requestAnimationFrame(spy));
 
   // ------------------------------------------------------------ the probe: pointing at a figure shows its labels where
-  // it is, one per line; a petal of a row's glyph shows its name and state. Any other title is left to the browser
+  // it is, one per line; a petal of a row's glyph shows its name and state; any other title in main shows as it is
   // The labels are the figure's description for a screen reader while they are shown.
   const probe = document.createElement('div');
   probe.className = 'probe';
@@ -629,7 +633,7 @@
   // and scrolls inside, and focus from the keyboard first brings the figure up under what is pinned (`bring`, on
   // focus only: a scroll is never undone). A figure scrolled out of the window takes its labels with it
   const place = (el, bring) => {
-    const box = el.matches('.sl') ? el.closest('svg') : el;
+    const box = el.matches('.glyph .sl') ? el.closest('svg') : el;
     const next = box.nextElementSibling;
     let r = box.getBoundingClientRect();
     const top = pinned(box);
@@ -654,7 +658,7 @@
     // where every place covers something, the first that covers no model's name, the window's top and foot among them
     const names = seen(titles);
     const free = spots.find((p) => fits(p) && clear([...others, ...names])(p))
-      || [...spots, [x, top + 8], [x, innerHeight - 8 - h]].find((p) => fits(p) && clear(names)(p));
+      || [...spots, [x, top + 8], [x, innerHeight - 8 - h]].find((p) => fits(p) && clear([...names, r])(p));
     let px = x;
     if (free) [px, y] = free;
     probe.style.setProperty('max-height', !free && h > Math.max(below, above) ? `${Math.max(0, below, above)}px` : 'none');
@@ -700,6 +704,7 @@
     t.split('; ').forEach((part) => {
       const m = /^([a-z][a-z ]*?)(:| =) (.+)$/i.exec(part);
       const d = document.createElement('div');
+      if (!m) d.className = 'one';  // a line with no label of its own spans the box
       const dt = document.createElement('dt'); const dd = document.createElement('dd');
       dt.textContent = m ? m[1] : '';
       // a record's path breaks after a slash or a hash, never inside a word
@@ -742,6 +747,8 @@
   probe.addEventListener('pointerenter', stay);
   probe.addEventListener('pointerleave', (ev) => { if (mouse(ev)) later(); });
   const main = $('main');
+  // what a pointer over this element shows: a figure's labels first, else the nearest title (none inside the probe)
+  const tipOf = (t) => (t && t.closest ? t.closest(FIG) || t.closest(TIP) : null);
   if (main) {
     // labels that could find no free place give way to a figure or petal under them when the pointer moves there:
     // the pointer on the labels over empty ground keeps them
@@ -750,7 +757,7 @@
       const els = document.elementsFromPoint(ev.clientX, ev.clientY).filter((e) => !probe.contains(e));
       const pt = els.map((e) => e.closest('.glyph .sl')).find((e) => e && main.contains(e) && e !== at);
       if (pt) { stay(); clearPetal(); petal(pt); return; }
-      const f = els.map((e) => e.closest(FIG)).find((e) => e && main.contains(e) && e !== at);
+      const f = els.map((e) => tipOf(e)).find((e) => e && main.contains(e) && e !== at);
       if (f) { stay(); clearPetal(); labelled(f); }
     });
     main.addEventListener('pointerover', (ev) => {
@@ -759,7 +766,7 @@
       if (p) { stay(); clearPetal(); petal(p); return; }
       // on the ground between two petals of a glyph the one last pointed at stays
       if (at && at.matches('.sl') && ev.target.closest('.glyph') === at.closest('.glyph')) { stay(); return; }
-      const el = ev.target.closest(FIG);
+      const el = tipOf(ev.target);
       // a figure taken from a petal: the petal's edge goes with its labels
       if (el && main.contains(el)) { stay(); if (el !== at) { clearPetal(); labelled(el); } } else later();
     });
@@ -786,7 +793,8 @@
     main.addEventListener('focusin', (ev) => {
       if (press) return;
       // a ladder figure linked to its section: the link takes focus, its figure's labels show
-      const el = ev.target.closest('.fig[title], .na[title], .part[title]') || (ev.target.matches('a.flk') ? $('.fig[title]', ev.target) : null);
+      const el = ev.target.closest('.fig[title], .na[title], .part[title]') || (ev.target.matches('a.flk') ? $('.fig[title]', ev.target) : null)
+        || (ev.target.matches(TIP) ? ev.target : null);
       if (el) { labelled(el); byKey = true; place(el, true); }
     });
     main.addEventListener('focusout', (ev) => { if (at && ev.target.contains(at)) hide(); });

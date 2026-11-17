@@ -175,6 +175,8 @@ PETAL_TERM = {"unforgeable": "soundness",
               "faithful_model": "quantization error, in matched leading tokens",
               "machine_checked": "machine-checked soundness proof",
               "no_trusted_party": "trusted setup or party"}  # fmt: skip
+# the petal name's title on a system page, which the probe shows beside it: its field term
+FIELD_TERMS_TITLE = "in the field's terms: {term}"
 # each petal in plain words: a question, what it grades, whom it protects, what Met means. The
 # name's title at depths 1 and 2; printed under the name at depth 3 and on the checks page
 PETAL_PLAIN = {

@@ -22,6 +22,7 @@ from .words import (
     CAUSE_WORD,
     EVIDENCE,
     EVIDENCE_TAG,
+    FIELD_TERMS_TITLE,
     FORMAT_WORD,
     FROM_WORD,
     GAP,
@@ -1583,7 +1584,9 @@ def verdict(p):
     checks page (its cause's line where a cause set it)."""
     tok = f"{p['state']} {p['form']}".strip()
     href = f"{CHECKS_PAGE}#cause-{e(p['cause'])}" if p["cause"] else f"{CHECKS_PAGE}#{e(p['id'])}"
-    title = f' title="{e(CAUSE_WORD[p["cause"]])}"' if p["cause"] else ""
+    # the cause in the title, unless the step word already says it ("Not stated")
+    cause = CAUSE_WORD[p["cause"]] if p["cause"] else ""
+    title = f' title="{e(cause)}"' if cause and cause != petal_step(p).lower() else ""
     mark = (f'<a class="pfr" href="{CHECKS_PAGE}#reading">{e(READING_MARK)}</a>'
             if read_sets_grade(p) else "")  # fmt: skip
     return f'<a class="pvd {tok}" href="{href}"{title}>{e(petal_step(p))}</a>{mark}'
@@ -1613,7 +1616,7 @@ def petal_row(i, p, row, petals):
                f'<div class="pbd">{sup(nobreak(panel(p, row, petals), row))}</div></details>')  # fmt: skip
     return (f'<tr class="pt {tok}" id="petal-{e(p["id"])}"><th scope="row">'
             f'<a class="sl s{i + 1} {tok}"{data} href="{CHECKS_PAGE}#{p["id"]}" data-k="p{i + 1}" '
-            f'title="{e(PETAL_TERM[p["id"]])}"><span>{e(PETAL_NAME[p["id"]])}</span></a>'
+            f'title="{e(FIELD_TERMS_TITLE.format(term=PETAL_TERM[p["id"]]))}"><span>{e(PETAL_NAME[p["id"]])}</span></a>'
             f'<span class="pst">{e(PETAL_ASK[p["id"]])}</span></th>'
             f'<td class="cst">{verdict(p)}</td>'
             f'<td class="prs">{details}</td></tr>')  # fmt: skip
