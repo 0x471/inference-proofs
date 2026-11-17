@@ -1545,10 +1545,18 @@ def glyph_section(row, scope_head):
     """The Glyph section: its lead, the five petals, then soundness, zero knowledge and
     completeness with the stated security and the scope card (`scope_head`)."""
     petals = {p["id"]: p for p in row["glyph"]}
+    names = [n for n in ((row.get("statement") or {}).get("verifiers") or {}).values() if n]
+
+    def whole(html):
+        """A verifier's name never breaks across lines ("boundary-grid --verify")."""
+        for n in names:
+            html = html.replace(e(n), e(n).replace(" ", "\u00a0").replace("-", "\u2011"))
+        return html
+
     lead = "".join(
         p_(e(w), "glead" + (" gwords" if i == 2 else "")) for i, w in enumerate(GLYPH_LEAD)
     )
-    trs = "".join(petal_row(i, p, row, petals) for i, p in enumerate(row["glyph"]))
+    trs = "".join(whole(petal_row(i, p, row, petals)) for i, p in enumerate(row["glyph"]))
     return (f'<div class="glede">{lead}</div>'
             '<div class="checks"><table class="rt ckt gbig gpl"><caption class="sr">Petal, grade, '
             f'what it has and what it misses</caption><tbody>{trs}</tbody></table></div>'
