@@ -1244,7 +1244,7 @@ TF_KL = "KL to the original, on its reply"
 # leading tokens set the check and the petal)
 TF_TESTS_ON = "on top-token agreement; they set no state"
 # the two teacher-forced columns by name: the lead and FI-13's label say which columns they are about
-TF_BOTH = f"Fidelity figure and {TF_KL}"
+TF_BOTH = "top-token agreement and KL divergence"  # the table's heads for the two (FID_HEAD)
 # the KL head's title (FI-12: the tokens both lists hold, every other token one outcome)
 TF_KL_TITLE = (
     "KL compares, at each position, each token that both lists of the {k:,} most probable tokens "
