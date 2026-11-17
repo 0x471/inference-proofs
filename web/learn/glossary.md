@@ -48,7 +48,7 @@ A value computed from data, such as a model's weights, that fixes them for later
 
 ### Completeness
 
-The property that a verifier accepts every proof an honest prover makes of a true statement, often except with a small stated probability. It protects the provider, and it is the one of the three properties a test can show: on a system's page it reads "tested by us on honest runs" with the count of honest replies whose proofs were accepted ([[run check|Run check]]). No petal grades it. In safeguards writing, a complete declaration leaves nothing out.
+The property that a verifier accepts every proof an honest prover makes of a true statement, often except with a small stated probability. It protects the provider, and it is the one of the three properties a test can show: on a system's page it reads as the count of honest replies whose proofs were accepted, from our [[run check|Run check]]. No petal grades it. In safeguards writing, a complete declaration leaves nothing out.
 
 ### Confidentiality
 
@@ -300,7 +300,7 @@ An ideal hash function that gives every new input a fresh, uniformly random outp
 
 ### Read as
 
-What a grade comes from, printed beside it: **the publisher's words**, its own sentence; **our reading**, with the number of points it covers, where no single sentence of the publisher's states a point, so we read it from several passages, which are linked; **our test**, our own runs; **our rebuild**, our run of the publisher's proof through its proof-checking program. A grade that uses our reading is Mostly met at most, for every system alike. The name of a construction, such as STARK, is never read as a claim. Until 2026-11-17 the page printed this as "stated", "read as" or "tested by us".
+What a grade comes from, printed at the head of an opened petal's evidence, with "our reading" beside the grade wherever a reading of ours sets it: **the publisher's words**, its own sentence; **our reading**, with the number of points it covers, where no single sentence of the publisher's states a point, so we read it from several passages, which are linked; **our test**, our own runs; **our rebuild**, our run of the publisher's proof through its proof-checking program. A grade that uses our reading is Mostly met at most, for every system alike. The name of a construction, such as STARK, is never read as a claim. Until 2026-11-17 the page printed this as "stated", "read as" or "tested by us"; it now says "from" and "our reading", here and in a system's Statement block.
 
 ### Recomputation
 
@@ -357,7 +357,7 @@ The property that a verifier refuses proofs of false statements, except with a p
 
 ### Soundness error
 
-The probability, as the publisher states it, that a verifier accepts a proof of a false statement: the bound behind [[soundness]]. It is stated for a given verifier, per proof or per part of one, often as a function of the forger's hash queries. The [Integrity](/checks#unforgeable) petal grades it: its reason names every condition that keeps it from covering what the row runs, then the bound, such as a verifier other than the one the bound is stated for. A chance written 2^-128 is 1 in 2^128, about 3 in 10^39, and a smaller chance than 2^-100.
+The probability, as the publisher states it, that a verifier accepts a proof of a false statement: the bound behind [[soundness]]. It is stated for a given verifier, per proof or per part of one, often as a function of the forger's hash queries. The [Integrity](/checks#unforgeable) petal grades it: a system's page lists, under the petal, every condition that keeps it from covering what the row runs, such as a verifier other than the one the bound is stated for; the petal's full reason stays on the board. A chance written 2^-128 is 1 in 2^128, about 3 in 10^39, and a smaller chance than 2^-100.
 
 ### Statement
 
