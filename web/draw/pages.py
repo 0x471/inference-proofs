@@ -79,8 +79,8 @@ from .words import (
     CONTROL_NAME,
     COPY_WORD,
     DTYPE_BITS,
+    FID_HEAD,
     FID_KIND,
-    FID_LABEL,
     FID_WHO,
     FIDELITY_AGAINST,
     FIGURE_ANCHOR,
@@ -1212,7 +1212,7 @@ def fid_tr(cls, th, kind, cells, heads, tf, entry, ink):
         track = (
             f'<td class="trk" aria-hidden="true">{fid_svg(mean, None, tf["positions"], ink)}</td>'
         )
-    tds = "".join(f'<td data-l="{e(FID_LABEL.get(h, h))}">{c}</td>'
+    tds = "".join(f'<td data-l="{e(FID_HEAD.get(h, h))}">{c}</td>'
                   for h, c in zip(heads[2:], cells, strict=True))  # fmt: skip
     at = f' class="{cls}"' if cls else ""
     return f'<tr{at}>{th}<td data-l="{e(FID_KIND)}">{kind}</td>{track}{tds}</tr>'
@@ -1226,7 +1226,7 @@ def own_rows(row, tf, any_kl, heads):
     mine = row["fidelity"]
     tf_mine = tf["rows"].get(row["system"]) if tf else None
     if mine is None and tf_mine is None:
-        return ""
+        return []
     cells = []
     if tf:
         sub = [median_words(tf_mine, tf)]
@@ -1261,7 +1261,7 @@ def own_rows(row, tf, any_kl, heads):
         label = (f'<p>{e(whose)}: {e(tf_mine["label"])}. What ran: '
                  f'{e(tf_mine["computed_by"])}.</p>{"".join(evidence_links(records))}')  # fmt: skip
         out += f'<tr class="me ml"><td colspan="{len(heads) + 1}">{label}</td></tr>'
-    return out
+    return [(fid_score(tf_mine, mine), out)]
 
 
 def control_rows(fid, tf, any_kl, heads):
@@ -1276,6 +1276,8 @@ def control_rows(fid, tf, any_kl, heads):
         i, c = fcs.get(cid, (None, None))
         t = tcs.get(cid)
         is_bar = bar is not None and bar["control"] == cid
+        if not (is_bar or FID_COPY.match(cid)):  # the table holds the quantized copies; the
+            continue  # other controls stay in the fidelity record
         failed = c is not None and c["status"] == "failed"
         kind = (
             (c or t)["kind"]
@@ -1295,9 +1297,26 @@ def control_rows(fid, tf, any_kl, heads):
         # honest or damaged, linked to what the level means by it (FI-2), then the rest
         word = (c or t)["kind"]
         kind_html = term(word, KIND_TERM) + e(kind[len(word) :])
-        out.append(fid_tr("bar" if is_bar else "", control_th(cid), kind_html, cells, heads, tf, t,
-                          (c or t)["kind"]))  # fmt: skip
-    return "".join(out)
+        tr = fid_tr("bar" if is_bar else "", control_th(cid), kind_html, cells, heads, tf, t,
+                    (c or t)["kind"])  # fmt: skip
+        out.append((fid_score(t, c), tr))
+    return out
+
+
+# the controls the Fidelity table prints: the quantized copies, by llama.cpp's type names
+# ("q8_0", "q4_k_m"); a rerun, a model with blocks cut and a smaller model stay in the record
+FID_COPY = re.compile(r"^q\d")
+
+
+def fid_score(tf_entry, entry):
+    """What the Fidelity table sorts on, highest first: a row's top-token agreement (FI-10's
+    mean), else its mean matched prefix; a row with neither goes last."""
+    if tf_entry is not None and tf_entry.get("status") == "ok" and tf_entry.get("mean") is not None:
+        return (1, tf_entry["mean"])
+    prefix = (entry or {}).get("mean_prefix")
+    if isinstance(prefix, dict):  # a stored quantity
+        prefix = prefix.get("value")
+    return (0, prefix) if prefix is not None else (-1, 0.0)
 
 
 def fidelity_html(row):
@@ -1319,7 +1338,9 @@ def fidelity_html(row):
     )
     heads = [FID_WHO, FID_KIND, *([TF_AGREE] if tf else []), PREFIX, *([TF_KL] if tf else []),
              *([kl_h] if any_kl else [])]  # fmt: skip
-    body = own_rows(row, tf, any_kl, heads) + control_rows(fid, tf, any_kl, heads)
+    # one board, highest Fidelity first: the system's row takes its place among the copies
+    scored = own_rows(row, tf, any_kl, heads) + control_rows(fid, tf, any_kl, heads)
+    body = "".join(tr for _, tr in sorted(scored, key=lambda r: r[0], reverse=True))
     if not body:
         return '<p class="none">Not run yet.</p>'
     lead = ""
@@ -1332,7 +1353,8 @@ def fidelity_html(row):
     lead = proved_html(row) + lead
     ths = (f'<th scope="col">{e(heads[0])}</th><th scope="col">{e(heads[1])}</th>'
            + ('<th scope="col" class="trk" aria-hidden="true"></th>' if tf else "")
-           + "".join(f'<th scope="col"{tf_title(h, tf)}>{e(h)}</th>' for h in heads[2:]))  # fmt: skip
+           + "".join(f'<th scope="col"{tf_title(h, tf)}>{e(FID_HEAD.get(h, h))}</th>'
+                     for h in heads[2:]))  # fmt: skip
     tests = tests_html(row, tf, tf["rows"].get(row["system"])) if tf else ""
     limits = "".join(f'<p class="flead">{e(line)}</p>' for line in fid_limits(rung, tf))
     return (f'{lead}<table class="rt stk fid"><thead><tr>{ths}</tr></thead>'
@@ -1380,7 +1402,8 @@ def tf_title(head, tf):
     Fidelity column, its class (words.css sets its width)."""
     if tf and head == TF_KL:
         return f' title="{e(TF_KL_TITLE.format(k=tf["top_k"]))}"'
-    return ' class="fag"' if head == TF_AGREE else ""
+    full = f' title="{e(head)}"' if head in FID_HEAD else ""  # the head prints the short name
+    return (' class="fag"' if head == TF_AGREE else "") + full
 
 
 def band_figure(row):
@@ -1723,7 +1746,7 @@ def fidelity_block(row):
     kl = (row["fidelity"] or {}).get("kl")
     cells.append((defined(FIGURE_NAME["kl"], "kl"),
                   fig_html(kl) if has(kl) else '<span class="na">not measured</span>', ""))  # fmt: skip
-    return tiles(cells) + dig("Every copy, the tests and the sources", fidelity_html(row))
+    return tiles(cells) + dig("The copies, the tests and the sources", fidelity_html(row))
 
 
 def sessions_block(row):

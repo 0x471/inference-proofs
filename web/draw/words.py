@@ -1210,7 +1210,7 @@ CONTROL_NAME = {"reference-2": "the original, run again",
                 "smaller-model": "a smaller model"}  # fmt: skip
 # the table's first two heads: whose replies a row holds, and whether it is the system, an honest
 # copy or a damaged one (FI-2)
-FID_WHO = "Whose replies"
+FID_WHO = "Replies"
 FID_KIND = "Kind"
 KIND_TERM = "Honest and damaged copies"  # the glossary entry a control's kind links to
 # a check's record as its link reads, by the file's name (the path stands in the link's title)
@@ -1220,9 +1220,12 @@ P_ABOVE = "above the bar: {p}"  # {p} reads "p = 0.0058" or the floor's bound (`
 P_FLOOR = ", the test's floor"  # after a p at the lowest value its test can give (FI-4)
 # the reference's precision in words, where a line names the original (FI-1)
 DTYPE_BITS = {"bf16": "16-bit", "f16": "16-bit", "f32": "32-bit"}
-# what a column is called on a phone, where each card repeats it (the heads in full above)
-FID_LABEL = {"Fidelity figure: top-token agreement, mean": "Fidelity figure",
-             "Fidelity check: matched leading tokens, mean": "Matched leading tokens, mean"}  # fmt: skip
+# a column's head as the table prints it, on every width: the measure's name alone (its full
+# name, with what it is a mean of and on which reply, is the head's title and the glossary's)
+FID_HEAD = {"Fidelity figure: top-token agreement, mean": "Top-token agreement",
+            "Fidelity check: matched leading tokens, mean": "Matched leading tokens",
+            "KL to the original, on its reply": "KL divergence",
+            "KL to the original weights": "KL on fixed texts"}  # fmt: skip
 TF_INTERVAL = "95\u00a0% interval {low} to {high}\u202f%"  # SI-9, under and in a percentage's title
 # the limits under the table (depth 3), each generated from the board, the level and its records
 LIM_ORIGINAL = "Original: {repo} at {rev}, {bits}."
