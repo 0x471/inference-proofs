@@ -224,7 +224,7 @@ def plot_svg(lo, hi, serve, mean=None, ticks=(), span=None):
 
 # ------------------------------------------------------------------ a lane, a section, the page
 def figure_html(row, dim):
-    """The row's figure as the ladder prints it, with its two parts where it has them (CO-7)."""
+    """The row's figure as the ladder prints it (its two parts are the system page's, CO-7)."""
     if dim == "multiple":
         return multiple_html(row, bare=True)
     f = figure_of(row, dim)

@@ -42,7 +42,7 @@ A certifier at the inspected data centre's boundary, in either country, records 
 
 The inspectorate later draws replies for the operator to prove. SASH's publisher adds that "the draw must be unpredictable to the provider, and the provider must commit to its answers before the draw." By our arithmetic, when both hold, 300 draws catch an unregistered model serving 1 reply in 100 about 95 % of the time, and 1 in 10,000 about 3 %.
 
-Any reply may be drawn, so the [[quantization|quantized copy]] must generate every reply. Where the ladder prints a generation [part](/checks#multiple), that part is paid on every reply, drawn or not. Of the "commit and proving" part, only proving shrinks with the sample.
+Any reply may be drawn, so the [[quantization|quantized copy]] must generate every reply. Where a system's page prints a generation [part](/checks#multiple), that part is paid on every reply, drawn or not. Of the "commit and proving" part, only proving shrinks with the sample.
 :::
 
 :::stage outside The data centre did nothing else

@@ -14,7 +14,7 @@ Every function here is pure except `load_properties` and `load_proof_build`.
 
 import json
 import re
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Collection, Mapping, Sequence
 from dataclasses import dataclass, replace
 from pathlib import Path
 
@@ -116,10 +116,46 @@ class Petal:
     forms: Sequence[Mapping[str, object]] | None = None  # Weights hidden: the stated ZK forms
     visible_at_least: bool = False  # Weights hidden: the publisher's list is a lower bound
     next_step: Mapping[str, object] | None = None  # GL-11: the step above and what it lacks
+    # GL-11 (amended 2026-11-17): everything the row lacks for Met, in groups by the step each
+    # group reaches, each item a key the site words, with who acts and its numbers; None takes
+    # the next step's needs as one group of their own words
+    to_met: tuple[Mapping[str, object], ...] | None = None
+    # the facts with a note that the step or a need for Met rests on, each with its note and
+    # the note's plain words where the properties file gives them (GL-10)
+    read_facts: tuple[Mapping[str, object], ...] = ()
+    why: Mapping[str, object] | None = None  # the page's "Why" line's inputs (UF-9, WH-6, MC-6)
+    facts: Mapping[str, object] | None = None  # the facts the page words the petal from
+    rebuilt: bool = False  # Formally verified: a matching proof build of ours decided the step
 
     @property
     def state(self) -> str:
         return STEP_STATE[self.step]
+
+    @property
+    def came_from(self) -> str | None:
+        """What the step comes from, the board's `sources` (GL-5, amended 2026-11-17): our test,
+        the publisher's words, our rebuild of its theorem, our reading; None on a Not stated or
+        Not decided petal."""
+        if self.step is None or self.cause == NOT_STATED:
+            return None
+        if self.basis == TEST:
+            return "test"
+        head = "build" if self.rebuilt else "statement"
+        return f"{head}_reading" if self.reading else head
+
+    def met_groups(self) -> list[dict[str, object]]:
+        """`to_met`, or the next step's needs as one group in their own words."""
+        if self.to_met is not None:
+            return [dict(g) for g in self.to_met]
+        nx = self.next_step
+        if nx is None:
+            return []
+        to = nx.get("to")
+        kind = "up" if to is not None else ("decide" if self.step is None else "repair")
+        needs = nx.get("needs")
+        items = [_item("text", str(_m(n).get("by")), text=str(_m(n).get("text")))
+                 for n in (needs if isinstance(needs, list) else ())]  # fmt: skip
+        return [{"to": to, "kind": kind, "items": items}]
 
     def tree(self) -> dict[str, object]:
         out: dict[str, object] = {
@@ -132,7 +168,16 @@ class Petal:
             "quotes": [_quote(q) for q in self.quotes],
             "lowered_by": list(self.lowered_by),
             "next": None if self.next_step is None else dict(self.next_step),
+            "to_met": self.met_groups(),
+            "sources": self.came_from,
+            "sources_count": sum(1 for f in self.read_facts if f.get("used")),
         }
+        if self.read_facts:
+            out["read_facts"] = [dict(f) for f in self.read_facts]
+        if self.why is not None:
+            out["why"] = dict(self.why)
+        if self.facts is not None and self.id in FACTS_KEY:
+            out[FACTS_KEY[self.id]] = dict(self.facts)
         if self.id == "machine_checked":
             out["formal"] = None if self.formal is None else dict(self.formal)
         if self.id == "weights_hidden":
@@ -210,6 +255,49 @@ def _plural(k: int, one: str) -> str:
     return one if k == 1 else f"{one}s"
 
 
+# the key under which a petal's facts sit on the board (Formally verified's are `formal`)
+FACTS_KEY = {"unforgeable": "bound", "weights_hidden": "hiding", "faithful_model": "fidelity",
+             "no_trusted_party": "trust"}  # fmt: skip
+
+
+def _item(need: str, by: str, **params: object) -> dict[str, object]:
+    """GL-11 (amended 2026-11-17): one thing a petal lacks for Met, as a key the site words,
+    who acts, and the numbers and names it is worded with."""
+    return {"need": need, "by": by, **params}
+
+
+def _group(to: str | None, items: Sequence[Mapping[str, object]]) -> dict[str, object]:
+    """One group of `to_met`: the step its items reach together, in the order a rule reads."""
+    return {"to": to, "kind": "up", "items": [dict(i) for i in items]}
+
+
+def _groups(*found: tuple[str | None, Sequence[Mapping[str, object]]]) -> tuple[
+        dict[str, object], ...]:  # fmt: skip
+    return tuple(_group(to, items) for to, items in found if items)
+
+
+def _read_facts(group: Mapping[str, object], keys: Sequence[str],
+                used: Collection[str] | None = None) -> tuple[dict[str, object], ...]:  # fmt: skip
+    """The facts of `keys` that carry a note, in the order given, each once: the note, its plain
+    words (`plain`, where the properties file gives them) and `used`, whether the decision that
+    set the step read it (N1; `used` None: every key was read). A fact the step did not read is
+    one only Met's rule reads: Met needs the publisher's words in its place (GL-11)."""
+    out: list[dict[str, object]] = []
+    for k in dict.fromkeys(keys):
+        fact = _m(group.get(k))
+        if note := fact.get("note"):
+            plain = fact.get("plain")
+            out.append({"fact": k, "note": str(note), "plain": str(plain) if plain else None,
+                        "used": used is None or k in used})  # fmt: skip
+    return tuple(out)
+
+
+def _ordered(order: Sequence[str], *keys: Sequence[str]) -> list[str]:
+    """The union of `keys`, in `order`."""
+    found = {k for ks in keys for k in ks}
+    return [k for k in order if k in found] + sorted(found - set(order))
+
+
 class _Facts:
     """The facts of one group as a decision reads them, in order. `noted` turns true once a fact
     read carries a `note`: the value is then the reader's reading, not the publisher's words
@@ -219,6 +307,7 @@ class _Facts:
         self.group = group
         self.noted = False
         self.read: list[str] = []  # the notes of the facts read, in order, each once
+        self.keys: list[str] = []  # the facts read that carry a note, in order, each once
 
     def __call__(self, key: str) -> object:
         fact = _m(self.group.get(key))
@@ -226,6 +315,8 @@ class _Facts:
             self.noted = True
             if str(note) not in self.read:
                 self.read.append(str(note))
+            if key not in self.keys:
+                self.keys.append(key)
         return fact.get("value")
 
     @property
@@ -360,52 +451,147 @@ def _batch_short(batch: object, n: int | None) -> str | None:
     return f"no bound stated for batch members, and the row proves {n} replies a batch"
 
 
+Failing = tuple[str, Need, dict[str, object]]  # (reason words, next-step need, `to_met` item)
+
+
 def _failing(
     b: Mapping[str, object], coverage: Coverage, run: str | None, stated_for: str | None
-) -> list[tuple[str, Need]]:
+) -> list[Failing]:
     """UF-9 (amended 2026-11-16): every condition that keeps the bound from covering the run, the
     program condition first, then the basis, the adversary, the unit, the batch, the parameters
-    and the conditions, each with its need for the next step (GL-11), so the reason and the next
-    step cannot drift; empty when the bound covers it. Read for the reason only: the step is
-    decided by `_covers`, which reads each fact only when the conditions before it hold (N1)."""
-    out: list[tuple[str, Need]] = []
+    and the conditions, each with its need for the next step (GL-11) and its item for Met
+    (amended 2026-11-17), so the reason, the next step and the items cannot drift; empty when the
+    bound covers it. Read for the reason only: the step is decided by `_covers`, which reads each
+    fact only when the conditions before it hold (N1)."""
+    out: list[Failing] = []
     program = _program_short(b, run, stated_for)
     if program is not None:
         verifier = f"{run}, the verifier this row runs" if run else "the verifier this row runs"
-        out.append((program, (f"stated or proved for {verifier}", PUBLISHER)))
+        out.append((program, (f"stated or proved for {verifier}", PUBLISHER),
+                    _item("program", PUBLISHER, run=run, stated=stated_for)))  # fmt: skip
     basis = _v(b.get("basis"))
+    terms = _terms(b)
     if basis == "conjectured":
-        out.append(("conjectured, not proved", ("proved, not conjectured", PUBLISHER)))
+        out.append(("conjectured, not proved", ("proved, not conjectured", PUBLISHER),
+                    _item("basis", PUBLISHER, basis="conjectured", terms=terms)))  # fmt: skip
     elif basis != "proved":
-        out.append(("not said to be proved", ("said to be proved", PUBLISHER)))
+        out.append(("not said to be proved", ("said to be proved", PUBLISHER),
+                    _item("basis", PUBLISHER, basis=str(basis), terms=terms)))  # fmt: skip
     if _v(b.get("adversary")) != "any_prover":
         out.append(("not said which provers it holds against",
-                    ("said to hold against any prover", PUBLISHER)))  # fmt: skip
+                    ("said to hold against any prover", PUBLISHER),
+                    _item("adversary", PUBLISHER,
+                          adversary=str(_v(b.get("adversary"))))))  # fmt: skip
     per_reply: Need = ("stated per reply, or per proof with one reply a proof", PUBLISHER)
     unit = _v(b.get("unit"))
+    unit_item = _item("unit", PUBLISHER, unit=str(unit))
     if unit in ("part", "round"):
-        out.append(("not per reply", per_reply))
+        out.append(("not per reply", per_reply, unit_item))
     elif unit not in ("reply", "proof"):
-        out.append(("not said what it is stated per", per_reply))
+        out.append(("not said what it is stated per", per_reply, unit_item))
     elif unit == "proof" and not coverage.one_reply:
-        out.append(("replies per proof not recorded", ("the replies per proof recorded", US))
-                   if coverage.granularity is None
-                   else ("a proof here covers more than one reply", per_reply))  # fmt: skip
+        out.append(("replies per proof not recorded", ("the replies per proof recorded", US),
+                    _item("granularity", US)) if coverage.granularity is None
+                   else ("a proof here covers more than one reply", per_reply,
+                         unit_item))  # fmt: skip
     n = coverage.batch_size
     batch = _batch_short(_v(b.get("batch")), n)
     if batch is not None:
         each = f"stated for each reply of a {n}-reply batch checked alone"
-        out.append((batch, ("the row's batch size recorded", US) if n is None else
-                    (each, PUBLISHER)))  # fmt: skip
+        out.append((batch, ("the row's batch size recorded", US), _item("batch_size", US))
+                   if n is None else
+                   (batch, (each, PUBLISHER),
+                    _item("batch", PUBLISHER, n=n, batch=str(_v(b.get("batch"))))))  # fmt: skip
     parameters = _v(b.get("parameters"))
     row_params: Need = ("stated for this row's parameters", PUBLISHER)
+    params_item = _item("parameters", PUBLISHER, parameters=str(parameters))
     if parameters == "other":
-        out.append(("stated for other parameters than the row's", row_params))
+        out.append(("stated for other parameters than the row's", row_params, params_item))
     elif parameters != "row":
-        out.append(("its parameters not shown to be the row's", row_params))
+        out.append(("its parameters not shown to be the row's", row_params, params_item))
     if _v(b.get("conditions_shown")) is not True:
         out.append(("its conditions not shown to hold for the row's files",
-                    ("its conditions shown to hold for this row's files", PUBLISHER)))  # fmt: skip
+                    ("its conditions shown to hold for this row's files", PUBLISHER),
+                    _item("conditions", PUBLISHER, proved=basis == "proved")))  # fmt: skip
+    return out
+
+
+# the facts UF-7 reads for Met, in the properties order
+_UF_MET = ("basis", "unit", "batch", "adversary", "parameters", "conditions_shown", "program")
+
+
+def _terms(b: Mapping[str, object]) -> list[int]:
+    raw = b.get("terms")
+    return [int(t) for t in raw] if isinstance(raw, list) else []
+
+
+def _uf_passing(b: Mapping[str, object], coverage: Coverage) -> list[str]:
+    """GL-11 (amended 2026-11-17): the facts UF-7 reads whose value meets Met's condition and
+    carries a note: Met needs the publisher's words in place of each reading (GL-10)."""
+    unit, n = _v(b.get("unit")), coverage.batch_size
+    ok = {"basis": _v(b.get("basis")) == "proved",
+          "unit": unit == "reply" or (unit == "proof" and coverage.one_reply),
+          "batch": n == 1 or _v(b.get("batch")) == "each_member",
+          "adversary": _v(b.get("adversary")) == "any_prover",
+          "parameters": _v(b.get("parameters")) == "row",
+          "conditions_shown": _v(b.get("conditions_shown")) is True,
+          "program": _v(b.get("program")) in ("proved", "stated")}  # fmt: skip
+    return [k for k in _UF_MET if ok[k] and _m(b.get(k)).get("note")]
+
+
+# a first term written q/2^t, where q counts what the bound is stated after (`after`)
+_Q_TERM = re.compile(r"\bq\s*/\s*2\s*(?:\^|\*\*)\s*[{(]?\s*(\d+)")
+
+
+def q_cross(b: Mapping[str, object]) -> list[int] | None:
+    """For a first term written q/2^t, when `after` names q: the exponents of q, t - 100 and
+    t - 80, at which that term reaches 2^-100 and 2^-80. Printed; the rule reads the written
+    exponents and fixes no q (U1). None otherwise."""
+    after = _v(b.get("after"))
+    if not isinstance(after, str) or not re.match(r"q\b", after.strip()):
+        return None
+    found = _Q_TERM.search(str(_v(b.get("expression"))))
+    if found is None:
+        return None
+    t = int(found.group(1))
+    return [t - 100, t - 80]
+
+
+def said(group: Mapping[str, object]) -> dict[str, object]:
+    """Each fact's quotes and, where the properties file gives them, its `named` and
+    `described` words, by fact: what the page prints a fact with. Sets nothing."""
+    out: dict[str, object] = {}
+    for k, fact in group.items():
+        if not isinstance(fact, Mapping) or "value" not in fact:
+            continue
+        entry: dict[str, object] = {"quotes": [_quote(q) for q in _quotes(fact)]}
+        entry.update({w: str(fact[w]) for w in ("named", "described", "check", "plain")
+                      if fact.get(w)})  # fmt: skip
+        out[str(k)] = entry
+    return out
+
+
+def _bound_facts(
+    b: Mapping[str, object],
+    coverage: Coverage,
+    run: str | None,
+    stated_for: str | None,
+    props: Mapping[str, object],
+) -> dict[str, object]:
+    """Integrity's facts as the page words them (amended 2026-11-17); they set nothing."""
+    out: dict[str, object] = {k: _v(b.get(k)) for k in (
+        "expression", "basis", "unit", "batch", "adversary", "parameters", "conditions_shown",
+        "program", "after")}  # fmt: skip
+    out.update(
+        terms=_terms(b),
+        q_cross=q_cross(b),
+        batch_size=coverage.batch_size,
+        one_reply=coverage.one_reply,
+        run=run,
+        stated_for=stated_for,
+        said=said(b),
+        verifiers=said(_m(props.get("verifiers"))),
+    )
     return out
 
 
@@ -448,20 +634,35 @@ def unforgeable(  # noqa: PLR0911 (one return per line of the table)
         return _not_read(pid, nr or NO_PROPERTIES)
     b = _m(petal.get("bound"))
     v = _Facts(b)
-    raw_terms = b.get("terms")
-    terms = [int(t) for t in raw_terms] if isinstance(raw_terms, list) else []
+    terms = _terms(b)
+    run, stated_for = _verifiers(props)
+    facts = _bound_facts(b, coverage, run, stated_for, props)
     if v("stated") is not True or not terms:  # UF-3
         return Petal(pid, RED, NOT_STATED, STATEMENT, _silent(petal, props), quotes,
                      reading=v.noted, notes=v.notes,
-                     next_step=_next(AMBER_LOWER, *UF_STATED_NEEDS))  # fmt: skip
-    run, stated_for = _verifiers(props)
+                     next_step=_next(AMBER_LOWER, *UF_STATED_NEEDS), facts=facts)  # fmt: skip
     head = _bound_head(b, stated_for)
+    passing = _uf_passing(b, coverage)  # GL-11: the readings Met needs replaced by words
 
     # UF-4 to UF-8 (amended 2026-11-16): the deciding fact first, then the stated bound, as UF-9
-    def decided(step: str, cause: str | None, *why: str, to: Mapping[str, object] | None) -> Petal:
+    def decided(step: str, cause: str | None, *why: str, to: Mapping[str, object] | None,
+                to_met: tuple[dict[str, object], ...] | None = None) -> Petal:  # fmt: skip
         reason = "; ".join((*why, f"stated bound: {head}"))
         return Petal(pid, step, cause, STATEMENT, reason, quotes, reading=v.noted, notes=v.notes,
-                     next_step=to)  # fmt: skip
+                     next_step=to, to_met=to_met, facts=facts,
+                     read_facts=_read_facts(b, _ordered(_UF_MET, v.keys, passing),
+                                            v.keys))  # fmt: skip
+
+    def met_items(least: int) -> list[dict[str, object]]:
+        """Met's own conditions above Mostly met: every term at most 2^-128, the publisher's
+        words in place of each reading."""
+        out = []
+        if least < 128:
+            out.append(_item("exponent", PUBLISHER, floor=128, terms=terms,
+                             q=facts["q_cross"] is not None))  # fmt: skip
+        if passing:
+            out.append(_item("reading", PUBLISHER, facts=passing))
+        return out
 
     least = min(terms)
     # GL-11, Not met to Partly met: every UF-4 to UF-6 line the bound meets, read from the facts
@@ -484,22 +685,31 @@ def unforgeable(  # noqa: PLR0911 (one return per line of the table)
     covers = basis == "proved" and _covers(v, coverage)
     if covers and least >= 128:  # UF-7
         return decided(GREEN, None, "covers each reply as the row runs it, every exponent 128 or "
-                       "more", to=None)  # fmt: skip
+                       "more", to=None, to_met=_groups((GREEN, met_items(least))))  # fmt: skip
     if covers and least >= 100:  # UF-8
         needs: list[Need] = [("every exponent 128 or more", PUBLISHER)]
         if v.noted:
             needs.append((READING_NEED, PUBLISHER))
         return decided(AMBER_UPPER, None, "covers each reply as the row runs it, with exponent "
-                       f"{least}, under 128", to=_next(GREEN, *needs))  # fmt: skip
+                       f"{least}, under 128", to=_next(GREEN, *needs),
+                       to_met=_groups((GREEN, met_items(least))))  # fmt: skip
     # UF-9 (amended 2026-11-16): the deciding fact first, every failing condition, program first,
     # then the stated bound
     failing = _failing(b, coverage, run, stated_for)
+    cover = len(failing)  # the conditions of covering the run, items 1 to `cover` (the Why line)
     if least < 100:
-        failing.append((f"exponent {least}, under 100", ("every exponent 100 or more", PUBLISHER)))
-    reason = (f"not shown to cover this row: {'; '.join(w for w, _ in failing)}; stated bound: "
+        failing.append((f"exponent {least}, under 100", ("every exponent 100 or more", PUBLISHER),
+                        _item("exponent", PUBLISHER, floor=100, terms=terms,
+                              q=facts["q_cross"] is not None)))  # fmt: skip
+    reason = (f"not shown to cover this row: {'; '.join(w for w, _, _ in failing)}; stated bound: "
               f"{head}")  # fmt: skip
-    return Petal(pid, AMBER_LOWER, None, STATEMENT, reason, quotes, reading=v.noted,
-                 notes=v.notes, next_step=_next(AMBER_UPPER, *(n for _, n in failing)))  # fmt: skip
+    unit_at = next((i + 1 for i, (_, _, it) in enumerate(failing) if it["need"] == "unit"), None)
+    why = {"floor": 80 if basis == "proved" else 100, "first": 1, "last": cover, "exps": terms,
+           "least": least, "q": facts["q_cross"] is not None, "unit": str(_v(b.get("unit"))),
+           "unit_item": unit_at}  # fmt: skip
+    upward = _next(AMBER_UPPER, *(n for _, n, _ in failing))
+    to_met = _groups((AMBER_UPPER, [it for _, _, it in failing]), (GREEN, met_items(least)))
+    return replace(decided(AMBER_LOWER, None, to=upward, to_met=to_met), reason=reason, why=why)
 
 
 # ---------------------------------------------------------------- Machine-checked (MC-1 to MC-6)
@@ -581,7 +791,16 @@ def _formal_tree(formal: Mapping[str, object], stated: str, top: str) -> dict[st
         "scope_card": {row: {col: _scope_cell(card, row, col) for col in SCOPE_COLS}
                        for row in SCOPE_ROWS},
         "scope_bounds": {row: _scope_bound(card, row) for row in SCOPE_ROWS},
+        # the limits the publisher states that no rule reads, each in plain words with its
+        # quotes (amended 2026-11-17); printed, they set nothing
+        "limits": [{"plain": str(i.get("plain")), "quotes": [_quote(q) for q in _quotes(i)]}
+                   for i in _list(formal.get("limits"))],
+        "said": said(formal),  # each fact's own quotes, printed with it; it sets nothing
     }  # fmt: skip
+
+
+def _list(found: object) -> list[Mapping[str, object]]:
+    return [i for i in found if isinstance(i, Mapping)] if isinstance(found, list) else []
 
 
 def _axioms(found: object) -> set[str]:
@@ -634,6 +853,7 @@ def _build_tree(build: Mapping[str, object], path: str) -> dict[str, object]:
         "seconds": build.get("seconds"),
         "exit_code": build.get("exit_code"),
         "status": str(build.get("status")),
+        "axioms": sorted(_axioms(build.get("axioms_reported"))),  # amended 2026-11-17
     }
 
 
@@ -660,15 +880,21 @@ def machine_checked(  # noqa: PLR0911, PLR0912, PLR0915 (one return per line of 
         formal["build"] = _build_tree(build, build_path)
     r = _v(fm.get("reach"))
     run, stated_for = _verifiers(props)
+    reach_run = _item("reach_run", PUBLISHER, run=run)
+    rebuild = _item("rebuild", US, new=formal.get("build") is not None)
     if stated == RED:  # MC-2
         first = _next(AMBER_LOWER, (MC_THEOREM_NEED, PUBLISHER),
                       ("then our recorded build of it", US))  # fmt: skip
+        ladder = _groups((AMBER_LOWER, [_item("named_theorem", PUBLISHER), rebuild]),
+                         (AMBER_UPPER, [_item("whole_method", PUBLISHER)]),
+                         (GREEN, [reach_run]))  # fmt: skip
         if r == "none":
             return Petal(pid, RED, STATED, STATEMENT, "nothing is machine-checked, as the "
                          "publisher states", quotes, formal=formal, reading=v.noted,
-                         notes=v.notes, next_step=first)  # fmt: skip
+                         notes=v.notes, next_step=first, to_met=ladder)  # fmt: skip
         return Petal(pid, RED, NOT_STATED, STATEMENT, _silent(petal, props), quotes,
-                     formal=formal, reading=v.noted, notes=v.notes, next_step=first)  # fmt: skip
+                     formal=formal, reading=v.noted, notes=v.notes, next_step=first,
+                     to_met=ladder)  # fmt: skip
     f = failed(checks, LOWERED_BY[pid])
     if f and stated == GREEN:  # MC-3
         return _check_failed(pid, f, quotes, formal=formal)
@@ -758,14 +984,20 @@ def machine_checked(  # noqa: PLR0911, PLR0912, PLR0915 (one return per line of 
                    "tool's standard ones")  # fmt: skip
     reason += _mc_tail(fm, r, run, stated_for, None)
     up: dict[str, object] | None = None
+    groups: list[tuple[str | None, list[dict[str, object]]]] = []
+    reading = [_item("reading", PUBLISHER, facts=list(v.keys))] if v.keys else []
+    why: dict[str, object] | None = None
     if step == AMBER_LOWER:  # GL-11: name only what `reach` or MC-7 lacks
-        lacks = [need for hit, need in (
-            (r in ("part", "protocol"), "the whole protocol, model included"),
-            (conclusion != "model", "its conclusion about a reference definition of the model"),
+        lacks = [(need, key) for hit, need, key in (
+            (r in ("part", "protocol"), "the whole protocol, model included", "whole_method"),
+            (conclusion != "model", "its conclusion about a reference definition of the model",
+             "conclusion"),
             (conclusion == "model" and not standard_axioms(tool, reported),
-             "built with only its tool's standard axioms"),
+             "built with only its tool's standard axioms", "axioms"),
         ) if hit]  # fmt: skip
-        up = _next(AMBER_UPPER, *((n, PUBLISHER) for n in lacks))
+        up = _next(AMBER_UPPER, *((n, PUBLISHER) for n, _ in lacks))
+        groups = [(AMBER_UPPER, [_item(k, PUBLISHER) for _, k in lacks] + [rebuild]),
+                  (GREEN, [reach_run, *reading])]  # fmt: skip
     elif step == AMBER_UPPER:
         code = "the verifier code this row runs"
         code = f"{run}, {code}" if run else code
@@ -775,8 +1007,17 @@ def machine_checked(  # noqa: PLR0911, PLR0912, PLR0915 (one return per line of 
         if v.noted:
             needs.append((READING_NEED, PUBLISHER))
         up = _next(GREEN, *needs)
+        if gaps:
+            gap_items = [_item("trusted_base" if t == "its trusted base listed" else "input_code",
+                               PUBLISHER) for t, _ in gaps]  # fmt: skip
+            new = any(i["need"] == "input_code" for i in gap_items)
+            groups = [(GREEN, gap_items + reading + ([rebuild] if new else []))]
+        else:
+            groups = [(GREEN, [reach_run, *reading, rebuild])]
+        why = {"reach": str(r), "read": v.noted, "run": run, "gaps": bool(gaps)}
     return Petal(pid, step, None, STATEMENT, reason, quotes, formal=formal, reading=v.noted,
-                 notes=v.notes, next_step=up)  # fmt: skip
+                 notes=v.notes, next_step=up, to_met=_groups(*groups), rebuilt=True, why=why,
+                 read_facts=_read_facts(fm, v.keys))  # fmt: skip
 
 
 # ---------------------------------------------------------------- Weights hidden (WH-1 to WH-6)
@@ -812,7 +1053,7 @@ def _zk_proved(h: Mapping[str, object], proof: object, n: int | None) -> list[st
     return out
 
 
-def weights_hidden(  # noqa: PLR0911, PLR0912 (one return per line of the table)
+def weights_hidden(  # noqa: PLR0911, PLR0912, PLR0915 (one return per line of the table)
     props: Mapping[str, object] | None,
     checks: Mapping[str, str],
     commit: str | None,
@@ -832,12 +1073,49 @@ def weights_hidden(  # noqa: PLR0911, PLR0912 (one return per line of the table)
     if petals is None or props is None or visible is None:  # WH-2
         return _not_read(pid, nr or NO_PROPERTIES)
     forms, at_least = _forms(h), _v(h.get("visible_at_least")) is True
+    n = coverage.batch_size if coverage else None
+    fitted = [str(i.get("item")) for i in visible if i.get("tag") == "fitted_to_weights"]
+    facts = {k: _v(h.get(k)) for k in ("stated", "verifier_gets_weights", "proof", "programs",
+                                       "zk_kind", "zk_model", "zk_unit")}  # fmt: skip
+    facts.update(
+        said=said(h),
+        listed=_v(h.get("visible_listed")) is True,
+        at_least=at_least,
+        visible_count=len(visible),
+        fitted=fitted,
+        batch_size=n,
+    )
+    passing = _wh_passing(h, visible, fitted)
 
-    def decided(step: str, cause: str | None, reason: str, *needs: Need) -> Petal:
+    def decided(step: str, cause: str | None, reason: str, *needs: Need,
+                to_met: tuple[dict[str, object], ...] | None = None,
+                why: Mapping[str, object] | None = None) -> Petal:  # fmt: skip
         to = {RED: AMBER_LOWER, AMBER_LOWER: AMBER_UPPER, AMBER_UPPER: GREEN}.get(step)
         return Petal(pid, step, cause, STATEMENT, reason, quotes, visible=visible,
                      reading=v.noted, notes=v.notes, forms=forms, visible_at_least=at_least,
-                     next_step=_next(to, *needs) if needs else None)  # fmt: skip
+                     next_step=_next(to, *needs) if needs else None, to_met=to_met,
+                     read_facts=_read_facts(h, _ordered(_WH_MET, v.keys, passing), v.keys), why=why,
+                     facts=facts)  # fmt: skip
+
+    def met_items() -> list[dict[str, object]]:
+        """GL-11 (amended 2026-11-17): what Met adds to a zero-knowledge theorem, in WH-5's
+        order, each the publisher's to give."""
+        programs = _v(h.get("programs"))
+        out = []
+        if _v(h.get("proof")) != "configuration_run":
+            out.append(_item("zk_run", PUBLISHER, n=n, unit=_v(h.get("zk_unit"))))
+        if programs != "stated":
+            out.append(_item("programs", PUBLISHER, programs=str(programs),
+                             read=bool(_m(h.get("programs")).get("note"))))  # fmt: skip
+        if _v(h.get("visible_listed")) is not True or not visible:
+            out.append(_item("visible_list", PUBLISHER))
+        if fitted:
+            out.append(_item("fitted", PUBLISHER, k=len(fitted)))
+        if passing:
+            out.append(_item("reading", PUBLISHER, facts=passing))
+        return out
+
+    zk_theorem = [_item("zk_theorem", PUBLISHER)]
 
     hidden_need: Need = ("a statement that they stay hidden", PUBLISHER)
     if v("verifier_gets_weights") is True:  # WH-3
@@ -850,18 +1128,21 @@ def weights_hidden(  # noqa: PLR0911, PLR0912 (one return per line of the table)
     if stated is not True:  # WH-3: not_stated
         return decided(RED, NOT_STATED, _silent(petal, props),
                        ("a statement that the weights stay hidden from the verifier, with a "
-                        "verifier that is not given them", PUBLISHER))  # fmt: skip
+                        "verifier that is not given them", PUBLISHER),
+                       to_met=_groups((AMBER_LOWER, [_item("hide_statement", PUBLISHER)]),
+                                      (AMBER_UPPER, zk_theorem),
+                                      (GREEN, met_items())))  # fmt: skip
     proof = v("proof")
     if proof not in ("protocol", "configuration_run"):  # WH-4 (none)
         return decided(AMBER_LOWER, None, "hiding is stated, with no zero-knowledge theorem",
-                       ("a proved zero-knowledge theorem", PUBLISHER))  # fmt: skip
+                       ("a proved zero-knowledge theorem", PUBLISHER),
+                       to_met=_groups((AMBER_UPPER, zk_theorem), (GREEN, met_items())))  # fmt: skip
     programs, listed = v("programs"), v("visible_listed") is True
-    fitted = [str(i.get("item")) for i in visible if i.get("tag") == "fitted_to_weights"]
     if (proof == "configuration_run" and programs == "stated" and listed and visible
             and not fitted):  # WH-5 (W1: a listed set is copied, not empty)  # fmt: skip
         return decided(GREEN, None, "zero knowledge proved for the configuration the row runs, "
-                       "with no listed visible value that depends on the weights")  # fmt: skip
-    n = coverage.batch_size if coverage else None
+                       "with no listed visible value that depends on the weights",
+                       to_met=_groups((GREEN, met_items())))  # fmt: skip
     missing = _zk_proved(h, proof, n)  # WH-6
     needs: list[Need] = []
     if proof != "configuration_run":
@@ -885,7 +1166,26 @@ def weights_hidden(  # noqa: PLR0911, PLR0912 (one return per line of the table)
         needs.append((f"no listed visible value that depends on the weights ({k} now)", PUBLISHER))
     if v.noted:
         needs.append((READING_NEED, PUBLISHER))
-    return decided(AMBER_UPPER, None, "; ".join(missing), *needs)
+    items = met_items()
+    return decided(AMBER_UPPER, None, "; ".join(missing), *needs,
+                   to_met=_groups((GREEN, items)), why={"n": len(items)})  # fmt: skip
+
+
+# the facts WH-5 reads for Met, in the properties order
+_WH_MET = ("stated", "verifier_gets_weights", "proof", "programs", "visible_listed")
+
+
+def _wh_passing(h: Mapping[str, object], visible: Sequence[Mapping[str, object]],
+                fitted: Sequence[str]) -> list[str]:  # fmt: skip
+    """GL-11 (amended 2026-11-17): the facts WH-5 reads whose value meets Met's condition and
+    carries a note."""
+    ok = {"stated": _v(h.get("stated")) is True,
+          "verifier_gets_weights": _v(h.get("verifier_gets_weights")) is not True,
+          "proof": _v(h.get("proof")) == "configuration_run",
+          "programs": _v(h.get("programs")) == "stated",
+          "visible_listed": _v(h.get("visible_listed")) is True and bool(visible)
+          and not fitted}  # fmt: skip
+    return [k for k in _WH_MET if ok[k] and _m(h.get(k)).get("note")]
 
 
 # ---------------------------------------------------------------- Trust assumptions (NT)
@@ -904,11 +1204,17 @@ def no_trusted_party(  # noqa: PLR0911 (one return per line of the table)
     v = _Facts(t)
     quotes = petal_quotes(pid, petal)
 
-    def decided(step: str, cause: str | None, reason: str, *needs: str) -> Petal:
+    facts: dict[str, object] = {"rests_on": _v(t.get("rests_on")),
+                                "publicly_checkable": _v(t.get("publicly_checkable")),
+                                "clause": None, "said": said(t)}  # fmt: skip
+
+    def decided(step: str, cause: str | None, reason: str, *needs: str,
+                to_met: tuple[dict[str, object], ...] | None = None) -> Petal:  # fmt: skip
         to = {RED: AMBER_LOWER, AMBER_LOWER: AMBER_UPPER, AMBER_UPPER: GREEN}.get(step)
         up = _next(to, *((n, PUBLISHER) for n in needs)) if needs else None
         return Petal(pid, step, cause, STATEMENT, reason, quotes, reading=v.noted, notes=v.notes,
-                     next_step=up)  # fmt: skip
+                     next_step=up, to_met=to_met, facts=facts,
+                     read_facts=_read_facts(t, v.keys))  # fmt: skip
 
     r = v("rests_on")
     rests_noted = v.noted  # N1: the value of rests_on is the reader's reading
@@ -930,17 +1236,21 @@ def no_trusted_party(  # noqa: PLR0911 (one return per line of the table)
     if v("publicly_checkable") is False:  # NT-4
         return decided(AMBER_LOWER, None, "proofs are not publicly checkable", *up)
     if r == "open_ceremony":  # NT-5 (N2)
+        facts["clause"] = "ceremony"  # Mostly met's second case
         return decided(AMBER_UPPER, None, "soundness rests on an open setup ceremony whose "
                        "secret stays unknown if one participant was honest",
-                       "no setup that produced a secret, as the publisher states")  # fmt: skip
+                       "no setup that produced a secret, as the publisher states",
+                       to_met=_groups((GREEN, [_item("no_setup_secret", PUBLISHER)])))  # fmt: skip
     if rests_noted:  # NT-6, N1, GL-10: no quote says it in words, so Mostly met at most
+        facts["clause"] = "reading"  # Mostly met's first case
         return decided(AMBER_UPPER, None, "cryptography only, as we read the publisher: no setup "
                        "produced a secret; no quoted sentence says so in words, so Mostly met at "
                        "most", "a sentence of the publisher's, at the pinned commit, that "
                        "soundness rests on cryptography alone and no setup produced a "
-                       "secret")  # fmt: skip
+                       "secret",
+                       to_met=_groups((GREEN, [_item("rests_sentence", PUBLISHER)])))  # fmt: skip
     return decided(GREEN, None, "stated to rest on cryptographic assumptions alone, with no "
-                   "setup that produced a secret")  # NT-6  # fmt: skip
+                   "setup that produced a secret", to_met=())  # NT-6  # fmt: skip
 
 
 def statement_petals(
@@ -968,8 +1278,10 @@ def read_as(p: Petal) -> Petal:
     met at most, its reason says why, and its next step is the publisher's sentence (GL-11)."""
     if not p.reading or p.basis != STATEMENT or p.step != GREEN:
         return p
+    facts = [str(f["fact"]) for f in p.read_facts]
     return replace(p, step=AMBER_UPPER, reason=f"{p.reason}; it rests on our reading, so Mostly "
-                   "met at most", next_step=_next(GREEN, (READING_NEED, PUBLISHER)))  # fmt: skip
+                   "met at most", next_step=_next(GREEN, (READING_NEED, PUBLISHER)),
+                   to_met=_groups((GREEN, [_item("reading", PUBLISHER, facts=facts)])))  # fmt: skip
 
 
 # ---------------------------------------------------------------- Fidelity (FM-1 to FM-7)
@@ -983,6 +1295,7 @@ def _scores(found: object) -> list[int] | None:
 
 
 _THRESHOLD_NAMES = (("green", "T_green"), ("upper", "T_upper"))
+FM5_ENGINE = "llama.cpp"  # FM-5: the engine whose slot count can make a fidelity run one at a time
 # FM (amended 2026-11-15): a control as a reason names it, by its type or recipe
 _CONTROL_WORDS = {"q8_0": "the 8-bit copy", "q4_k_m": "the 4-bit copy",
                   "rerun": "the original run again"}  # fmt: skip
@@ -1107,10 +1420,12 @@ def faithful_model(  # noqa: PLR0911, PLR0912, PLR0915 (one return per line of t
     policy: str | None,
     level_alpha: float | None = None,
     reference: str | None = None,
+    weight_bits: float | None = None,
 ) -> Petal:
     """FM-1 to FM-7 (basis test throughout). The step tests are read from `doc`, never run; an
     exact one is counted again to tie it to the stored threshold (F5). `reference` is the
-    precision of the rung's fidelity reference (FI-1), which the reason names."""
+    precision of the rung's fidelity reference (FI-1), which the reason names; `weight_bits`
+    the proved copy's weight bits (the workload record), which selects a printed sentence."""
     pid = "faithful_model"
 
     def petal(step: str | None, reason: str, cause: str | None = None, *needs: Need) -> Petal:
@@ -1190,8 +1505,21 @@ def faithful_model(  # noqa: PLR0911, PLR0912, PLR0915 (one return per line of t
 
     green_shown, upper_shown = pg < alpha, pu < alpha
     slots = doc.get("slots")
+    facts = fidelity_facts(doc, scores, ids("upper"), ids("green"), upper_shown, green_shown,
+                           policy, weight_bits)  # fmt: skip
+    facts.update(alpha=alpha, method=g.get("method"))
+    above = {k: _item("above", PUBLISHER, key=k, value=facts[k]["display"])  # type: ignore[index]
+             for k in ("upper", "green")}  # fmt: skip
+    # FM-5: every part of the run in llama.cpp, one request at a time; a vLLM part counts no slot
+    vllm = facts.get("rerun_engine") == "vllm"
+    one_item = [_item("one_at_a_time", US, slots=slots, engine=FM5_ENGINE, vllm=vllm)] \
+        if slots != 1 else []  # fmt: skip
+
+    def counted(p: Petal, *groups: tuple[str | None, list[dict[str, object]]]) -> Petal:
+        return replace(p, to_met=_groups(*groups), facts=facts)
+
     if green_shown and slots == 1:  # FM-5 (F2)
-        return petal(GREEN, f"shown above {half('green', vg)}; {tail}")
+        return counted(petal(GREEN, f"shown above {half('green', vg)}; {tail}"))
     cause = doc.get("slots_cause")
     one = "Met needs a fidelity run of one request at a time"
     had = f"the fidelity run had {slots} at a time and Met needs one" if slots is not None else (
@@ -1204,16 +1532,73 @@ def faithful_model(  # noqa: PLR0911, PLR0912, PLR0915 (one return per line of t
                         PUBLISHER)  # fmt: skip
     if upper_shown:  # FM-6 (F3)
         if green_shown:
-            return petal(AMBER_UPPER, f"shown above {half('green', vg)}, but {had}; {tail}", None,
-                         one_at_a_time)  # fmt: skip
-        return petal(AMBER_UPPER, f"shown above {half('upper', vu)}; not shown above "
-                     f"{half('green', vg)}; {tail}", None, green_need,
-                     *([one_at_a_time] if slots != 1 else []))  # fmt: skip
+            return counted(petal(AMBER_UPPER, f"shown above {half('green', vg)}, but {had}; "
+                                 f"{tail}", None, one_at_a_time), (GREEN, one_item))  # fmt: skip
+        return counted(petal(AMBER_UPPER, f"shown above {half('upper', vu)}; not shown above "
+                             f"{half('green', vg)}; {tail}", None, green_need,
+                             *([one_at_a_time] if slots != 1 else [])),
+                       (GREEN, [above["green"], *one_item]))  # fmt: skip
     if green_shown:  # FM-7 (F4)
-        return petal(AMBER_LOWER, f"not shown above {half('upper', vu)}; shown above "
-                     f"{half('green', vg)}, but {had}; {tail}", None, upper_need)  # fmt: skip
-    return petal(AMBER_LOWER, f"not shown above {half('upper', vu)}; {tail}", None,
-                 upper_need)  # FM-7  # fmt: skip
+        return counted(petal(AMBER_LOWER, f"not shown above {half('upper', vu)}; shown above "
+                             f"{half('green', vg)}, but {had}; {tail}", None, upper_need),
+                       (AMBER_UPPER, [above["upper"]]), (GREEN, one_item))  # fmt: skip
+    return counted(petal(AMBER_LOWER, f"not shown above {half('upper', vu)}; {tail}", None,
+                         upper_need),
+                   (AMBER_UPPER, [above["upper"]]),
+                   (GREEN, [above["green"], *one_item]))  # FM-7  # fmt: skip
+
+
+def tenth(x: float) -> float:
+    """A mean or a threshold as the page prints it, to one decimal place (amended 2026-11-17).
+    A threshold is rounded from its unrounded value, never from two rounded means."""
+    return round(x, 1)
+
+
+def fidelity_facts(
+    doc: Mapping[str, object],
+    scores: Sequence[int],
+    upper_ids: Sequence[str],
+    green_ids: Sequence[str],
+    upper_shown: bool,
+    green_shown: bool,
+    policy: str | None,
+    weight_bits: float | None,
+) -> dict[str, object]:
+    """The Fidelity petal's facts as the page words them (amended 2026-11-17): the row's mean,
+    each control's and each threshold's, unrounded and to one decimal; whether each threshold
+    is shown; the slots; the engine the original runs in; whether the claim's policy caps the
+    step (FM-3); and whether the copy proved at 8 bits or more scores below the 8-bit copy
+    (`below_own_width`). They set nothing."""
+    steps = _m(doc.get("steps"))
+    means = control_means(doc)
+    mean = sum(scores) / len(scores)
+    controls = {cid: {"words": w, "mean": m, "display": tenth(m)} for cid, (w, m) in means.items()}
+
+    def threshold(key: str, found: Sequence[str], shown: bool) -> dict[str, object]:
+        value = float(_m(steps.get(key)).get("value"))  # type: ignore[arg-type]
+        return {"value": value, "display": tenth(value), "controls": list(found), "shown": shown}
+
+    bar = _m(doc.get("bar"))
+    found = bar.get("mean_prefix")
+    bar_mean = tenth(float(found)) if isinstance(found, int | float) else None
+    q8 = means.get("q8_0")
+    rerun = next((str(_m(c).get("id")) for c in _list(doc.get("controls"))
+                  if c.get("recipe") == "rerun"), None)  # fmt: skip
+    below = weight_bits is not None and weight_bits >= 8 and q8 is not None and mean < q8[1]
+    return {
+        "n": len(scores),
+        "mean": mean,
+        "display": tenth(mean),
+        "controls": controls,
+        "rerun": rerun,
+        "bar": {"control": bar.get("control"), "display": bar_mean},
+        "upper": threshold("upper", upper_ids, upper_shown),
+        "green": threshold("green", green_ids, green_shown),
+        "slots": doc.get("slots"),
+        "rerun_engine": _m(doc.get("engine")).get("tool"),
+        "policy_cap": policy != EXACT_MATCH,
+        "below_own_width": below,
+    }
 
 
 def glyph(petals: Mapping[str, Petal]) -> list[dict[str, object]]:
@@ -1247,7 +1632,7 @@ _EXPONENT = re.compile(
 )
 
 
-def properties_problems(  # noqa: PLR0912 (one branch per offline rule of spec 1.2)
+def properties_problems(  # noqa: PLR0912, PLR0915 (one branch per offline rule of spec 1.2)
     doc: Mapping[str, object], system_dir: Path, system_pin: str | None
 ) -> list[str]:
     """What the properties/2 schema cannot check (spec 1.2): the pin, the directory, the quote
@@ -1297,6 +1682,7 @@ def properties_problems(  # noqa: PLR0912 (one branch per offline rule of spec 1
     card = _m(formal.get("scope_card"))
     copied = [(f"verifiers.{k}", _m(named.get(k))) for k in ("run", "stated")]
     copied += [(f"scope_card.{r}.bound", _m(_m(card.get(r)).get("bound"))) for r in SCOPE_ROWS]
+    copied.append(("bound.after", _m(bound.get("after"))))  # amended 2026-11-17
     for where, fact in copied:
         words = _v(fact)
         texts = [str(q.get("text")).lower() for q in _quotes(fact)]

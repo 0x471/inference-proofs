@@ -112,23 +112,30 @@ def test_glyphs_draw_the_board_states(board_site: Any) -> None:
         assert checks == [(c, row["checks"][c]["state"]) for c in CHECKS], row["system"]
 
 
-def test_petal_rows_print_the_boards_reasons(board_site: Any) -> None:
-    """SI-3 (amended 2026-11-16): a petal's default line is its board reason's first clause and
-    the count of the clauses cut (Fidelity's reason whole, its last clause the row's measure),
-    never typed, and the full reason sits in the petal's disclosure."""
+def test_petal_rows_count_the_boards_items_for_met(board_site: Any) -> None:
+    """SI-3 (amended 2026-11-17): a petal's row counts the board's items missing for Met
+    (`to_met`) and who acts on them, never typed; at Met it counts none."""
     text = pages(board_site.out)
     for row in rows(board_site.board):
         page = text[f"{row['system']}.html"]
-        trs = re.findall(r'<tr class="pt [^"]*">(.*?)</tr>', page, re.S)
+        trs = re.findall(r'<tr class="pt [^"]*"[^>]*>(.*?)</tr>', page, re.S)
         assert len(trs) == len(row["glyph"]), row["system"]
         for tr, p in zip(trs, row["glyph"], strict=True):
-            line = re.search(r'<span class="rs">([^<]*)</span>', tr)
-            assert line, (row["system"], p["id"])
-            clauses = p["reason"].split("; ")
-            first = (p["reason"] if p["basis"] == "test" or len(clauses) == 1
-                     else f"{clauses[0]}, and {len(clauses) - 1} more")  # fmt: skip
-            assert html.unescape(line[1]) == first, (row["system"], p["id"])
-            assert p["reason"] in html.unescape(tr), (row["system"], p["id"])
+            tag = re.search(r'<span class="pdl">(.*?)<span class="sr">', tr, re.S)
+            assert tag, (row["system"], p["id"])
+            said = html.unescape(re.sub(r"<[^>]+>", "", tag[1]))
+            groups = p.get("to_met")
+            if groups is None:  # a board from before 2026-11-17: its next step's needs
+                nx = p.get("next")
+                groups = [{"items": nx["needs"]}] if nx else []
+            items = [i for g in groups for i in g["items"]]
+            if not items:
+                assert "missing" not in said, (row["system"], p["id"])
+                continue
+            us = sum(1 for i in items if i["by"] == "us")
+            pub = len(items) - us
+            who = "publisher" if not us else "us" if not pub else f"{pub} publisher, {us} us"
+            assert said == f"{len(items)} missing \u00b7 {who}", (row["system"], p["id"], said)
 
 
 def test_order_and_positions_are_the_boards(board_site: Any) -> None:
@@ -231,19 +238,18 @@ def test_scale_positions_are_the_boards(board_site: Any) -> None:
     assert re.search(r'id="scale-multiple-flashprove">.*?class="mk" x="63.92%"', text, re.S)
 
 
-def test_session_parts_print_beside_the_whole_sessions_figure(board_site: Any) -> None:
-    """RFC-0018 CO-7: a row with no steady state prints its session figure's two parts. In the
-    example board SASH's session is 604.9 GPU-s per reply, of which 100.0 generation and 504.9
-    commit and proving, so the ladder's share bar gives commit and proving 100 * 504.9 / 604.9 =
-    83.47 % of its length; both parts' figures are on the ladder (over the two rates there,
-    amended 2026-11-16), the system page and the card."""
+def test_session_parts_print_on_the_system_page_only(board_site: Any) -> None:
+    """RFC-0018 CO-7 (amended 2026-11-17): a row with no steady state has its session figure's two
+    parts, and they print only under Cost on its system page (not every system times them apart,
+    so no surface carries them). In the example board SASH's session is 604.9 GPU-s per reply, of
+    which 100.0 generation and 504.9 commit and proving: both parts' figures are on its page, and
+    neither is on the ladder, the Scale page or the card."""
     out = board_site.out
     at = "/rungs/1/rows/0/session_"
-    for page in ("index.html", "sash.html", "og/sash.html"):
+    for page in ("index.html", "scale.html", "sash.html", "og/sash.html"):
         text = html.unescape((out / page).read_text())
         for part in ("generation_multiple", "commit_and_proving_multiple"):
-            assert f"{at}{part}" in text, (page, part)
-    assert '<rect class="bp" width="83.47"' in (out / "index.html").read_text()
+            assert (f"{at}{part}" in text) == (page == "sash.html"), (page, part)
 
 
 def printed(text: str) -> tuple[float, float]:
@@ -256,8 +262,7 @@ def test_printed_rates_divide_to_the_printed_multiple(board_site: Any) -> None:
     """CO-8 (amended 2026-11-17): the proved rate under a row's multiple and the served rate in
     its model's head, as printed, divide to the multiple printed above. By hand on the example
     board: 849.92 / 10.274 = 82.72, printed "10.27 proved" under "82.72×" and "849.9" in the
-    head. A row with no rate pair (SASH there) prints no line, and keeps its parts
-    (`test_session_parts_print_beside_the_whole_sessions_figure`)."""
+    head. A row with no rate pair (SASH there) prints no line."""
     out = board_site.out
     index = (out / "index.html").read_text()
     for pid, body in re.findall(r'<tr class="row" id="row-([a-z0-9-]+)">(.*?)</tr>', index, re.S):
@@ -305,7 +310,8 @@ def test_surface_figures_are_whole_sessions(board_site: Any) -> None:
     pages_ = {"index.html": tr[1]}
     for page in ("flashprove.html", "og/flashprove.html"):
         text = html.unescape((out / page).read_text())
-        pages_[page] = text.split('class="figs"')[0]  # the band (all of a card)
+        band = re.search(r'<section class="mast.*?</section>', text, re.S)
+        pages_[page] = band[0] if band else text  # the band (all of a card)
     for page, text in pages_.items():
         pointers = set(re.findall(r"record: [^#]+#(/[^;\"]+)", text))
         assert f"{at}session_multiple" in pointers, page
@@ -353,3 +359,45 @@ def test_gpt2_prints_the_model_card_count() -> None:
     gpt2 = next(r for r in view["rungs"] if r["id"] == "gpt-2")
     assert gpt2["parameters_total"] == 137_022_720 - 12 * 1024 * 1024 == 124_439_808
     assert "124M" in gpt2["parameters_erratum"]["card"]["quote"]
+
+
+def test_cost_block_figures_share_the_bands_scope(board_site: Any) -> None:
+    """CO-5 (amended 2026-11-17): the figures that lead a system page's Cost block (the two rates
+    and the cost in USD; the multiple is the band's alone) are of the scope the band prints, so
+    the block never sets a steady figure beside a whole-session one. In the example board
+    FlashProve has both scopes: its Cost tiles name the proved rate and session_usd_per_reply,
+    never multiple or steady_usd_per_reply."""
+    text = html.unescape((board_site.out / "flashprove.html").read_text())
+    block = re.search(r'<section class="blk" id="cost".*?<dl class="figs tiles">(.*?)</dl>', text,
+                      re.S)  # fmt: skip
+    assert block
+    pointers = set(re.findall(r"record: [^#]+#(/[^;\"]+)", block[1]))
+    at = "/rungs/0/rows/0/"
+    assert {f"{at}session_reply_tokens_per_gpu_second", f"{at}session_usd_per_reply"} <= pointers
+    assert not {f"{at}multiple", f"{at}steady_usd_per_reply"} & pointers
+
+
+def test_fidelity_row_figures_are_the_boards(board_site: Any) -> None:
+    """GL-11, SI-3 (amended 2026-11-17): a Fidelity petal's row prints the row's mean matched
+    leading tokens and the 8-bit and 4-bit copies' means at the Fidelity check's precision (four
+    significant digits), and the first threshold missing for Met with the step it reaches, at the
+    board's one decimal; none at Met. On the stored release by hand: FlashProve 29.66 (8-bit
+    65.71, 4-bit 30.29), Mostly met at 48.0; SASH 31.00 (8-bit 106.1, 4-bit 5.267), Mostly met at
+    55.7."""
+    figures = board_site.build.draw.petal.fidelity_figures
+    board = json.loads((WEB.parent / "releases/v1.0/board.json").read_text())
+    petals = {row["system"]: next(p for p in row["glyph"] if p["id"] == "faithful_model")
+              for row in rows(board)}  # fmt: skip
+    # the view's `facts` is the board's petal record (iproofs.site.view)
+    got = {k: figures({**p, "facts": p["fidelity"]}) for k, p in petals.items()}
+    assert got == {
+        "flashprove": {
+            "own": "29.66",
+            "q8": "65.71",
+            "q4": "30.29",
+            "next": ("Mostly met", "48.0"),
+        },
+        "sash": {"own": "31.00", "q8": "106.1", "q4": "5.267", "next": ("Mostly met", "55.7")},
+    }
+    met = petals["flashprove"]
+    assert figures({**met, "facts": met["fidelity"], "to_met": []})["next"] is None

@@ -53,10 +53,10 @@
     {
       "group": "Glyph",
       "kind": "petal",
-      "meta": "The bound the publisher states on a false reply being accepted: whether it is proved, and whether it covers what the row runs.",
+      "meta": "The bound the publisher states on a false reply being accepted: whether it is proved, and whether it covers what we run.",
       "name": "Integrity",
       "pie": "",
-      "terms": "integrity the bound the publisher states on a false reply being accepted: whether it is proved, and whether it covers what the row runs. soundness",
+      "terms": "integrity the bound the publisher states on a false reply being accepted: whether it is proved, and whether it covers what we run. soundness",
       "tier": 2,
       "url": "/checks#unforgeable"
     },
@@ -363,6 +363,16 @@
     {
       "group": "Glossary",
       "kind": "term",
+      "meta": "A cheater that controls its own machine, with no hardware or outside party assumed honest.",
+      "name": "Any cheating prover",
+      "pie": "",
+      "terms": "any cheating prover a cheater that controls its own machine, with no hardware or outside party assumed honest.",
+      "tier": 4.2,
+      "url": "/glossary#any-cheating-prover"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
       "meta": "A model's layout and sizes: its layers, widths and heads.",
       "name": "Architecture",
       "pie": "",
@@ -473,10 +483,10 @@
     {
       "group": "Glossary",
       "kind": "term",
-      "meta": "Said of a soundness bound that rests on an unproved conjecture.",
+      "meta": "Said of a soundness limit that rests on an unproven assumption, not a theorem.",
       "name": "Conjectured",
       "pie": "",
-      "terms": "conjectured said of a soundness bound that rests on an unproved conjecture.",
+      "terms": "conjectured said of a soundness limit that rests on an unproven assumption, not a theorem.",
       "tier": 4.2,
       "url": "/glossary#conjectured"
     },
@@ -663,6 +673,16 @@
     {
       "group": "Glossary",
       "kind": "term",
+      "meta": "One run of the hash function by a cheating prover searching for a proof that passes.",
+      "name": "Hash query",
+      "pie": "",
+      "terms": "hash query one run of the hash function by a cheating prover searching for a proof that passes.",
+      "tier": 4.2,
+      "url": "/glossary#hash-query"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
       "meta": "The fidelity run's yardsticks, fixed in the level file before any run: honest copies are the original run again and its 8-bit and 4-bit copies, the usual ways to run the model; damaged copies (3-bit and 2-bit copies, a quarter of the model's blocks cut, a smaller model) are made worse on purpose, and the highest-scoring of them that every honest copy scores above is the bar.",
       "name": "Honest and damaged copies",
       "pie": "",
@@ -723,6 +743,16 @@
     {
       "group": "Glossary",
       "kind": "term",
+      "meta": "A proof assistant: a program that checks every step of a mathematical proof.",
+      "name": "Lean",
+      "pie": "",
+      "terms": "lean a proof assistant: a program that checks every step of a mathematical proof.",
+      "tier": 4.2,
+      "url": "/glossary#lean"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
       "meta": "A frozen definition of the benchmark in one file: the models, request, checks, order rule and constants.",
       "name": "Level",
       "pie": "",
@@ -769,6 +799,16 @@
       "terms": "matched leading tokens how many tokens at the start of a reply equal the original's, up to the first difference; the score of the fidelity check.",
       "tier": 4.2,
       "url": "/glossary#matched-leading-tokens"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
+      "meta": "Everything a petal lacks for its top grade, Met, as a system page prints it: the items in groups by the step each group reaches, each with who acts, the publisher or us, and what it is today.",
+      "name": "Missing for Met",
+      "pie": "",
+      "terms": "missing for met everything a petal lacks for its top grade, met, as a system page prints it: the items in groups by the step each group reaches, each with who acts, the publisher or us, and what it is today.",
+      "tier": 4.2,
+      "url": "/glossary#missing-for-met"
     },
     {
       "group": "Glossary",
@@ -883,6 +923,16 @@
     {
       "group": "Glossary",
       "kind": "term",
+      "meta": "Our run of the publisher's machine-checked proof through the proof-checking program it names, at the version we ran, with the program version the publisher pins.",
+      "name": "Our rebuild",
+      "pie": "",
+      "terms": "our rebuild our run of the publisher's machine-checked proof through the proof-checking program it names, at the version we ran, with the program version the publisher pins.",
+      "tier": 4.2,
+      "url": "/glossary#our-rebuild"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
       "meta": "Said of a system on a model when all six of our checks passed there.",
       "name": "Passed",
       "pie": "",
@@ -939,6 +989,16 @@
       "terms": "prompt check with one prompt token changed, the verifier refuses the proof (rule).",
       "tier": 4.2,
       "url": "/glossary#prompt-check"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
+      "meta": "On a system's page, the file the system sends with each reply for the verifier to check.",
+      "name": "Proof",
+      "pie": "",
+      "terms": "proof on a system's page, the file the system sends with each reply for the verifier to check.",
+      "tier": 4.2,
+      "url": "/glossary#proof"
     },
     {
       "group": "Glossary",
@@ -1023,10 +1083,10 @@
     {
       "group": "Glossary",
       "kind": "term",
-      "meta": "What a petal rests on, printed beside its step: stated, the publisher's own sentence; read as, our reading of sentences none of which says it alone; tested by us, our own runs.",
+      "meta": "What a grade comes from, printed at the head of an opened petal's evidence, with \"our reading\" beside the grade wherever a reading of ours sets it: the publisher's words, its own sentence; our reading, with the number of points it covers, where no single sentence of the publisher's states a point, so we read it from several passages, which are linked; our test, our own runs; our rebuild, our run of the publisher's proof through its proof-checking program.",
       "name": "Read as",
       "pie": "",
-      "terms": "read as what a petal rests on, printed beside its step: stated, the publisher's own sentence; read as, our reading of sentences none of which says it alone; tested by us, our own runs.",
+      "terms": "read as what a grade comes from, printed at the head of an opened petal's evidence, with \"our reading\" beside the grade wherever a reading of ours sets it: the publisher's words, its own sentence; our reading, with the number of points it covers, where no single sentence of the publisher's states a point, so we read it from several passages, which are linked; our test, our own runs; our rebuild, our run of the publisher's proof through its proof-checking program.",
       "tier": 4.2,
       "url": "/glossary#read-as"
     },
@@ -1193,12 +1253,32 @@
     {
       "group": "Glossary",
       "kind": "term",
+      "meta": "Our statistical test finds an average above a threshold at the usual 5% level: p < 0.05 in a paired sign-flip test over the prompts.",
+      "name": "Shown above",
+      "pie": "",
+      "terms": "shown above our statistical test finds an average above a threshold at the usual 5% level: p < 0.05 in a paired sign-flip test over the prompts.",
+      "tier": 4.2,
+      "url": "/glossary#shown-above"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
       "meta": "A protocol that convinces a verifier of a polynomial's sum over exponentially many points with one random evaluation.",
       "name": "Sumcheck",
       "pie": "",
       "terms": "sumcheck a protocol that convinces a verifier of a polynomial's sum over exponentially many points with one random evaluation.",
       "tier": 4.2,
       "url": "/glossary#sumcheck"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
+      "meta": "A mathematical result with its proof.",
+      "name": "Theorem",
+      "pie": "",
+      "terms": "theorem a mathematical result with its proof.",
+      "tier": 4.2,
+      "url": "/glossary#theorem"
     },
     {
       "group": "Glossary",

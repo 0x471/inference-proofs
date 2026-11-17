@@ -253,7 +253,7 @@ def test_formal_carries_the_stored_build_without_our_wrapper() -> None:
         "record": path, "toolchain": {"name": TOOLCHAIN["name"], "version": TOOLCHAIN["version"]},
         "command": ["X=1", "make", "check"], "started_at": "2026-11-15T21:09:43Z",
         "seconds": 6388.0,
-        "exit_code": 0, "status": "built"}  # fmt: skip
+        "exit_code": 0, "status": "built", "axioms": ["classic"]}  # fmt: skip
     absent = machine_checked(properties2(), HELD, PIN, None, None).formal
     assert absent is not None
     assert "build" not in absent

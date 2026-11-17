@@ -144,6 +144,13 @@ def _formal(pid: str, raw: dict[str, Any] | None) -> dict[str, Any] | None:
                          {"text": raw["scope_bounds"][r]["text"],
                           "quotes": _quotes(raw["scope_bounds"][r]["quotes"])}
                          for r in SCOPE_ROWS},
+        "conclusion": raw.get("conclusion"),
+        "limits": [{"plain": str(i["plain"]), "quotes": _quotes(i["quotes"])}
+                   for i in raw.get("limits") or []],  # amended 2026-11-17
+        # each fact's own quotes, printed with it (amended 2026-11-17); absent from an older board
+        "said": {k: {"quotes": _quotes(v.get("quotes")),
+                     **({"plain": str(v["plain"])} if v.get("plain") else {})}
+                 for k, v in (raw.get("said") or {}).items()},
     }  # fmt: skip
 
 
@@ -181,8 +188,30 @@ def _glyph(raw: list[dict[str, Any]]) -> list[dict[str, Any]]:
                      for v in visible],
                     "visible_at_least": p.get("visible_at_least", False) is True,
                     "forms": [{"item": f["item"], "quotes": _quotes(f["quotes"])}
-                              for f in p.get("forms") or []]})  # fmt: skip
+                              for f in p.get("forms") or []],
+                    # GL-11 (amended 2026-11-17): what the petal lacks for Met, what its step
+                    # comes from, the facts its reading rests on, the Why line's inputs and the
+                    # facts the page words it from; absent from an older board
+                    "to_met": _to_met(p),
+                    "came_from": p.get("sources"),
+                    "read_facts": [dict(f) for f in p.get("read_facts") or []],
+                    "why": p.get("why"),
+                    "facts": next((p[k] for k in ("bound", "hiding", "fidelity", "trust")
+                                   if k in p), None)})  # fmt: skip
     return out
+
+
+def _to_met(p: dict[str, Any]) -> list[dict[str, Any]]:
+    """GL-11: the petal's items for Met; on a board from before 2026-11-17, its next step's
+    needs as one group in their own words."""
+    if "to_met" in p:
+        return list(p["to_met"])
+    nx = p.get("next")
+    if not nx:
+        return []
+    kind = "up" if nx["to"] is not None else ("decide" if p["step"] is None else "repair")
+    items = [{"need": "text", "text": n["text"], "by": n["by"]} for n in nx["needs"]]
+    return [{"to": nx["to"], "kind": kind, "items": items}]
 
 
 def _checks(raw: dict[str, Any]) -> list[dict[str, Any]]:

@@ -26,6 +26,7 @@ from .chrome import (
     lead_figure,
     link,
     page,
+    parts_of,
     pnav,
     rate_pair,
     rung_of,
@@ -39,7 +40,6 @@ from .overview import (
     NOT_TESTED,
     RATE_ANCHOR,
     defined,
-    fidelity_word,
     fig_html,
     filled,
     how_link,
@@ -47,27 +47,24 @@ from .overview import (
     multiple_html,
     name_of,
     nobreak,
+    part_term,
     pct,
     proved_words,
     rate_html,
     request_words,
     serving_words,
-    split_html,
     standing_html,
     states,
+    steady_line,
     sub_line,
     whole_line,
     whole_note,
 )
+from .petal import chip, glyph_section, quote_links, state_word
 from .plots import fid_svg, hbar
 from .words import (
-    ARCH_LONG,
-    ARCH_NO_FACT,
-    ARCH_SHORT,
-    AS_READ,
     BASIS_BITS,
     BASIS_READING,
-    BASIS_WORD,
     CARD_ERRATUM,
     CAUSE_WORD,
     CHECK_CAUSE_LEAD,
@@ -79,23 +76,13 @@ from .words import (
     CHECK_NAME,
     CHECK_PLAIN,
     CHECKS_DESC,
-    CHECKS_LEAD,
     CONTROL_NAME,
-    DETAILS_HEAD,
-    DOCS_READ,
+    COPY_WORD,
     DTYPE_BITS,
+    FID_HEAD,
     FID_KIND,
-    FID_KINDS,
-    FID_LABEL,
-    FID_LEAD_CHECK,
-    FID_LEAD_LOGITS,
-    FID_LEAD_PREFIX,
-    FID_LEAD_TF,
-    FID_PLAIN,
-    FID_PLAIN_COPIES,
-    FID_PLAIN_TF,
     FID_WHO,
-    FID_WHY,
+    FIDELITY_AGAINST,
     FIGURE_ANCHOR,
     FIGURE_HEAD,
     FIGURE_NAME,
@@ -103,12 +90,9 @@ from .words import (
     FORMAT_HEAD,
     FORMAT_WORD,
     FULL_LOAD_WORD,
-    HIDING_LABEL,
-    HOW_RULE,
     KEPT_CHANGE,
     KEPT_HEAD,
     KEPT_MEANS,
-    KEPT_SETS,
     KEPT_TIME,
     KIND_TERM,
     KNOW_COLS,
@@ -116,11 +100,9 @@ from .words import (
     KNOW_LINES,
     KNOW_WHERE,
     KNOW_WORD,
-    LEVEL_STATEMENT_HEAD,
     LIM_CEILING,
     LIM_COPY,
     LIM_ENGINES,
-    LIM_GREEN,
     LIM_LLAMA,
     LIM_ORIGINAL,
     LIM_PART,
@@ -140,12 +122,9 @@ from .words import (
     MANDATE_MEMBERS_IN,
     NEXT_BY,
     NEXT_HEAD,
-    NEXT_MORE,
-    NEXT_SHORT,
     NO_STEADY_WORD,
     NOT_RUN_LEAD,
     NOT_RUN_RULE,
-    NOT_TIMED_APART,
     NOTION_HEAD,
     NULL_WORD,
     OF_WHICH,
@@ -153,6 +132,7 @@ from .words import (
     P_ABOVE,
     P_FLOOR,
     PART_WORD,
+    PARTS_HEAD,
     PETAL_CAUSE_DRAW,
     PETAL_CAUSE_RULE,
     PETAL_CHECKS,
@@ -166,33 +146,22 @@ from .words import (
     PETAL_STEPS_FOOT,
     PETAL_TERM,
     PREFIX,
-    PROOF_BUILD_HEAD,
+    PROVED_HEAD,
     PROVED_LINK,
-    QUOTES_HEAD,
-    RATE_SERVING,
-    REACH_GAP,
-    REACH_LABEL,
-    REACH_STATED,
+    RATE_PER,
+    RATE_PROVED,
     READ_AS,
-    READING_HEAD,
-    READING_NEED,
     READING_RULE,
-    REASON_HEAD,
     REASON_LINK,
     RECORD_WORD,
     REPLY_TOKENS_HEAD,
-    SAID_WORD,
-    SCOPE_BLOCK_HEAD,
     SCOPE_BOUND_HEAD,
     SCOPE_CARD_HEAD,
     SCOPE_CARD_WORD,
     SCOPE_COL_WORD,
-    SCOPE_HEAD,
-    SCOPE_NOT_GRADED,
-    SCOPE_PROTECTS,
     SCOPE_ROW_WORD,
     SCOPE_SHORT,
-    SCOPE_STATED,
+    SCOPE_TERMS,
     SCOPE_TESTED,
     SCOPE_VALUE_WORD,
     SCOPE_WORD,
@@ -201,7 +170,6 @@ from .words import (
     SE3B_NONE,
     SE3B_ROW,
     SEP,
-    SPLIT_PARTS,
     STATE_WORD,
     STATED_SECURITY,
     STATEMENT_WORD,
@@ -221,19 +189,14 @@ from .words import (
     TRIAL_REFUSED,
     TRIAL_WHAT,
     TRIALS_HEAD,
-    VERIFIER_LINE,
-    VISIBLE_OTHERS,
-    VISIBLE_TAG_WORD,
     architecture,
     beside_unit,
     curly,
     e,
     kl_head,
     number,
-    petal_step,
     quoted,
     range_words,
-    said_word,
     sig,
     step_key,
 )
@@ -320,13 +283,6 @@ def evidence_links(paths):
     return out
 
 
-def chip(state, word, form=""):
-    """A state as a chip: ground ink on its state's ink, an outline when undecided or hollow; amber
-    in lesser part notched (cut), a silent red an outline in the red ink (open)."""
-    tok = f"{state} {form}".strip()
-    return f'<span class="schip {tok}">{e(word)}</span>'
-
-
 def stacked(heads, rows, titles=None):
     """A ruled table whose cells carry their column's head (data-l), so a phone stacks each row
     as labelled lines instead of hiding columns past the edge. rows: lists of cell html; titles:
@@ -349,68 +305,6 @@ def petals_of(check):
     """The petals whose red names a check (PETAL_CHECKS), by their place in the glyph (p1 to
     p5), so the page lights them with the check's row (words.js)."""
     return " ".join(f"p{i + 1}" for i, p in enumerate(S.V["petals"]) if check in PETAL_CHECKS[p])
-
-
-# a publisher's Markdown and source-comment marks, which a quote prints without: **strong**, a
-# [link](target) (its words kept), a comment marker opening one of the lines it spans, and " -- "
-MARKS = ((re.compile(r"\*\*(.+?)\*\*"), r"\1"), (re.compile(r"\[([^\]]+)\]\([^)\s]+\)"), r"\1"),
-         (re.compile(r"(^|\s)//[!/]?\s+"), r"\1"), (re.compile(r" -- "), " \u2013 "))  # fmt: skip
-
-
-def unmarked(text):
-    """A quote's words as the publisher wrote them, the marks of their file's syntax left out
-    (the words themselves unchanged, hard rule 9)."""
-    for mark, to in MARKS:
-        text = mark.sub(to, text)
-    return text
-
-
-def quote_links(quotes):
-    return "".join(f'<a class="qt" href="{e(q["url"])}">\u201c{quoted(unmarked(q["text"]))}\u201d</a>'
-                   for q in quotes)  # fmt: skip
-
-
-def proof_build_html(b):
-    """The stored proof build (GL-5): the toolchain as the toolchain file spells it, linked to the
-    record, the publisher's command, then what it did: status, day, seconds and exit code."""
-    tool = f"{b['toolchain']['name']}:{b['toolchain']['version']}"
-    tool = f'<a href="{e(link(b["record"]))}" title="{e(b["record"])}"><code>{e(tool)}</code></a>'
-    command = f"<code>{e(' '.join(b['command']))}</code>"
-    did = (f"{e(b['status'])} on {e(b['started_at'][:10])} in {b['seconds']:,.0f}\u00a0s, exit "
-           f"code {b['exit_code']}")  # fmt: skip
-    return f"{tool}, {command}, {did}"
-
-
-def formal_facts_html(formal):
-    """Machine-checked's recorded facts, inside its disclosure: the tool, the theorem (linked at
-    the pin) and the trusted base as the publisher lists it. The scope card is printed at the
-    head of the Glyph section (`scope_head_html`)."""
-    if formal is None:
-        return ""
-    if silent(formal):  # nothing stated: said once, not in every fact
-        said = (
-            f'<p class="pvh">Tool, theorem, trusted base: {e(SCOPE_VALUE_WORD["not_stated"])}</p>'
-        )
-        if formal.get("build"):  # a stored build is drawn even where nothing is stated
-            said += (f'<dl class="pf"><div><dt>{e(PROOF_BUILD_HEAD)}</dt>'
-                     f'<dd>{proof_build_html(formal["build"])}</dd></div></dl>')  # fmt: skip
-        return said
-    theorem = formal["theorem"]
-    code = (
-        f"<code>{e(theorem).replace('.', '.<wbr>')}</code>" if theorem else None
-    )  # breaks at a dot
-    if theorem and formal["theorem_url"]:
-        theorem = f'<a href="{e(formal["theorem_url"])}">{code}</a>'
-    elif theorem:
-        theorem = code
-    lines = [("Tool", e(formal["tool"]) if formal["tool"] else None), ("Theorem", theorem),
-             ("Trusted base", e(", ".join(formal["trusted_base"])) if formal["trusted_base"]
-              else None)]  # fmt: skip
-    if formal.get("build"):
-        lines.insert(1, (PROOF_BUILD_HEAD, proof_build_html(formal["build"])))
-    facts = "".join(f"<div><dt>{e(k)}</dt><dd>{v or e(SCOPE_VALUE_WORD['not_stated'])}</dd></div>"
-                    for k, v in lines)  # fmt: skip
-    return f'<dl class="pf">{facts}</dl>'
 
 
 def scope_card_html(formal):
@@ -453,35 +347,24 @@ def scope_card_html(formal):
 
 
 def scope_head_html(row):
-    """The head of the Glyph section (the paragraph after MC-7, amended 2026-11-16): soundness,
-    zero knowledge and completeness, in that order, each with what it means, whether the publisher
-    states it or we test it, computed for the row (soundness from Integrity's step, zero knowledge
-    from Confidentiality's, completeness from the counted sessions' accepted replies), where it
-    is graded and whom it protects; the publisher's stated security, verbatim with its link; then
-    the scope card."""
-    petal = {p["id"]: p for p in row["glyph"]}
-
-    def stated(pid):
-        p = petal[pid]
-        silent_ = p["step"] is None or (p["step"] == "red" and p["cause"] == "not_stated")
-        return SCOPE_STATED["not_stated" if silent_ else "stated"]
-
+    """Under the five petals (the paragraph after MC-7, amended 2026-11-17, owner decision):
+    soundness, zero knowledge and completeness on one line, in that order, each linked to its
+    definition, with the petal that grades it or our Run check's count of accepted replies; the
+    publisher's stated security, verbatim with its link, and the scope card one click down."""
     n = row["honest_accepted"]
-    lines = []
-    for _, name, means, pid, whom, ours in SCOPE_HEAD:
-        head = e(means[0].upper() + means[1:])
-        if pid is not None:
-            to = f'<a href="{CHECKS_PAGE}#{pid}">{e(PETAL_NAME[pid])}</a>'
-            said = (f"{head}. {e(stated(pid)).format(petal=to)} "
-                    f"{e(SCOPE_PROTECTS.format(whom=whom))} {e(ours)}")  # fmt: skip
-        else:
-            tested = e(SCOPE_TESTED.format(n=f"{n:,}").replace(" of ", "\u00a0of\u00a0"))
-            run = f'(<a href="{CHECKS_PAGE}#run">{e(CHECK_NAME["run"])} check</a>)'
-            more = (f", {counted_words(len(row['incomplete']), 'incomplete session')} not counted"
-                    if row["incomplete"] else "")  # fmt: skip
-            said = (f"{head}. {tested} {run}{e(more)}. {e(SCOPE_NOT_GRADED)} "
-                    f"{e(SCOPE_PROTECTS.format(whom=whom))}")  # fmt: skip
-        lines.append((name, said.strip()))
+    parts = []
+    for slug_, name, pid in SCOPE_TERMS:
+        term = f'<a class="df" href="/glossary#{slug_}">{e(name)}</a>'
+        if pid is not None:  # graded by its petal above; the glossary says which
+            continue
+        run = f'<a href="{CHECKS_PAGE}#run">{e(CHECK_NAME["run"])} check</a>'
+        said = e(SCOPE_TESTED.format(n=f"{n:,}", run="\x00")).replace(" of ", "\u00a0of\u00a0")
+        said = said.replace("\x00", run)
+        if row["incomplete"]:
+            said += e(f", {counted_words(len(row['incomplete']), 'incomplete session')} "
+                      "not counted")  # fmt: skip
+        parts.append(f'<span class="szt">{term}: {said}</span>')
+    line = f'<p class="szc">{"".join(parts)}</p>'
     sec = row.get("security") or {}
     security = ""
     if sec.get("words"):
@@ -495,10 +378,7 @@ def scope_head_html(row):
         if notion:  # the publisher's own name for the notion, verbatim (SI-3)
             words += f" {e(NOTION_HEAD)}: " + quote_links(notion)
         security = f"<div><dt>{e(STATED_SECURITY)}</dt><dd>{words}</dd></div>"
-    facts = "".join(f"<div><dt>{e(k)}</dt><dd>{v}</dd></div>" for k, v in lines)
-    formal = petal["machine_checked"]["formal"]
-    # the three lines stay in view; the stated security and the scope card one click down
-    # (amended 2026-11-16)
+    formal = {p["id"]: p for p in row["glyph"]}["machine_checked"]["formal"]
     card = scope_card_html(formal)
     held = [w for w, part in ((STATED_SECURITY, security), (SCOPE_CARD_WORD, card)) if part]
     more = ""
@@ -506,68 +386,7 @@ def scope_head_html(row):
         security = f'<dl class="pf">{security}</dl>' if security else ""
         more = (f'<details class="more"><summary>{e(", ".join(held))}</summary>{security}{card}'
                 "</details>")  # fmt: skip
-    return (f'<div class="psb"><h3 class="sub-h">{e(SCOPE_BLOCK_HEAD)}</h3>'
-            f'<dl class="pf">{facts}</dl>{more}</div>')  # fmt: skip
-
-
-def silent(formal):
-    """Whether Machine-checked's recorded facts state nothing at all."""
-    return not (formal["tool"] or formal["theorem"] or formal["trusted_base"])
-
-
-FITTED = "fitted_to_weights"  # the one kind of visible value that sets Weights hidden's step
-
-
-def forms_html(forms):
-    """Weights hidden: the forms of the proved zero knowledge, each the publisher's words linked
-    to its quote (amended 2026-11-15). They set no step."""
-    if not forms:
-        return ""
-    items = "".join(f'<li><a href="{e(f["quotes"][0]["url"])}">{quoted(f["item"])}</a></li>'
-                    for f in forms)  # fmt: skip
-    return f'<p class="pvh">Zero knowledge, as stated</p><ul class="pvis">{items}</ul>'
-
-
-def visible_html(visible, at_least=False):
-    """Weights hidden: what the publisher lists as visible to a proof's reader, each item linked
-    to its quote, in two groups: those fitted to the weights (the only kind that sets the step,
-    WH-5, WH-6), then the others, each with its kind. The second group's head says "others", not
-    "not fitted": an item is untagged when its quote does not say it is fitted, which does not
-    show that it is not (AGENTS.md rule 9)."""
-    if not visible:
-        return ""
-
-    def items(vs, tagged):
-        return "".join(f'<li><a href="{e(v["quotes"][0]["url"])}">{e(v["item"])}</a>'
-                       + (f' <span class="vt">{e(VISIBLE_TAG_WORD[v["tag"]])}</span>' if tagged
-                          else "") + "</li>" for v in vs)  # fmt: skip
-
-    fitted = [v for v in visible if v["tag"] == FITTED]
-    other = [v for v in visible if v["tag"] != FITTED]
-    groups = ((f"{len(fitted):,} {VISIBLE_TAG_WORD[FITTED]}", fitted, False),
-              (f"{len(other):,} {VISIBLE_OTHERS}" if fitted else "", other, True))  # fmt: skip
-    head = "Visible, as listed" + (" (at least these)" if at_least else "")
-    return f'<p class="pvh">{e(head)}</p>' + "".join(
-        (f'<p class="pvg">{e(head)}</p>' if head else "")
-        + f'<ul class="pvis">{items(vs, tagged)}</ul>'
-        for head, vs, tagged in groups
-        if vs
-    )
-
-
-def basis_html(p):
-    """What a petal rests on, its label first: from our tests, linked to the Fidelity section
-    that holds them; from the publisher's documents, and, when a fact the decision read carries a
-    note, "as we read them", linked to what that means (GL-5)."""
-    if p["basis"] == "test":
-        said = f'<a class="df" href="#fidelity">{e(BASIS_WORD["test"])}</a>'
-    elif p["basis"] == "statement" and p["reading"]:
-        read = e(AS_READ)  # the step's "read as" links to what a reading means (said_html)
-        said = f"{e(BASIS_WORD['statement'])}, {read}"
-    else:
-        said = e(BASIS_WORD[p["basis"]])
-    # the label and its words in two spans: in a petal's row a second line hangs under the words
-    return f'<span class="k">From</span> <span>{said}</span>'
+    return f'<div class="psb">{line}{more}</div>'
 
 
 def counted_words(k, one):
@@ -575,200 +394,10 @@ def counted_words(k, one):
     return f"{k:,} {one}" if k == 1 else f"{k:,} {one}s"
 
 
-def gist(p):
-    """A petal's deciding fact, its default line on a system page (amended 2026-11-16): the
-    reason's first clause, then ", and <k> more" where clauses follow, so a cut says so. A reason
-    opens with what decides the step and joins its clauses with semicolons (GL-5, UF-9), so
-    nothing here is typed per system. A petal our tests set (Fidelity, basis `test`) prints its
-    reason whole: its last clause is the row's own measure, in its unit (FI-5)."""
-    clauses = p["reason"].split("; ")
-    if p["basis"] == "test" or len(clauses) == 1:
-        return p["reason"]
-    return NEXT_MORE.format(need=clauses[0], k=len(clauses) - 1)
-
-
-def petal_details(p, row):
-    """What a petal holds beyond its default row, one click down in one native disclosure
-    (RFC-0018 SI-3, amended 2026-11-16): its plain sentence, the full reason and next step (the
-    row's two short lines step aside while it is open, words.css), the scale and fact lines,
-    then the publisher's words, our reading,
-    Formally verified's tool and theorem, Confidentiality's forms and visible values, the trials,
-    the documents read and what the petal rests on. Its summary counts the publisher's quotes."""
-    basis = basis_html(p) if not p["sources"] or p["reading"] else ""
-    foot = f'<p class="pfrom">{basis}</p>' if basis else ""
-    full = f'<p class="pdr"><span class="k">{e(REASON_HEAD)}</span> {e(p["reason"])}</p>'
-    more = next_html(p)
-    scale = scale_html(p, row)
-    quotes = ""
-    if p["quotes"]:  # the publisher's own words at the pinned commit
-        quotes = f'<p class="pvh">{e(QUOTES_HEAD.format(n=len(p["quotes"])))}</p>' + quote_links(
-            p["quotes"]
-        )
-    notes = "".join(f'<p class="cn">{e(n)}</p>' for n in p["notes"])
-    if notes:  # GL-10: what the reading rests on, in our words, apart from the quotes
-        notes = f'<p class="pvh">{e(READING_HEAD)}</p>{notes}'
-    # a silent red: the documents read, each linked at the pin (GL-1)
-    docs = ", ".join(f'<a href="{e(d["url"])}">{e(d["path"])}</a>' for d in p["sources"])
-    docs = f'<p class="pfrom"><span class="k">{e(DOCS_READ)}</span> {docs}</p>' if docs else ""
-    body = (f'<p class="ppl">{e(PETAL_PLAIN[p["id"]])}</p>{full}{more}{scale}{extra_html(p, row)}'
-            + quotes + notes + formal_facts_html(p["formal"]) + forms_html(p["forms"])
-            + visible_html(p["visible"], p["visible_at_least"]) + kept_html(row, p["id"]) + docs
-            + foot)  # fmt: skip
-    said = [DETAILS_HEAD]
-    if p["quotes"]:
-        said.append(counted_words(len(p["quotes"]), "quote"))
-    elif p["sources"]:
-        said.append(counted_words(len(p["sources"]), "document") + " read")
-    said = " · ".join(f'<span class="nw">{e(w)}</span>' for w in said)
-    owner = f'<span class="sr">, {e(PETAL_NAME[p["id"]])}</span>'
-    return f'<details class="more"><summary>{said}{owner}</summary>{body}</details>'
-
-
-def said_html(p):
-    """What a petal rests on, under its step (amended 2026-11-16): "tested by us", "stated", or
-    "read as", which links to what a reading means and caps the step (GL-10). A Not stated petal
-    has none: its step already says it; nor has a Not decided petal, which rests on nothing yet
-    (its scale label says whether the reach is stated or read)."""
-    if p["cause"] == "not_stated" or p["step"] is None:
-        return ""
-    word = said_word(p)
-    if word == said_word({"basis": "statement", "reading": True}):
-        return f'<a class="sd df" href="{CHECKS_PAGE}#reading">{e(word)}</a>'
-    return f'<span class="sd">{e(word)}</span>'
-
-
-def reach_label(formal):
-    """Formally verified's stated reach in the scale's words (§3, amended 2026-11-16): what is
-    verified, and for a verifier short of Met, its gaps."""
-    r = formal["reach"]
-    label = REACH_LABEL.get(r, r)
-    if r == "verifier_run" and formal["stated_step"] != "green":
-        gaps = [REACH_GAP[k] for k, gap in (("base", not formal["trusted_base"]),
-                                            ("input", formal["input_code_unverified"] is not False))
-                if gap]  # fmt: skip
-        label += f", with gaps ({', '.join(gaps)})" if gaps else ""
-    return label
-
-
-STATED_REACH = ("part", "protocol", "protocol_and_statement", "verifier_run")
-
-
-def scale_html(p, row):
-    """The scale lines in a petal's disclosure (§3, §4, §5.3, amended 2026-11-16):
-    Confidentiality's step as a scale of what was proved; Fidelity's proved copy (its bits and
-    number format); Formally verified's stated reach. They set no state."""
-    out = []
-    if p["id"] == "faithful_model" and (proved := proved_words(row, long=True)):
-        out.append(proved)
-    if p["id"] == "weights_hidden":
-        key = step_key(p["step"], p["cause"])
-        needs = [n["text"] for n in (p.get("next") or {}).get("needs") or ()]
-        if key == "amber_upper" and needs == [READING_NEED]:  # WH-5 capped by GL-10
-            key = "amber_reading"
-        label = HIDING_LABEL.get(key)
-        out += [label] if label else []  # its architecture fact follows, in full (`extra_html`)
-    formal = p.get("formal")
-    if p["id"] == "machine_checked" and formal and formal["reach"] in STATED_REACH:
-        said = SAID_WORD["reading" if p["reading"] else "statement"]
-        out.append(REACH_STATED.format(said=said, label=reach_label(formal)))
-    return "".join(f'<p class="psc">{e(w)}</p>' for w in out)
-
-
-def next_parts(p):
-    """A petal's next step as (head, needs, who acts), or None: the step above and what the row
-    lacks for it; for a hollow petal what decides it; for a failed one its repair (GL-11)."""
-    nx = p.get("next")
-    if not nx:
-        return None
-    needs = [n["text"] for n in nx["needs"]]
-    by = NEXT_BY[tuple(b for b in ("publisher", "us") if any(n["by"] == b for n in nx["needs"]))]
-    if nx["to"] is not None:
-        head = NEXT_HEAD["up"].format(to=STEP_WORD[nx["to"]])
-    elif p["step"] is None:
-        head = NEXT_HEAD["decide"]
-    else:
-        head, by = NEXT_HEAD["repair"], ""
-    return head, needs, by
-
-
-def next_html(p, short=False):
-    """A petal's next step (GL-11, amended 2026-11-16), from the board. It sets nothing. `short`
-    (the default row): the step it would move to and who acts ("Next step: Mostly met, by the
-    publisher."; "To decide, by us."), or a Failed petal's first repair and the count of the
-    others; in full (the disclosure): every need."""
-    parts = next_parts(p)
-    if parts is None:
-        return ""
-    head, needs, by = parts
-    nx = p["next"]
-    if short and by:
-        key = "up" if nx["to"] is not None else "decide"
-        to = STEP_WORD[nx["to"]] if nx["to"] is not None else ""
-        said = NEXT_SHORT[key].format(to=to, by=by[0].lower() + by[1:])
-        return f'<p class="pnx pns">{e(said)}</p>'
-    said = "; ".join(needs)
-    if short and len(needs) > 1:
-        said = NEXT_MORE.format(need=needs[0], k=len(needs) - 1)
-    cls = "pnx" + (" pns" if short else "")
-    return (f'<p class="{cls}"><span class="k">{e(head)}:</span> {e(said)}.'
-            f'{" " + e(by) if by else ""}</p>')  # fmt: skip
-
-
-def extra_html(p, row):
-    """A petal's lines after its next step, each printed and setting nothing: Confidentiality's
-    architecture (§4: the publisher's words, linked to the line they cite); for Formally verified,
-    which verifier the theorem is about (§3); Trust assumptions' Q12 line."""
-    st = row.get("statement") or {}
-    if p["id"] == "weights_hidden":
-        fact = st.get("architecture_visible")
-        said = next((r["said"] for r in st.get("rows") or () if r["id"] == "architecture"), None)
-        url = said[0]["url"] if said else None
-        words = e(f"{fact}, as the publisher states") if fact else e(ARCH_NO_FACT)
-        if fact and url:
-            words = f'<a href="{e(url)}">{words}</a>'
-        return f'<p class="pxl">{e(ARCH_SHORT)} ({words}). {e(ARCH_LONG)}</p>'
-    named = st.get("verifiers") or {}
-    if p["id"] == "machine_checked" and named.get("stated") and named.get("run") and (
-            named["stated"] != named["run"]):  # fmt: skip
-        return f'<p class="pxl">{e(VERIFIER_LINE.format(**named))}</p>'
-    if p["id"] == "no_trusted_party":
-        return "".join(f'<p class="pxl">{e(w)}</p>' for _, w in PETAL_MORE["no_trusted_party"])
-    return ""
-
-
-def glyph_html(row):
-    """The glyph once, large, as the heads of the petals' table: each arm is its petal's name on
-    the ink of its state (never its state word: the ink says it, and the chip beside it), on one
-    stem, its plain sentence in its title, with its field term under it; then the step in words
-    (a hollow petal's cause in the chip's title) and what it rests on; then two short lines, the
-    reason's deciding fact and the step it would move to with who acts; everything else one
-    click down
-    (`petal_details`, amended 2026-11-16). An arm, its row and the checks its red names light
-    together."""
-    trs = []
-    for i, p in enumerate(row["glyph"]):
-        tok = f"{p['state']} {p['form']}".strip()
-        data = f' data-step="{e(p["step"] or "none")}"'
-        state = chip(p["state"], petal_step(p), p["form"])
-        if p["cause"] is not None:  # the reason says it; the chip links its definition
-            data += f' data-cause="{e(p["cause"])}"'
-            state = (f'<a class="cc" href="{CHECKS_PAGE}#cause-{e(p["cause"])}" '
-                     f'title="{e(CAUSE_WORD[p["cause"]])}">{state}</a>')  # fmt: skip
-        plain = PETAL_PLAIN[p["id"]]
-        trs.append(
-            f'<tr class="pt {tok}"><th scope="row">'
-            f'<a class="sl s{i + 1} {tok}"{data} href="{CHECKS_PAGE}#{p["id"]}" data-k="p{i + 1}" '
-            f'title="{e(plain)}"><span>{e(PETAL_NAME[p["id"]])}</span></a>'
-            f'<span class="pst">{e(PETAL_TERM[p["id"]])}</span></th>'
-            f'<td class="cst">{state}{said_html(p)}</td>'
-            f'<td class="prs"><span class="rs">{e(gist(p))}</span>'
-            f"{next_html(p, short=True)}{petal_details(p, row)}</td></tr>"
-        )
-    # plain first (D7): the five petals, then the properties they grade, the stated security and
-    # the scope card
-    return ('<div class="checks"><table class="rt ckt gbig"><caption class="sr">Petal, state, '
-            f'reason</caption><tbody>{"".join(trs)}</tbody></table></div>'
-            + scope_head_html(row))  # fmt: skip
+def glyph_block(row):
+    """The Glyph section (amended 2026-11-17): what each petal needs for Met, has, misses and
+    where to check (`petal.glyph_section`), then soundness, zero knowledge and completeness."""
+    return glyph_section(row, scope_head_html(row))
 
 
 # RFC-0018 SI-3 (amended 2026-11-15): the Statement block's rows, in the view's order
@@ -819,13 +448,19 @@ def statement_html(row):
     if not st:
         return f'<p class="none">{e(SCOPE_VALUE_WORD["not_stated"])}</p>'
     rows = []
+    ls = row.get("level_statement")
+    if ls is not None:  # SI-4a: what an accept says, the publisher's words beside it
+        key = "read" if ls["reading"] else "stated" if ls["stated"] else "not"
+        quotes = "".join(f'<p class="stc">{e(q["text"])} <a href="{e(q["url"])}">source</a></p>'
+                         for q in ls["quotes"])  # fmt: skip
+        rows.append(
+            [e(ACCEPT_HEAD), e(STATEMENT_WORD[key]), quotes or e(SCOPE_VALUE_WORD["not_stated"])]
+        )
     for r in st["rows"]:
         said = (f'<span class="na">{e(SCOPE_VALUE_WORD["not_stated"])}</span>' if r["said"] is None
                 else "".join(f'<p class="stc">{e(q["text"])} <a href="{e(q["url"])}" '
                              f'title="{e(q["field"])}">source</a></p>' for q in r["said"]))  # fmt: skip
         rows.append([e(STATEMENT_HEAD[r["id"]]), statement_given(row, st, r["id"]), said])
-    card = (f' <a href="{e(link(st["card"]))}" title="{e(st["card"])}">claim card</a>'
-            if st["card"] else "")  # fmt: skip
     fix = st.get("erratum")
     erratum = ""
     if fix:  # the card is kept byte for byte (the runs record its digest): said beside its link
@@ -833,13 +468,7 @@ def statement_html(row):
         q = fix["level_1"]
         erratum = (f'<p class="cn">{CARD_ERRATUM.format(fields=fields, says=e(fix["says"]))} '
                    f'<a class="qt" href="{e(q["url"])}">\u201c{e(q["quote"])}\u201d</a></p>')  # fmt: skip
-    lead = (f'<p class="rb"><span class="k">Verifier</span> <span><code>{e(st["program"])}</code>; '
-            f"each row's right column is the{card}, which copies the publisher's documents at "
-            f"the row's commit</span></p>{erratum}")  # fmt: skip
-    return lead + stacked(["What", "Given", "Claim card"], rows)
-
-
-NOTE_SHORT = 48  # a check's note longer than this, in characters, is left to its records
+    return erratum + stacked(["What", "Given", "Claim card"], rows)
 
 
 def note_parts(note):
@@ -849,13 +478,6 @@ def note_parts(note):
     if not (sep and " " not in head):
         return "", note
     return head, tail
-
-
-def note_gist(note):
-    """A check's note as its row prints it: its words without the id that leads them, and only
-    when they are short; None otherwise."""
-    words = note_parts(note)[1]
-    return words if len(words) <= NOTE_SHORT else None
 
 
 def decide_html(c, note):
@@ -873,52 +495,6 @@ def decide_html(c, note):
     said = text.format(session=session)
     return (f'<p class="pnx"><span class="k">{e(NEXT_HEAD["decide"])}:</span> {e(said)}. '
             f"{e(NEXT_BY[(by,)])}</p>")  # fmt: skip
-
-
-def checks_html(row):
-    """The six checks, the entry gate: one ruled row per check: name, state, cause (a column
-    only where a check has one, a short note under it), and its records one click away, a note
-    too long for the cause in full with them; a note's leading id stands in its title. A check
-    names the petals its failure turns red."""
-    caused = any(c["cause"] or c.get("note") for c in row["checks"])
-    trs = []
-    for c in row["checks"]:
-        cause, note = "", c.get("note")
-        if c["cause"]:  # in words, the stored cause in the title
-            cause = (f'<a class="cw df" href="{CHECKS_PAGE}#cause-{e(c["cause"].replace(" ", "-"))}" '
-                     f'title="{e(c["cause"])}">{e(CHECK_CAUSE_WORD[c["cause"]])}</a>')  # fmt: skip
-        # a check not decided says why under its cause, however long: it is what holds the row
-        gist = (note_parts(note)[1] if c["state"] == "undecided" else note_gist(note)) if note \
-            else None  # fmt: skip
-        head = e(note_parts(note)[0]) if note else ""
-        at = f' title="{head}"' if head else ""  # the id the note opens with, out of the words
-        if gist:
-            cause += f'<span class="cn"{at}>{quoted(gist)}</span>'
-        cause += decide_html(c, note)
-        # in full with the records, only when too long for the cause
-        full = f'<p class="cn"{at}>{quoted(note_parts(note)[1])}</p>' if note and not gist else ""
-        links = evidence_links(c["evidence"])  # counted as printed: a file's entries are one link
-        recs = counted_words(len(links), "record") if links else "note"
-        owner = f'<span class="sr">, {e(CHECK_NAME[c["id"]])}</span>'
-        ran = trials_html(c.get("trials") or ()) + kept_html(row, c["id"])
-        more = (f'<details class="more"><summary>{e(recs)}{owner}</summary>{full}{ran}'
-                f"{''.join(links)}</details>"
-                if c["evidence"] or full else "")  # fmt: skip
-        to = petals_of(c["id"])
-        to = f' data-to="{to}"' if to else ""
-        trs.append(
-            f'<tr class="ck {c["state"]}" id="ck-{c["id"]}"><th scope="row">'
-            f'<a href="{CHECKS_PAGE}#{c["id"]}"{to} title="{e(filled(CHECK_PLAIN[c["id"]]))}">'
-            f"{e(CHECK_NAME[c['id']])}</a></th>"
-            f'<td class="cst">{chip(c["state"], STATE_WORD[c["state"]])}</td>'
-            + (f"<td>{cause}</td>" if caused else "")
-            + f"<td>{more}</td></tr>"
-        )
-    cause_th = '<th scope="col">Cause</th>' if caused else ""
-    return (f'<p class="rd">{e(CHECKS_LEAD)}</p>'
-            '<table class="rt ckt cks"><thead><tr><th scope="col">Check</th><th scope="col">'
-            f'State</th>{cause_th}<th scope="col">Evidence</th></tr></thead>'
-            f'<tbody>{"".join(trs)}</tbody></table>{level_statement_html(row)}')  # fmt: skip
 
 
 def trials_html(trials):
@@ -975,26 +551,9 @@ def kept_html(row, place):
         rec = (
             f'<a class="ev" href="{e(link(t["record"]))}" title="{e(t["record"])}">trial record</a>'
         )
-        out.append(f'<p class="cn"><span class="k">{e(KEPT_HEAD)}, {e(KEPT_SETS)}</span> '
+        out.append(f'<p class="cn"><span class="k">{e(KEPT_HEAD)}</span> '
                    f"{e(words)} {rec}</p>")  # fmt: skip
     return "".join(out)
-
-
-def level_statement_html(row):
-    """SI-4a: whether the publisher states Level 1's statement at the pin, with its quotes one
-    click away; "read as", linked to what that means, when the fact is our reading."""
-    st = row.get("level_statement")
-    if st is None:
-        return ""
-    if st["reading"]:
-        said = (f'<a class="df" href="{CHECKS_PAGE}#reading">{e(READ_AS.capitalize())}</a> '
-                f"{e(STATEMENT_WORD['read'])}")  # fmt: skip
-    else:
-        said = e(STATEMENT_WORD["stated" if st["stated"] else "not"])
-    quotes = (f'<details class="more"><summary>{e(QUOTES_HEAD.format(n=len(st["quotes"])))}'
-              f'</summary>{quote_links(st["quotes"])}</details>' if st["quotes"] else "")  # fmt: skip
-    head = f'<span class="k">{e(LEVEL_STATEMENT_HEAD)}</span>'
-    return f'<p class="rb">{head} <span>{said}</span></p>{quotes}'
 
 
 def plain(v, unit, record, said="", missing="none"):
@@ -1032,7 +591,7 @@ def replaced_why(s):
     return s["cause"].removesuffix(tail)
 
 
-def sessions_html(row):
+def sessions_html(row, counted_table=True):
     """SE-3: each counted session (slot, run, m or why there is none, session cost per reply),
     then every incomplete session with its exit code and last line (AGENTS.md rule 5), then each
     replaced session (SE-3a), its reason said once over the table where the sessions share it,
@@ -1067,9 +626,11 @@ def sessions_html(row):
         f"time per reply over the {term('whole session', 'Whole session')}. {e(M_COL)}: the "
         f"same after its first release group, in {term('steady state', 'Steady state')}.</p>"
     )
-    out = (lead + once + stacked(heads, [cells(k, s) for k, s in enumerate(row["sessions"])],
-                                 {M_COL: M_NAME})
-           if row["sessions"] else '<p class="none">No counted session.</p>')  # fmt: skip
+    out = ""
+    if counted_table:
+        out = (lead + once + stacked(heads, [cells(k, s) for k, s in enumerate(row["sessions"])],
+                                     {M_COL: M_NAME})
+               if row["sessions"] else '<p class="none">No counted session.</p>')  # fmt: skip
     if row["incomplete"]:
         rows = [
             [
@@ -1309,7 +870,7 @@ def proved_html(row):
         said += f", {e(n)} bits per weight{e(part)}, {how}"
     if fmt := format_html(p):
         said += f"; {fmt}"
-    return f'<p class="rb" id="proved"><span class="k">Proved</span> <span>{said}</span></p>'
+    return f'<p class="rb"><span class="k">Proved</span> <span>{said}</span></p>'
 
 
 def generation_html(row):
@@ -1350,31 +911,12 @@ def ladder_html(rung):
     rows = [[f"{c['concurrency']:,}" + (" (full load)" if c["concurrency"] == b["concurrency"]
                                        else ""),
              fig_html(c["rate"], sub=BARE)] for c in ladder]  # fmt: skip
-    return (
-        f'<details class="more"><summary>serving ladder, {len(ladder):,} concurrencies'
-        "</summary>" + stacked(["Concurrent requests", "Rate"], rows) + "</details>"
-    )
+    return (f'<h3 class="sub-h">Serving ladder, {len(ladder):,} concurrencies</h3>'
+            + stacked(["Concurrent requests", "Rate"], rows))  # fmt: skip
 
 
 # a stored tier's glossary entry, where its words link (D2: they say whose runs these are)
 TIER_TERM = {"reported": "Evidence: our runs only, not rerun by anyone else"}
-
-
-def how_html(row):
-    """B5 at the Cost section's head: how the headline is computed, in one sentence (the same as
-    opens its title), its scope's words linked to their definition, then the rule."""
-    said = e(how_computed(row)).replace(
-        "whole sessions", term("whole sessions", "Whole session"), 1
-    )
-    return (
-        f'<p class="rd">{said} <a class="df" href="{CHECKS_PAGE}#multiple">{e(HOW_RULE)}</a>.</p>'
-    )
-
-
-def amount(f):
-    """A stored figure's value in its reading unit, in a sentence ("230.0 GPU-s/reply")."""
-    n, u = number(f["value"], f["unit"])
-    return f"{n}\u00a0{u}"
 
 
 def reply_tokens_html(row):
@@ -1395,28 +937,8 @@ def reply_tokens_html(row):
     if bound:  # the GPUs the sessions bound, the ones its GPU-seconds count (SE-2)
         said.append(e(f"{' or '.join(f'{g:,}' for g in bound)} × {gpu_name(row)}"))
     head = term(REPLY_TOKENS_HEAD, REPLY_TOKENS_HEAD)
-    # what the records do time apart (CO-7): the whole session's GPU time in its two parts, each a
-    # stored figure, so the rate is not read as proving alone
-    figs = row["figures"]
-    # the served rate beside it (amended 2026-11-16), where the row has both, and what the two
-    # make, so the ladder's line under the multiple has its labels in words (how it was served is
-    # the Serving line's, above; what it counts is in its title)
-    pair = rate_pair(row)
-    served = ""
-    if pair is not None:
-        lead_head, lead_tail = RATE_SERVING
-        served = (f" {e(lead_head)}: {fig_html(pair[1], sub=BARE, note=pair[1].get('note'))}. "
-                  f"{e(lead_tail.format(multiple=fig_words(lead_figure(row)[1])))}")  # fmt: skip
-    whole, parts = figs.get("session_gpu_seconds_per_reply"), [
-        (PART_WORD[w], figs.get(k)) for w, k in (("generation", "session_generation_gpu_seconds_per_reply"),
-                                                ("commit_and_proving",
-                                                 "session_commit_and_proving_gpu_seconds_per_reply"))]  # fmt: skip
-    split = (" " + e(SPLIT_PARTS.format(whole=amount(whole), parts=" and ".join(
-        f"{w} {amount(p)}" for w, p in parts)))
-             if has(whole) and all(has(p) for _, p in parts) else "")  # fmt: skip
-    return (f'<p class="rb rtk" id="{RATE_ANCHOR}"><span class="k">{head}</span> <span>'
-            f"{fig_html(f, count, sub=BARE)} ({', '.join(said)}).{served}{split} "
-            f"{e(NOT_TIMED_APART)}</span></p>")  # fmt: skip
+    return (f'<p class="rb rtk"><span class="k">{head}</span> <span>'
+            f"{fig_html(f, count, sub=BARE)} ({', '.join(said)})</span></p>")  # fmt: skip
 
 
 def evidence_words(named):
@@ -1474,10 +996,12 @@ def cost_html(row):
     sheet = [*((k, f, count) for k, f, count, key in gpu if not any(f is d[1] for d in drawn)),
              other, ("Steady cost per reply", figs["steady_usd_per_reply"], n),
              ("Session cost per reply", figs["session_usd_per_reply"], n),
-             ("Serving cost per reply", b.get("usd_per_reply"), None),
-             (FIGURE_NAME["check-time"], figs["verify_seconds_per_reply"], n),
-             (FIGURE_NAME["proof-size"], figs["proof_bytes_per_reply"], n)]  # fmt: skip
-    own = (figs["verify_seconds_per_reply"], figs["proof_bytes_per_reply"])  # their scope and n
+             ]  # fmt: skip
+    # the block's tiles print the multiple's cost, the serving cost, the price, verify time and
+    # proof size: the sheet holds the rest
+    usd = "session_usd_per_reply" if key == "session_multiple" else "steady_usd_per_reply"
+    sheet = [x for x in sheet if x[1] is not figs[usd]]
+    own = ()
     no_steady = not has(figs["multiple"]) and figs["multiple"]["null_reason"] == "not_applicable"
     steady_figs = (figs["multiple"], figs["steady_gpu_seconds_per_reply"],
                    figs["steady_usd_per_reply"])  # fmt: skip
@@ -1505,8 +1029,7 @@ def cost_html(row):
     against = (f'; <a href="#proved">{e(PROVED_LINK[0])}</a>{e(PROVED_LINK[1])}'
                if row.get("precision") else "")  # fmt: skip
     serving = (f'<p class="rb"><span class="k">Serving</span> <span>{e(serving_words(base))}'
-               f"{against}</span>"
-               f"</p>{ladder_html(rung)}" if line else "")  # fmt: skip
+               f"{against}</span></p>" if line else "")  # fmt: skip
     whole = e(whole_line(row, n)).replace(
         "whole sessions", term("whole sessions", "Whole session"), 1
     )
@@ -1518,10 +1041,10 @@ def cost_html(row):
     evidence = (f'<p class="rb"><span class="k">Evidence</span> <span>{evidence_words(shown)}'
                 "</span></p>" if shown else "")  # fmt: skip
     missing.pop(NO_STEADY_WORD, None)  # the sessions table prints each session's none and why
-    return (f"{how_html(row)}{serving}{proving}{generation_html(row)}"
-            f"{verifying_html(row)}{size_html(row)}{evidence}{cost_bars(row, drawn)}"
-            f"{reply_tokens_html(row)}"
-            f'<dl class="parts">{cells}</dl>{missing_html(missing)}')  # fmt: skip
+    return (f"{serving}{proving}{generation_html(row)}"
+            f"{verifying_html(row)}{size_html(row)}{reply_tokens_html(row)}{evidence}"
+            f"{cost_bars(row, drawn)}"
+            f'<dl class="parts">{cells}</dl>{missing_html(missing)}{ladder_html(rung)}')  # fmt: skip
 
 
 def p_html(p):
@@ -1627,9 +1150,13 @@ def agree_html(entry, tf, sub):
     if entry is None or entry["status"] != "ok":
         why = (entry or {}).get("cause") or "not run"
         return f'<span class="na" title="{e(why)}">not run</span>'
-    said = f"mean {sig(entry['mean'])} of {tf['positions']:,} positions; n = {entry['n']:,} prompts"
+    # each part with its label, so the title's lines keep one column (the ladder's Fidelity title does the same)
+    said = (
+        f"mean: {sig(entry['mean'])} of {tf['positions']:,} positions; n = {entry['n']:,} prompts"
+    )
     if entry.get("percent_interval"):
-        said += "; " + interval_words(entry)
+        low, high = entry["percent_interval"]
+        said += f"; interval: 95\u00a0%, {pct(low)} to {pct(high)}\u202f%"
     return (f'<span class="fig" title="{e(said)}; record: {e(tf["path"])}">'
             f'<span class="n">{e(pct(entry["percent"]))}</span><span class="u">%</span></span>'
             + "".join(f'<span class="sub">{e(line)}</span>' for line in sub if line))  # fmt: skip
@@ -1669,8 +1196,7 @@ def tests_html(row, tf, mine):
     if not lines:
         return ""
     said = f"{counted_words(2 * len(lines), 'test')} {TF_TESTS_ON}"  # the measure, visible
-    return (f'<details class="more fts"><summary>{e(said)}<span class="sr">, '
-            f'{e(FIGURE_HEAD["fidelity"])}</span></summary><dl>{"".join(lines)}</dl></details>')  # fmt: skip
+    return f'<h3 class="sub-h">{e(said)}</h3><dl class="fts">{"".join(lines)}</dl>'
 
 
 NOT_RUN = '<span class="na">not run</span>'
@@ -1686,7 +1212,7 @@ def fid_tr(cls, th, kind, cells, heads, tf, entry, ink):
         track = (
             f'<td class="trk" aria-hidden="true">{fid_svg(mean, None, tf["positions"], ink)}</td>'
         )
-    tds = "".join(f'<td data-l="{e(FID_LABEL.get(h, h))}">{c}</td>'
+    tds = "".join(f'<td data-l="{e(FID_HEAD.get(h, h))}">{c}</td>'
                   for h, c in zip(heads[2:], cells, strict=True))  # fmt: skip
     at = f' class="{cls}"' if cls else ""
     return f'<tr{at}>{th}<td data-l="{e(FID_KIND)}">{kind}</td>{track}{tds}</tr>'
@@ -1700,7 +1226,7 @@ def own_rows(row, tf, any_kl, heads):
     mine = row["fidelity"]
     tf_mine = tf["rows"].get(row["system"]) if tf else None
     if mine is None and tf_mine is None:
-        return ""
+        return []
     cells = []
     if tf:
         sub = [median_words(tf_mine, tf)]
@@ -1735,7 +1261,7 @@ def own_rows(row, tf, any_kl, heads):
         label = (f'<p>{e(whose)}: {e(tf_mine["label"])}. What ran: '
                  f'{e(tf_mine["computed_by"])}.</p>{"".join(evidence_links(records))}')  # fmt: skip
         out += f'<tr class="me ml"><td colspan="{len(heads) + 1}">{label}</td></tr>'
-    return out
+    return [(fid_score(tf_mine, mine), out)]
 
 
 def control_rows(fid, tf, any_kl, heads):
@@ -1750,6 +1276,8 @@ def control_rows(fid, tf, any_kl, heads):
         i, c = fcs.get(cid, (None, None))
         t = tcs.get(cid)
         is_bar = bar is not None and bar["control"] == cid
+        if not (is_bar or FID_COPY.match(cid)):  # the table holds the quantized copies; the
+            continue  # other controls stay in the fidelity record
         failed = c is not None and c["status"] == "failed"
         kind = (
             (c or t)["kind"]
@@ -1769,9 +1297,26 @@ def control_rows(fid, tf, any_kl, heads):
         # honest or damaged, linked to what the level means by it (FI-2), then the rest
         word = (c or t)["kind"]
         kind_html = term(word, KIND_TERM) + e(kind[len(word) :])
-        out.append(fid_tr("bar" if is_bar else "", control_th(cid), kind_html, cells, heads, tf, t,
-                          (c or t)["kind"]))  # fmt: skip
-    return "".join(out)
+        tr = fid_tr("bar" if is_bar else "", control_th(cid), kind_html, cells, heads, tf, t,
+                    (c or t)["kind"])  # fmt: skip
+        out.append((fid_score(t, c), tr))
+    return out
+
+
+# the controls the Fidelity table prints: the quantized copies, by llama.cpp's type names
+# ("q8_0", "q4_k_m"); a rerun, a model with blocks cut and a smaller model stay in the record
+FID_COPY = re.compile(r"^q\d")
+
+
+def fid_score(tf_entry, entry):
+    """What the Fidelity table sorts on, highest first: a row's top-token agreement (FI-10's
+    mean), else its mean matched prefix; a row with neither goes last."""
+    if tf_entry is not None and tf_entry.get("status") == "ok" and tf_entry.get("mean") is not None:
+        return (1, tf_entry["mean"])
+    prefix = (entry or {}).get("mean_prefix")
+    if isinstance(prefix, dict):  # a stored quantity
+        prefix = prefix.get("value")
+    return (0, prefix) if prefix is not None else (-1, 0.0)
 
 
 def fidelity_html(row):
@@ -1793,7 +1338,9 @@ def fidelity_html(row):
     )
     heads = [FID_WHO, FID_KIND, *([TF_AGREE] if tf else []), PREFIX, *([TF_KL] if tf else []),
              *([kl_h] if any_kl else [])]  # fmt: skip
-    body = own_rows(row, tf, any_kl, heads) + control_rows(fid, tf, any_kl, heads)
+    # one board, highest Fidelity first: the system's row takes its place among the copies
+    scored = own_rows(row, tf, any_kl, heads) + control_rows(fid, tf, any_kl, heads)
+    body = "".join(tr for _, tr in sorted(scored, key=lambda r: r[0], reverse=True))
     if not body:
         return '<p class="none">Not run yet.</p>'
     lead = ""
@@ -1803,61 +1350,15 @@ def fidelity_html(row):
         why, note = kl_why(row)
         lead += (f'<p class="flead">{e(kl_h)}: <span class="na" title="{e(note or "not measured")}">'
                  f"not measured</span>{f' ({e(why)})' if why else ''}</p>")  # fmt: skip
-    lead = proved_html(row) + "".join(f'<p class="flead">{line}</p>'
-                                       for line in fid_lead(row, rung, tf)) + lead  # fmt: skip
+    lead = proved_html(row) + lead
     ths = (f'<th scope="col">{e(heads[0])}</th><th scope="col">{e(heads[1])}</th>'
            + ('<th scope="col" class="trk" aria-hidden="true"></th>' if tf else "")
-           + "".join(f'<th scope="col"{tf_title(h, tf)}>{e(h)}</th>' for h in heads[2:]))  # fmt: skip
+           + "".join(f'<th scope="col"{tf_title(h, tf)}>{e(FID_HEAD.get(h, h))}</th>'
+                     for h in heads[2:]))  # fmt: skip
     tests = tests_html(row, tf, tf["rows"].get(row["system"])) if tf else ""
     limits = "".join(f'<p class="flead">{e(line)}</p>' for line in fid_limits(rung, tf))
     return (f'{lead}<table class="rt stk fid"><thead><tr>{ths}</tr></thead>'
             f"<tbody>{body}</tbody></table>{limits}{tests}")  # fmt: skip
-
-
-def fid_lead(row, rung, tf):
-    """The lines over the Fidelity table (SI-9, amended 2026-11-16), as HTML: in plain words what
-    is compared with what (the copy the row proves, from its workload record, against the
-    original), what 100 % means and what the 8-bit and 4-bit copies are; why the surface figure is
-    top-token agreement; then which measure sets the check and the petal (the leading tokens,
-    FI-3), what passes the check, that the figure sets no state, and that neither compares
-    logits."""
-    bits = DTYPE_BITS.get(rung["reference_dtype"], rung["reference_dtype"])
-    p = row.get("precision") or {}
-    proved = (f"{p['proved']} ({p['proved_words']})" if p.get("proved_words")
-              else str(p.get("proved") or ""))  # fmt: skip
-    if proved and isinstance(p.get("bits"), int | float):
-        n = f"{p['bits']:,}" if float(p["bits"]).is_integer() else sig(p["bits"], 3)
-        part = " for part of the weights" if p.get("bits_covers") == "part" else ""
-        proved += f", {n} bits per weight{part}"
-    fmt = p.get("number_format") or {}
-    said = [f"{FORMAT_WORD[fmt[k]['value']]} {k}" for k in ("weights", "activations")
-            if k in fmt and fmt[k]["value"] in FORMAT_WORD]  # fmt: skip
-    if proved and said:  # never inferred: only the format the publisher states
-        proved += f", computed with {' and '.join(said)}"
-    plain = FID_PLAIN.format(name=name_of(row), bits=bits, proved=proved)
-    if not proved:  # no workload record: the general sentence alone
-        plain = plain.partition(", and ")[0] + "."
-    controls = {c["id"] for c in ((rung.get("fidelity") or {}).get("controls") or [])}
-    if tf:
-        plain += FID_PLAIN_TF.format(n=tf["n"])
-    if {"q8_0", "q4_k_m"} <= controls | {c["id"] for c in (tf or {}).get("controls") or []}:
-        plain += FID_PLAIN_COPIES
-    kinds = (e(FID_KINDS).replace("honest", term("honest", KIND_TERM), 1)
-             if controls else "")  # fmt: skip
-    out = [to_rule(e(plain), "Fidelity figure", "fidelity-figure") + kinds]
-    if tf:
-        out.append(e(FID_WHY.format(tokens=tf["positions"])))
-    exact = FID_LEAD_PREFIX.format(bits=bits) + FID_LEAD_CHECK + (FID_LEAD_TF if tf else "")
-    out.append(to_rule(e(exact + FID_LEAD_LOGITS), "Fidelity check", "fidelity"))
-    return out
-
-
-def to_rule(html, phrase, anchor):
-    """`html` with the first `phrase` in it linked to its rule on the checks page."""
-    head, found, tail = html.partition(phrase)
-    if not found:
-        return html
-    return f'{head}<a class="df" href="{CHECKS_PAGE}#{anchor}">{phrase}</a>{tail}'
 
 
 def fid_limits(rung, tf):
@@ -1887,7 +1388,7 @@ def fid_limits(rung, tf):
             parts.append(LIM_LLAMA.format(part=part, slots=slots))
     if parts:
         line = LIM_ENGINES.format(parts="; ".join(parts))
-        out.append(line + (LIM_GREEN if fid.get("slots") != 1 else ""))
+        out.append(line)
     corpus = S.V.get("corpus")
     if corpus and corpus["texts"]:
         out.append(LIM_PROMPTS.format(tokens=S.V["request"]["prompt_tokens"], texts=corpus["texts"],
@@ -1901,32 +1402,16 @@ def tf_title(head, tf):
     Fidelity column, its class (words.css sets its width)."""
     if tf and head == TF_KL:
         return f' title="{e(TF_KL_TITLE.format(k=tf["top_k"]))}"'
-    return ' class="fag"' if head == TF_AGREE else ""
-
-
-def figures_html(row):
-    """The row's other figures (the band prints its one figure) as one ruled row of cells, each
-    figure with its unit and no more (SI-8): verify time and proof size per reply, then Fidelity
-    (USD is under Cost only, and the two rates the multiple is made of stand under it on the band,
-    amended 2026-11-16). Each one's scope and n stand under Cost (and in its title); the bar, the
-    controls and KL under Fidelity."""
-    figs, n = row["figures"], counted(row)
-    cells = [(defined(FIGURE_HEAD["check-time"], "check-time"),
-              fig_html(figs["verify_seconds_per_reply"], n, sub=BARE)),
-             (defined(FIGURE_HEAD["proof-size"], "proof-size"),
-              fig_html(figs["proof_bytes_per_reply"], n, sub=BARE)),
-             (defined(FIGURE_HEAD["fidelity"], FIGURE_ANCHOR["fidelity"]),
-              fidelity_word(row, "", long=True))]  # fmt: skip
-    return '<dl class="figs">' + "".join(f"<div><dt>{k}</dt><dd>{v}</dd></div>"
-                                         for k, v in cells) + "</dl>"  # fmt: skip
+    full = f' title="{e(head)}"' if head in FID_HEAD else ""  # the head prints the short name
+    return (' class="fag"' if head == TF_AGREE else "") + full
 
 
 def band_figure(row):
-    """The band's one figure (`multiple_html` without its parts); of the whole sessions, its title
+    """The band's one figure (`multiple_html`); of the whole sessions, its title
     names them and n, as the line under it does (law 3)."""
     _, f, key = lead_figure(row)
     if key != "session_multiple":
-        return multiple_html(row, parts=False)
+        return multiple_html(row)
     count = f["n"] if f["n"] is not None else counted(row)
     # the line under it, "whole sessions" linked to their definition (D1)
     line = sub_line(whole_line(row, count)).replace(
@@ -1934,6 +1419,377 @@ def band_figure(row):
     )
     return (fig_html(f, count, sub=BARE, note=whole_note(row, key), how=how_computed(row))
             + f'<span class="sub">{line}</span>')  # fmt: skip
+
+
+# ------------------------------------------------------------------ the body's blocks, as the ladder
+# Each block of a system's page (amended 2026-11-17): what is computed, with its unit and labels;
+# what it means, in a head or a few words linked to its definition (the checks page, the
+# glossary); what it says for this system. How it is measured and why the rule is what it is are
+# on the checks page and in Learn. The system's own data one level down (its records, sessions,
+# the publisher's words, every copy) sits in one native disclosure per block.
+
+
+def dig(label, inner):
+    """A block's own data one click down: one native disclosure, its summary a plain label."""
+    return (f'<details class="more dig"><summary>{e(label)}</summary>'
+            f'<div class="dig-in">{inner}</div></details>')  # fmt: skip
+
+
+def tiles(cells):
+    """A block's figures as the Figures row draws them: each (head, figure html, id or "")."""
+    out = []
+    for k, v, at in cells:
+        place = f' id="{at}"' if at else ""
+        out.append(f"<div{place}><dt>{k}</dt><dd>{v}</dd></div>")
+    return f'<dl class="figs tiles">{"".join(out)}</dl>'
+
+
+def scope_html(*parts):
+    """What a block's figures share (scope, n, GPUs, evidence), said once over them (DEPTH: once
+    per block); each part is markup."""
+    said = [p for p in parts if p]
+    sep = f'<span class="sep">{SEP}</span>'
+    return f'<p class="scope">{sep.join(said)}</p>' if said else ""
+
+
+def lines_html(pairs):
+    """Figures of one cell, one a line, each after its word ("proved", "8-bit copy"), the words in
+    one column and the figures in the next."""
+    return '<span class="tls">' + "".join(f'<span class="tlw">{w}</span><span class="tf">{f}</span>'
+                                          for w, f in pairs) + "</span>"  # fmt: skip
+
+
+def mean(words):
+    """What a figure means, in a few words under it."""
+    return f'<span class="mean">{e(words)}</span>'
+
+
+# the Statement block's lines, by the board's row ids (SI-3, amended 2026-11-17)
+STATEMENT_LINE = {"commit_record": "From our commit record", "request": "From the request",
+                  "proof": "From the proof", "decoding": "Decoding",
+                  "unchecked": "Not checked by any call", "architecture": "Architecture"}  # fmt: skip
+# what an accept says, by whether the publisher states Level 1's statement at the pin (SI-4a)
+ACCEPT_HEAD = "An accept means"
+ACCEPT_SAYS = "the committed model's own greedy reply to the prompt"
+ACCEPT_STATE = {"stated": "stated", "read": "no single sentence states it",
+                "not": "not stated: no position"}  # fmt: skip
+
+
+def given_short(st, rid):
+    """What the verifier is given, for one line of the Statement block, in a few words; the files'
+    names in a title (they are in full in the block's disclosure)."""
+    if rid == "commit_record":
+        k, names = len(st["verifier_files"]), ", ".join(st["verifier_files"])
+        files = f' and <span title="{e(names)}">{e(counted_words(k, "file"))}</span>' if k else ""
+        return "the commitment" + files.replace(" and ", ", ", 1)
+    if rid == "request":
+        said = f"the prompt ({st['prompt_tokens']:,} token ids)"
+        if st["reply"] == "record":
+            said += f", our {st['output_tokens']:,}-token reply"
+        return e(said)
+    if rid == "proof":
+        said = counted_words(st["proof_files"], "file")
+        said = e(said + ("; the reply is read from it" if st["reply"] == "proof" else ""))
+        if st.get("proof_caveat"):  # a gap in our own verdict stays in view (law 2)
+            cav = st["proof_caveat"]
+            said += (f'<span class="sub cav">{e(cav[:1].upper() + cav[1:])}. '
+                     '<a href="/statement#the-seams">The seams ↗</a></span>')  # fmt: skip
+        return said
+    if rid == "decoding":
+        return e(f"{S.V['request']['decoding']}, at every reply position")
+    if rid == "architecture":
+        seen = st["architecture_visible"]
+        return (
+            e(f"visible: {seen}")
+            if seen
+            else f'<span class="na">{e(SCOPE_VALUE_WORD["not_stated"])}</span>'
+        )
+    return ""
+
+
+def sources_html(quotes):
+    """A line's evidence: the publisher's line it rests on ("source"), or each of several by its
+    number; "not stated" where the publisher is silent."""
+    if not quotes:
+        return f'<span class="na">{e(SCOPE_VALUE_WORD["not_stated"])}</span>'
+    links = [f'<a href="{e(q["url"])}" title="{e(q.get("text") or "")}">{e(str(i + 1))}</a>'
+             for i, q in enumerate(quotes)]  # fmt: skip
+    if len(links) == 1:
+        return links[0].replace(">1</a>", ">source</a>")
+    return "sources " + " ".join(links)
+
+
+def statement_block(row):
+    """SI-3 and SI-4a as a short list: the verifier, what an accept says (and whether the
+    publisher states it), what the verifier is given and from where, the decoding rule, what no
+    call checks and what of the architecture a proof shows; each line with its source. The claim
+    card line by line, with every file named, one click down."""
+    st = row.get("statement")
+    if not st:
+        return f'<p class="none">{e(SCOPE_VALUE_WORD["not_stated"])}</p>'
+    lines = []
+    card = (f'<a href="{e(link(st["card"]))}" title="{e(st["card"])}">claim card</a>'
+            if st["card"] else "")  # fmt: skip
+    lines.append(("Verifier", f"<code>{e(st['program'])}</code>", card))
+    ls = row.get("level_statement")
+    if ls is not None:
+        if ls["reading"]:
+            said = (f'<a class="df" href="{CHECKS_PAGE}#reading">{e(READ_AS)}</a>: '
+                    f"{e(ACCEPT_STATE['read'])}")  # fmt: skip
+        elif ls["stated"]:
+            said = e(ACCEPT_STATE["stated"])
+        else:
+            said = f'<span class="na">{e(ACCEPT_STATE["not"])}</span>'
+        lines.append((ACCEPT_HEAD, f'{e(ACCEPT_SAYS)} <span class="qs">({said})</span>',
+                      sources_html(ls["quotes"])))  # fmt: skip
+    for r in st["rows"]:
+        given = given_short(st, r["id"])
+        if not given:  # nothing given: the publisher's words name it, or it is not stated
+            given = (e("listed by the publisher") if r["said"]
+                     else f'<span class="na">{e(SCOPE_VALUE_WORD["not_stated"])}</span>')  # fmt: skip
+        src = sources_html(r["said"]) if r["said"] or r["id"] != "unchecked" else ""
+        lines.append((STATEMENT_LINE[r["id"]], given, src))
+    trs = "".join(f'<tr><th scope="row">{e(k)}</th><td>{v}</td><td class="src">{s}</td></tr>'
+                  for k, v, s in lines)  # fmt: skip
+    quotes = sum(len(r["said"] or ()) for r in st["rows"])
+    return (f'<table class="rt kvt"><tbody>{trs}</tbody></table>'
+            + dig(f"Claim card in full ({counted_words(quotes, 'quote')})",
+                  statement_html(row)))  # fmt: skip
+
+
+def first_record(c):
+    """A check's first record, one link labelled by what the file holds (its run and path in the
+    title); its other records are in the block's disclosure."""
+    path, _, ptr = c["evidence"][0].partition("#")
+    path = path.rstrip("/")
+    ptr = ptr.strip("/")
+    word = RECORD_WORD.get(path.rsplit("/", 1)[-1], path.rsplit("/", 1)[-1])
+    href_ = link(path) + (f"#/{ptr}" if ptr else "")
+    return f'<a class="ev" href="{e(href_)}" title="{e(c["evidence"][0])}">{e(word)}</a>'
+
+
+def checks_block(row):
+    """The six checks, the entry gate: each one's name (linked to its rule), its state, its cause
+    where it has one (a check not decided says why, and who acts, in view: law 2), and one record.
+    Every record, trial and long note one click down, by check."""
+    caused = any(c["cause"] or (c["state"] == "undecided" and c.get("note")) for c in row["checks"])
+    trs, more, count = [], [], 0
+    for c in row["checks"]:
+        note = c.get("note")
+        cause = ""
+        if c["cause"]:
+            cause = (f'<a class="cw df" href="{CHECKS_PAGE}#cause-{e(c["cause"].replace(" ", "-"))}" '
+                     f'title="{e(c["cause"])}">{e(CHECK_CAUSE_WORD[c["cause"]])}</a>')  # fmt: skip
+        head = e(note_parts(note)[0]) if note else ""
+        at = f' title="{head}"' if head else ""
+        if note and c["state"] == "undecided":
+            cause += f'<span class="cn"{at}>{quoted(note_parts(note)[1])}</span>'
+        cause += decide_html(c, note)
+        links = evidence_links(c["evidence"])
+        count += len(links)
+        full = (f'<p class="cn"{at}>{quoted(note_parts(note)[1])}</p>'
+                if note and c["state"] != "undecided" else "")  # fmt: skip
+        ran = trials_html(c.get("trials") or ()) + kept_html(row, c["id"])
+        if links or full or ran:
+            more.append(f'<div><dt>{e(CHECK_NAME[c["id"]])}</dt><dd>{full}{ran}'
+                        f'<span class="evs">{"".join(links)}</span></dd></div>')  # fmt: skip
+        to = petals_of(c["id"])
+        to = f' data-to="{to}"' if to else ""
+        rec = first_record(c) if c["evidence"] else '<span class="na">none</span>'
+        trs.append(
+            f'<tr class="ck {c["state"]}" id="ck-{c["id"]}"><th scope="row">'
+            f'<a href="{CHECKS_PAGE}#{c["id"]}"{to} title="{e(filled(CHECK_PLAIN[c["id"]]))}">'
+            f"{e(CHECK_NAME[c['id']])}</a></th>"
+            f'<td class="cst">{state_word(c["state"], STATE_WORD[c["state"]])}</td>'
+            + (f"<td>{cause}</td>" if caused else "")
+            + f'<td class="cev">{rec}</td></tr>'
+        )
+    cause_th = '<th scope="col">Cause</th>' if caused else ""
+    table = ('<table class="rt ckt cks"><thead><tr><th scope="col">Check</th><th scope="col">'
+             f'State</th>{cause_th}<th scope="col">Record</th></tr></thead>'
+             f'<tbody>{"".join(trs)}</tbody></table>')  # fmt: skip
+    records = dig(f"Every record and trial ({count:,} records)",
+                  f'<dl class="ckr">{"".join(more)}</dl>') if more else ""  # fmt: skip
+    return table + records
+
+
+# what each figure of the Cost block means, in a few words under it
+COST_MEAN = {"rate": "served over proved is the cost vs serving",
+             "parts": "each over a served reply's GPU time, as the whole is",
+             "check-time": "verifier wall time", "proof-size": "every proof file, as written"}  # fmt: skip
+
+
+def on_point(html, whole, frac):
+    """A figure padded so figures in one column line up on the decimal point ("2.027" over
+    "2,669" reads as two and two thousand, not as two equal widths): `whole` and `frac` are the
+    widest whole and fractional parts in the column, in characters of the mono face."""
+    num = re.search(r'<span class="n">([^<]*)</span>', html)[1]
+    a, dot, b = num.partition(".")
+    left, right = whole - len(a), frac - len(dot + b)
+    if not (0 <= left <= 9 and 0 <= right <= 9):  # the classes words.css has (no inline style: CSP)
+        raise ValueError(f"a figure's padding out of range: {left}, {right}")
+    return f'<span class="np pl{left} pr{right}">{html}</span>'
+
+
+def rates_tile(row):
+    """The two rates the multiple divides (CO-8): proved and served, in one unit, aligned on their
+    decimal point, each with its unit and GPU; None where the row has no pair."""
+    pair = rate_pair(row)
+    if pair is None:
+        return None
+    proved, served, gp, sg = pair
+    n = counted(row)
+    lines = [(proved, RATE_PROVED, gp, n), (served, "served", sg, None)]
+    shown = [fig_html(f, k, sub=BARE, unit=RATE_PER.format(gpu=g)) for f, _, g, k in lines]
+    nums = [re.search(r'<span class="n">([^<]*)</span>', h)[1].partition(".") for h in shown]
+    whole, frac = max(len(a) for a, _, _ in nums), max(len(d + b) for _, d, b in nums)
+    figs = [(e(w), on_point(h, whole, frac)) for (_, w, _, _), h in zip(lines, shown, strict=True)]
+    tile = f'<span class="rts">{lines_html(figs)}</span>' + mean(COST_MEAN["rate"])
+    return tile
+
+
+def parts_tile(row):
+    """CO-7 (amended 2026-11-17): the band's multiple in its two parts, commit and proving then
+    generation, each with its unit; printed only here, on the system page, and only for a row that
+    times them apart. None otherwise."""
+    _, _, key = lead_figure(row)
+    parts = parts_of(row, key)
+    if not parts:
+        return None
+    n = counted(row)
+    figs = [(part_term(w), fig_html(f, n, sub=BARE, note=whole_note(row, key))) for w, f in parts]
+    return f'<span class="rts">{lines_html(figs)}</span>' + mean(COST_MEAN["parts"])
+
+
+def cost_block(row):
+    """The Cost block (CO-1 to CO-8), led by its figures: the two rates the band's multiple
+    divides, its two parts where the row times them apart (CO-7, printed nowhere else), verify
+    time, proof size and, small, the cost in USD; what they share (scope,
+    n, GPUs, evidence) once over them. How each side ran, every GPU time and the serving ladder
+    one click down (`cost_html`)."""
+    figs, n = row["figures"], counted(row)
+    b = rung_of(row)["baseline"] or {}
+    _, lead, key = lead_figure(row)
+    count = (lead or {}).get("n") or n
+    scope = whole_line(row, count) if key == "session_multiple" else steady_line(count)
+    scope = e(scope).replace("whole sessions", term("whole sessions", "Whole session"), 1)
+    bound = sorted({s.get("gpus") for s in row["sessions"] if s.get("gpus")})
+    gpus = e(f"{' or '.join(f'{g:,}' for g in bound)} × {gpu_name(row)}") if bound else ""
+    shown = [(k, f) for k, f in (("multiple", lead), ("verify", figs["verify_seconds_per_reply"]),
+                                 ("size", figs["proof_bytes_per_reply"])) if has(f)]  # fmt: skip
+    tier = evidence_words(shown) if shown else ""
+    cells = []
+    rates = rates_tile(row)
+    if rates:
+        cells.append((defined(FIGURE_HEAD["rate"], "rate"), rates, RATE_ANCHOR))
+    if split := parts_tile(row):
+        cells.append((defined(PARTS_HEAD, "multiple"), split, "parts"))
+    for k, f in (("check-time", figs["verify_seconds_per_reply"]),
+                 ("proof-size", figs["proof_bytes_per_reply"])):  # fmt: skip
+        sub = cost_sub(f, n, FIGURE_HEAD[k], own=True)
+        cells.append((defined(FIGURE_HEAD[k], k), fig_html(f, n, sub=sub) + mean(COST_MEAN[k]), ""))
+    usd = (
+        figs["session_usd_per_reply"] if key == "session_multiple" else figs["steady_usd_per_reply"]
+    )
+    price = S.V["price"]
+    if has(usd):
+        under = [(e(RATE_PROVED), fig_html(usd, n, sub=BARE))]
+        if has(b.get("usd_per_reply")):
+            under.append(("served", fig_html(b["usd_per_reply"], sub=BARE)))
+        if price and has(price["usd_per_gpu_hour"]):
+            basis = f"basis: {price['basis']}"
+            under.append(("H200", fig_html(price["usd_per_gpu_hour"], sub=BARE, note=basis)))
+        cells.append((defined(FIGURE_HEAD["cost"], "cost"),
+                      f'<span class="usd">{lines_html(under)}</span>', ""))  # fmt: skip
+    return (
+        scope_html(scope, gpus, tier)
+        + tiles(cells)
+        + dig("GPU time, hardware and serving", cost_html(row))
+    )
+
+
+def fidelity_block(row):
+    """The Fidelity block (SI-9): the Fidelity figure with its n, what the row proves, the 8-bit
+    and 4-bit copies, the Fidelity check's state with the matched leading tokens and the bar,
+    and KL to the original or "not measured" (law 2). Every copy, the tests, the publisher's words
+    on the number format and the run's sources one click down (`fidelity_html`)."""
+    rung = rung_of(row)
+    fid, tf = rung["fidelity"], rung.get("teacher_forced")
+    mine = (tf or {}).get("rows", {}).get(row["system"]) if tf else None
+    cells = []
+    if tf and mine is not None:
+        sub = [f"top-token agreement, n\u00a0=\u00a0{mine['n']:,} prompts"]
+        cells.append((defined(FIGURE_HEAD["fidelity"], FIGURE_ANCHOR["fidelity"]),
+                      agree_html(mine, tf, sub), ""))  # fmt: skip
+    proved = proved_words(row, long=True).removeprefix(f"{PROVED_HEAD}: ")
+    if proved:
+        p = row["precision"]
+        cells.append((term("Proved", "Proved"),
+                      f'<span class="pw">{e(proved)}</span>{mean(p["proved"])}', "proved"))  # fmt: skip
+    if tf:
+        by = {c["id"]: c for c in tf.get("controls") or []}
+        copies = [(e(COPY_WORD[i]), agree_html(by[i], tf, [])) for i in FIDELITY_AGAINST if i in by]
+        if copies:
+            cells.append((term("Copies", "Q8_0 and Q4_K_M"), lines_html(copies), ""))
+    check = next(c for c in row["checks"] if c["id"] == "fidelity")
+    said = state_word(check["state"], STATE_WORD[check["state"]])
+    own, bar = row["fidelity"], (fid or {}).get("bar")
+    if own is not None and own.get("mean_prefix") is not None:
+        mine_n = f"n = {own['n']:,} replies"
+        at = row["record"] + "/fidelity/mean_prefix"
+        lines = [(e(name_of(row)), plain(own["mean_prefix"], "tokens", at, mine_n))]
+        ids = [c["id"] for c in (fid or {}).get("controls") or []]
+        if bar is not None and bar["control"] in ids:
+            i = ids.index(bar["control"])
+            at = f"{fid['record']}/controls/{i}/mean_prefix"
+            lines.append(("pass bar", plain(bar["mean_prefix"], "tokens", at)))
+        said += lines_html(lines) + mean("matched leading tokens, mean")
+    cells.append((defined("Fidelity check", "fidelity"), said, ""))
+    kl = (row["fidelity"] or {}).get("kl")
+    cells.append((defined(FIGURE_NAME["kl"], "kl"),
+                  fig_html(kl) if has(kl) else '<span class="na">not measured</span>', ""))  # fmt: skip
+    return tiles(cells) + dig("The copies, the tests and the sources", fidelity_html(row))
+
+
+def sessions_block(row):
+    """SE-3: the counted sessions in one table (slot, run, the whole session's GPU time per
+    reply, its generation part, the steady one or why there is none), the release groups once
+    over it; the sessions not counted, by kind and count, in view, and listed one click down."""
+    rec = row["record"]
+    if not row["sessions"]:
+        return '<p class="none">No counted session.</p>'
+    gen = any(s.get("generation_gpu_seconds_per_reply") is not None for s in row["sessions"])
+    groups = {len(s["groups"]) for s in row["sessions"]}
+    steady, whole = (f"scope: {SCOPE_WORD[k]}" for k in ("prove.steady", "whole_wall"))
+    heads = [("Slot", e("Slot")), ("Run", e("Run")),
+             ("Session", term("Session", "Whole session")),
+             *([("Generation", part_term("generation"))] if gen else []),
+             (M_COL, term(M_COL, "Steady state")),
+             *([("Release groups", e("Release groups"))] if len(groups) > 1 else [])]  # fmt: skip
+    trs = []
+    for k, s in enumerate(row["sessions"]):
+        at = f"{rec}/sessions/{k}"
+        g = s.get("generation_gpu_seconds_per_reply")
+        cells = [str(s["slot"]), run_link(row, s["run_id"]),
+                 plain(s["session"], GPU_S, f"{at}/session", whole),
+                 *([plain(g, GPU_S, f"{at}/generation_gpu_seconds_per_reply", whole)] if gen else []),
+                 steady_cell(s, at, steady),
+                 *([f"{len(s['groups']):,}"] if len(groups) > 1 else [])]  # fmt: skip
+        trs.append("<tr>" + "".join(f'<td data-l="{e(h)}">{c}</td>'
+                                    for (h, _), c in zip(heads, cells, strict=True)) + "</tr>")  # fmt: skip
+    ths = "".join(f'<th scope="col">{h}</th>' for _, h in heads)
+    table = (
+        f'<table class="rt stk"><thead><tr>{ths}</tr></thead><tbody>{"".join(trs)}</tbody></table>'
+    )
+    once = f"{next(iter(groups)):,} release groups in each" if len(groups) == 1 else ""
+    others = [(len(row.get(k) or ()), w) for k, w in (("incomplete", "incomplete"),
+                                                      ("replaced", "replaced"),
+                                                      ("ineligible", "ineligible"))]  # fmt: skip
+    kept_out = ", ".join(f"{k:,} {w}" for k, w in others if k)
+    scope = scope_html(e(f"{len(row['sessions']):,} counted"), e(once),
+                       e(f"not counted: {kept_out}") if kept_out else "")  # fmt: skip
+    rest = sessions_html(row, counted_table=False)
+    return scope + table + (dig("Sessions not counted", rest) if rest else "")
 
 
 PAPER_WORD = "PDF, at the commit this row runs"  # the band's Paper fact, linked (D5)
@@ -1967,18 +1823,20 @@ def share_html(row):
 
 
 def pin_html(pin, name):
-    """A row that runs a change to the publisher's code, in one line (SI-3, amended 2026-11-15):
-    the pull request, whether upstream merged it, who wrote it, and what the publisher's own
-    commit did on the level's request, linked to its record."""
+    """A row that runs a change to the publisher's code, in label-and-fact form (SI-3(c), amended
+    2026-11-15): the pull request, whether upstream merged it, who wrote it (linked to the
+    mandate's ties), and what the publisher's own commit did on the level's request, linked to
+    its record."""
+    sep = f'<span class="sep">{SEP}</span>'
     merged = "merged upstream" if pin["merged"] else "not merged upstream"
-    who = ", written by this project's owner" if pin["by_owner"] else ""
+    who = '<a href="/mandate#ties">by this project\'s owner</a>' if pin["by_owner"] else ""
     record = (f' (<a href="{e(link(pin["record"]))}" title="{e(pin["record"])}">record</a>)'
               if pin.get("record") else "")  # fmt: skip
-    return (
-        f'Runs <a href="{e(pin["url"])}">pull request #{pin["pull"]:,}</a> to {e(name)}, '
-        f"{merged}{who}; at upstream <code>{e(pin['upstream_commit'][:7])}</code>, "
-        f"{e(pin['upstream_outcome'])}{record}."
-    )
+    facts = [f'<a href="{e(pin["url"])}">PR #{pin["pull"]:,}</a>', e(merged), who,
+             f"upstream <code>{e(pin['upstream_commit'][:7])}</code>: "
+             f"{e(pin['upstream_outcome'])}{record}"]  # fmt: skip
+    return sep.join(f'<span class="nw">{f}</span>' if i < 3 else f
+                    for i, f in enumerate(facts) if f)  # fmt: skip
 
 
 def system_page(row):
@@ -2013,13 +1871,12 @@ def system_page(row):
     size = next((i + 1 for i, k in enumerate(NAME_SIZES) if len(name) <= k), len(NAME_SIZES) + 1)
     # the figure's plain name, the figure, and under it, once, what was counted and n (CO-5)
     label, lead = FIGURE_HEAD["multiple"], band_figure(row)
-    _, _, lkey = lead_figure(row)
-    lead += split_html(row, lkey, bar=False, bare=True) + rate_html(row, f"#{RATE_ANCHOR}")
+    lead += rate_html(row, f"#{RATE_ANCHOR}")
     unranked = "" if row["position"] is not None else " unr"
     band_ = (
         f'<section class="mast mast-sys sysb" aria-labelledby="h-name"><div class="mast-in">'
         f'<div class="sb"><h1 id="h-name" class="sysname nm{size}">{e(name)}</h1>'
-        f'<p class="sbm{unranked}"><span class="sbl">{e(label)}</span>{lead}</p></div>'
+        f'<p class="sbm{unranked}"><span class="sbl">{defined(label, "multiple")}</span>{lead}</p></div>'
         '<dl class="facts">'
         + "".join(f'<div class="{c}"><dt>{k}</dt><dd>{v}</dd></div>' for c, k, v in facts)
         + "</dl></div></section>"
@@ -2035,7 +1892,7 @@ def system_page(row):
     )
     # the share group at the strip's end on a wide screen
     share_strip = f'<div class="shr" role="group" aria-label="{e(SHARE[0])}">{share}</div>'
-    parts = (("figures", "Figures"), ("glyph", "Glyph"), ("statement", "Statement"),
+    parts = (("glyph", "Glyph"), ("statement", "Statement"),
              ("checks", "Checks"), ("cost", "Cost"), ("fidelity", "Fidelity"),
              ("sessions", "Sessions"))  # fmt: skip
     body = f"""
@@ -2044,13 +1901,12 @@ def system_page(row):
   {band_}
   {pnav(name, parts, share_strip)}
   <div class="wrap">
-    {section("figures", "Figures", figures_html(row))}
-    {section("glyph", "Glyph", glyph_html(row))}
-    {section("statement", "Statement", statement_html(row))}
-    {section("checks", "Checks", checks_html(row))}
-    {section("cost", "Cost", cost_html(row))}
-    {section("fidelity", "Fidelity", fidelity_html(row))}
-    {section("sessions", "Sessions", sessions_html(row))}
+    {section("glyph", "Glyph", glyph_block(row))}
+    {section("statement", "Statement", statement_block(row))}
+    {section("checks", "Checks", checks_block(row))}
+    {section("cost", "Cost", cost_block(row))}
+    {section("fidelity", "Fidelity", fidelity_block(row))}
+    {section("sessions", "Sessions", sessions_block(row))}
     {foot}
   </div>
 </main>

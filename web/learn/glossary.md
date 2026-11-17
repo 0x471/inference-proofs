@@ -10,6 +10,10 @@ The wrapper through which the harness runs a system's commands, in a container b
 
 An algebraic intermediate representation: a computation as a table of values (the trace) with polynomial constraints between rows. STARK provers such as [Winterfell](https://github.com/meta/winterfell/blob/2f78ee9bf667a561bdfcdfa68668d0f9b18b8315/README.md?plain=1#L59) take a computation in this form.
 
+### Any cheating prover
+
+A cheater that controls its own machine, with no hardware or outside party assumed honest. Integrity's Met needs a limit that holds against any cheating prover.
+
 ### Architecture
 
 A model's layout and sizes: its layers, widths and heads. It is public for every Level 1 model, so no Level 1 petal grades hiding it.
@@ -36,7 +40,7 @@ The record of what one system's accepted proofs establish in one configuration, 
 
 ### Commit and proving
 
-The part of a [[whole session]]'s GPU time that is not [[generation]]: the commit call, which commits to the weights, and the proving of every reply. Under Cost vs serving it is printed beside generation, each over the same serving time.
+The part of a [[whole session]]'s GPU time that is not [[generation]]: the commit call, which commits to the weights, and the proving of every reply. On a system's page, under Cost, it is printed beside generation, each over the same serving time as Cost vs serving.
 
 ### Commitment
 
@@ -44,7 +48,7 @@ A value computed from data, such as a model's weights, that fixes them for later
 
 ### Completeness
 
-The property that a verifier accepts every proof an honest prover makes of a true statement, often except with a small stated probability. It protects the provider, and it is the one of the three properties a test can show: on a system's page it reads "tested by us on honest runs" with the count of honest replies whose proofs were accepted ([[run check|Run check]]). No petal grades it. In safeguards writing, a complete declaration leaves nothing out.
+The property that a verifier accepts every proof an honest prover makes of a true statement, often except with a small stated probability. It protects the provider, and it is the one of the three properties a test can show: on a system's page it reads as the count of honest replies whose proofs were accepted, from our [[run check|Run check]]. No petal grades it. In safeguards writing, a complete declaration leaves nothing out.
 
 ### Confidentiality
 
@@ -56,7 +60,7 @@ How a derived figure was obtained: code calculates it from the times and counts 
 
 ### Conjectured
 
-Said of a soundness bound that rests on an unproved conjecture. On the [Integrity](/checks#unforgeable) petal, a conjectured bound reaches Partly met at most.
+Said of a soundness limit that rests on an unproven assumption, not a theorem. On the [Integrity](/checks#unforgeable) petal, a conjectured limit reaches Partly met at most.
 
 ### Control
 
@@ -112,7 +116,7 @@ A protocol that shows committed values lie close to a Reed-Solomon codeword, the
 
 ### Generation
 
-The phase of a [[session]] in which the system's own model computes the replies, where the system does this apart from proving them. Its GPU time counts in the proved side of Cost vs serving, and the figure prints it as a part of its own.
+The phase of a [[session]] in which the system's own model computes the replies, where the system does this apart from proving them. Its GPU time counts in the proved side of Cost vs serving, and a system's page prints it under Cost as a part of its own.
 
 ### Glyph
 
@@ -129,6 +133,10 @@ Choosing the highest-scoring token at every step. With exact arithmetic and a fi
 ### Halfway point
 
 The average of two copies' mean scores; a row is shown above it by a paired sign-flip test at p < 0.05. The Fidelity petal's steps are halfway points between the original run again, the 8-bit copy and the 4-bit copy.
+
+### Hash query
+
+One run of the hash function by a cheating prover searching for a proof that passes. A limit written q/2^t grows with the number of hash queries, q.
 
 ### Honest and damaged copies
 
@@ -154,6 +162,10 @@ A measure of how far one probability distribution lies from another (Kullback-Le
 
 The home page: one table per open-weights model, largest first, with one row per system run on it. Systems are [ranked](/checks#order) inside a model, never across models.
 
+### Lean
+
+A proof assistant: a program that checks every step of a mathematical proof. A proof it accepts is [[machine-checked]].
+
 ### Level
 
 A frozen definition of the benchmark in one file: the models, request, checks, order rule and constants. The glyph's rules are not part of it, and changing them needs no [new level](repo:rfcs/0018-level-1-ladder.md#the-glyph).
@@ -174,6 +186,10 @@ A petal's top step, the step below it, and the lowest step above Not met. Each p
 
 How many tokens at the start of a reply equal the original's, up to the first difference; the score of the [[Fidelity check]].
 
+### Missing for Met
+
+Everything a petal lacks for its top grade, Met, as a system page prints it: the items in groups by the step each group reaches, each with who acts, the publisher or us, and what it is today.
+
 ### Mixture of experts
 
 A model that runs only part of its weights for each token. Llama 4 Maverick runs about 17 billion of its 400 billion parameters.
@@ -192,11 +208,11 @@ The ranked figure: steady GPU-seconds per further proved reply over the serving 
 
 ### Next step
 
-What would move a petal up one step, computed from its rule, and who acts: the publisher or us. A petal not decided prints what decides it.
+What would move a petal up one step, computed from its rule, and who acts: the publisher or us. A system page prints everything a petal misses for Met as **Missing for Met**, grouped by the step each group reaches, each item with who acts. A petal not decided prints what decides it.
 
 ### Not decided
 
-A petal we cannot grade yet; its line says what it waits on, and it is never a failure.
+A petal we cannot grade yet; its line says what it waits on, and it is never a failure. It is not a step of the scale: our part is not done yet.
 
 ### Not decided (check)
 
@@ -204,7 +220,7 @@ A check that has not run, ran without a result that counts yet, or that the syst
 
 ### Not met
 
-A petal's step when the publisher's own facts fall below Partly met.
+A petal's step when the publisher's own facts fall below Partly met. Not met, Not stated and Failed are the three red steps, and none of them ranks above another.
 
 ### Not stated
 
@@ -217,6 +233,10 @@ Whether the proved copy computes in integers, fixed point (integers with a fixed
 ### Operator
 
 The party that serves a model and makes its proofs, such as a lab or an API provider. [RFC-0018](repo:rfcs/0018-level-1-ladder.md) also uses the word for the team that runs this benchmark.
+
+### Our rebuild
+
+Our run of the publisher's machine-checked proof through the proof-checking program it names, at the version we ran, with the program version the publisher pins. A Formally verified grade above Not met needs it.
 
 ### Passed
 
@@ -241,6 +261,10 @@ A ranked system's place in its model's table: 1 plus the number of systems place
 ### Prompt check
 
 With one prompt token changed, the verifier refuses the proof ([rule](/checks#prompt)).
+
+### Proof
+
+On a system's page, the file the system sends with each reply for the [[verifier]] to check. A mathematical result and its argument are called a [[theorem]].
 
 ### Proof of inference
 
@@ -276,7 +300,7 @@ An ideal hash function that gives every new input a fresh, uniformly random outp
 
 ### Read as
 
-What a petal rests on, printed beside its step: **stated**, the publisher's own sentence; **read as**, our reading of sentences none of which says it alone; **tested by us**, our own runs. A petal read as prints the quotes it rests on and is graded Mostly met at most, for every system alike. The name of a construction, such as STARK, is never read as a claim.
+What a grade comes from, printed at the head of an opened petal's evidence, with "our reading" beside the grade wherever a reading of ours sets it: **the publisher's words**, its own sentence; **our reading**, with the number of points it covers, where no single sentence of the publisher's states a point, so we read it from several passages, which are linked; **our test**, our own runs; **our rebuild**, our run of the publisher's proof through its proof-checking program. A grade that uses our reading is Mostly met at most, for every system alike. The name of a construction, such as STARK, is never read as a claim. Until 2026-11-17 the page printed this as "stated", "read as" or "tested by us"; it now says "from" and "our reading", here and in a system's Statement block.
 
 ### Recomputation
 
@@ -333,7 +357,7 @@ The property that a verifier refuses proofs of false statements, except with a p
 
 ### Soundness error
 
-The probability, as the publisher states it, that a verifier accepts a proof of a false statement: the bound behind [[soundness]]. It is stated for a given verifier, per proof or per part of one, often as a function of the forger's hash queries. The [Integrity](/checks#unforgeable) petal grades it: its reason names every condition that keeps it from covering what the row runs, then the bound, such as a verifier other than the one the bound is stated for.
+The probability, as the publisher states it, that a verifier accepts a proof of a false statement: the bound behind [[soundness]]. It is stated for a given verifier, per proof or per part of one, often as a function of the forger's hash queries. The [Integrity](/checks#unforgeable) petal grades it: a system's page lists, under the petal, every condition that keeps it from covering what the row runs, such as a verifier other than the one the bound is stated for; the petal's full reason stays on the board. A chance written 2^-128 is 1 in 2^128, about 3 in 10^39, and a smaller chance than 2^-100.
 
 ### Statement
 
@@ -343,9 +367,17 @@ The proposition that an accepted proof establishes. For [an inference prover](/s
 
 The part of a [[session]] after its first group of proofs, when proofs come out at an even pace. A release group is a burst of proofs released together. A row is [steady](/checks#multiple) when its three sessions are.
 
+### Shown above
+
+Our statistical test finds an average above a threshold at the usual 5% level: p < 0.05 in a paired sign-flip test over the prompts. Never "not shown" alone: not shown above means the test does not find it, not that the average is below.
+
 ### Sumcheck
 
 A protocol that convinces a verifier of a polynomial's sum over exponentially many points with one random evaluation. The verifier's work is [one round per variable](/forward-pass).
+
+### Theorem
+
+A mathematical result with its proof. On a system's page, a theorem is one the publisher states and proves, such as a limit on the chance that the verifier accepts a fake reply.
 
 ### Token
 
