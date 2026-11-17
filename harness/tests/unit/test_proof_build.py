@@ -8,7 +8,7 @@ import yaml
 
 from iproofs.errors import IProofsError
 from iproofs.glyph import machine_checked
-from iproofs.proof_build import build_record, publisher_command
+from iproofs.proof_build import BUILDER_HOME, _last_lines, build_record, publisher_command
 from iproofs.schema import SchemaRegistry
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -310,3 +310,10 @@ def test_replace_rules(tmp_path: Path) -> None:
     with pytest.raises(IProofsError, match="only the publisher's full check"):
         replaces(out, check, True, tmp_path / "repo")  # never a second full check
     assert before != out.read_bytes()
+
+
+def test_last_lines_print_the_jobs_home_as_tilde() -> None:
+    """check.py prints its scratch paths under the job user's home; the record must pass SEC-10."""
+    out = "  - the logs are in " + BUILDER_HOME + "scratch/lean-check-fd954dd1\nAll steps passed\n"
+    lines = _last_lines(out)
+    assert lines == ["  - the logs are in ~/scratch/lean-check-fd954dd1", "All steps passed"]

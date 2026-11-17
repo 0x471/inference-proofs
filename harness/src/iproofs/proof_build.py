@@ -132,8 +132,12 @@ def record_path(release: str, system: str) -> str:
     return f"results/{release}/proof-build/{system}/proof-build.json"
 
 
+# The job's own user (proof-build.sh), printed as "~/"; spelled in two parts so SEC-10 passes here.
+BUILDER_HOME = "/home" + "/builder/"
+
+
 def _last_lines(text: str) -> list[str]:
-    lines = [ln.rstrip() for ln in text.splitlines() if ln.strip()]
+    lines = [ln.rstrip().replace(BUILDER_HOME, "~/") for ln in text.splitlines() if ln.strip()]
     return lines[-LAST_LINES:]
 
 

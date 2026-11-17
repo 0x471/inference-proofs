@@ -35,17 +35,20 @@ took 6,388 s there.
 The publisher's full check (`MODE=check`, lean/CHECKING.md step 5) builds the library from nothing,
 replays the kernel and audits the named theorems. Its heaviest files hold up to 49 GiB a process,
 and the publisher's whole run took 4 h 26 min on 84 cores and 960 GiB (CHECKING.md L83-L105), so it
-runs on `a100x8` (96 vCPU, 1,136 GB, 20.00 USD per hour; its GPUs stay idle), with the settings
-close to that run:
+needs a machine of about 1 TB. The recorded run of 2026-11-16 ran on `rtx-pro-6000x4` (92 vCPU,
+1,024 GB, 11.00 USD per hour; its GPUs stay idle), with settings close to the publisher's:
 
 ```sh
-hf jobs run --detach --flavor a100x8 --timeout 7h --name iproofs-proof-check-flashprove \
+hf jobs run --detach --flavor rtx-pro-6000x4 --timeout 21h --name iproofs-proof-check-flashprove \
   -v hf://buckets/<namespace>/iproofs-dev-runs:/upload \
-  -e OUT=/upload/$D/out -e IMAGE=$IMG -e MODE=check -e BUILD_TIMEOUT_S=23400 \
+  -e OUT=/upload/$D/out -e IMAGE=$IMG -e MODE=check -e BUILD_TIMEOUT_S=72000 \
   -e LEAN_NUM_THREADS=64 -e WIDE_JOBS=24 "$IMG" bash /upload/$D/proof-build.sh
 ```
 
-Cap: 7 h at 20.00 USD per hour, 140 USD. `SETUP_ONLY=1` stops a run after the publisher's check
+It took 68,494 s (19 h): about 2 h 30 min for the build, then the kernel replay, far slower than
+the publisher's 2 h 24 min. The check cannot resume, so `BUILD_TIMEOUT_S` only guards against a
+hang: a first run with 23,400 s was stopped in the replay and stored nothing. Size the limit to
+several times the expected time, and again whenever the machine changes. `SETUP_ONLY=1` stops a run after the publisher's check
 of its build files, for a dry run in local Docker (`--platform linux/amd64`).
 
 ## Record
