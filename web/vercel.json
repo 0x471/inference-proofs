@@ -1,7 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "rm -rf public && mkdir -p public/og public/fonts && cp *.html search.json robots.txt sitemap.xml llms.txt public/ && cp og/*.png og/*.svg public/og/ && cp fonts/*.woff2 public/fonts/ && npm ci --include=dev --ignore-scripts && npm run assets",
-  "cleanUrls": true,
+  "cleanUrls": false,
   "framework": null,
   "headers": [
     {
@@ -16,7 +16,7 @@
         },
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'sha256-BvfZjEgH5q5tQ8fzRtC/NtSi5j+O9wxUdXmwLgOx10w=' 'sha256-/uW0YL9QX0kTikYF/cGpP8RjA++ASIBQJaMvYdXjzI4=' 'sha256-0lYLNdZPkTerouJMWGryemI0VZ3l2RWalcGhaaN/PMc=' 'sha256-4TyIrlIqgFISa+OgRS96VIbwW5XaLYebZ/e3VIdPO5M=' 'sha256-F6XDfcY8H1CBCKs1q1ekYL7l622ZD1nuigkDM1G1LIQ=' 'sha256-IhDmdBIZ7CvRxnwoLnxVWxEQtBottJJeC60WFWMVC0M=' 'sha256-KpHtusjZZTKfvJcKrASLAsopLPFJJY9+fjZK0Gp4JRg=' 'sha256-XBBTTbwXH8s+ptb08H56z+4pdyHIJFpJ89Wa92Y3FnE=' 'sha256-jRVRLcYBAacNH8gmdRvLfRaUuqQf9UAjTsdw+GnIQjY=' 'sha256-jpN1GF+OLYI1gVqmUmC7ef4mAqWd+ip0qZ00tk5e3H0=' 'sha256-oJWDU2FSm/EQs25IPRvlZKdSYnSFpDKCSdyRNgzvmAI=' 'sha256-uE6LmxwKhC/TLi3Wpt8q79xKJqz2Yy8Dce82vvaY1Zg=' 'sha256-uHsfNe5NeI1Q3aYT8aIL2y6tmKPgAXUTdUehKFNLyCs=' 'sha256-vu0gTG1dmvGX06u9uA2SSaOrGRCEuO9jaAGdXgaX2hw=' 'sha256-xiWEkHHxoq+AOgnc+9hRWFZK6aGYkEiUdWqjsAszpqo=' https://cdn.vercel-insights.com; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self' https://*.vercel-insights.com; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
+          "value": "default-src 'self'; script-src 'self' 'sha256-BvfZjEgH5q5tQ8fzRtC/NtSi5j+O9wxUdXmwLgOx10w=' 'sha256-/uW0YL9QX0kTikYF/cGpP8RjA++ASIBQJaMvYdXjzI4=' 'sha256-0lYLNdZPkTerouJMWGryemI0VZ3l2RWalcGhaaN/PMc=' 'sha256-4TyIrlIqgFISa+OgRS96VIbwW5XaLYebZ/e3VIdPO5M=' 'sha256-F6XDfcY8H1CBCKs1q1ekYL7l622ZD1nuigkDM1G1LIQ=' 'sha256-IhDmdBIZ7CvRxnwoLnxVWxEQtBottJJeC60WFWMVC0M=' 'sha256-KpHtusjZZTKfvJcKrASLAsopLPFJJY9+fjZK0Gp4JRg=' 'sha256-XBBTTbwXH8s+ptb08H56z+4pdyHIJFpJ89Wa92Y3FnE=' 'sha256-jRVRLcYBAacNH8gmdRvLfRaUuqQf9UAjTsdw+GnIQjY=' 'sha256-jpN1GF+OLYI1gVqmUmC7ef4mAqWd+ip0qZ00tk5e3H0=' 'sha256-oJWDU2FSm/EQs25IPRvlZKdSYnSFpDKCSdyRNgzvmAI=' 'sha256-uE6LmxwKhC/TLi3Wpt8q79xKJqz2Yy8Dce82vvaY1Zg=' 'sha256-uHsfNe5NeI1Q3aYT8aIL2y6tmKPgAXUTdUehKFNLyCs=' 'sha256-vu0gTG1dmvGX06u9uA2SSaOrGRCEuO9jaAGdXgaX2hw=' 'sha256-xiWEkHHxoq+AOgnc+9hRWFZK6aGYkEiUdWqjsAszpqo=' https://cdn.vercel-insights.com; style-src 'self' 'sha256-I31xxKa3iAVitetVBwSPP8LnWBG47O/jmMmIyPmhSlc=' 'sha256-YfiJ1xf8BdNhsiPQw+mUuK3n65gyKH9zHLfUwWLpj8g=' 'sha256-l94OzQg6u7opVCfVG77cpHwewFzn/xZF3XjGaQGZ0L0=' 'sha256-pPZgKzVUTfZmTRhwxiw8z7Dn0Dq0+kn/1HIXadplxpQ='; img-src 'self'; font-src 'self'; connect-src 'self' https://*.vercel-insights.com; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
         },
         {
           "key": "X-Frame-Options",
@@ -61,6 +61,271 @@
   "outputDirectory": "public",
   "redirects": [
     {
+      "destination": "/statement",
+      "permanent": true,
+      "source": "/architectures"
+    },
+    {
+      "destination": "/statement",
+      "permanent": true,
+      "source": "/architectures.html"
+    },
+    {
+      "destination": "/statement",
+      "permanent": true,
+      "source": "/architectures/"
+    },
+    {
+      "destination": "/proof-of-inference",
+      "permanent": true,
+      "source": "/before-you-rely"
+    },
+    {
+      "destination": "/proof-of-inference",
+      "permanent": true,
+      "source": "/before-you-rely.html"
+    },
+    {
+      "destination": "/proof-of-inference",
+      "permanent": true,
+      "source": "/before-you-rely/"
+    },
+    {
+      "destination": "/checks",
+      "permanent": true,
+      "source": "/checks.html"
+    },
+    {
+      "destination": "/checks",
+      "permanent": true,
+      "source": "/checks/"
+    },
+    {
+      "destination": "/method",
+      "permanent": true,
+      "source": "/cost"
+    },
+    {
+      "destination": "/method",
+      "permanent": true,
+      "source": "/cost.html"
+    },
+    {
+      "destination": "/method",
+      "permanent": true,
+      "source": "/cost/"
+    },
+    {
+      "destination": "/checks",
+      "permanent": true,
+      "source": "/criteria"
+    },
+    {
+      "destination": "/checks",
+      "permanent": true,
+      "source": "/criteria.html"
+    },
+    {
+      "destination": "/checks",
+      "permanent": true,
+      "source": "/criteria/"
+    },
+    {
+      "destination": "/",
+      "permanent": false,
+      "source": "/deepprove"
+    },
+    {
+      "destination": "/",
+      "permanent": false,
+      "source": "/deepprove.html"
+    },
+    {
+      "destination": "/",
+      "permanent": false,
+      "source": "/deepprove/"
+    },
+    {
+      "destination": "/deployment",
+      "permanent": true,
+      "source": "/deployment.html"
+    },
+    {
+      "destination": "/deployment",
+      "permanent": true,
+      "source": "/deployment/"
+    },
+    {
+      "destination": "/flashprove",
+      "permanent": true,
+      "source": "/flashprove.html"
+    },
+    {
+      "destination": "/flashprove",
+      "permanent": true,
+      "source": "/flashprove/"
+    },
+    {
+      "destination": "/forward-pass",
+      "permanent": true,
+      "source": "/forward-pass.html"
+    },
+    {
+      "destination": "/forward-pass",
+      "permanent": true,
+      "source": "/forward-pass/"
+    },
+    {
+      "destination": "/glossary",
+      "permanent": true,
+      "source": "/glossary.html"
+    },
+    {
+      "destination": "/glossary",
+      "permanent": true,
+      "source": "/glossary/"
+    },
+    {
+      "destination": "/how-a-check-works",
+      "permanent": true,
+      "source": "/how-a-check-works.html"
+    },
+    {
+      "destination": "/how-a-check-works",
+      "permanent": true,
+      "source": "/how-a-check-works/"
+    },
+    {
+      "destination": "/forward-pass",
+      "permanent": true,
+      "source": "/inference"
+    },
+    {
+      "destination": "/forward-pass",
+      "permanent": true,
+      "source": "/inference.html"
+    },
+    {
+      "destination": "/forward-pass",
+      "permanent": true,
+      "source": "/inference/"
+    },
+    {
+      "destination": "/learn",
+      "permanent": true,
+      "source": "/learn.html"
+    },
+    {
+      "destination": "/learn",
+      "permanent": true,
+      "source": "/learn/"
+    },
+    {
+      "destination": "/mandate",
+      "permanent": true,
+      "source": "/mandate.html"
+    },
+    {
+      "destination": "/mandate",
+      "permanent": true,
+      "source": "/mandate/"
+    },
+    {
+      "destination": "/method",
+      "permanent": true,
+      "source": "/method.html"
+    },
+    {
+      "destination": "/method",
+      "permanent": true,
+      "source": "/method/"
+    },
+    {
+      "destination": "/proof-of-inference",
+      "permanent": true,
+      "source": "/proof-of-inference.html"
+    },
+    {
+      "destination": "/proof-of-inference",
+      "permanent": true,
+      "source": "/proof-of-inference/"
+    },
+    {
+      "destination": "/forward-pass",
+      "permanent": true,
+      "source": "/proof-systems"
+    },
+    {
+      "destination": "/forward-pass",
+      "permanent": true,
+      "source": "/proof-systems.html"
+    },
+    {
+      "destination": "/forward-pass",
+      "permanent": true,
+      "source": "/proof-systems/"
+    },
+    {
+      "destination": "/",
+      "permanent": true,
+      "source": "/reference"
+    },
+    {
+      "destination": "/",
+      "permanent": true,
+      "source": "/reference.html"
+    },
+    {
+      "destination": "/",
+      "permanent": true,
+      "source": "/reference/"
+    },
+    {
+      "destination": "/",
+      "permanent": true,
+      "source": "/release"
+    },
+    {
+      "destination": "/",
+      "permanent": true,
+      "source": "/release.html"
+    },
+    {
+      "destination": "/",
+      "permanent": true,
+      "source": "/release/"
+    },
+    {
+      "destination": "/sash",
+      "permanent": true,
+      "source": "/sash.html"
+    },
+    {
+      "destination": "/sash",
+      "permanent": true,
+      "source": "/sash/"
+    },
+    {
+      "destination": "/scale",
+      "permanent": true,
+      "source": "/scale.html"
+    },
+    {
+      "destination": "/scale",
+      "permanent": true,
+      "source": "/scale/"
+    },
+    {
+      "destination": "/statement",
+      "permanent": true,
+      "source": "/statement.html"
+    },
+    {
+      "destination": "/statement",
+      "permanent": true,
+      "source": "/statement/"
+    },
+    {
       "destination": "/flashprove",
       "permanent": false,
       "source": "/system"
@@ -71,54 +336,24 @@
       "source": "/system.html"
     },
     {
-      "destination": "/statement",
-      "permanent": true,
-      "source": "/architectures"
-    },
-    {
-      "destination": "/proof-of-inference",
-      "permanent": true,
-      "source": "/before-you-rely"
-    },
-    {
-      "destination": "/method",
-      "permanent": true,
-      "source": "/cost"
-    },
-    {
-      "destination": "/checks",
-      "permanent": true,
-      "source": "/criteria"
-    },
-    {
-      "destination": "/",
+      "destination": "/flashprove",
       "permanent": false,
-      "source": "/deepprove"
-    },
-    {
-      "destination": "/forward-pass",
-      "permanent": true,
-      "source": "/inference"
-    },
-    {
-      "destination": "/forward-pass",
-      "permanent": true,
-      "source": "/proof-systems"
-    },
-    {
-      "destination": "/",
-      "permanent": true,
-      "source": "/reference"
-    },
-    {
-      "destination": "/",
-      "permanent": true,
-      "source": "/release"
+      "source": "/system/"
     },
     {
       "destination": "/",
       "permanent": true,
       "source": "/targets"
+    },
+    {
+      "destination": "/",
+      "permanent": true,
+      "source": "/targets.html"
+    },
+    {
+      "destination": "/",
+      "permanent": true,
+      "source": "/targets/"
     },
     {
       "destination": "/deployment",
@@ -128,7 +363,27 @@
     {
       "destination": "/deployment",
       "permanent": true,
+      "source": "/three-ways.html"
+    },
+    {
+      "destination": "/deployment",
+      "permanent": true,
+      "source": "/three-ways/"
+    },
+    {
+      "destination": "/deployment",
+      "permanent": true,
       "source": "/treaty"
+    },
+    {
+      "destination": "/deployment",
+      "permanent": true,
+      "source": "/treaty.html"
+    },
+    {
+      "destination": "/deployment",
+      "permanent": true,
+      "source": "/treaty/"
     },
     {
       "destination": "/proof-of-inference",
@@ -136,10 +391,88 @@
       "source": "/why-verify"
     },
     {
+      "destination": "/proof-of-inference",
+      "permanent": true,
+      "source": "/why-verify.html"
+    },
+    {
+      "destination": "/proof-of-inference",
+      "permanent": true,
+      "source": "/why-verify/"
+    },
+    {
+      "destination": "/",
+      "permanent": true,
+      "source": "/index"
+    },
+    {
+      "destination": "/",
+      "permanent": true,
+      "source": "/index.html"
+    },
+    {
+      "destination": "/",
+      "permanent": true,
+      "source": "/index/"
+    },
+    {
       "destination": "/og/icon-32.png",
       "permanent": false,
       "source": "/favicon.ico"
     }
   ],
-  "trailingSlash": false
+  "rewrites": [
+    {
+      "destination": "/checks.html",
+      "source": "/checks"
+    },
+    {
+      "destination": "/deployment.html",
+      "source": "/deployment"
+    },
+    {
+      "destination": "/flashprove.html",
+      "source": "/flashprove"
+    },
+    {
+      "destination": "/forward-pass.html",
+      "source": "/forward-pass"
+    },
+    {
+      "destination": "/glossary.html",
+      "source": "/glossary"
+    },
+    {
+      "destination": "/how-a-check-works.html",
+      "source": "/how-a-check-works"
+    },
+    {
+      "destination": "/learn.html",
+      "source": "/learn"
+    },
+    {
+      "destination": "/mandate.html",
+      "source": "/mandate"
+    },
+    {
+      "destination": "/method.html",
+      "source": "/method"
+    },
+    {
+      "destination": "/proof-of-inference.html",
+      "source": "/proof-of-inference"
+    },
+    {
+      "destination": "/sash.html",
+      "source": "/sash"
+    },
+    {
+      "destination": "/scale.html",
+      "source": "/scale"
+    },
+    {
+      "destination": "/statement.html",
+      "source": "/statement"
+    }
+  ]
 }

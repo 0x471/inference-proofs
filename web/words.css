@@ -760,6 +760,11 @@ a.fig.fp:hover .n { text-decoration: underline; text-decoration-thickness: 1px; 
   .rt.stk:not(.fid) .fig .u { flex-basis: 100%; }
 }
 
+/* ---------------------------------------------------------------- names shared by the Scale page and 404 cards */
+.ln { display: block; margin: 12px 0 0; font: 900 30px/.95 var(--disp); letter-spacing: -.005em; text-wrap: balance; }
+@media (max-width: 760px) { .ln { font-size: 28px; } }
+.lx, .ax { display: block; overflow: visible; }
+
 /* ---------------------------------------------------------------- the scale page: every row on a decade axis, one figure at a time (scale.py).
    A section per figure (with script the strip picks the one drawn): one table, its axis once at the head, a
    group (lane) per model under a cobalt rule, every lane on the one decade grid. A mark carries standing, never a state ink: passed a paper square,
@@ -770,7 +775,6 @@ html.js .scalepage .scl-panel { margin-top: 0; }
 .scl .grp > th:first-child { padding: 32px 0 10px; border-bottom: 0; color: var(--paper); }
 .scl .lane:first-of-type .grp > th:first-child { padding-top: 24px; }
 .lh { display: block; border-top: 3px solid var(--cobalt); }
-.ln { display: block; margin: 12px 0 0; font: 900 30px/.95 var(--disp); letter-spacing: -.005em; text-wrap: balance; }
 .lf { display: block; margin: 8px 0 0; font: var(--f-meta); color: var(--muted); }
 .lsv { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; margin-top: 6px; font: var(--f-meta); }
 .lsv .k { font: var(--f-label); color: var(--muted); text-transform: uppercase; letter-spacing: var(--track); }
@@ -799,7 +803,6 @@ html.js .scalepage .scl-panel { margin-top: 0; }
 .scl .sname { font-size: 26px; }
 .scl .st { margin-top: 6px; }
 .scl .cf > .fig .n { font-size: 20px; }
-.lx, .ax { display: block; overflow: visible; }
 .lx line { stroke-width: 1px; }
 .lx :is(.gd, .tk) { stroke: var(--line); }
 .lx .sv { stroke: var(--muted); stroke-dasharray: 2 2; }
@@ -838,7 +841,6 @@ html.js .scalepage .scl-panel { margin-top: 0; }
   .scl .row:active { box-shadow: inset 9px 0 0 var(--cobalt); }
 }
 @media (max-width: 760px) {
-  .ln { font-size: 28px; }
   .scl .sname { font-size: 24px; }
 }
 /* a phone: the plot's narrower labels; no position square (as the ladder's phone) */
@@ -1356,6 +1358,14 @@ html.js .scalepage .scl-panel { margin-top: 0; }
 .sbm .probed { background: var(--ground); color: var(--cobalt); box-shadow: 0 0 0 3px var(--ground); }
 .fid tr.me .probed { background: var(--ground); color: var(--paper); box-shadow: 0 0 0 3px var(--ground); }
 
+/* a glossary term pointed at or given focus, on any page (words.js) */
+.gpk { position: fixed; z-index: 40; left: 0; top: 0; width: max-content; max-width: min(380px, calc(100vw - 2 * var(--gut))); margin: 0; padding: 10px 12px 12px; background: var(--ground); box-shadow: inset 0 0 0 1px var(--rule), inset 0 3px 0 var(--cobalt); }
+.gpk b { display: block; margin: 2px 0 6px; font: 800 20px/1 var(--disp); }
+.gpk span { display: block; font: 400 12px/18px var(--mono); color: var(--paper); text-wrap: pretty; }
+.anim .gpk { animation: probe var(--quick) both; }
+@media print { .gpk { display: none; } }
+@media (forced-colors: active) { .gpk { outline: 1px solid CanvasText; outline-offset: -1px; } }
+
 /* ---------------------------------------------------------------- footer: one strip of cells */
 main { flex: 1 0 auto; }
 .foot { margin-top: 112px; border-top: 1px solid var(--line); font: 400 12px/18px var(--mono); color: var(--muted); }
@@ -1675,11 +1685,6 @@ ol.ls > li:before { counter-increment: n; content: counter(n); position: absolut
 .term > :not(.ah3) { grid-column: 2; }
 /* a letter's terms end on their text: the next letter's rule alone marks the change */
 .glt > .term:last-child { border-bottom: 0; }
-/* a glossary term pointed at or given focus: its name and first sentence where it is (words.js) */
-.gpk { position: fixed; z-index: 40; left: 0; top: 0; width: max-content; max-width: min(380px, calc(100vw - 2 * var(--gut))); margin: 0; padding: 10px 12px 12px; background: var(--ground); box-shadow: inset 0 0 0 1px var(--rule), inset 0 3px 0 var(--cobalt); }
-.gpk b { display: block; margin: 2px 0 6px; font: 800 20px/1 var(--disp); }
-.gpk span { display: block; font: 400 12px/18px var(--mono); color: var(--paper); text-wrap: pretty; }
-.anim .gpk { animation: probe var(--quick) both; }
 @media (max-width: 1100px) {
   .learnpage { --hd: 200px; --hg: 32px; }
   .lst { font-size: 17px; }
@@ -1773,13 +1778,13 @@ ol.ls > li:before { counter-increment: n; content: counter(n); position: absolut
 /* on paper: no controls, the filled mark in ink */
 @media print {
   .chip.measured { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
-  .xbar, .lsteps, .lways, .turn, .gpk { display: none; }
+  .xbar, .lsteps, .lways, .turn { display: none; }
   .glh { position: static; }
   .ah:target, .ah3:target, .sth:target { background: none; color: inherit; box-shadow: none; }
 }
 /* forced colours draw no box-shadow: the controls and boxes take an outline, emphasis a line */
 @media (forced-colors: active) {
-  .xb, .mx .bad, .note, .pc, .xpl, .tn, .lsc.on, .gpk { outline: 1px solid CanvasText; outline-offset: -1px; }
+  .xb, .mx .bad, .note, .pc, .xpl, .tn, .lsc.on { outline: 1px solid CanvasText; outline-offset: -1px; }
   .lsc.on { forced-color-adjust: none; background: Highlight; color: HighlightText; }
   .lsc.on .lsn { color: HighlightText; }
   .sx text, .sx .bt { fill: CanvasText; }

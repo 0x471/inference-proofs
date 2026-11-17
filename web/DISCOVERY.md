@@ -32,16 +32,28 @@ requirement. Its descriptions come from the generated JSON-LD. The sitemap exclu
 whose destinations depend on the current release redirect temporarily.
 
 Performance retains static HTML, deferred scripts, subset font preloads, hashed
-asset URLs, immutable asset caching and esbuild minification. `assets.mjs` also
-compacts the deployed search index; the committed JSON keeps RFC-0012's format.
-JSON-LD is compact;
-this pass adds no dependencies, browser requests required for rendering, or runtime
-JavaScript. Metadata increases HTML size slightly.
+asset URLs and immutable asset caching. `styles.mjs` uses the pinned esbuild to
+prepare the existing CSS sections in `styles.json`. The renderer inlines each
+page's rules, preserving their cascade, responsive states and no-script rendering.
+It omits Learn and Scale sections elsewhere, and the detail section on the home
+page. Shared card typography, chart axes and glossary previews stay shared.
+The manifest records the CSS source hash; a stale manifest stops the build. The
+CSP permits the exact inline style hashes, without allowing arbitrary inline styles.
+`assets.mjs` also compacts the deployed search index; committed JSON keeps RFC-0012's format.
+
+Clean routes use explicit rewrites. Legacy, `.html` and trailing-slash addresses
+redirect directly to their final canonical route, without an automatic normalization
+hop. Vercel's HTTP-to-HTTPS redirect happens before project routing: the HTTP bare
+domain still needs that hop followed by its configured redirect to HTTPS `www`.
+The canonical HTTPS `www` address avoids both. Vercel already compresses the text
+responses and caches the static documents at its edge.
 
 ## Verify and publish
 
 Run `uv run iproofs site build`, `uv run pytest web -q` and the repository gates
-before pushing. The Vercel build copies `llms.txt`, robots and sitemap into `public`.
+before pushing. After changing CSS, run `npm ci --include=dev --ignore-scripts` and
+`npm run styles` in `web/`, then rebuild the pages. The Vercel build copies
+`llms.txt`, robots and sitemap into `public`.
 After deployment, check the public files return 200, unknown pages return 404,
 and redirects point to their canonical destination. Submit the sitemap through the
 site owner's Google Search Console and Bing Webmaster Tools accounts, inspect a

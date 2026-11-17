@@ -26,6 +26,17 @@ def test_discovery_matches_public_pages(board_site: Any) -> None:
     for page in out.glob("*.html"):
         html = page.read_text()
         assert '<p class="sr" role="status" aria-atomic="true" id="live">' in html
+        assert 'rel="stylesheet"' not in html
+        style = re.search(r"<style>(.*?)</style>", html, re.S)
+        assert style
+        style_hash = base64.b64encode(hashlib.sha256(style[1].encode()).digest()).decode()
+        style_policy = next(
+            p
+            for p in headers["Content-Security-Policy"].split(";")
+            if p.strip().startswith("style-src")
+        )
+        assert f"'sha256-{style_hash}'" in style_policy
+        assert "unsafe-inline" not in style_policy
         if page.stem == "404":
             assert '<meta name="robots" content="noindex">' in html
             continue
@@ -117,3 +128,21 @@ def test_preview_serves_discovery_files_only() -> None:
         assert deployed.fullmatch(name)
     for name in (".env", "_data/facts.json", "serve.py", "learn/index.yaml"):
         assert not deployed.fullmatch(name)
+
+
+def test_canonical_and_legacy_routes_take_one_hop(board_site: Any) -> None:
+    config = json.loads((board_site.out / "vercel.json").read_text())
+    assert config["cleanUrls"] is False
+    assert "trailingSlash" not in config
+    redirects = {r["source"]: r["destination"] for r in config["redirects"]}
+    assert all(dst not in redirects for dst in redirects.values())
+    for rewrite in config["rewrites"]:
+        route = rewrite["source"]
+        assert route not in redirects
+        assert redirects[f"{route}.html"] == route
+        assert redirects[f"{route}/"] == route
+        assert (board_site.out / rewrite["destination"].lstrip("/")).is_file()
+    for alias in ("/criteria", "/criteria.html", "/criteria/"):
+        assert redirects[alias] == "/checks"
+    for alias in ("/system", "/system.html", "/system/"):
+        assert redirects[alias] == "/flashprove"
