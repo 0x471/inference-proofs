@@ -112,23 +112,32 @@ def test_glyphs_draw_the_board_states(board_site: Any) -> None:
         assert checks == [(c, row["checks"][c]["state"]) for c in CHECKS], row["system"]
 
 
-def test_petal_rows_print_the_boards_reasons(board_site: Any) -> None:
-    """SI-3 (amended 2026-11-16): a petal's default line is its board reason's first clause and
-    the count of the clauses cut (Fidelity's reason whole, its last clause the row's measure),
-    never typed, and the full reason sits in the petal's disclosure."""
+def test_petal_rows_count_the_boards_items_for_met(board_site: Any) -> None:
+    """SI-3 (amended 2026-11-17): a petal's default row counts the board's items missing for Met
+    (`to_met`) and the publisher's and ours among them, never typed."""
     text = pages(board_site.out)
     for row in rows(board_site.board):
         page = text[f"{row['system']}.html"]
-        trs = re.findall(r'<tr class="pt [^"]*">(.*?)</tr>', page, re.S)
+        trs = re.findall(r'<tr class="pt [^"]*"[^>]*>(.*?)</tr>', page, re.S)
         assert len(trs) == len(row["glyph"]), row["system"]
         for tr, p in zip(trs, row["glyph"], strict=True):
-            line = re.search(r'<span class="rs">([^<]*)</span>', tr)
+            line = re.search(r'<p class="pms">(.*?)</p>', tr, re.S)
             assert line, (row["system"], p["id"])
-            clauses = p["reason"].split("; ")
-            first = (p["reason"] if p["basis"] == "test" or len(clauses) == 1
-                     else f"{clauses[0]}, and {len(clauses) - 1} more")  # fmt: skip
-            assert html.unescape(line[1]) == first, (row["system"], p["id"])
-            assert p["reason"] in html.unescape(tr), (row["system"], p["id"])
+            said = html.unescape(re.sub(r"<[^>]+>", "", line[1]))
+            groups = p.get("to_met")
+            if groups is None:  # a board from before 2026-11-17: its next step's needs
+                nx = p.get("next")
+                groups = (
+                    [{"kind": "up" if nx["to"] else "decide", "items": nx["needs"]}] if nx else []
+                )
+            items = [i for g in groups for i in g["items"]]
+            if not items:
+                assert said.endswith("nothing."), (row["system"], p["id"])
+            elif groups[0]["kind"] == "up" and len(items) > 1:
+                assert f"{len(items)} items" in said, (row["system"], p["id"])
+                us = sum(1 for i in items if i["by"] == "us")
+                if us and us < len(items):
+                    assert f"{len(items) - us} for the publisher and {us} for us" in said
 
 
 def test_order_and_positions_are_the_boards(board_site: Any) -> None:

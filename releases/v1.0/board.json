@@ -580,12 +580,157 @@
                   44
                 ],
                 "run": "cp_verify",
+                "said": {
+                  "adversary": {
+                    "plain": "The publisher states the limit \"against a committer and a prover who may both cheat\" (the committer publishes the commitment; the prover makes the proofs). We read that as what our rule calls any cheating prover: one that controls its own machine, with no hardware or outside party assumed honest. The publisher claims nothing against quantum computers, and our rule does not ask about them.",
+                    "quotes": [
+                      {
+                        "text": "against a committer and a prover who may both cheat",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L142"
+                      },
+                      {
+                        "text": "so nothing is claimed against a quantum adversary",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L394-L395"
+                      }
+                    ]
+                  },
+                  "after": {
+                    "quotes": [
+                      {
+                        "text": "The Lean verifier accepts a proof of a false claim with probability at most about q/2^124 + 2^-101 after q hash queries (about 124 bits per query; not \"128 bits\")",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/what-is-proved.md#L46-L47"
+                      }
+                    ]
+                  },
+                  "basis": {
+                    "quotes": [
+                      {
+                        "text": "Lean's kernel has checked the proof.",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/what-is-proved.md#L51"
+                      }
+                    ]
+                  },
+                  "batch": {
+                    "quotes": [
+                      {
+                        "text": "**One proof.** N proofs handed in at once under one commitment, or N members of a batch, cost N times that error, taken at the whole list's hash queries; for proofs checked one after another, or members checked in separate sessions, no bound is stated.",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/what-is-proved.md#L66-L68"
+                      },
+                      {
+                        "text": "for separate sessions no theorem states it.",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L373"
+                      }
+                    ]
+                  },
+                  "conditions_shown": {
+                    "plain": "The condition, in the publisher's words: \"public files that are fixed before the hash function is sampled (a provider that tunes them to the real hash function is outside the statement)\". In plain words: the theorem covers only public files chosen before the hash function was picked; a provider who chose them to suit the hash function is not covered. Today no file of ours shows when they were fixed, and the publisher says the reader must grant it. The publisher also warns that at files other than its stored examples, nothing is known about whether the verifier accepts honest proofs. A verifier that accepted no proof would never accept a fake, so there the theorem could be true and still say nothing.",
+                    "quotes": [
+                      {
+                        "text": "At all other files in scope nothing is known, so there the theorem may hold only because `verify` rejects everything.",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L314-L315"
+                      },
+                      {
+                        "text": "The proofs from the runs on real weights were checked by `cp_verify` alone; none has been put to the Lean verifier",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/what-is-proved.md#L227-L228"
+                      },
+                      {
+                        "text": "public files that are fixed before the hash function is sampled (a provider that tunes them to the real hash function is outside the statement)",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L149-L150"
+                      },
+                      {
+                        "text": "No file shows that they were fixed before the provider could tune them to the hash function: that you grant.",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/what-is-proved.md#L288-L289"
+                      }
+                    ]
+                  },
+                  "expression": {
+                    "quotes": [
+                      {
+                        "text": "The Lean verifier accepts a proof of a false claim with probability at most about q/2^124 + 2^-101 after q hash queries (about 124 bits per query; not \"128 bits\")",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/what-is-proved.md#L46-L47"
+                      }
+                    ]
+                  },
+                  "parameters": {
+                    "plain": "It states the limit for \"full size, not the small examples\", and we run the full size.",
+                    "quotes": [
+                      {
+                        "text": "**One proof format and model size:** full size, not the small examples",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/what-is-proved.md#L62"
+                      },
+                      {
+                        "text": "Neither figure, 124 bits per query or 128 bits per round, is claimed for the C++ programs.",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/what-is-proved.md#L70"
+                      }
+                    ]
+                  },
+                  "program": {
+                    "quotes": [
+                      {
+                        "text": "Neither figure, 124 bits per query or 128 bits per round, is claimed for the C++ programs.",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/what-is-proved.md#L70"
+                      },
+                      {
+                        "text": "The C++ verifier and the CUDA prover are written to follow the same protocol and are tested against it, not themselves proved.",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/what-is-proved.md#L7-L8"
+                      },
+                      {
+                        "text": "The C++ programs' printed \"bits\" are their own accounting, not a theorem",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/known-limits.md#L65-L66"
+                      }
+                    ]
+                  },
+                  "stated": {
+                    "quotes": [
+                      {
+                        "text": "The Lean verifier accepts a proof of a false claim with probability at most about q/2^124 + 2^-101 after q hash queries (about 124 bits per query; not \"128 bits\")",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/what-is-proved.md#L46-L47"
+                      }
+                    ]
+                  },
+                  "unit": {
+                    "quotes": [
+                      {
+                        "text": "The bound is for one commitment, one prompt, one output, one proof and one call of `verify`.",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L150-L151"
+                      },
+                      {
+                        "text": "**One proof.** N proofs handed in at once under one commitment, or N members of a batch, cost N times that error, taken at the whole list's hash queries; for proofs checked one after another, or members checked in separate sessions, no bound is stated.",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/what-is-proved.md#L66-L68"
+                      }
+                    ]
+                  }
+                },
                 "stated_for": "the Lean verifier",
                 "terms": [
                   124,
                   101
                 ],
-                "unit": "proof"
+                "unit": "proof",
+                "verifiers": {
+                  "run": {
+                    "described": "the publisher's C++ verifier",
+                    "quotes": [
+                      {
+                        "text": "Anyone can check the proof on an ordinary CPU in seconds with `cp_verify`, without the weights.",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/README.md#L15-L16"
+                      }
+                    ]
+                  },
+                  "stated": {
+                    "described": "a verifier the publisher wrote in Lean and proves things about",
+                    "quotes": [
+                      {
+                        "text": "The Lean verifier accepts a proof of a false claim with probability at most about q/2^124 + 2^-101 after q hash queries (about 124 bits per query; not \"128 bits\")",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/what-is-proved.md#L46-L47"
+                      },
+                      {
+                        "text": "Neither figure, 124 bits per query or 128 bits per round, is claimed for the C++ programs.",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/what-is-proved.md#L70"
+                      }
+                    ]
+                  }
+                }
               },
               "cause": null,
               "id": "unforgeable",
@@ -832,6 +977,85 @@
                 "listed": true,
                 "programs": "not_stated",
                 "proof": "protocol",
+                "said": {
+                  "programs": {
+                    "plain": "For its programs (the C++ and CUDA code we run), the publisher states an expectation, not a theorem, and says the expectation does not reach a real model's weights or the files fitted to them. We run a real model, so we count no statement for the programs we run.",
+                    "quotes": [
+                      {
+                        "text": "we expect, rather than know, that the programs hide the weights at the default setting, in honest runs, if the provider keeps its duties (this does not reach any real model's weights, or the parameter file and scales fitted to them",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/weight-hiding.md#L3"
+                      },
+                      {
+                        "text": "Anything else is outside it, and so is any real model, the example's too, because it needs a parameter file fitted to it",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/weight-hiding.md#L37"
+                      }
+                    ]
+                  },
+                  "proof": {
+                    "quotes": [
+                      {
+                        "text": "batches, which are what the programs serve, are not covered",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/weight-hiding.md#L5"
+                      }
+                    ]
+                  },
+                  "stated": {
+                    "quotes": [
+                      {
+                        "text": "Zero knowledge, Lean's form of weight hiding, is proved in Lean for the protocol, at [full size](terms.md) and at the exact-match policy, with fresh random masks.",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/weight-hiding.md#L3"
+                      }
+                    ]
+                  },
+                  "verifier_gets_weights": {
+                    "quotes": [
+                      {
+                        "text": "Anyone can check the proof on an ordinary CPU in seconds with `cp_verify`, without the weights.",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/README.md#L15-L16"
+                      }
+                    ]
+                  },
+                  "visible_at_least": {
+                    "quotes": [
+                      {
+                        "text": "At least eleven things are visible",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/docs/what-is-not-hidden.md#L5"
+                      }
+                    ]
+                  },
+                  "visible_listed": {
+                    "quotes": [
+                      {
+                        "text": "At least eleven things are visible",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/docs/what-is-not-hidden.md#L5"
+                      }
+                    ]
+                  },
+                  "zk_kind": {
+                    "quotes": [
+                      {
+                        "text": "What Lean proves is statistical, with the hash as a random oracle and for truly random masks",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/weight-hiding.md#L25"
+                      }
+                    ]
+                  },
+                  "zk_model": {
+                    "quotes": [
+                      {
+                        "text": "For the compiled (non-interactive) prover and the Lean verifier that is proved sound, in the random-oracle model, it holds against any verifier within 2^64 hash queries and 688,127 replies",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/weight-hiding.md#L3"
+                      }
+                    ]
+                  },
+                  "zk_unit": {
+                    "quotes": [
+                      {
+                        "text": "They are for one commitment and one request to a proof",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/weight-hiding.md#L5"
+                      }
+                    ]
+                  }
+                },
                 "stated": true,
                 "verifier_gets_weights": false,
                 "visible_count": 11,
@@ -1062,6 +1286,7 @@
               "basis": "test",
               "cause": null,
               "fidelity": {
+                "alpha": 0.05,
                 "bar": {
                   "control": "q3_k_s",
                   "display": 11.2
@@ -1110,6 +1335,7 @@
                   "value": 283.0263888888889
                 },
                 "mean": 29.658333333333335,
+                "method": "monte-carlo",
                 "n": 360,
                 "policy_cap": false,
                 "rerun": "reference-2",
@@ -1179,6 +1405,11 @@
               "cause": null,
               "formal": {
                 "build": {
+                  "axioms": [
+                    "Classical.choice",
+                    "Quot.sound",
+                    "propext"
+                  ],
                   "command": [
                     "LEAN_NUM_THREADS=64",
                     "python3",
@@ -1575,7 +1806,46 @@
               "trust": {
                 "clause": "reading",
                 "publicly_checkable": true,
-                "rests_on": "transparent"
+                "rests_on": "transparent",
+                "said": {
+                  "publicly_checkable": {
+                    "quotes": [
+                      {
+                        "text": "Anyone can check the proof on an ordinary CPU in seconds with `cp_verify`, without the weights.",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/README.md#L15-L16"
+                      }
+                    ]
+                  },
+                  "rests_on": {
+                    "plain": "The publisher proves its theorems at every public setup (three public files it names), against any committer and prover, with one assumption: the random-oracle model, which treats the hash function as perfectly random. That is an idealization of the hash function, not a proved property of it. It needs no secret and no trusted party, and we count it among cryptographic assumptions (our reading).",
+                    "quotes": [
+                      {
+                        "text": "Six theorems are proved in Lean of one committer, prover and verifier, `compile (flashProve setup)`, at every public setup `setup` (`PublicSetup`: three public files, what the reader returns at them, and `FilesInUse`).",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L3-L5"
+                      },
+                      {
+                        "text": "`Sound` says that there is one extractor such that, whatever the committer and the prover, `verify` accepts a false claim with probability at most the bound at q = a + b.",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L276-L277"
+                      },
+                      {
+                        "text": "public files that are fixed before the hash function is sampled (a provider that tunes them to the real hash function is outside the statement)",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L149-L150"
+                      },
+                      {
+                        "text": "the soundness theorem on `verify` has no hypothesis beyond those in its statement, so nothing more is assumed by that road.",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L413-L414"
+                      },
+                      {
+                        "text": "**The random-oracle model** for the hash, with a second, fixed hash function, built on BLAKE2b's compression function, assumed independent of it, against classical adversaries.",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/what-is-proved.md#L57-L58"
+                      },
+                      {
+                        "text": "the random oracle and the second hash function belong to the statement, not to the proof's axioms.",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L159-L160"
+                      }
+                    ]
+                  }
+                }
               }
             }
           ],
@@ -3006,11 +3276,85 @@
                 "program": "not_stated",
                 "q_cross": null,
                 "run": "boundary-grid --verify",
+                "said": {
+                  "adversary": {
+                    "quotes": []
+                  },
+                  "basis": {
+                    "described": "a proof library",
+                    "named": "stwo",
+                    "quotes": [
+                      {
+                        "text": "stwo's own conjectured-soundness accounting is security_bits = pow_bits + log_blowup_factor * n_queries so blowup 2 (log_blowup_factor = 1) at 100 conjectured bits means exactly 100 FRI queries and no grinding.",
+                        "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/src/util.rs#L9-L12"
+                      }
+                    ]
+                  },
+                  "batch": {
+                    "quotes": []
+                  },
+                  "conditions_shown": {
+                    "quotes": []
+                  },
+                  "expression": {
+                    "quotes": [
+                      {
+                        "text": "stwo's own conjectured-soundness accounting is security_bits = pow_bits + log_blowup_factor * n_queries so blowup 2 (log_blowup_factor = 1) at 100 conjectured bits means exactly 100 FRI queries and no grinding.",
+                        "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/src/util.rs#L9-L12"
+                      }
+                    ]
+                  },
+                  "parameters": {
+                    "plain": "Its code fixes the settings as constants and asserts 100 bits; no sentence says that the limit is for the settings we run.",
+                    "quotes": [
+                      {
+                        "text": "assert_eq!(cfg.security_bits(), 100, \"security parameter drifted\");",
+                        "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/src/util.rs#L26"
+                      }
+                    ]
+                  },
+                  "program": {
+                    "quotes": []
+                  },
+                  "stated": {
+                    "quotes": [
+                      {
+                        "text": "stwo's own conjectured-soundness accounting is security_bits = pow_bits + log_blowup_factor * n_queries so blowup 2 (log_blowup_factor = 1) at 100 conjectured bits means exactly 100 FRI queries and no grinding.",
+                        "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/src/util.rs#L9-L12"
+                      }
+                    ]
+                  },
+                  "unit": {
+                    "described": "one transformer layer",
+                    "named": "segment",
+                    "quotes": [
+                      {
+                        "text": "A proof made by this prover is about one **segment**: one transformer layer",
+                        "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/docs/statement.md#L3"
+                      }
+                    ]
+                  }
+                },
                 "stated_for": null,
                 "terms": [
                   100
                 ],
-                "unit": "part"
+                "unit": "part",
+                "verifiers": {
+                  "run": {
+                    "check": "verify_composed",
+                    "described": "the publisher's verifier command",
+                    "quotes": [
+                      {
+                        "text": "`verify_composed` -- the only accept path, and what `boundary-grid --verify` runs on every chunk",
+                        "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/README.md#L34-L35"
+                      }
+                    ]
+                  },
+                  "stated": {
+                    "quotes": []
+                  }
+                }
               },
               "cause": null,
               "id": "unforgeable",
@@ -3148,6 +3492,28 @@
                 "listed": false,
                 "programs": "not_stated",
                 "proof": "none",
+                "said": {
+                  "programs": {
+                    "quotes": []
+                  },
+                  "proof": {
+                    "quotes": []
+                  },
+                  "stated": {
+                    "quotes": []
+                  },
+                  "verifier_gets_weights": {
+                    "quotes": [
+                      {
+                        "text": "The model root is not derivable -- it is the publisher's commitment to weights the verifier does not hold",
+                        "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/README.md#L56-L58"
+                      }
+                    ]
+                  },
+                  "visible_listed": {
+                    "quotes": []
+                  }
+                },
                 "stated": "not_stated",
                 "verifier_gets_weights": false,
                 "visible_count": 0,
@@ -3245,6 +3611,7 @@
               "basis": "test",
               "cause": null,
               "fidelity": {
+                "alpha": 0.05,
                 "bar": {
                   "control": "q3_k_s",
                   "display": 1.4
@@ -3298,6 +3665,7 @@
                   "value": 309.03333333333336
                 },
                 "mean": 31.0,
+                "method": "exact",
                 "n": 15,
                 "policy_cap": false,
                 "rerun": "reference-2",
@@ -3578,7 +3946,42 @@
               "trust": {
                 "clause": "reading",
                 "publicly_checkable": true,
-                "rests_on": "transparent"
+                "rests_on": "transparent",
+                "said": {
+                  "publicly_checkable": {
+                    "quotes": [
+                      {
+                        "text": "The **verifier** (`verify_composed`) takes those two byte strings and the //! serialized proof, and nothing else",
+                        "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/src/compose.rs#L15-L16"
+                      }
+                    ]
+                  },
+                  "rests_on": {
+                    "plain": "The publisher states its soundness as stwo's conjectured estimate (see Integrity). It describes its setup as two trees of public values: a shape tree the verifier builds itself from the public settings, and a model tree it compares with the published commitment. It calls some values `Fixed`, \"produced at setup, trusted by the verifier\": the model's shape and the settings of its circuits, the security settings, the trees' column sizes, and the pinned root of the tree that holds every table, weight and scale column. We read \"trusted\" here as: the verifier takes these values as given. Each is public, and none is a secret.",
+                    "quotes": [
+                      {
+                        "text": "stwo's own conjectured-soundness accounting is security_bits = pow_bits + log_blowup_factor * n_queries so blowup 2 (log_blowup_factor = 1) at 100 conjectured bits means exactly 100 FRI queries and no grinding.",
+                        "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/src/util.rs#L9-L12"
+                      },
+                      {
+                        "text": "The preprocessed trace is two committed trees (a shape tree whose root the verifier derives from the public parameters, and a model tree whose root is compared with the published model commitment).",
+                        "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/README.md#L117-L119"
+                      },
+                      {
+                        "text": "They are committed as a tree of their own, and what says they are the columns the public parameters give is that the verifier **builds that tree itself** and compares its root with the root the statement declares.",
+                        "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/docs/statement.md#L127-L129"
+                      },
+                      {
+                        "text": "`security` (the FRI parameters and the hash)",
+                        "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/README.md#L324"
+                      },
+                      {
+                        "text": "`Fixed` — produced at setup, trusted by the verifier: the shape and gadget parameters that determine every column size and selector, the security config, the tree column sizes, and the **pinned preprocessed root** (every table, selector, weight and scale column lives in tree 0, and B4 §3 / B5 / B6 all showed a corrupted table is invisible to everything else).",
+                        "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/src/compose.rs#L7-L11"
+                      }
+                    ]
+                  }
+                }
               }
             }
           ],

@@ -553,8 +553,27 @@ def q_cross(b: Mapping[str, object]) -> list[int] | None:
     return [t - 100, t - 80]
 
 
-def _bound_facts(b: Mapping[str, object], coverage: Coverage, run: str | None,
-                 stated_for: str | None) -> dict[str, object]:  # fmt: skip
+def said(group: Mapping[str, object]) -> dict[str, object]:
+    """Each fact's quotes and, where the properties file gives them, its `named` and
+    `described` words, by fact: what the page prints a fact with. Sets nothing."""
+    out: dict[str, object] = {}
+    for k, fact in group.items():
+        if not isinstance(fact, Mapping) or "value" not in fact:
+            continue
+        entry: dict[str, object] = {"quotes": [_quote(q) for q in _quotes(fact)]}
+        entry.update({w: str(fact[w]) for w in ("named", "described", "check", "plain")
+                      if fact.get(w)})  # fmt: skip
+        out[str(k)] = entry
+    return out
+
+
+def _bound_facts(
+    b: Mapping[str, object],
+    coverage: Coverage,
+    run: str | None,
+    stated_for: str | None,
+    props: Mapping[str, object],
+) -> dict[str, object]:
     """Integrity's facts as the page words them (amended 2026-11-17); they set nothing."""
     out: dict[str, object] = {k: _v(b.get(k)) for k in (
         "expression", "basis", "unit", "batch", "adversary", "parameters", "conditions_shown",
@@ -566,6 +585,8 @@ def _bound_facts(b: Mapping[str, object], coverage: Coverage, run: str | None,
         one_reply=coverage.one_reply,
         run=run,
         stated_for=stated_for,
+        said=said(b),
+        verifiers=said(_m(props.get("verifiers"))),
     )
     return out
 
@@ -611,7 +632,7 @@ def unforgeable(  # noqa: PLR0911 (one return per line of the table)
     v = _Facts(b)
     terms = _terms(b)
     run, stated_for = _verifiers(props)
-    facts = _bound_facts(b, coverage, run, stated_for)
+    facts = _bound_facts(b, coverage, run, stated_for, props)
     if v("stated") is not True or not terms:  # UF-3
         return Petal(pid, RED, NOT_STATED, STATEMENT, _silent(petal, props), quotes,
                      reading=v.noted, notes=v.notes,
@@ -826,6 +847,7 @@ def _build_tree(build: Mapping[str, object], path: str) -> dict[str, object]:
         "seconds": build.get("seconds"),
         "exit_code": build.get("exit_code"),
         "status": str(build.get("status")),
+        "axioms": sorted(_axioms(build.get("axioms_reported"))),  # amended 2026-11-17
     }
 
 
@@ -1050,6 +1072,7 @@ def weights_hidden(  # noqa: PLR0911, PLR0912, PLR0915 (one return per line of t
     facts = {k: _v(h.get(k)) for k in ("stated", "verifier_gets_weights", "proof", "programs",
                                        "zk_kind", "zk_model", "zk_unit")}  # fmt: skip
     facts.update(
+        said=said(h),
         listed=_v(h.get("visible_listed")) is True,
         at_least=at_least,
         visible_count=len(visible),
@@ -1177,7 +1200,7 @@ def no_trusted_party(  # noqa: PLR0911 (one return per line of the table)
 
     facts: dict[str, object] = {"rests_on": _v(t.get("rests_on")),
                                 "publicly_checkable": _v(t.get("publicly_checkable")),
-                                "clause": None}  # fmt: skip
+                                "clause": None, "said": said(t)}  # fmt: skip
 
     def decided(step: str, cause: str | None, reason: str, *needs: str,
                 to_met: tuple[dict[str, object], ...] | None = None) -> Petal:  # fmt: skip
@@ -1477,6 +1500,7 @@ def faithful_model(  # noqa: PLR0911, PLR0912, PLR0915 (one return per line of t
     slots = doc.get("slots")
     facts = fidelity_facts(doc, scores, ids("upper"), ids("green"), upper_shown, green_shown,
                            policy, weight_bits)  # fmt: skip
+    facts.update(alpha=alpha, method=g.get("method"))
     above = {k: _item("above", PUBLISHER, key=k, value=facts[k]["display"])  # type: ignore[index]
              for k in ("upper", "green")}  # fmt: skip
     one_item = [_item("one_at_a_time", US, slots=slots)] if slots != 1 else []

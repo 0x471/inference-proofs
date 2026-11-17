@@ -259,6 +259,14 @@
                 "version"
               ],
               "type": "object"
+            },
+            "axioms": {
+              "$comment": "the axioms the build reports for the theorem, sorted (amended 2026-11-17); printed with the record",
+              "items": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "type": "array"
             }
           },
           "required": [

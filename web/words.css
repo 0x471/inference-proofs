@@ -1107,6 +1107,53 @@ html.js .scalepage .scl-panel { margin-top: 0; }
 .ckt .pvis .vt { display: block; padding-left: 2ch; color: var(--muted); }
 .ckt .pvis a { color: var(--muted); text-decoration-color: var(--rule); }
 .ckt .pvis a:hover { color: var(--paper); }
+/* a petal on a system page (amended 2026-11-17): the section's lead, then each petal's question, grade and what it
+   comes from, one Has line and one Missing line; Details holds Met needs, Has, how it is graded, Missing, Evidence */
+.glede { max-width: 160ch; margin: 0; }
+.glede + .checks { padding-top: 14px; }
+.glede .glead { margin: 0 0 6px; }
+.glede .gwords { font-size: 12px; line-height: 18px; color: var(--muted); }
+.ckt.gpl tbody th { width: 236px; padding-right: 12px; }
+.ckt.gpl tbody :is(th, td) { padding-top: 7px; padding-bottom: 7px; }
+.ckt.gpl th a.sl { width: 208px; }
+.ckt.gpl th a.sl.cut { width: 179px; }
+.ckt.gpl th .pst { max-width: 228px; font-size: 12px; line-height: 16px; color: var(--paper); }
+.ckt.gpl .cst { width: 206px; padding-right: 12px; white-space: normal; }
+.ckt.gpl .cst .pfr { display: block; margin-top: 4px; max-width: 206px; font-size: 12px; line-height: 16px; color: var(--muted); }
+.ckt.gpl td.prs > p { max-width: 130ch; margin: 0 0 2px; }
+.ckt.gpl td.prs > .plm { color: var(--muted); }
+.ckt.gpl td.prs .k { margin-right: 6px; font-weight: 600; }
+.ckt.gpl .pms { color: var(--muted); }
+.ckt.gpl .pms .k { color: var(--paper); }
+.ckt.gpl .pbd { max-width: 110ch; padding: 4px 0 6px; }
+/* on a wide screen a closed petal's Details sits at the end of its Missing line, so five petals fit one screen */
+@media (min-width: 1181px) {
+  .ckt.gpl td.prs { position: relative; }
+  .ckt.gpl td.prs > .pms { padding-right: 13ch; }
+  .ckt.gpl .pdt:not([open]) > summary { position: absolute; right: 0; bottom: 7px; margin: 0; }
+}
+.ckt.gpl .pbd p { margin: 0 0 8px; }
+.ckt.gpl .pbh { margin: 18px 0 6px; font: var(--f-label); letter-spacing: var(--track); text-transform: uppercase; color: var(--muted); }
+.ckt.gpl .pbd > .pbh:first-child { margin-top: 10px; }
+.ckt.gpl .pbd .pwy { padding-left: 12px; box-shadow: inset 2px 0 0 var(--rule); }
+.ckt.gpl .pbd .phere { font-weight: 600; }
+.ckt.gpl .pbd .plc { padding-left: 2ch; }
+.ckt.gpl .pbd .pgh { margin: 10px 0 4px; }
+.ckt.gpl .pbd ol.pmi { margin: 0 0 8px; padding-left: 3ch; }
+.ckt.gpl .pbd ol.pmi li + li, .ckt.gpl .pbd ul.pls li + li { margin-top: 6px; }
+.ckt.gpl .pbd ul.pls { margin: 0 0 8px; padding-left: 2ch; }
+.ckt.gpl .pbd a.iq { color: var(--muted); text-decoration-color: var(--rule); }
+.ckt.gpl .pbd a.iq:hover { color: var(--paper); }
+.ckt.gpl .pbd .pel { margin: 6px 0; }
+.ckt.gpl .pbd .ptm { color: var(--muted); }
+.ckt.gpl .pev { margin: 6px 0; }
+.ckt.gpl .pev > summary { width: fit-content; list-style: none; cursor: pointer; text-decoration: underline; text-decoration-color: var(--rule); text-underline-offset: 3px; }
+.ckt.gpl .pev > summary::-webkit-details-marker { display: none; }
+.ckt.gpl .pev > summary:after { content: " \25B8" / ""; color: var(--muted); }
+.ckt.gpl .pev[open] > summary:after { content: " \25BE" / ""; }
+.ckt.gpl .pev > summary:hover { text-decoration-color: var(--paper); }
+.ckt.gpl .pev[open] { padding: 0 0 4px 12px; box-shadow: inset 2px 0 0 var(--line); }
+.ckt.gpl .pev[open] > summary { margin-left: -12px; padding-left: 12px; margin-bottom: 4px; }
 /* the petal in hand: its card keeps its own inks while the other rows dim */
 .ckt.dim tbody tr.lit .scard tr > * { color: var(--muted); }
 .ckt.dim tbody tr.lit .scard tr > * a.sv, .ckt.dim tbody tr.lit .scard tbody td:not(.not_stated) { color: var(--paper); }
