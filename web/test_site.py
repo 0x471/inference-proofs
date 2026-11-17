@@ -360,3 +360,20 @@ def test_gpt2_prints_the_model_card_count() -> None:
     gpt2 = next(r for r in view["rungs"] if r["id"] == "gpt-2")
     assert gpt2["parameters_total"] == 137_022_720 - 12 * 1024 * 1024 == 124_439_808
     assert "124M" in gpt2["parameters_erratum"]["card"]["quote"]
+
+
+def test_cost_block_figures_share_the_bands_scope(board_site: Any) -> None:
+    """CO-5 (amended 2026-11-17): the figures that lead a system page's Cost block (the multiple,
+    the two rates, the cost in USD) are of the scope the band prints, so the block never sets a
+    steady figure beside a whole-session one. In the example board FlashProve has both scopes: its
+    Cost tiles name session_multiple, the proved rate and session_usd_per_reply, never multiple or
+    steady_usd_per_reply."""
+    text = html.unescape((board_site.out / "flashprove.html").read_text())
+    block = re.search(r'<section class="blk" id="cost".*?<dl class="figs tiles">(.*?)</dl>', text,
+                      re.S)  # fmt: skip
+    assert block
+    pointers = set(re.findall(r"record: [^#]+#(/[^;\"]+)", block[1]))
+    at = "/rungs/0/rows/0/"
+    assert {f"{at}session_multiple", f"{at}session_reply_tokens_per_gpu_second",
+            f"{at}session_usd_per_reply"} <= pointers  # fmt: skip
+    assert not {f"{at}multiple", f"{at}steady_usd_per_reply"} & pointers
