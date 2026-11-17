@@ -162,6 +162,10 @@ A measure of how far one probability distribution lies from another (Kullback-Le
 
 The home page: one table per open-weights model, largest first, with one row per system run on it. Systems are [ranked](/checks#order) inside a model, never across models.
 
+### Lean
+
+A proof assistant: a program that checks every step of a mathematical proof. A proof it accepts is [[machine-checked]].
+
 ### Level
 
 A frozen definition of the benchmark in one file: the models, request, checks, order rule and constants. The glyph's rules are not part of it, and changing them needs no [new level](repo:rfcs/0018-level-1-ladder.md#the-glyph).
@@ -208,7 +212,7 @@ What would move a petal up one step, computed from its rule, and who acts: the p
 
 ### Not decided
 
-A petal we cannot grade yet; its line says what it waits on, and it is never a failure.
+A petal we cannot grade yet; its line says what it waits on, and it is never a failure. It is not a step of the scale: our part is not done yet.
 
 ### Not decided (check)
 
@@ -216,7 +220,7 @@ A check that has not run, ran without a result that counts yet, or that the syst
 
 ### Not met
 
-A petal's step when the publisher's own facts fall below Partly met.
+A petal's step when the publisher's own facts fall below Partly met. Not met, Not stated and Failed are the three red steps, and none of them ranks above another.
 
 ### Not stated
 
@@ -257,6 +261,10 @@ A ranked system's place in its model's table: 1 plus the number of systems place
 ### Prompt check
 
 With one prompt token changed, the verifier refuses the proof ([rule](/checks#prompt)).
+
+### Proof
+
+On a system's page, the file the system sends with each reply for the [[verifier]] to check. A mathematical result and its argument are called a [[theorem]].
 
 ### Proof of inference
 
@@ -349,7 +357,7 @@ The property that a verifier refuses proofs of false statements, except with a p
 
 ### Soundness error
 
-The probability, as the publisher states it, that a verifier accepts a proof of a false statement: the bound behind [[soundness]]. It is stated for a given verifier, per proof or per part of one, often as a function of the forger's hash queries. The [Integrity](/checks#unforgeable) petal grades it: its reason names every condition that keeps it from covering what the row runs, then the bound, such as a verifier other than the one the bound is stated for.
+The probability, as the publisher states it, that a verifier accepts a proof of a false statement: the bound behind [[soundness]]. It is stated for a given verifier, per proof or per part of one, often as a function of the forger's hash queries. The [Integrity](/checks#unforgeable) petal grades it: its reason names every condition that keeps it from covering what the row runs, then the bound, such as a verifier other than the one the bound is stated for. A chance written 2^-128 is 1 in 2^128, about 3 in 10^39, and a smaller chance than 2^-100.
 
 ### Statement
 
@@ -366,6 +374,10 @@ Our statistical test finds an average above a threshold at the usual 5% level: p
 ### Sumcheck
 
 A protocol that convinces a verifier of a polynomial's sum over exponentially many points with one random evaluation. The verifier's work is [one round per variable](/forward-pass).
+
+### Theorem
+
+A mathematical result with its proof. On a system's page, a theorem is one the publisher states and proves, such as a limit on the chance that the verifier accepts a fake reply.
 
 ### Token
 

@@ -19,31 +19,26 @@ from .overview import bits_words, name_of, proved_words
 from .words import (
     CAME_FROM,
     CAUSE_WORD,
-    CHECKS_LINK,
-    DETAILS_WORD,
     EVIDENCE,
-    FIDELITY_LINK,
+    EVIDENCE_TAG,
     FORMAT_WORD,
     FROM_WORD,
-    GLYPH_KEY,
-    GLYPH_KEY_HEAD,
-    GLYPH_LEAD,
+    GAP,
+    GAP_ANY,
+    GRADE_SCALE,
+    GRADE_SCALE_HEAD,
     HAS_HEAD,
-    HERE,
-    LADDER,
-    LADDER_CAP,
-    LADDER_CASES,
-    MET_NEEDS,
-    MISSING_DECIDE,
+    IN_FULL,
     MISSING_GROUP,
-    MISSING_HEAD,
     MISSING_NONE,
-    MISSING_REPAIR,
+    MISSING_STEP,
+    MISSING_TAG,
     NEEDS_HEAD,
     NEEDS_SHORT,
-    NOT_GRADED_HERE,
+    NEEDS_TINY,
     OPEN_QUESTION,
     OURS_NOTHING,
+    PANEL_HEAD,
     PETAL_ASK,
     PETAL_BLOCK,
     PETAL_NAME,
@@ -58,6 +53,7 @@ from .words import (
     VISIBLE_OTHERS,
     VISIBLE_TAG_WORD,
     WHO,
+    WHO_TAG,
     e,
     petal_step,
     quoted,
@@ -276,7 +272,7 @@ def needs_short(p):
     return NEEDS_SHORT[p["id"]].format(green=green)
 
 
-def has_short(p, row, petals):  # noqa: PLR0911, PLR0912, PLR0915 (one clause per rule path)
+def has_short(p, row, petals):  # noqa: PLR0911, PLR0912 (one clause per rule path)
     """One or two clauses, in the system's own numbers and names: what it has today."""
     f, pid, step, cause = facts_of(p), p["id"], p["step"], p["cause"]
     k_docs = len(p["sources"])
@@ -290,54 +286,47 @@ def has_short(p, row, petals):  # noqa: PLR0911, PLR0912, PLR0915 (one clause pe
             return (
                 f"no limit on the chance of a fake reply in the {count(k_docs, 'document')} we read"
             )
-        expr, per = f.get("expression"), per_words(f)
+        expr, per = f.get("expression"), per_words(f, short=True)
         run, stated = f.get("run"), f.get("stated_for")
         least = min(f.get("terms") or [0])
-        q = " (q: the hash queries a cheater makes)" if f.get("q_cross") else ""
+        q = " (q: hash queries)" if f.get("q_cross") else ""
         if f.get("basis") == "conjectured":
-            said = f"a conjectured limit, a chance of about 2^-{least} {per}; not a theorem"
-            return said + ("; no verifier named" if not stated else f"; for {stated}")
+            said = f"a conjectured limit, a chance of about 2^-{least} {per}"
+            return said + (f", for {stated}" if stated else "")
         head = f"a proved limit, {expr} {per}{q}" if f.get("basis") == "proved" else \
             f"a limit, {expr} {per}, not said to be proved"  # fmt: skip
         if cause == "stated":
             return head
         if stated and f.get("program") not in ("proved", "stated"):
-            return f"{head}, for {stated}; not for {run_named(row, petals)}"
-        return head + (f", for {run_named(row, petals)}" if run else "; no verifier named")
+            return f"{head}, for {stated}"
+        return head + (f", for {run}, which we run" if run else "")
     if pid == "weights_hidden":
         if cause == "not_stated":
             tail = (
-                "; they say the verifier does not hold them"
+                "; they say the verifier is not given them"
                 if f.get("verifier_gets_weights") is False
                 else ""
             )
-            return (f"nothing in the {count(k_docs, 'document')} we read on whether a proof hides "
-                    f"the weights{tail}")  # fmt: skip
+            return f"nothing on whether a proof hides the weights{tail}"
         if f.get("verifier_gets_weights") is True:
             return "the verifier is given the weights"
         if cause == "stated":
             return "the publisher states that a proof does not hide the weights"
         if step == "amber_lower":
             return "a statement that a proof hides the weights; no theorem"
-        n = f.get("batch_size")
         if f.get("proof") == "configuration_run":
             return "a theorem that a proof of what we run hides the weights"
         said = "a theorem that the method hides the weights"
         if f.get("zk_unit") == "request":
             said += ", for one request per proof"
-        nots = []
-        if f.get("programs") != "stated":
-            nots.append("the programs we run")
-        if f.get("zk_unit") == "request" and n and n > 1:
-            nots.append(f"our {n}-reply batches")
-        return said + (f"; not for {' or '.join(nots)}" if nots else "")
+        return said
     if pid == "faithful_model":
         if not f:
             return p["reason"]
         c = f["controls"]
         return (f"replies match the original's for their first {tenth(f['display'])} tokens on "
-                f"average; our 4-bit copy {tenth(c['q4_k_m']['display'])}, our 8-bit copy "
-                f"{tenth(c['q8_0']['display'])} (the Fidelity figure above is another measure)")  # fmt: skip
+                f"average; our 8-bit copy {tenth(c['q8_0']['display'])}, our 4-bit copy "
+                f"{tenth(c['q4_k_m']['display'])}")  # fmt: skip
     if pid == "machine_checked":
         formal = p.get("formal") or {}
         tool = str(formal.get("tool") or "").split(" ")[0]
@@ -358,7 +347,7 @@ def has_short(p, row, petals):  # noqa: PLR0911, PLR0912, PLR0915 (one clause pe
             return f"a {tool} theorem we rebuilt, about {run}, the verifier we run{lim}"
         if reach == "protocol_and_statement":
             about = f"about {stated} and the method" if stated else "about the method"
-            return f"a {tool} theorem we rebuilt, {about}; not about {run_named(row, petals)}{lim}"
+            return f"a {tool} theorem we rebuilt, {about}{lim}"
         return f"a {tool} theorem we rebuilt, about part of the method{lim}"
     if pid == "no_trusted_party":
         if cause == "not_stated":
@@ -393,7 +382,7 @@ def item_short(it, p, row):  # noqa: PLR0911 (one phrase per item key)
     if need == "text":
         return it["text"]
     if need == "program":
-        return f"the limit for {run}, the verifier we run"
+        return f"the limit for {run}, which we run"
     if need == "zk_run":
         n = it.get("n")
         return f"the theorem for our {n}-reply batches" if it.get("unit") == "request" \
@@ -401,7 +390,9 @@ def item_short(it, p, row):  # noqa: PLR0911 (one phrase per item key)
     if need == "rebuild":
         return "our rebuild of that new theorem" if it.get("new") else "our rebuild of it"
     if need == "reach_run":
-        return f"a theorem that reaches {run}, the verifier we run"
+        return f"a theorem that reaches {run}, which we run"
+    if need == "conditions":
+        return f"its condition{'' if it.get('proved') else 's'} shown to hold for our files"
     if need == "exponent":
         return f"every part of the limit at most 2^-{it['floor']}"
     if need == "above":
@@ -414,14 +405,13 @@ def item_short(it, p, row):  # noqa: PLR0911 (one phrase per item key)
 
 SHORT = {
     "basis": "a theorem, not a conjecture",
-    "adversary": "a statement that it holds against any cheating prover",
-    "unit": "a limit for a whole reply",
+    "adversary": "the limit against any cheating prover",
+    "unit": "a limit per whole reply",
     "granularity": "a record of how many replies one proof covers",
     "batch": "a limit for each reply checked on its own",
     "batch_size": "a record of our batch size",
     "parameters": "a statement that the limit is for the settings we run",
-    "conditions": "a record that its condition holds for our files",
-    "reading": "the publisher's own words in place of our reading",
+    "reading": "the publisher's words in place of our reading",
     "programs": "a statement that its programs keep the weights secret",
     "visible_list": "a published list of what stays visible",
     "fitted": "nothing on that list that depends on the weights",
@@ -642,56 +632,103 @@ def runs_words(fid):
     return "; ".join(parts) if parts else "no slot count is recorded"
 
 
-def who_words(items):
-    n = len(items)
-    pub = sum(1 for it in items if it["by"] == "publisher")
-    us = n - pub
-    if not us:
-        return "both for the publisher" if n == 2 else "all for the publisher"
-    if not pub:
-        return "both for us" if n == 2 else "all for us"
-    return f"{pub} for the publisher and {us} for us"
+# ------------------------------------------------------------------ the closed row (amended 2026-11-17)
 
 
-def missing_line(p, row):
-    """The default row's Missing line: the count of items, who acts, how many each step needs,
-    the first item, and ours where both act; Fidelity names every item."""
+def needs_tiny(p):
+    """What full marks need, in a few words."""
+    f = facts_of(p)
+    green = tenth(f["green"]["display"]) if p["id"] == "faithful_model" and f.get("green") else "?"
+    return NEEDS_TINY[p["id"]].format(green=green)
+
+
+def has_tiny(p, row, petals):  # noqa: PLR0911, PLR0912 (one phrase per rule path)
+    """What the system has, in a few words: the figure or the fact, the gap left to the row's
+    sentence. Every path the short words do not cover reads as `has_short`."""
+    f, pid, step, cause = facts_of(p), p["id"], p["step"], p["cause"]
+    if cause == "not_stated":
+        return "nothing stated in the documents we read"
+    if cause in ("not_read", "check_failed", "stated", "proof_build_not_run"):
+        return has_short(p, row, petals)
+    if pid == "unforgeable" and f.get("terms"):
+        per = per_words(f, short=True)
+        if f.get("basis") == "conjectured":
+            return f"about 2^-{min(f['terms'])} {per}, conjectured"
+        said = "proved" if f.get("basis") == "proved" else "not said to be proved"
+        return f"{f['expression']} {per}, {said}"
+    if (
+        pid == "weights_hidden"
+        and step == "amber_upper"
+        and f.get("verifier_gets_weights") is not True
+    ):
+        if f.get("proof") == "configuration_run":
+            return "a zero-knowledge theorem for what we run"
+        return "a zero-knowledge theorem for the method"
+    if pid == "faithful_model" and f:
+        c = f["controls"]
+        return (f"{tenth(f['display'])} matched tokens on average; 8-bit copy {tenth(c['q8_0']['display'])}, "
+                f"4-bit {tenth(c['q4_k_m']['display'])}")  # fmt: skip
+    if pid == "machine_checked":
+        formal = p.get("formal") or {}
+        tool = str(formal.get("tool") or "").split(" ")[0]
+        reach = formal.get("reach")
+        if tool and reach == "verifier_run":
+            return f"a {tool} theorem of the verifier we run, rebuilt by us"
+        if tool and reach == "protocol_and_statement":
+            return f"a {tool} theorem of the method, rebuilt by us"
+        if tool:
+            return f"a {tool} theorem of part of the method, rebuilt by us"
+    if pid == "no_trusted_party":
+        if step == "green":
+            return "cryptography only, in the publisher's words"
+        if f.get("clause") == "reading":
+            return "cryptography only, on our reading"
+        if f.get("clause") == "ceremony":
+            return "a setup secret from an open ceremony"
+    return has_short(p, row, petals)
+
+
+def gap_sentence(p, row, petals):  # noqa: PLR0911, PLR0912 (one sentence per item kind)
+    """The row's one sentence: the first item missing for Met, in plain words; "Nothing missing."
+    at Met."""
     groups = p["to_met"]
     if not groups:
-        return MISSING_NONE
-    kind = groups[0]["kind"]
-    items = [it for g in groups for it in g["items"]]
-    if kind == "decide":
-        return MISSING_DECIDE.format(need=item_short(items[0], p, row))
-    if kind == "repair":
-        return MISSING_REPAIR.format(need=item_short(items[0], p, row))
-    n = len(items)
-    if n == 1:
-        return f"1 item, {WHO[items[0]['by']]}: {item_short(items[0], p, row)}."
-    head = f"{count(n, 'item')}, {who_words(items)}"
-    if p["id"] == "faithful_model" and all(
-        it["need"] in ("above", "one_at_a_time") for it in items
-    ):
-        steps, first = [], True
-        for g in groups:
-            said = []
-            for it in g["items"]:
-                words = item_short(it, p, row)
-                words = words if first else words.replace("an average above", "above")
-                first = False
-                said.append(words)
-            steps.append(f"for {STEP_WORD[g['to']]}, {and_list(said)}")
-        return f"{head}. {cap('; '.join(steps))}."
-    ladder = ""
-    if len(groups) > 1:
-        ladder = ": " + ", then ".join(
-            f"{len(g['items'])} for {STEP_WORD[g['to']]}" for g in groups
-        )
-    said = f"{head}{ladder}. First: {item_short(items[0], p, row)}."
-    ours = [it for it in items if it["by"] == "us"]
-    if ours and len(ours) < n:
-        said += f" Ours: {item_short(ours[0], p, row)}."
-    return said
+        return GAP["none"]
+    g, it = groups[0], groups[0]["items"][0]
+    if g["kind"] in ("decide", "repair"):
+        return GAP[g["kind"]].format(need=item_short(it, p, row))
+    need, f = it["need"], facts_of(p)
+    st = (row.get("statement") or {}).get("verifiers") or {}
+    run = it.get("run") or f.get("run") or st.get("run")
+    stated = f.get("stated_for") or st.get("stated")
+    if need == "program":
+        if not it.get("stated") or not stated:
+            return GAP["program_none"].format(run=run)
+        key = "program_proved" if f.get("basis") == "proved" else "program_stated"
+        return GAP[key].format(stated=stated, run=run)
+    if need == "zk_run":
+        n = it.get("n")
+        if it.get("unit") == "request" and n and n > 1:
+            return GAP["zk_batch"].format(n=n)
+        return GAP["zk_run"]
+    if need == "above":
+        return GAP["above"].format(to=STEP_WORD[g["to"]], value=tenth(it["value"]))
+    if need == "reach_run":
+        tool = str((p.get("formal") or {}).get("tool") or "").split(" ")[0]
+        if tool and stated:
+            return GAP["reach_stated"].format(tool=tool, stated=stated, run=run)
+        return GAP["reach_none"].format(run=run)
+    if need == "basis":
+        return GAP["basis_conjectured" if it.get("basis") == "conjectured" else "basis"]
+    if need == "exponent":
+        return GAP["exponent"].format(floor=it["floor"])
+    if need == "reading":
+        return GAP["reading"].format(topics=reading_topics(it["facts"]))
+    if need in GAP:
+        return GAP[need]
+    if need == "text":
+        return cap(it["text"]) + "."
+    return GAP_ANY.format(need=item_short(it, p, row))
 
 
 def missing_html(p, row, petals):
@@ -1180,35 +1217,6 @@ HAS = {"unforgeable": has_unforgeable, "weights_hidden": has_weights_hidden,
        "no_trusted_party": has_trust}  # fmt: skip
 
 
-# ------------------------------------------------------------------ how it is graded
-
-
-def ladder_html(p, row):
-    """The petal's grades, best first, the system's line (or its case, on Trust's Mostly met)
-    marked "<System> is here." A line that does not apply to this system is not printed."""
-    here = f' <span class="phere">{e(HERE.format(system=name_of(row)))}</span>'
-    key = step_key(p["step"], p["cause"])
-    clause = facts_of(p).get("clause") or "reading"
-    out = []
-    for k, words, _ in LADDER[p["id"]]:
-        if p["id"] == "no_trusted_party" and k == "amber_upper":
-            cases = "".join(
-                p_(e(LADDER_CASES[c]) + (here if key == k and c == clause else ""))
-                for c in ("reading", "ceremony")
-            )
-            out.append(p_(e(words)) + f'<div class="plc">{cases}</div>')
-            continue
-        line = e(words) + (here if k == key else "")
-        out.append(p_(line, "pme" if k == key else ""))
-        if (
-            p["id"] == "faithful_model"
-            and facts_of(p).get("policy_cap")
-            and k == key == "amber_lower"
-        ):
-            out.append(p_(e(LADDER_CAP.format(system=name_of(row)))))
-    return "".join(out)
-
-
 # ------------------------------------------------------------------ Evidence and the field's terms
 
 
@@ -1221,9 +1229,11 @@ def details_list(head, body):
     return f'<details class="pev"><summary>{e(head)}</summary>{body}</details>'
 
 
-def evidence_html(p, row, petals):  # noqa: PLR0912, PLR0915 (one line per record kind)
-    out = []
-    pid = p["id"]
+def evidence_short(p, row, petals):
+    """The opened petal's evidence, one line each: the publisher's words (their count, opening on
+    the quotes), the documents read where they are silent, what the publisher states and lists,
+    our reading's notes, and our test or rebuild in a few words, linked to its record."""
+    out, pid = [], p["id"]
     if p["quotes"]:
         out.append(details_list(EVIDENCE["quotes"].format(pin=pin7(row), n=count(len(p["quotes"]), "quote")),
                                 quote_links(p["quotes"])))  # fmt: skip
@@ -1236,25 +1246,56 @@ def evidence_html(p, row, petals):  # noqa: PLR0912, PLR0915 (one line per recor
     if pid == "weights_hidden" and p.get("visible"):
         k = sum(1 for v in p["visible"] if v["tag"] == FITTED)
         n = f"{'at least ' if p.get('visible_at_least') else ''}{len(p['visible'])}"
-        n += f", {k} that {VISIBLE_TAG_WORD[FITTED].replace('depends', 'depend')}" if k else ""
+        n += f"; {k} {VISIBLE_TAG_WORD[FITTED].replace('depends', 'depend')}" if k else ""
         out.append(details_list(EVIDENCE["visible"].format(n=n),
                                 headless(visible_html(p["visible"], p.get("visible_at_least")))))  # fmt: skip
     if p["read_facts"]:
         k = len(p["read_facts"])
         body = "".join(p_(e(f["note"]), "cn") for f in p["read_facts"])
-        out.append(details_list(EVIDENCE["notes"].format(n=count(k, "note")), body))
         unused = [f for f in p["read_facts"] if not f.get("used", True)]
         if unused:
             topics = and_list(READING_TOPIC.get(f["fact"], ("", f["fact"]))[1] for f in unused)
             why = ""
             if pid == "unforgeable" and facts_of(p).get("basis") != "proved":
                 why = " (a limit that is not a theorem stays at Partly met at most, whatever its settings)"
-            out.append(p_(e(EVIDENCE["not_used"].format(
+            body += p_(e(EVIDENCE["not_used"].format(
                 this=f"our reading that the limit {topics}" if pid == "unforgeable"
                 else f"our reading on {topics}", its="its" if len(unused) == 1 else "their",
-                why=why)), "pel"))  # fmt: skip
-    checks = f'<a href="#checks">{e(CHECKS_LINK)}</a>'
-    rec = e(EVIDENCE["records"])
+                why=why)), "pel")  # fmt: skip
+        out.append(details_list(EVIDENCE["notes"].format(n=f"{k:,}"), body))
+    if pid in ("unforgeable", "machine_checked", "weights_hidden"):
+        if pid == "machine_checked":
+            formal = p.get("formal") or {}
+            build = formal.get("build") or {}
+            if build:
+                tc = f"{build['toolchain']['name']} {build['toolchain']['version']}"
+                said = EVIDENCE["rebuild_short"].format(tc=tc, code=build["exit_code"],
+                                                        t=secs(build["seconds"]))  # fmt: skip
+                out.append(p_(e(said) + f' <a href="{e(link(build["record"]))}">'
+                              f"{e(RECORD_LINK)}</a>", "pel"))  # fmt: skip
+        cids = ("no_weight_file",) if pid == "weights_hidden" else ("model", "prompt", "reply")
+        states = {check_state(row, c) for c in cids}
+        word = "passed" if states == {"held"} else "failed" if "failed" in states else "not decided"
+        said = EVIDENCE["checks_short"].format(names=and_list(CHECK_WORD[c] for c in cids),
+                                               s="" if len(cids) == 1 else "s", state=word)  # fmt: skip
+        out.append(p_(f'<a href="#checks">{e(said)}</a>', "pel"))
+    elif pid == "faithful_model":
+        fid = rung_of(row).get("fidelity") or {}
+        n = facts_of(p).get("n")
+        said = EVIDENCE["fidelity_short"].format(n=f"{n:,} prompts" if n else "")
+        recl = f' <a href="{e(link(fid["path"]))}">{e(RECORD_LINK)}</a>' if fid.get("path") else ""
+        out.append(p_(f'<a href="#fidelity">{e(said)}</a>{recl}', "pel"))
+    else:
+        out.append(p_(e(EVIDENCE["none_short"]), "pel"))
+    src = came_from(p)
+    src = f' <span class="pfrm">{e(src)}</span>' if src else ""
+    return f'<h5 class="pbh">{e(EVIDENCE["head"])}{src}</h5>' + "".join(out)
+
+
+def records_full(p, row):
+    """Our records in full, one click down: what each test does, the rebuild's command and times,
+    and a trial outside the grade."""
+    out, pid = [], p["id"]
     if pid in ("unforgeable", "machine_checked"):
         states = [check_state(row, c) for c in ("model", "prompt", "reply")]
         if pid == "machine_checked":
@@ -1280,34 +1321,23 @@ def evidence_html(p, row, petals):  # noqa: PLR0912, PLR0915 (one line per recor
                               f'<a href="{e(link(t["record"]))}">{e(RECORD_LINK)}</a>', "pel"))  # fmt: skip
             state = "passed on this run" if all(s == "held" for s in states) else \
                 "did not all pass on this run (see Checks)"  # fmt: skip
-            out.append(
-                p_(f'<span class="k">{rec}</span> {e(RECORDS[pid].format(state=state))}', "pel")
-            )
+            out.append(p_(e(cap(RECORDS[pid].format(state=state))), "pel"))
         else:
             state = ("Each was refused on this run;" if all(s == "held" for s in states)
                      else "Not every one was refused on this run;")  # fmt: skip
-            out.append(p_(f'<span class="k">{rec}</span> {e(RECORDS[pid].format(state=state))} '
-                          f"{checks}", "pel"))  # fmt: skip
+            out.append(p_(e(cap(RECORDS[pid].format(state=state))), "pel"))
     elif pid == "weights_hidden":
         s = check_state(row, "no_weight_file")
         state = {"held": "It passed on this run.", "failed": "It failed on this run."}.get(
             s, "It is not decided on this run."
         )
-        out.append(p_(f'<span class="k">{rec}</span> {e(RECORDS[pid].format(state=state))} '
-                      f"{checks}", "pel"))  # fmt: skip
+        out.append(p_(e(cap(RECORDS[pid].format(state=state))), "pel"))
     elif pid == "faithful_model":
         rung = rung_of(row)
-        fid = rung.get("fidelity") or {}
-        f = facts_of(p)
-        n = f.get("n")
-        said = (f"our fidelity run on {rung['model']}" + (f", {n:,} prompts" if n else "")
-                + ", each reply scored against the original's.")  # fmt: skip
-        recl = f' <a href="{e(link(fid["path"]))}">{e(RECORD_LINK)}</a>' if fid.get("path") else ""
-        out.append(p_(f'<span class="k">{rec}</span> {e(said)}{recl} '
-                      f'<a href="#fidelity">{e(FIDELITY_LINK)}</a>', "pel"))  # fmt: skip
-    else:
-        out.append(p_(f'<span class="k">{rec}</span> {e(RECORDS[pid])}', "pel"))
-    return "".join(out)
+        n = facts_of(p).get("n")
+        out.append(p_(e(cap(f"our fidelity run on {rung['model']}" + (f", {n:,} prompts" if n else "")
+                            + ", each reply scored against the original's.")), "pel"))  # fmt: skip
+    return out
 
 
 TRIAL_CHANGE = {"commitment_id": "one proof with a commitment that no run of ours made",
@@ -1482,73 +1512,105 @@ def terms_html(p, row, petals):  # noqa: PLR0912, PLR0915 (one sentence per fact
 # ------------------------------------------------------------------ the petal
 
 
-def not_graded_html(p, row):
-    if p["id"] not in NOT_GRADED_HERE:
-        return ""
-    arch = ""
-    if p["id"] == "weights_hidden":
-        st = row.get("statement") or {}
-        fact = st.get("architecture_visible")
-        arch = f" ({fact}, as the publisher states)" if fact else ""
-    said = e(NOT_GRADED_HERE[p["id"]].format(arch=arch, q="\x00")).replace("\x00", open_question())
-    return block("not_graded", p_(said))
-
-
 def block(key, body):
     return f'<div class="pbk"><h5 class="pbh">{e(PETAL_BLOCK[key])}</h5>{body}</div>'
 
 
-def petal_body(p, row, petals):
-    """The petal opened: the owner's four answers (Met needs, Has, Missing, Evidence), then why
-    the grade is what it is, the limits no rule counts, every grade of the petal, what is not
-    graded here, and the field's terms."""
-    tokens = (
-        S.V.get("request", {}).get("output_tokens", 512)
-        if isinstance(S.V.get("request"), dict)
-        else 512
-    )
-    needs = MET_NEEDS[p["id"]].format(tokens=tokens, alpha="0.05")
-    has = "".join(HAS[p["id"]](p, row, petals))
+def in_full(p, row, petals):
+    """One click down in an opened petal: this system's own facts in full (what it has, every
+    item missing with what it is today, our records, why the grade, the limits the publisher
+    states, the field's terms). How a grade is set is the checks page's."""
     why = why_html(p, row, petals)
-    how = details_list(PETAL_BLOCK["how"], ladder_html(p, row))
-    return (block("needs", p_(e(needs))) + block("has", has)
+    records = "".join(records_full(p, row))
+    body = (block("has", "".join(HAS[p["id"]](p, row, petals)))
             + block("missing", missing_html(p, row, petals))
-            + block("evidence", evidence_html(p, row, petals))
+            + (block("records", records) if records else "")
             + (block("why", why) if why else "") + limits_html(p)
-            + not_graded_html(p, row) + f'<div class="pmore">{how}{terms_html(p, row, petals)}</div>')  # fmt: skip
+            + terms_html(p, row, petals))  # fmt: skip
+    return f'<details class="pev pfull"><summary>{e(IN_FULL)}</summary>{body}</details>'
+
+
+def missing_list(p, row):
+    """The opened petal's Missing block: the items in their groups, each in a few words; who acts
+    beside each item where both act."""
+    groups = p["to_met"]
+    if not groups:
+        return p_(e(MISSING_NONE.capitalize()))
+    out, k = [], 0
+    mixed = len({it["by"] for it in items_of(p)}) > 1
+    for gi, g in enumerate(groups):
+        if g["kind"] in ("decide", "repair"):
+            head = MISSING_STEP[g["kind"]]
+        else:
+            head = MISSING_STEP["first" if gi == 0 else "then"].format(to=STEP_WORD[g["to"]])
+        lis = []
+        for it in g["items"]:
+            k += 1
+            who = f' <span class="pwho">{e(WHO_TAG[it["by"]])}</span>' if mixed else ""
+            lis.append(f'<li value="{k}">{e(cap(item_short(it, p, row)))}{who}</li>')
+        out.append(f'<p class="pgh">{e(head)}</p><ol class="pmi">{"".join(lis)}</ol>')
+    return "".join(out)
+
+
+def panel(p, row, petals):
+    """The petal opened: what Met needs, what it has, what is missing, side by side; then the
+    evidence, and its facts in full one click down."""
+    rule = f'<a href="{CHECKS_PAGE}#{e(p["id"])}">{e(PANEL_HEAD["needs"])}</a>'
+    needs = f'<div class="pq"><h5 class="pbh">{rule}</h5>{p_(e(cap(needs_short(p)) + "."))}</div>'
+    has = (f'<div class="pq"><h5 class="pbh">{e(PANEL_HEAD["has"])}</h5>'
+           f"{p_(e(cap(has_short(p, row, petals)) + '.'))}</div>")  # fmt: skip
+    bys = {it["by"] for it in items_of(p)}
+    who = f", {WHO[bys.pop()]}" if len(bys) == 1 else ""
+    miss = (f'<div class="pq pqm"><h5 class="pbh">{e(PANEL_HEAD["missing"] + who)}</h5>'
+            f"{missing_list(p, row)}</div>")  # fmt: skip
+    return (f'<div class="pqs">{needs}{has}{miss}</div>'
+            f'<div class="pevs">{evidence_short(p, row, petals)}{in_full(p, row, petals)}</div>')  # fmt: skip
+
+
+def missing_tag(p):
+    """The disclosure's label: "5 missing · publisher", "3 missing · 2 publisher, 1 us"; at Met,
+    "Evidence"."""
+    items = items_of(p)
+    if not items:
+        return EVIDENCE_TAG
+    pub = sum(1 for it in items if it["by"] == "publisher")
+    us = len(items) - pub
+    who = (WHO_TAG["publisher"] if not us else WHO_TAG["us"] if not pub
+           else f"{pub} {WHO_TAG['publisher']}, {us} {WHO_TAG['us']}")  # fmt: skip
+    return f"{MISSING_TAG.format(n=len(items))} · {who}"
+
+
+def verdict(p):
+    """The grade as a word in its ink, in display type, linked to the rule that sets it on the
+    checks page (its cause's line where a cause set it)."""
+    tok = f"{p['state']} {p['form']}".strip()
+    href = f"{CHECKS_PAGE}#cause-{e(p['cause'])}" if p["cause"] else f"{CHECKS_PAGE}#{e(p['id'])}"
+    title = f' title="{e(CAUSE_WORD[p["cause"]])}"' if p["cause"] else ""
+    return f'<a class="pvd {tok}" href="{href}"{title}>{e(petal_step(p))}</a>'
 
 
 def petal_row(i, p, row, petals):
-    """One petal's row: its name with its plain question; its grade and what it comes from; the
-    three short lines (Needs, Has, Missing), which open the petal's one disclosure."""
+    """One petal's row: its name and plain question; its grade, a word in its ink, and what it
+    comes from; the one sentence of what is missing first, with what Met needs and what it has
+    in a few words; the row opens on the three blocks and the evidence."""
     tok = f"{p['state']} {p['form']}".strip()
     data = f' data-step="{e(p["step"] or "none")}"'
-    state = chip(p["state"], petal_step(p), p["form"])
     if p["cause"] is not None:
         data += f' data-cause="{e(p["cause"])}"'
-        state = (f'<a class="cc" href="{CHECKS_PAGE}#cause-{e(p["cause"])}" '
-                 f'title="{e(CAUSE_WORD[p["cause"]])}">{state}</a>')  # fmt: skip
-    src = came_from(p)
-    src = f'<span class="pfr">{e(src)}</span>' if src else ""
-
-    def line(cls, head, words):
-        return (f'<span class="pln {cls}"><span class="k">{e(head)}</span> '
-                f'<span class="pv">{nobreak(e(words), row)}</span></span>')  # fmt: skip
-
-    has = has_short(p, row, petals)
-    lines = (line("pnd", NEEDS_HEAD, cap(needs_short(p)) + ".")
-             + line("phs", HAS_HEAD, cap(has) + ".")
-             + line("pms", MISSING_HEAD, cap(missing_line(p, row))))  # fmt: skip
+    mini = (f'<span class="pmini"><span class="k">{e(NEEDS_HEAD)}</span>'
+            f'<span>{nobreak(e(needs_tiny(p)), row)}</span>'
+            f'<span class="k">{e(HAS_HEAD)}</span>'
+            f'<span>{nobreak(e(has_tiny(p, row, petals)), row)}</span></span>')  # fmt: skip
     owner = f'<span class="sr">, {e(PETAL_NAME[p["id"]])}</span>'
-    details = (f'<details class="more pdt"><summary>{lines}<span class="pdl">{e(DETAILS_WORD)}'
-               f'{owner}</span></summary>'
-               f'<div class="pbd">{nobreak(petal_body(p, row, petals), row)}</div></details>')  # fmt: skip
-    ask = PETAL_ASK[p["id"]]
+    summary = (f'<span class="pgap">{nobreak(e(gap_sentence(p, row, petals)), row)}</span>{mini}'
+               f'<span class="pdl">{e(missing_tag(p))}{owner}</span>')  # fmt: skip
+    details = (f'<details class="more pdt"><summary>{summary}</summary>'
+               f'<div class="pbd">{nobreak(panel(p, row, petals), row)}</div></details>')  # fmt: skip
     return (f'<tr class="pt {tok}" id="petal-{e(p["id"])}"><th scope="row">'
             f'<a class="sl s{i + 1} {tok}"{data} href="{CHECKS_PAGE}#{p["id"]}" data-k="p{i + 1}" '
             f'title="{e(PETAL_TERM[p["id"]])}"><span>{e(PETAL_NAME[p["id"]])}</span></a>'
-            f'<span class="pst">{e(ask)}</span></th>'
-            f'<td class="cst">{state}{src}</td>'
+            f'<span class="pst">{e(PETAL_ASK[p["id"]])}</span></th>'
+            f'<td class="cst">{verdict(p)}</td>'
             f'<td class="prs">{details}</td></tr>')  # fmt: skip
 
 
@@ -1566,17 +1628,21 @@ def nobreak(html, row):
                    for pt in parts)  # fmt: skip
 
 
+def grade_scale():
+    """The one line over the five petals: the grades, best first, each in its ink, each linked to
+    its definition."""
+    words = "".join(f'<a class="pvd {tok}" href="/glossary#{slug}">{e(w)}</a>'
+                    for tok, w, slug in GRADE_SCALE)  # fmt: skip
+    return f'<p class="gscale"><span class="sr">{e(GRADE_SCALE_HEAD)}: </span>{words}</p>'
+
+
 def glyph_section(row, scope_head):
-    """The Glyph section: its one-line lead with the grades and words behind one disclosure, the
-    five petals, then soundness, zero knowledge and completeness with the stated security and the
-    scope card (`scope_head`)."""
+    """The Glyph section (amended 2026-11-17, owner decision): the grade scale on one line, the five
+    petals, then soundness, zero knowledge and completeness on one line with the stated security and
+    the scope card (`scope_head`) one click down."""
     petals = {p["id"]: p for p in row["glyph"]}
-    key = "".join(p_(e(w)) for w in GLYPH_KEY)
-    lead = (p_(e(GLYPH_LEAD.format(system=name_of(row))), "glead")
-            + f'<details class="more gkey"><summary>{e(GLYPH_KEY_HEAD)}</summary>'
-            f'<div class="gwords">{key}</div></details>')  # fmt: skip
     trs = "".join(petal_row(i, p, row, petals) for i, p in enumerate(row["glyph"]))
-    return (f'<div class="glede">{lead}</div>'
-            '<div class="checks"><table class="rt ckt gbig gpl"><caption class="sr">Petal, grade, '
-            f'what full marks need, what it has and what it misses</caption><tbody>{trs}</tbody>'
+    return (grade_scale()
+            + '<div class="checks"><table class="rt ckt gbig gpl"><caption class="sr">Petal, grade, '
+            f'what is missing first, what Met needs and what it has</caption><tbody>{trs}</tbody>'
             f'</table></div><div id="scope">{scope_head}</div>')  # fmt: skip

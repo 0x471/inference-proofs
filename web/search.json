@@ -743,6 +743,16 @@
     {
       "group": "Glossary",
       "kind": "term",
+      "meta": "A proof assistant: a program that checks every step of a mathematical proof.",
+      "name": "Lean",
+      "pie": "",
+      "terms": "lean a proof assistant: a program that checks every step of a mathematical proof.",
+      "tier": 4.2,
+      "url": "/glossary#lean"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
       "meta": "A frozen definition of the benchmark in one file: the models, request, checks, order rule and constants.",
       "name": "Level",
       "pie": "",
@@ -979,6 +989,16 @@
       "terms": "prompt check with one prompt token changed, the verifier refuses the proof (rule).",
       "tier": 4.2,
       "url": "/glossary#prompt-check"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
+      "meta": "On a system's page, the file the system sends with each reply for the verifier to check.",
+      "name": "Proof",
+      "pie": "",
+      "terms": "proof on a system's page, the file the system sends with each reply for the verifier to check.",
+      "tier": 4.2,
+      "url": "/glossary#proof"
     },
     {
       "group": "Glossary",
@@ -1249,6 +1269,16 @@
       "terms": "sumcheck a protocol that convinces a verifier of a polynomial's sum over exponentially many points with one random evaluation.",
       "tier": 4.2,
       "url": "/glossary#sumcheck"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
+      "meta": "A mathematical result with its proof.",
+      "name": "Theorem",
+      "pie": "",
+      "terms": "theorem a mathematical result with its proof.",
+      "tier": 4.2,
+      "url": "/glossary#theorem"
     },
     {
       "group": "Glossary",
