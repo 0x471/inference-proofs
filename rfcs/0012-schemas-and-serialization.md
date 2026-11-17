@@ -399,6 +399,11 @@ Amendment of 2026-11-16 (RFC-0018 Q37, GL-11, CO-8, SI-9). Additive, and the one
 - `properties/2`: the optional top-level `number_format` (SI-9: the proved copy's weights and activations, each `integer`, `fixed_point`, `floating_point` or `not_stated`, with its quotes).
 - `site-facts/1`: per system `paper`, the publisher's paper as a file of its repository at the row's pinned commit, where the repository carries one; the site refuses a link at another commit.
 
+Amendment of 2026-11-16 (RFC-0018 MC-4a, GL-5, SI-3, Q42, Q43). Additive, and the one stored board is recomputed in the same change (RFC-0018 Q14), so no stored run record changes:
+
+- `proof-build/1`: `status` takes `stopped` (a build we stopped before a verdict), with `stop` (`cause` `timeout` or `signal`, and `detail`), required when the status is `stopped` and absent otherwise. One record is stored, FlashProve's (`results/v1.0/proof-build/flashprove/proof-build.json`, the publisher's full check, built).
+- `board/1`: in Formally verified's `formal`, the optional `build` (the record's path, the toolchain's name and version, the publisher's command without our time-limit wrapper, its start, seconds, exit code and status).
+
 ## Testing Strategy
 
 Unit tests in `harness/tests/unit/`:

@@ -235,9 +235,12 @@ def test_mc4a_stopped_build_is_hollow() -> None:
                "stop": {"cause": "timeout", "detail": "the build's own limit"}}  # fmt: skip
     petal = mc(stopped)
     assert got(petal) == (None, "proof_build_not_run", "statement", ())
-    assert (
-        petal.reason == "the recorded proof build stopped before a verdict (timeout, exit code 124)"
+    assert petal.reason == (
+        "the recorded proof build stopped before a verdict (timeout, exit code 124); it is stated "
+        "for fake-verify, which this row runs; once built: Met at most; statement not reviewed by "
+        "an outside Coq reader"
     )
+    assert needs(petal) == (None, [("our build of the named theorem, run to a verdict", "us")])
 
 
 def test_formal_carries_the_stored_build_without_our_wrapper() -> None:

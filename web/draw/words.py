@@ -298,7 +298,7 @@ SCOPE_ROW_WORD = {"soundness": "Soundness", "zero_knowledge": "Zero knowledge",
                   "completeness": "Completeness"}  # fmt: skip
 SCOPE_COL_WORD = {"protocol": "Protocol", "verifier_run": "Verifier code this row runs",
                   "prover_run": "Prover code this row runs"}  # fmt: skip
-# a fact beside the tool on the scope card: Formally verified's stored build (GL-5)
+# Formally verified's stored build (GL-5), a fact beside the tool in the petal's details
 PROOF_BUILD_HEAD = "Proof build"
 # "tested" is the publisher's word for its own tests ("tested, not proved"), never ours: our runs are
 # the Completeness line above the card
@@ -422,8 +422,8 @@ PETAL_RULE = {
         (("red", "check_failed"), "Our build of the named theorem failed or reported axioms "
          "other than the declared ones; or our Model, Prompt or Reply check failed where the "
          "stated step is Met."),
-        (None, "A machine-checked proof is stated, and our build of it is not recorded yet; or "
-         "not read at this row's commit."),
+        (None, "A machine-checked proof is stated, and our build of it is not recorded yet, or "
+         "the recorded one stopped before a verdict; or not read at this row's commit."),
     ),
     # NT-4 comes before NT-5 and NT-6; Q12's line is printed under the steps (PETAL_MORE)
     "no_trusted_party": (

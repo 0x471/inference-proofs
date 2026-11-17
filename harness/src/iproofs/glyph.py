@@ -694,7 +694,8 @@ def machine_checked(  # noqa: PLR0911, PLR0912, PLR0915 (one return per line of 
             cause = _m(recorded.get("stop")).get("cause")
             return Petal(pid, None, PROOF_BUILD_NOT_RUN, STATEMENT,
                          f"the recorded proof build stopped before a verdict ({cause}, exit code "
-                         f"{code})", quotes, formal=formal, reading=v.noted, notes=v.notes,
+                         f"{code})" + _mc_tail(fm, r, run, stated_for, top), quotes,
+                         formal=formal, reading=v.noted, notes=v.notes,
                          next_step=_next(None, ("our build of the named theorem, run to a "
                                                 "verdict", US)))  # fmt: skip
         if status != "built" or code != 0:  # MC-4
