@@ -272,7 +272,7 @@ html:has(.top.s-on) { overflow: hidden; }
 .facts .f-pin dd { font-weight: 400; max-width: 76ch; }
 .facts a { text-decoration-thickness: 1px; }
 /* the model's size under its name, on every screen (a phone's band too) */
-.facts .msz { display: block; font-weight: 400; }
+.facts .msz { display: block; margin-top: var(--s1); font-weight: 400; }
 /* a link on the band, in hand: a block of ground ink, the words in cobalt (as an index line) */
 .facts a:hover, .facts a:active, .facts a:focus-visible { background: var(--ground); color: var(--cobalt); text-decoration: none; box-shadow: 0 0 0 3px var(--ground); }
 @media print {
@@ -306,7 +306,7 @@ html:has(.top.s-on) { overflow: hidden; }
   .sysb .facts dt { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
   .sysb .facts dd { margin: 0; }
   .sysb .facts > .f-md { order: 2; margin-top: 10px; }
-  .sysb .facts > .f-st { order: 3; margin-top: 3px; }
+  .sysb .facts > .f-st { order: 3; margin-top: var(--s3); }
   .sysb .facts > :is(.f-src, .f-pap) { display: none; }
   .sysb .facts > .f-pin { order: 4; margin-top: 10px; }
   .sysb .sbm { order: 4; display: flex; flex-wrap: wrap; align-items: flex-end; column-gap: 18px; row-gap: 8px; margin: 18px 0 20px; padding: 0; }
@@ -653,6 +653,8 @@ a.fig.fp:hover .n { text-decoration: underline; text-decoration-thickness: 1px; 
   /* the multiple's cell makes no box: its figure ends the name's line. A row with no multiple keeps the cell, the
      word and its reason under it at the line's end */
   .lad .cm { display: contents; }
+  /* its label too: the column's head names the figure */
+  .lad .cm > .lbl { display: none; }
   .lad .cm > :is(.fig, .flk) { grid-area: 1 / 2; justify-self: end; }
   .lad .cm:has(> .na) { display: block; grid-area: 1 / 2; max-width: 8.5rem; text-align: right; }
   .lad tr:has(> .cm > .na) .st .nw { white-space: normal; }
@@ -692,7 +694,7 @@ a.fig.fp:hover .n { text-decoration: underline; text-decoration-thickness: 1px; 
   .meta > div:nth-child(-n+2) > dt { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
   .meta > div:nth-child(2):before { content: "\00a0·\00a0"; }
   /* serving, the figure every multiple under it is over, on a line of its own, named */
-  .meta > div:nth-child(3) { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: .6em; margin-top: 4px; }
+  .meta > div:nth-child(3) { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: .6em; margin-top: var(--s3); }
   .meta > div:nth-child(3) > dt { margin: 0; }
   .meta > div:nth-child(3) dd .fig { color: var(--paper); }
   .meta > div:nth-child(n+4) { display: none; }
@@ -900,7 +902,8 @@ html.js .scalepage .scl-panel { margin-top: 0; }
 .cl .hb { grid-area: b; margin-top: 2px; }
 .clf { grid-area: f; }
 .cps { grid-area: s; display: flex; flex-wrap: wrap; gap: 8px 32px; margin-top: 12px; }
-.cpt { display: flex; flex-direction: column; row-gap: 4px; }
+.cpt { display: flex; flex-direction: column; row-gap: var(--s2); }
+.cpt > .sub { margin-top: 0; }
 .cpl { font: var(--f-label); letter-spacing: var(--track); text-transform: uppercase; color: var(--muted); }
 .cpl:before { content: ""; display: inline-block; width: 14px; height: 4px; margin: 0 8px 2px 0; background: var(--paper); vertical-align: middle; }
 .pg .cpl:before { background: var(--rule); }
@@ -1129,6 +1132,9 @@ a.pvd:hover { text-decoration: underline 2px; text-underline-offset: 4px; }
 .ckt.gpl .pfull > summary + .pbk { margin-top: var(--s1); }
 /* our notes, one a paragraph, apart as the publisher's quotes are */
 .ckt.gpl .pev > p + p { margin-top: var(--s2); }
+/* the visible list's groups: a head in words, apart from the group above it, close to its own items */
+.ckt.gpl .pev > .pvg { margin: var(--s2) 0 var(--s1); font: 400 12px/18px var(--mono); letter-spacing: 0; text-transform: none; color: var(--muted); }
+.ckt.gpl .pev > .pvis + .pvg { margin-top: var(--s4); }
 .ckt.gpl .pfull p + p, .ckt.gpl .pfull .pel + .pel { margin-top: var(--s2); }
 .ckt.gpl .pfull .pgh { margin: var(--s3) 0 var(--s1); color: var(--muted); }
 .ckt.gpl .pfull ol.pmi { margin: 0; padding-left: 3ch; }
@@ -2177,6 +2183,8 @@ ol.ls > li:before { counter-increment: n; content: counter(n); position: absolut
 .tiles .usd .tf .fig { flex-wrap: nowrap; white-space: nowrap; }
 /* the two rates on their decimal point: the whole digits right-aligned, the fraction after them */
 .tiles .rts .np .n { padding-left: var(--pl); padding-right: var(--pr); }
+/* the rates start where every tile's figure starts, one step under the label */
+.tiles .rts { margin-top: 0; }
 /* the Cost block's first tile holds the two rates on one line each, so it takes the widest column */
 @media (min-width: 761px) {
   .syspage #cost .tiles { grid-template-columns: minmax(0, 1.6fr) repeat(3, minmax(0, 1fr)); }
@@ -2202,7 +2210,9 @@ ol.ls > li:before { counter-increment: n; content: counter(n); position: absolut
 .dig > summary { padding-left: 12px; }
 .dig > .dig-in { padding-top: var(--s2); }
 .dig > .dig-in > .rb:first-child, .dig > .dig-in > p:first-child { margin-top: var(--s2); }
-.dig .rb { display: grid; grid-template-columns: minmax(8ch, max-content) minmax(0, 1fr); column-gap: 12px; padding: var(--s2) 0 0 12px; }
+.dig .rb { display: grid; grid-template-columns: minmax(18ch, max-content) minmax(0, 1fr); column-gap: 12px; padding: var(--s2) 0 0 12px; }
+/* a quote inside a line runs on with the line */
+.dig .rb .qt { display: inline; margin: 0; }
 .dig .rb .k { margin-right: 0; }
 .dig .sub-h { margin-top: 24px; padding-left: 12px; }
 .dig > .dig-in > .rt, .dig > .dig-in > .cbars, .dig > .dig-in > .parts { margin-top: var(--s4); }
