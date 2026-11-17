@@ -22,6 +22,8 @@ Each indexable page has one canonical URL, matching social metadata, topic entit
 a website identity, image metadata and (except home) a breadcrumb path. Only topics
 covered by a page belong in its structured data. System descriptions still derive
 from the current board. There are no invented treaty endorsements, ratings or safety claims.
+Section headings with IDs also supply `hasPart` entries and agent-guide links, so
+readers can cite a section directly. These links reuse the rendered heading text.
 
 The agent guide links every public page and the repository's specification and
 level rules. It is an optional navigation aid, not a ranking signal or an indexing
@@ -30,7 +32,9 @@ requirement. Its descriptions come from the generated JSON-LD. The sitemap exclu
 whose destinations depend on the current release redirect temporarily.
 
 Performance retains static HTML, deferred scripts, subset font preloads, hashed
-asset URLs, immutable asset caching and esbuild minification. JSON-LD is compact;
+asset URLs, immutable asset caching and esbuild minification. `assets.mjs` also
+compacts the deployed search index; the committed JSON keeps RFC-0012's format.
+JSON-LD is compact;
 this pass adds no dependencies, browser requests required for rendering, or runtime
 JavaScript. Metadata increases HTML size slightly.
 
@@ -43,6 +47,7 @@ and redirects point to their canonical destination. Submit the sitemap through t
 site owner's Google Search Console and Bing Webmaster Tools accounts, inspect a
 system page and the deployment page, and track impressions and referred visits.
 Local checks cannot establish indexing, traffic growth or inclusion in AI answers.
+The local preview serves `llms.txt` under the same allowlist as the other discovery files.
 
 References: [Google's AI search guidance](https://developers.google.com/search/docs/appearance/ai-features)
 and [structured-data policies](https://developers.google.com/search/docs/appearance/structured-data/sd-policies).

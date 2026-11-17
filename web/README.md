@@ -96,7 +96,8 @@ Public pages allow indexing. The 404 keeps its `noindex` metadata. The build wri
 Every public page has canonical, social and WebPage structured metadata; its JSON-LD
 hash is allowed by the deployment CSP. Descriptions and figures come from the existing view.
 
-Vercel installs the locked esbuild development dependency and minifies CSS and JavaScript
-into `public/`. Source assets stay readable. Run `npm ci --include=dev --ignore-scripts` in `web/` before
+Vercel installs the locked esbuild development dependency. `assets.mjs` minifies CSS,
+JavaScript and the search index into `public/`. Source assets stay readable, and committed
+JSON keeps its canonical format. Run `npm ci --include=dev --ignore-scripts` in `web/` before
 `npm run assets` locally. Asset URLs retain the source content hash, which changes whenever
 their content changes. Fonts use swap on pages so readers see text while they load.
