@@ -18,7 +18,6 @@ from .chrome import (
     lead_figure,
     not_passed,
     page,
-    parts_of,
     rate_pair,
     rung_of,
     serving_gpu,
@@ -168,7 +167,7 @@ def lead_fig(row, bare=False):
     what it is in its title."""
     label, f, _ = lead_figure(row)
     if bare:
-        return FIGURE_HEAD["multiple"], multiple_html(row, parts=False, bare=True)
+        return FIGURE_HEAD["multiple"], multiple_html(row, bare=True)
     return label, fig_html(f, counted(row))
 
 
@@ -216,17 +215,18 @@ def to_section(html, to):
     return f'<a class="flk" href="{e(to)}">{html}</a>' if to else html
 
 
-def multiple_html(row, parts=True, bare=False, to=None, rates=None):
+def multiple_html(row, bare=False, to=None, rates=None):
     """CO-5: the multiple; with no steady state, the session cost over serving, labelled as whole
-    sessions. With `parts`, its two parts under it (CO-7, `split_html`). `bare` (the ladder, the
+    sessions. Its two parts (CO-7) are not printed with it: since 2026-11-17 they print only in
+    the system page's Cost block (`pages.parts_tile`). `bare` (the ladder, the
     Scale page): the figures alone, no line of scope and n under any; `to` (the ladder): the
-    figure and its parts each linked there. `rates` (the ladder, amended 2026-11-16): under the
-    parts, the line of the two rates the multiple is made of (`rate_html`), linked to that
-    address; parts and rates in one block (`cmx`) that a narrow row sets beside the glyph."""
+    figure linked there. `rates` (the ladder, amended 2026-11-16): under it, the line of the
+    proved rate (`rate_html`), linked to that address, in one block (`cmx`) that a narrow row
+    sets beside the glyph."""
     _, f, key = lead_figure(row)
-    split = split_html(row, key, bare=bare, to=to) if parts else ""
+    split = ""
     if rates is not None:
-        under = split + rate_html(row, rates)
+        under = rate_html(row, rates)
         split = f'<span class="cmx">{under}</span>' if under else ""
     how = how_computed(row)
     if bare:
@@ -278,31 +278,6 @@ PART_TERM = {"generation": "Generation", "commit and proving": "Commit and provi
 def part_term(w):
     """A part's name, linked to its glossary entry where it has one."""
     return term(w, PART_TERM[w]) if w in PART_TERM else e(w)
-
-
-def split_html(row, key, bar=True, bare=False, to=None):
-    """CO-7: under a multiple (`key`: the steady one or the whole sessions'), its two parts, each
-    a figure with its scope and n (`bare`: the figure alone, where the whole above them says both
-    once), after a bar of their shares, where the system generates in a phase of its own; nothing
-    otherwise. The part that is not generation first, in paper."""
-    parts = parts_of(row, key)
-    if not parts:
-        return ""
-    (w1, f1), (w2, f2) = parts
-    share = 100 * f1["value"] / (f1["value"] + f2["value"])
-    svg = ""
-    if bar:
-        # each share at its own length; one too short to see is marked by a line where it ends
-        nib = f'<line class="nib" x1="{share:.2f}" x2="{share:.2f}" y2="4"/>' if share < 1.5 else ""
-        svg = (f'<svg class="sbar" viewBox="0 0 100 4" preserveAspectRatio="none" aria-hidden="true">'
-               f'<rect class="bp" width="{share:.2f}" height="4"/>'
-               f'<rect class="bg" x="{share:.2f}" width="{100 - share:.2f}" height="4"/>{nib}</svg>')  # fmt: skip
-    n = counted(row)
-    line, note = (BARE, whole_note(row, key)) if bare else (None, None)
-    out = "".join(f'<span class="part {c}"><span class="pl">{part_term(w)}</span>'
-                  f"{to_section(fig_html(f, n, sub=line, note=note), to)}</span>"
-                  for c, w, f in (("pp", w1, f1), ("pg", w2, f2)))  # fmt: skip
-    return f'<span class="split">{svg}{out}</span>'
 
 
 def pct(v):

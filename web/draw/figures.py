@@ -27,7 +27,6 @@ from .overview import (
     multiple_html,
     name_of,
     serving_words,
-    split_html,
     whole_line,
     whole_note,
 )
@@ -444,13 +443,11 @@ def rows_words(found):
 
 
 def row_figure(row):
-    """A row's multiple with, under it, what it counted and n, once; its two parts under that,
-    bare (the whole above says both). The line under the whole breaks before its dot, so "n"
-    keeps its dot."""
-    whole = multiple_html(row, parts=False).replace(
+    """A row's multiple with, under it, what it counted and n, once (its two parts are the system
+    page's, CO-7). The line under the whole breaks before its dot, so "n" keeps its dot."""
+    return multiple_html(row).replace(
         f'<span class="sep">{SEP}</span>', '<span class="sep"> ·\u00a0</span>'
     )
-    return whole + split_html(row, lead_figure(row)[2], bare=True)
 
 
 @drawn(MEASURED, "rows")

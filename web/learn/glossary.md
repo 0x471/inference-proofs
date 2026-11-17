@@ -40,7 +40,7 @@ The record of what one system's accepted proofs establish in one configuration, 
 
 ### Commit and proving
 
-The part of a [[whole session]]'s GPU time that is not [[generation]]: the commit call, which commits to the weights, and the proving of every reply. Under Cost vs serving it is printed beside generation, each over the same serving time.
+The part of a [[whole session]]'s GPU time that is not [[generation]]: the commit call, which commits to the weights, and the proving of every reply. On a system's page, under Cost, it is printed beside generation, each over the same serving time as Cost vs serving.
 
 ### Commitment
 
@@ -116,7 +116,7 @@ A protocol that shows committed values lie close to a Reed-Solomon codeword, the
 
 ### Generation
 
-The phase of a [[session]] in which the system's own model computes the replies, where the system does this apart from proving them. Its GPU time counts in the proved side of Cost vs serving, and the figure prints it as a part of its own.
+The phase of a [[session]] in which the system's own model computes the replies, where the system does this apart from proving them. Its GPU time counts in the proved side of Cost vs serving, and a system's page prints it under Cost as a part of its own.
 
 ### Glyph
 

@@ -806,9 +806,10 @@ FIGURE_RULE = {
          "after the first, each group's time per reply within 5\u202f% of their median. Otherwise "
          "it has no multiple and prints its session GPU-seconds per reply over b, labelled "
          "\u201cwhole sessions of N replies\u201d."),
-        ("parts", "Where a system generates its replies in a phase of its own, two parts print "
-         "beside the figure, each over b: generation, and the rest (proving under m, commit and "
-         "proving under whole sessions). The order reads the figure, never a part."),
+        ("parts", "Where a system generates its replies in a phase of its own, the figure "
+         "splits in two, each over b: generation, and the rest (proving under m, commit and "
+         "proving under whole sessions). Not every system times them apart, so they print only "
+         "under Cost on its own page. The order reads the figure, never a part."),
     ),
     # CO-8 (amended 2026-11-16): the two rates under the multiple; {reply_tokens} the level's
     "rate": (
@@ -1179,6 +1180,8 @@ PART_WORD = {"proving": "proving", "generation": "generation",
 # before a part's name where it stands beside its whole in a sentence or a table's head (a card's
 # alt text, the sessions table); under its whole, a part's name stands alone
 OF_WHICH = "of which"
+# the Cost block's head over the multiple's two parts (CO-7, amended 2026-11-17: printed only there)
+PARTS_HEAD = "Cost vs serving, in two parts"
 # the GPU time per reply after the first release group, m (CO-3): its name beside the serving and
 # session GPU times (Cost), its full name (that line's title, the sessions column's), its column
 # (beside Session; a session with none prints why under its "none")

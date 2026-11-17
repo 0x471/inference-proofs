@@ -26,6 +26,7 @@ from .chrome import (
     lead_figure,
     link,
     page,
+    parts_of,
     pnav,
     rate_pair,
     rung_of,
@@ -52,7 +53,6 @@ from .overview import (
     rate_html,
     request_words,
     serving_words,
-    split_html,
     standing_html,
     states,
     steady_line,
@@ -132,6 +132,7 @@ from .words import (
     P_ABOVE,
     P_FLOOR,
     PART_WORD,
+    PARTS_HEAD,
     PETAL_CAUSE_DRAW,
     PETAL_CAUSE_RULE,
     PETAL_CHECKS,
@@ -1379,11 +1380,11 @@ def tf_title(head, tf):
 
 
 def band_figure(row):
-    """The band's one figure (`multiple_html` without its parts); of the whole sessions, its title
+    """The band's one figure (`multiple_html`); of the whole sessions, its title
     names them and n, as the line under it does (law 3)."""
     _, f, key = lead_figure(row)
     if key != "session_multiple":
-        return multiple_html(row, parts=False)
+        return multiple_html(row)
     count = f["n"] if f["n"] is not None else counted(row)
     # the line under it, "whole sessions" linked to their definition (D1)
     line = sub_line(whole_line(row, count)).replace(
@@ -1587,6 +1588,7 @@ def checks_block(row):
 
 # what each figure of the Cost block means, in a few words under it
 COST_MEAN = {"rate": "served over proved is the cost vs serving",
+             "parts": "each over a served reply's GPU time, as the whole is",
              "check-time": "verifier wall time", "proof-size": "every proof file, as written"}  # fmt: skip
 
 
@@ -1617,9 +1619,28 @@ def rates_tile(row):
     return tile
 
 
+def parts_tile(row):
+    """CO-7 (amended 2026-11-17): the band's multiple in its two parts, commit and proving then
+    generation, each with its unit, aligned on the decimal point; printed only here, on the system
+    page, and only for a row that times them apart. None otherwise."""
+    _, _, key = lead_figure(row)
+    parts = parts_of(row, key)
+    if not parts:
+        return None
+    n = counted(row)
+    shown = [fig_html(f, n, sub=BARE, note=whole_note(row, key)) for _, f in parts]
+    nums = [re.search(r'<span class="n">([^<]*)</span>', h)[1].partition(".") for h in shown]
+    whole, frac = max(len(a) for a, _, _ in nums), max(len(d + b) for _, d, b in nums)
+    figs = [
+        (part_term(w), on_point(h, whole, frac)) for (w, _), h in zip(parts, shown, strict=True)
+    ]
+    return f'<span class="rts">{lines_html(figs)}</span>' + mean(COST_MEAN["parts"])
+
+
 def cost_block(row):
-    """The Cost block (CO-1 to CO-8), led by its figures: the multiple and its two parts, the two
-    rates it divides, verify time, proof size and, small, the cost in USD; what they share (scope,
+    """The Cost block (CO-1 to CO-8), led by its figures: the two rates the band's multiple
+    divides, its two parts where the row times them apart (CO-7, printed nowhere else), verify
+    time, proof size and, small, the cost in USD; what they share (scope,
     n, GPUs, evidence) once over them. How each side ran, every GPU time and the serving ladder
     one click down (`cost_html`)."""
     figs, n = row["figures"], counted(row)
@@ -1637,6 +1658,8 @@ def cost_block(row):
     rates = rates_tile(row)
     if rates:
         cells.append((defined(FIGURE_HEAD["rate"], "rate"), rates, RATE_ANCHOR))
+    if split := parts_tile(row):
+        cells.append((defined(PARTS_HEAD, "multiple"), split, "parts"))
     for k, f in (("check-time", figs["verify_seconds_per_reply"]),
                  ("proof-size", figs["proof_bytes_per_reply"])):  # fmt: skip
         sub = cost_sub(f, n, FIGURE_HEAD[k], own=True)
@@ -1824,8 +1847,7 @@ def system_page(row):
     size = next((i + 1 for i, k in enumerate(NAME_SIZES) if len(name) <= k), len(NAME_SIZES) + 1)
     # the figure's plain name, the figure, and under it, once, what was counted and n (CO-5)
     label, lead = FIGURE_HEAD["multiple"], band_figure(row)
-    _, _, lkey = lead_figure(row)
-    lead += split_html(row, lkey, bar=False, bare=True) + rate_html(row, f"#{RATE_ANCHOR}")
+    lead += rate_html(row, f"#{RATE_ANCHOR}")
     unranked = "" if row["position"] is not None else " unr"
     band_ = (
         f'<section class="mast mast-sys sysb" aria-labelledby="h-name"><div class="mast-in">'

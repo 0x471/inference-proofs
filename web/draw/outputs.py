@@ -22,9 +22,7 @@ from .chrome import (
     counted,
     credit_words,
     font_faces,
-    lead_figure,
     only_run,
-    parts_of,
     rung_of,
     standing,
 )
@@ -346,11 +344,6 @@ def system_card(pid):
     lines, size = card_name(name_of(row))
     label, lead = lead_fig(row, bare=True)
     n = counted(row)
-    _, f, key = lead_figure(row)
-    if parts := parts_of(row, key):  # CO-7: the two parts beside the figure, by their names alone
-        pts = "".join(f'<span class="pt"><span class="pw">{e(w)}</span>'
-                      f'{fig_html(p, n, sub=BARE)}</span>' for w, p in parts)  # fmt: skip
-        lead = fig_html(f, n, sub=BARE) + f'<span class="pts">{pts}</span>'
     head, _, why = standing(row).partition(": ")
     if row["position"] is not None:  # OR-4: no count where nothing else ran on the model
         why = ONLY_RUN if only_run(row) else f"position {row['position']} of {rung['systems_run']}"
@@ -370,12 +363,8 @@ def system_card(pid):
 .fig{{display:flex;align-items:baseline;white-space:nowrap}}
 .lead .fig{{justify-content:flex-end}}
 .n{{letter-spacing:-.04em}}
-.lead .n{{font-size:{68 if parts else 84}px;line-height:.84;font-weight:{weight}}}
-.lead .u{{font-size:{36 if parts else 44}px;font-weight:{weight}}}
-.pts{{display:block;margin-top:10px}}
-.pt{{display:flex;justify-content:flex-end;align-items:baseline;gap:8px;font-size:13px;line-height:18px}}
-.lead .pt .n{{font-size:15px;line-height:18px;font-weight:600;letter-spacing:0}}
-.lead .pt .u{{font-size:13px;font-weight:400}}
+.lead .n{{font-size:84px;line-height:.84;font-weight:{weight}}}
+.lead .u{{font-size:44px;font-weight:{weight}}}
 .sub{{display:block;margin-top:10px;font-size:14px;line-height:18px}}
 .na{{font-size:28px;line-height:1}}
 .low{{position:absolute;left:64px;top:344px;width:690px}}

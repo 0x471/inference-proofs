@@ -238,19 +238,18 @@ def test_scale_positions_are_the_boards(board_site: Any) -> None:
     assert re.search(r'id="scale-multiple-flashprove">.*?class="mk" x="63.92%"', text, re.S)
 
 
-def test_session_parts_print_beside_the_whole_sessions_figure(board_site: Any) -> None:
-    """RFC-0018 CO-7: a row with no steady state prints its session figure's two parts. In the
-    example board SASH's session is 604.9 GPU-s per reply, of which 100.0 generation and 504.9
-    commit and proving, so the ladder's share bar gives commit and proving 100 * 504.9 / 604.9 =
-    83.47 % of its length; both parts' figures are on the ladder (over the two rates there,
-    amended 2026-11-16), the system page and the card."""
+def test_session_parts_print_on_the_system_page_only(board_site: Any) -> None:
+    """RFC-0018 CO-7 (amended 2026-11-17): a row with no steady state has its session figure's two
+    parts, and they print only under Cost on its system page (not every system times them apart,
+    so no surface carries them). In the example board SASH's session is 604.9 GPU-s per reply, of
+    which 100.0 generation and 504.9 commit and proving: both parts' figures are on its page, and
+    neither is on the ladder, the Scale page or the card."""
     out = board_site.out
     at = "/rungs/1/rows/0/session_"
-    for page in ("index.html", "sash.html", "og/sash.html"):
+    for page in ("index.html", "scale.html", "sash.html", "og/sash.html"):
         text = html.unescape((out / page).read_text())
         for part in ("generation_multiple", "commit_and_proving_multiple"):
-            assert f"{at}{part}" in text, (page, part)
-    assert '<rect class="bp" width="83.47"' in (out / "index.html").read_text()
+            assert (f"{at}{part}" in text) == (page == "sash.html"), (page, part)
 
 
 def printed(text: str) -> tuple[float, float]:
@@ -263,8 +262,7 @@ def test_printed_rates_divide_to_the_printed_multiple(board_site: Any) -> None:
     """CO-8 (amended 2026-11-17): the proved rate under a row's multiple and the served rate in
     its model's head, as printed, divide to the multiple printed above. By hand on the example
     board: 849.92 / 10.274 = 82.72, printed "10.27 proved" under "82.72×" and "849.9" in the
-    head. A row with no rate pair (SASH there) prints no line, and keeps its parts
-    (`test_session_parts_print_beside_the_whole_sessions_figure`)."""
+    head. A row with no rate pair (SASH there) prints no line."""
     out = board_site.out
     index = (out / "index.html").read_text()
     for pid, body in re.findall(r'<tr class="row" id="row-([a-z0-9-]+)">(.*?)</tr>', index, re.S):

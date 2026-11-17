@@ -19,7 +19,6 @@ from .words import (
     FIGURE_NAME,
     HOW_MULTIPLE,
     HOW_ON,
-    OF_WHICH,
     PART_WORD,
     PETAL_NAME,
     SERVING_GPU,
@@ -444,22 +443,18 @@ ONLY_RUN = "only system run on this model"
 
 def share_words(row):
     """A system page in a sentence (its description and share text, depth 0): the system, its
-    model and standing, its one figure and, where it has them, its two parts (CO-7), as the card
-    prints them."""
+    model and standing and its one figure, as the card prints them (its two parts are the system
+    page's Cost block's, CO-7, amended 2026-11-17)."""
     name = S.V["systems"][row["system"]]["name"]
     said = standing(row)  # a state word is lower case in prose
     return f"{name} on {rung_of(row)['model']}, {said[0].lower() + said[1:]}. {lead_words(row)}."
 
 
 def lead_words(row):
-    """The row's one figure in words, with its two parts where it has them (CO-7: "of which"
-    once, before both): "Cost vs serving: 1,317×, of which commit and proving 118.2× and
-    generation 1,199×"."""
-    _, f, key = lead_figure(row)
-    lead = f"{FIGURE_HEAD['multiple']}: {fig_words(f)}"
-    if parts := parts_of(row, key):
-        lead += f", {OF_WHICH} " + " and ".join(f"{w} {fig_words(p)}" for w, p in parts)
-    return lead
+    """The row's one figure in words: "Cost vs serving: 1,317×". Its two parts are not said here
+    (CO-7, amended 2026-11-17: not every system times them apart, so they are no surface figure)."""
+    _, f, _ = lead_figure(row)
+    return f"{FIGURE_HEAD['multiple']}: {fig_words(f)}"
 
 
 def not_passed(row):
