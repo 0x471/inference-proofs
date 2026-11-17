@@ -455,8 +455,9 @@ PETAL_MORE = {
          "verifier program we run is proved or stated to implement what the bound is "
          "about. A batch size not recorded is not covered."),
         ("exponent", "In 2^-t, the t: a larger exponent is a smaller chance. An error term "
-         "q/2^t also has exponent t. Exponents are read as the publisher states them, and no "
-         "bits figure is computed."),
+         "q/2^t also has exponent t. A bound that is a sum of terms needs every term's exponent, so "
+         "the whole stays within a few times the smallest chance allowed. Exponents are read as "
+         "the publisher states them, and no bits figure is computed."),
     ),
     "faithful_model": (
         ("halfway", "The average of two copies' mean scores."),
@@ -488,7 +489,10 @@ PETAL_MORE = {
     ),
     # Q12: printed under the steps, as the question is printed over them
     "no_trusted_party": (
-        ("", "This petal does not grade which model a commitment names."),
+        ("", "This petal does not grade which model a commitment names, nor how strong "
+         "soundness is (a theorem or a conjecture: Integrity grades that). Where a publisher's "
+         "theorem asks that the public files were fixed before the hash function was drawn, "
+         "Integrity counts that condition."),
     ),
 }  # fmt: skip
 # what each petal leaves to another place, under its steps on the checks page
