@@ -377,3 +377,33 @@ def test_cost_block_figures_share_the_bands_scope(board_site: Any) -> None:
     assert {f"{at}session_multiple", f"{at}session_reply_tokens_per_gpu_second",
             f"{at}session_usd_per_reply"} <= pointers  # fmt: skip
     assert not {f"{at}multiple", f"{at}steady_usd_per_reply"} & pointers
+
+
+def test_fidelity_row_sentence_prints_its_average_and_the_next_bar() -> None:
+    """GL-11, SI-3 (amended 2026-11-17, Q45): where the first item a Fidelity petal lacks is an
+    average, its row's sentence prints the row's own average and that item's threshold, both the
+    board's, and its second line prints the copies' averages under "Copies", not the row's own
+    again. On the stored release by hand: FlashProve 29.7 against 48.0 (8-bit 65.7, 4-bit 30.3);
+    SASH 31.0 against 55.7 (8-bit 106.1, 4-bit 5.3)."""
+    board = json.loads((WEB.parent / "releases/v1.0/board.json").read_text())
+    seen = 0
+    for row in rows(board):
+        p = next(p for p in row["glyph"] if p["id"] == "faithful_model")
+        items = [i for g in p.get("to_met") or () for i in g["items"]]
+        if not items or items[0]["need"] != "above":
+            continue
+        page = html.unescape((WEB / f"{row['system']}.html").read_text())
+        tr = re.search(r'id="petal-faithful_model">(.*?)</tr>', page, re.S)
+        assert tr, row["system"]
+        said = re.sub(r"<[^>]+>", "", re.search(r'<span class="pgap">(.*?)</span>', tr[1])[1])
+        own, bar = p["fidelity"]["display"], items[0]["value"]
+        assert said.startswith(f"{own:,.1f} matched tokens on average;"), (row["system"], said)
+        assert said.endswith(f"needs above {bar:,.1f}."), (row["system"], said)
+        mini = re.sub(r"<[^>]+>", " ", re.search(r'<span class="pmini">(.*?)</span></span>',
+                                                 tr[1])[1])  # fmt: skip
+        c = p["fidelity"]["controls"]
+        assert f"Copies 8-bit {c['q8_0']['display']:,.1f}, 4-bit {c['q4_k_m']['display']:,.1f}" \
+            in " ".join(mini.split()), (row["system"], mini)  # fmt: skip
+        assert f"{own:,.1f}" not in mini, (row["system"], mini)
+        seen += 1
+    assert seen == 2
