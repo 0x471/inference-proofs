@@ -1,15 +1,11 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "rm -rf public && mkdir -p public/og public/fonts && cp *.html words.css words.js search.json public/ && cp og/*.png og/*.svg public/og/ && cp fonts/*.woff2 public/fonts/",
+  "buildCommand": "rm -rf public && mkdir -p public/og public/fonts && cp *.html search.json robots.txt sitemap.xml public/ && cp og/*.png og/*.svg public/og/ && cp fonts/*.woff2 public/fonts/ && npm ci --include=dev --ignore-scripts && npm run assets",
   "cleanUrls": true,
   "framework": null,
   "headers": [
     {
       "headers": [
-        {
-          "key": "X-Robots-Tag",
-          "value": "noindex"
-        },
         {
           "key": "X-Content-Type-Options",
           "value": "nosniff"
@@ -20,7 +16,7 @@
         },
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'sha256-BvfZjEgH5q5tQ8fzRtC/NtSi5j+O9wxUdXmwLgOx10w=' https://cdn.vercel-insights.com; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self' https://*.vercel-insights.com; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
+          "value": "default-src 'self'; script-src 'self' 'sha256-BvfZjEgH5q5tQ8fzRtC/NtSi5j+O9wxUdXmwLgOx10w=' 'sha256-0mDbqDWADm8AidXdSnqA8qBDbAInTXt/pj0ZCfT3oRs=' 'sha256-3za/eENtDSiwlcAzoz3S8lUEskURQbL/bjldm7WEGiA=' 'sha256-4vORuV4DOhod5JVKF5FI2tI4f4CraC80OHwZ7eHRRW4=' 'sha256-5PJiTWn6lAxv5jx6/tloN3VmIn25kp/iMGJZusk5Nfc=' 'sha256-A+tetLJ0wdP0upQ56mfaYV0q+Ej+BaFcMlT1/Og6jn0=' 'sha256-DvYVSUFnK6witTDVxZ1x134X2dcb6iORrNQonEOukvQ=' 'sha256-NyESFxz8cSL3yhUFFTgDoemRuTrqj4MsUoPmxoPABIs=' 'sha256-Ov8dv7N3qHItogd6FSJt7vomq0MDDbJdVh8z61g5EyM=' 'sha256-mQZOQtuyEtXN1R1twPwR8SUkf3leaid8AGU1qqaRDNk=' 'sha256-oR5gEorqETO4PnMfs/59sItHemAUZFK3fHUtd9Sibco=' 'sha256-pWI7Nj7tGktkJ40J+PiPk8El647KDigZWEQV8FTr5po=' 'sha256-teVpEKyzBkAE7m5DEu17zHTwXoP7Z9WaKkpkasRjjpg=' 'sha256-y2SrfivrQVY/XOarBZdSLHW6BwWxKhhMJUGanB5juro=' 'sha256-zrcmt6zfoI4Phd5vFXIpJZ5k/kc4EHvfLcQFJlF/5yc=' https://cdn.vercel-insights.com; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self' https://*.vercel-insights.com; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
         },
         {
           "key": "X-Frame-Options",

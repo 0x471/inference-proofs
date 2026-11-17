@@ -68,12 +68,11 @@ def load_faces():
 
 def font_faces(base, site=False):
     """The @font-face rules, with file URLs under base ("/fonts/" on the site, "../fonts/" for cards).
-    On the site the figures' face (Martian Mono) shows a system monospace after 100 ms rather than
-    hiding text while it loads; the display face and the cards wait for their own font."""
+    Site text stays visible while fonts load; preview cards wait for their own font."""
     out = []
     for f in S.FACES:
         stretch = f"font-stretch:{f['stretch']};" if f.get("stretch") else ""
-        display = "fallback" if site and f["fam"] == "Martian Mono" else "block"
+        display = "swap" if site else "block"
         out.append(
             f'@font-face{{font-family:"{f["fam"]}";font-style:normal;font-weight:{f["wt"]};{stretch}'
             f'font-display:{display};src:url({base}{f["file"]}) format("woff2");unicode-range:{f["range"]}}}'
@@ -516,6 +515,23 @@ def share_meta(title, desc, path, card):
         ("name", "twitter:image", img),
         ("name", "twitter:image:alt", alt),
     ]
-    return f'<link rel="canonical" href="{e(url)}">' + "".join(
-        f'<meta {k}="{v}" content="{e(c)}">' for k, v, c in tags
-    )
+    data = {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        "@id": url,
+        "url": url,
+        "name": full,
+        "description": desc,
+        "inLanguage": "en",
+        "isPartOf": {
+            "@type": "WebSite",
+            "@id": f"{SITE_URL}/#website",
+            "url": f"{SITE_URL}/",
+            "name": "Inference proofs",
+        },
+    }
+    structured = json.dumps(data, ensure_ascii=False).replace("<", "\\u003c")
+    return (
+        f'<script type="application/ld+json">{structured}</script>'
+        f'<link rel="canonical" href="{e(url)}">'
+    ) + "".join(f'<meta {k}="{v}" content="{e(c)}">' for k, v, c in tags)

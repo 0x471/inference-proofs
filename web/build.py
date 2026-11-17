@@ -152,6 +152,22 @@ def render(view, out, *, write_json, write_text):
                            f"writes {sorted(q.name for q in pages)}")  # fmt: skip
     for path, text in pages.items():
         write_text(path, text)
-    write_json(S.HERE / "vercel.json", draw.outputs.vercel_json())
+    urls = sorted(
+        f"{draw.chrome.SITE_URL}/{p.stem if p.stem != 'index' else ''}"
+        for p in pages
+        if p.stem != "404"
+    )
+    write_text(
+        S.HERE / "sitemap.xml",
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        + "".join(f"<url><loc>{draw.words.e(url)}</loc></url>\n" for url in urls)
+        + "</urlset>\n",
+    )
+    write_text(
+        S.HERE / "robots.txt",
+        f"User-agent: *\nAllow: /\n\nSitemap: {draw.chrome.SITE_URL}/sitemap.xml\n",
+    )
+    write_json(S.HERE / "vercel.json", draw.outputs.vercel_json(pages.values()))
     draw.outputs.write_readme()
     return sorted(pages)

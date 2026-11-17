@@ -59,3 +59,7 @@ coverage.json
 .coverage
 # A serving ladder run's reply token ids stay with the run in the bucket (iproofs.replies)
 results/**/replies.jsonl
+
+# Site build dependencies and deployment output
+web/node_modules/
+web/public/
