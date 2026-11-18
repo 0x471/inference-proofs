@@ -1,0 +1,94 @@
+{
+  "$id": "https://inference-proofs.org/schema/refusal/1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "A refusal by a system's own code of a Level 1 request (RFC-0018 SE-5)",
+  "description": "results/<release>/<system>/refusals/slot-<k>.json, written by a reviewer: the run, the refusal line from its last lines and the upstream source line that raises it. `upstream.commit` is the pin the refusal was made at; RUN reads a record only at the commit the row's sessions run (SE-5, amended 2026-11-15), so a record of another pin stays a record and decides nothing there.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "rule",
+    "run_id",
+    "slot",
+    "step",
+    "exit_code",
+    "upstream",
+    "refusal",
+    "raised_at",
+    "why_a_refusal",
+    "recorded"
+  ],
+  "properties": {
+    "schema": {
+      "const": "refusal/1"
+    },
+    "rule": {
+      "const": "RFC-0018 SE-5"
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "slot": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "step": {
+      "enum": [
+        "setup",
+        "commit",
+        "prove"
+      ]
+    },
+    "exit_code": {
+      "type": "integer"
+    },
+    "upstream": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repo",
+        "commit"
+      ],
+      "properties": {
+        "repo": {
+          "type": "string",
+          "minLength": 1
+        },
+        "commit": {
+          "$ref": "../quantity/1.schema.json#/$defs/commit"
+        }
+      }
+    },
+    "refusal": {
+      "$comment": "the refusal line, quoted from the run's last lines",
+      "type": "string",
+      "minLength": 1
+    },
+    "raised_at": {
+      "$comment": "the upstream source line that raises it, linked at upstream.commit",
+      "type": "string",
+      "format": "uri",
+      "pattern": "^https://"
+    },
+    "refusal_text_from": {
+      "$comment": "where the refusal's words are written, when not at raised_at",
+      "type": "string",
+      "format": "uri",
+      "pattern": "^https://"
+    },
+    "why_a_refusal": {
+      "type": "string",
+      "minLength": 1
+    },
+    "recorded": {
+      "type": "string",
+      "format": "date"
+    },
+    "note": {
+      "$comment": "what a reader of the record needs and the fields do not say, such as a run whose records were not imported",
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

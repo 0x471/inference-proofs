@@ -271,3 +271,16 @@ def test_learn_styles_touch_no_other_page() -> None:
                 continue
             classes = set(re.findall(r"\.([a-zA-Z][\w-]*)", selector))
             assert classes - used_elsewhere, f"{selector!r} restyles classes of other pages"
+
+
+def test_the_drawn_fraction_makes_the_multiple(board_site: Any) -> None:
+    """How a check works draws cost vs serving as a fraction: the GPU time over the bar and the
+    one under it are the two figures whose ratio is the multiple printed beside them, the
+    proved reply's at the multiple's own scope, never another scope's."""
+    fig = board_site.build.draw.figures
+    row = fig.fraction_row()
+    assert row is not None
+    over, under, multiple, _key = fig.fraction_parts(row)
+    assert over["unit"] == under["unit"] == "gpu_s/request"
+    assert over["scope"] == multiple["scope"]
+    assert over["value"] / under["value"] == pytest.approx(multiple["value"], rel=1e-9)

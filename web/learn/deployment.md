@@ -10,13 +10,22 @@ A cloud customer and its operator can trust the GPU's maker, and a company and i
 
 [TEE.fail](https://tee.fail/)'s authors forged [[attestation|attestations]] of Intel's CPU enclaves (SGX, TDX) with a memory-bus interposer costing "under $1000" to build. Intel and AMD leave interposer attacks outside their threat models.
 
+The same authors write that "[the fact that Nvidia's attestation reports are not bound to the identity of a specific CVM means we can "borrow" Nvidia attestations from devices that aren't ours](https://tee.fail/)" (a CVM is a confidential virtual machine): a GPU attestation does not show which machine ran the workload.
+
 :::quote https://www.aisafety.sg/research/what-proving-llm-inference-actually-costs-research-note SASH, Towards Proving Frontier-Scale LLM Inference, September 2026
 TEEs and activation checks are cheap, and for many settings they are the right tool; TEEs are a sensible starting point for a first agreement. What they cost is trust: in a hardware vendor, in a third party, or in a tolerance. A proof moves that trust into cryptographic assumptions and into code that both sides can read.
 :::
 
+## What a relying party supplies
+
+A proof is checked against inputs the verifier does not check. For each system on the ladder, the claim card's words on each, linked to the publisher's line at the row's commit:
+
+:::measured supplies
+:::
+
 ## In an agreement
 
-A hypothetical rule: declared data centres in States A and B serve only models whose [[commitment|commitments]] are in a shared register. An inspectorate holds the register and checks State A's [[operator]], which keeps its weights.
+Consider a hypothetical bilateral AI agreement between the United States (US) and China: declared data centres in both countries serve only models whose [[commitment|commitments]] are in a shared register. A jointly agreed inspectorate holds the register and checks an [[operator]] in either country, which keeps its weights. This is an illustrative scenario, not a description of an existing deal.
 
 Given accepted proofs and a trusted traffic record, the inspectorate could sign one finding: each sampled reply is what the registered quantized copy gives for its recorded prompt.
 
@@ -29,11 +38,11 @@ Proved against one commitment, evaluation replies and served replies are what th
 :::
 
 :::stage proposed A sample stands for the traffic
-A certifier at the data centre's boundary, in State A, records a fingerprint of every prompt and reply, and must be trusted. [SASH's publisher](https://www.aisafety.sg/research/what-proving-llm-inference-actually-costs-research-note) writes: "Nothing yet ties a proof to what the certifier recorded."
+A certifier at the inspected data centre's boundary, in either country, records a fingerprint of every prompt and reply, and must be trusted. [SASH's publisher](https://www.aisafety.sg/research/what-proving-llm-inference-actually-costs-research-note) writes: "Nothing yet ties a proof to what the certifier recorded."
 
 The inspectorate later draws replies for the operator to prove. SASH's publisher adds that "the draw must be unpredictable to the provider, and the provider must commit to its answers before the draw." By our arithmetic, when both hold, 300 draws catch an unregistered model serving 1 reply in 100 about 95 % of the time, and 1 in 10,000 about 3 %.
 
-Any reply may be drawn, so the [[quantization|quantized copy]] must generate every reply. Where the ladder prints a generation [part](/checks#multiple), that part is paid on every reply, drawn or not. Of the "commit and proving" part, only proving shrinks with the sample.
+Any reply may be drawn, so the [[quantization|quantized copy]] must generate every reply. Where a system's page prints a generation [part](/checks#multiple), that part is paid on every reply, drawn or not. Of the "commit and proving" part, only proving shrinks with the sample.
 :::
 
 :::stage outside The data centre did nothing else

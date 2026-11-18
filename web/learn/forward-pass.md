@@ -43,10 +43,10 @@ Generating a 512-token reply takes 512 passes in a row. Proving it can take one.
 
 ## Zero knowledge
 
-An opening does not hide the weights: it reveals a linear equation over them. The [Weights hidden](/checks#weights_hidden) petal reads what publishers state and prove.
+An opening does not hide the weights: it reveals a linear equation over them. The [Confidentiality](/checks#weights_hidden) petal reads what publishers state and prove.
 
 ## What an accepted proof rests on
 
 If a proof is accepted, the statement holds, the draws hit a point where two different polynomials agree, an assumption broke, or the verifier has a bug.
 
-[The Ethereum Foundation writes](https://blog.ethereum.org/2025/12/18/zkevm-security-foundations) that many STARK-based zkEVMs rely on [[conjectured|conjectures]]: "Each conjecture that falls takes bits of security with it: what was advertised as 100 bits might actually be 80." No test tells 60 bits from 128 short of a 2^60 search, so the [Unforgeable](/checks#unforgeable) petal reads [the bound each publisher states](/statement#the-error-bound).
+[The Ethereum Foundation writes](https://blog.ethereum.org/2025/12/18/zkevm-security-foundations) that many STARK-based zkEVMs rely on [[conjectured|conjectures]]: "Each conjecture that falls takes bits of security with it: what was advertised as 100 bits might actually be 80." No test tells 60 bits from 128 short of a 2^60 search, so the [Integrity](/checks#unforgeable) petal reads [the bound each publisher states](/statement#the-error-bound).

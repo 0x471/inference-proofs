@@ -1,0 +1,11 @@
+{
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  },
+  "name": "inference-proofs-site",
+  "private": true,
+  "scripts": {
+    "assets": "node assets.mjs",
+    "styles": "node styles.mjs"
+  }
+}

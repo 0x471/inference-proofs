@@ -4,7 +4,7 @@ Instructions for coding agents (and humans) working in this repository. Read thi
 
 ## What this project is
 
-An open benchmark for provable inference. Level 1 ([RFC-0018](rfcs/0018-level-1-ladder.md), `levels/L1.yaml`) is a ladder of open-weights models. On each rung, every system we can run unpatched gets one fixed request, six checks we run ourselves and one figure: the cost of a proved reply as a multiple of serving it. Systems that pass the six checks are ranked by that figure inside their rung, never across rungs. It runs provers; it does not build or certify them.
+An open benchmark for provable inference. Level 1 ([RFC-0018](rfcs/0018-level-1-ladder.md), `levels/L1.yaml`) is a ladder of open-weights models. On each rung, every system we can run at a public pin, with no source change of ours, gets one fixed request (SASH's pin is a pull request this project's owner wrote, RFC-0018 SI-3), six checks we run ourselves and one figure: the cost of a proved reply as a multiple of serving it. Systems that pass the six checks are ranked by that figure inside their rung, never across rungs. It runs provers; it does not build or certify them.
 
 ## Sources of truth
 
@@ -20,7 +20,7 @@ An open benchmark for provable inference. Level 1 ([RFC-0018](rfcs/0018-level-1-
 6. **The commitment the verifier checks comes from the harness record**, never from files sent with a proof.
 7. **No secrets, hosts or personal data.** No API keys, SSH aliases, IP addresses, account names or machine identifiers beyond the hardware record RFC-0006 asks for.
 8. **No weights in the repository.** Models are referenced by public source and content hash.
-9. **Claims follow the systems' own documentation.** On a claim card, copy what the system states at the pinned commit, link it, and write "not stated" where it is silent. Do not infer security properties. A quote is printed as the publisher's words; it never sets a check state.
+9. **Claims follow the systems' own documentation.** On a claim card, copy what the system states at the pinned commit, link it, and write "not stated" where it is silent. Do not infer security properties. A value that rests on our reading of the publisher's words, not on a sentence that says it, is marked "read as" with the quotes it rests on and is graded Mostly met at most, for every system alike (RFC-0018 GL-10); the name of a construction is never read as a claim. A quote is printed as the publisher's words; it never sets a check state.
 10. **Neutral language.** Rank only by RFC-0018's order rule, inside one rung; nothing is ranked across rungs. No superlatives ("best", "fastest", "secure") and no self-description ("neutral", "independent") on the site. Describe what was measured. Say "proved", "bound", "attested" or "sampled" precisely; never "provably safe".
 11. **Pin everything and check pins against content**: full commit hashes, container digests, toolchain versions, weights sha256 and model digest at fetch. The manifest records the adapter commit and image digest.
 

@@ -15,6 +15,11 @@ tracks:
         summary: >-
           A proof shows a reply is the committed model's greedy reply to its prompt, not whose
           model it is or that the reply was served.
+      - slug: how-a-check-works
+        title: How a check works
+        summary: >-
+          One request for every system, a commitment, a proof and a verifier without the weights,
+          six checks drawn one by one, and the fraction behind the headline figure.
       - slug: deployment
         title: Deployments and treaties
         summary: >-
@@ -32,8 +37,8 @@ tracks:
       - slug: statement
         title: The statement
         summary: >-
-          The systems on the ladder prove a committed, quantized copy's greedy reply. They differ
-          in what one proof covers and what their error bound covers.
+          The ladder's verifiers check a committed, quantized copy's greedy reply. No row has a
+          proved error bound that covers what it runs.
       - slug: forward-pass
         title: Proving a forward pass
         summary: >-

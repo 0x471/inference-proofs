@@ -195,6 +195,15 @@ A control is `not_applicable`, with a recorded reason, when its precondition fai
 
 Per row the site and release index show: controls run, passed, rejected, accepted, `no_verdict`, `invalid_call`, void, not applicable, error ([RFC-0009](0009-results-and-publication.md)). Every `accepted` outcome where rejection was expected is printed in the row in full (control id, mutation, raw last line). Every `no_verdict` is listed.
 
+### Verifier trials (amended 2026-11-15)
+
+A verifier trial is a set of verify calls on stored proofs that neither a counted session nor its control suite makes: a publisher's second verifier on our proofs, the C3 null twin (a proof verified against the commitment of another session of the same weights), or C1 at every reply position. Its record is `results/<release>/<system>/_trials/<trial id>/trial.json` (`verifier-trial/1`), with the calls' own outputs under `raw/`.
+
+- TR-1. A trial gates nothing: no check, petal, position or order reads it. A page may print its counts and its time range, computed by `iproofs.trials.summary`, with the program's name, the host, n and "gates nothing".
+- TR-2. Every commitment it uses comes from a harness record (INV-CTRL-6). A source marked `in_results` names a run directory in `results/`; the validator (G4, TRIAL-1) refuses a record whose commitment ID is not that run's manifest's, or whose archive digest is not the one in that run's `digests.txt`.
+- TR-3. The program runs unpatched, from the upstream commit the system pins, and the record says what it lacks (`missing`): a job script outside the harness, unpinned downloads, proofs whose run directory is not in `results/`. A time a job script took is an adapter-reported time (RFC-0004 INV-GRADE-2), never an input to a derived figure.
+- TR-4. A trial whose changed call is accepted where a reject was expected follows §Disclosure.
+
 ### Disclosure
 
 An accepted control where rejection was expected is a possible soundness or adapter defect. The harness marks the run `disclosure_pending: true` in `controls.json` (a computed flag; stored records carry it under that name). The runner first checks the adapter: a fault in the verdict mapping is fixed in this repository and the run is redone; it is not a finding against the system. Otherwise the runner reports it privately to the system's maintainers, through the channel in the system's security policy or, when none is published, through the upstream repository's contact, and opens no public pull request with that run until the embargo in `SECURITY.md` ends; the run is then published in full, its outcome unsoftened ([06-security](../docs/spec/06-security.md)).
@@ -280,6 +289,7 @@ An accepted control where rejection was expected is a possible soundness or adap
 
 - Q4. An upstream rejected-proof example that comes with its own commitment (for example FlashProve `examples/rejected-proofs`) is registered as a control only if the harness can regenerate its commitment through the adapter's `commit` step, since the commitment always comes from a harness record (INV-CTRL-6); otherwise it is listed in the adapter README and not run as a control.
 - Q5. A `fixture_proof` control is recorded as `not_applicable`, with that reason: `system-controls/1` names only an upstream `source`, and adapters see only `/io` and `/models`, so no path brings its bytes to the harness. `weakened_prover` controls run as specified.
+- Q6 (2026-11-15). Verify calls outside a session's suite are recorded as verifier trials that gate nothing (§Verifier trials): they add evidence beside the six checks without changing what a check reads.
 
 ## References
 

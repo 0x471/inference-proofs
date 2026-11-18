@@ -515,7 +515,24 @@
                 "trusted_base": [
                   "Coq's kernel",
                   "the extraction to OCaml"
-                ]
+                ],
+                "build": {
+                  "command": [
+                    "make",
+                    "-C",
+                    "coq",
+                    "check-axioms"
+                  ],
+                  "exit_code": 0,
+                  "record": "results/v1.0/proof-build/fake/proof-build.json",
+                  "seconds": 812.4,
+                  "started_at": "2026-11-13T10:00:00Z",
+                  "status": "built",
+                  "toolchain": {
+                    "name": "coq",
+                    "version": "8.20.0"
+                  }
+                }
               },
               "id": "machine_checked",
               "lowered_by": [],

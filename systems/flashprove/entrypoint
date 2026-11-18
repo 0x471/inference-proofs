@@ -180,8 +180,13 @@ FORBIDDEN_FLAGS = ["-public-weights", "-keep-for-the-audit"]
 MEMORY = "lean,tensor-rooms=8"  # measure_rate.py's default -memory
 PARTS = ["response.y", "response.proof"]
 POLL_S = 0.05
-VERDICTS = {1: "reject", 5: "no_verdict", 2: "invalid_call", 3: "invalid_call",
-            4: "invalid_call", 14: "invalid_call", 15: "invalid_call"}  # fmt: skip
+# exit 1 is a rejection only with its documented last line `NO: <name>` (verdict())
+VERDICTS = {5: "no_verdict", 2: "invalid_call", 3: "invalid_call", 4: "invalid_call",
+            14: "invalid_call", 15: "invalid_call"}  # fmt: skip
+REJECTED = "NO: "  # U/verifier/docs/output.md "Exit codes": 1, last line `NO: <name>`
+# U/verifier/docs/output.md "Rejection names": "a name with `internal-`: the program or the machine
+# failed before the stages started. This says nothing about the files. Treat it like exit code 5"
+INTERNAL = "internal-"
 
 
 def host(container_path: str) -> Path:
@@ -619,6 +624,9 @@ def verdict(code: int, last: str) -> tuple[str, str | None]:
         return "accept", "exact-match"
     if code == 0 and last.startswith("WITHIN LIMITS: clipped-gap"):
         return "accept", "clipped-gap"
+    if code == 1 and last.startswith(REJECTED) and len(last) > len(REJECTED):
+        name = last.removeprefix(REJECTED)
+        return ("no_verdict" if name.startswith(INTERNAL) else "reject"), None
     if code in VERDICTS:
         return VERDICTS[code], None
     raise SystemExit(f"flashprove: cp_verify exit {code}, last line {last!r}: not documented")

@@ -11,6 +11,7 @@ import statistics
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 from iproofs import __version__
 from iproofs.checks import (
@@ -36,10 +37,13 @@ from iproofs.derive import (
     generation_seconds,
     nonzero,
     release_groups,
+    reply_tokens_per_gpu_second,
+    served_reply_tokens_per_gpu_second,
     session_per_reply,
     steady_per_reply,
 )
 from iproofs.errors import ErrorKind, IProofsError
+from iproofs.fidelity import run_slots as fidelity_run_slots
 from iproofs.fidelity import with_steps as fidelity_with_steps
 from iproofs.glyph import (
     Coverage,
@@ -51,11 +55,13 @@ from iproofs.glyph import (
     statement_petals,
 )
 from iproofs.model import card_path
+from iproofs.proof_build import record_path
 from iproofs.quantity import Grade, NullReason, Scope, SourceKind, Tier, Unit
 from iproofs.release import RunView
 from iproofs.serialize import load_yaml
 
 NO_SECURITY_LEVEL = "publisher states no security level"  # OR-2
+NO_LEVEL_STATEMENT = "publisher states no Level 1 statement"  # SI-4a
 
 # ---------------------------------------------------------------- order rule (OR-1 to OR-6)
 
@@ -73,11 +79,13 @@ class RowSummary:
     m: tuple[float, ...] = ()
     session_mean: float | None = None
     session: tuple[float, ...] = ()
+    relation: bool = True  # SI-4a: the publisher states Level 1's statement at the pin
 
     @property
     def ranked(self) -> bool:
-        """OR-1, OR-2: a passed row whose publisher states a security level."""
-        return self.passed and self.stated
+        """OR-1, OR-2, SI-4a: a passed row whose publisher states a security level and states
+        that an accept is the committed model's own greedy reply to the prompt."""
+        return self.passed and self.stated and self.relation
 
 
 def placed_above(a: RowSummary, b: RowSummary, margin: float) -> bool:
@@ -133,10 +141,11 @@ class RungSummary:
 
 
 def frontier(rungs: Sequence[RungSummary]) -> dict[str, object] | None:
-    """OR-6: the largest rung by total parameters with a passed row; the rows at position 1
-    there, or every passed row when none is ranked; and the count of systems run on it."""
+    """OR-6: the largest rung by total parameters with a passed row whose publisher states Level
+    1's statement (SI-4a); the rows at position 1 there, or every such row when none is ranked;
+    and the count of systems run on it."""
     for rung in sorted(rungs, key=lambda r: -r.parameters_total):
-        passed = [(r, p) for r, p in rung.rows if r.passed]
+        passed = [(r, p) for r, p in rung.rows if r.passed and r.relation]
         if not passed:
             continue
         first = [r.system for r, p in passed if p == 1]
@@ -217,6 +226,36 @@ def _usd(scope: Scope | None, gpu_seconds: Input, price: Input) -> QuantityTree:
                    lambda x: x[0] * x[1] / 3600)  # fmt: skip
 
 
+def _reply_tokens(figures: Sequence["SessionFigures"], tokens: int,
+                  inputs: Sequence[str]) -> QuantityTree:  # fmt: skip
+    """CO-8 (adopted 2026-11-16): reply tokens per GPU-second over whole sessions, the request's
+    reply tokens over the sessions' mean GPU-seconds per reply (CO-1), with its range (the tokens
+    over the largest and the smallest session) and n; null where a session has no value."""
+    per_reply = [f.per_reply for f in figures]
+    if not per_reply or not tokens or any(v is None or v <= 0 for v in per_reply):
+        return _quantity(None, Unit.TOKEN_PER_GPU_S, Scope.WHOLE_WALL, "D-L1-REPLY-TOKENS",
+                         inputs, NullReason.MISSING_INPUT)  # fmt: skip
+    r = reply_tokens_per_gpu_second([float(v) for v in per_reply if v is not None], tokens)
+    out = _quantity(r.value, Unit.TOKEN_PER_GPU_S, Scope.WHOLE_WALL, "D-L1-REPLY-TOKENS", inputs)
+    out["stats"] = {"n": r.n, "n_failed": 0, "mean": r.value, "stdev": None, "min": r.low,
+                    "max": r.high}  # fmt: skip
+    return out
+
+
+def _served_tokens(per_reply: QuantityTree, tokens: int, inputs: Sequence[str],
+                   note: str | None) -> QuantityTree:  # fmt: skip
+    """CO-8 (amended 2026-11-16): the serving baseline's reply tokens per GPU-second, the
+    request's reply tokens over its GPU-seconds per reply at full load, at the baseline's scope.
+    One rate over the timed batches of one run: it has no range; `note` says what it counts."""
+    v = per_reply.get("value")
+    if not isinstance(v, int | float) or v <= 0 or not tokens:
+        return _quantity(None, Unit.TOKEN_PER_GPU_S, Scope.PROVE_STEADY, "D-L1-SERVED-TOKENS",
+                         inputs, NullReason.MISSING_INPUT)  # fmt: skip
+    rate = served_reply_tokens_per_gpu_second(tokens, float(v))
+    return _quantity(rate, Unit.TOKEN_PER_GPU_S, Scope.PROVE_STEADY, "D-L1-SERVED-TOKENS",
+                     inputs, note=note)  # fmt: skip
+
+
 def _null(
     unit: Unit, scope: Scope | None, formula: str, ref: str, reason: NullReason
 ) -> QuantityTree:
@@ -270,6 +309,7 @@ class SessionFigures:
     cause: str | None
     per_reply: float | None  # CO-1
     generation: float | None = None  # CO-3: the generation phase's GPU-seconds over N
+    commit: float | None = None  # CO-7: the `commit` call's GPU-seconds over N
 
     def tree(self) -> dict[str, object]:
         return {
@@ -304,7 +344,11 @@ def session_figures(s: Session, n: int, level: object) -> SessionFigures:
     )  # fmt: skip
     replies = sum(g.size for g in groups)
     generation = None if phase is None or gpus is None or not replies else phase * gpus / replies
-    return SessionFigures(s, gpus, tuple(g.size for g in groups), m, cause, per_reply, generation)
+    end = _event(s.run, "commit.end")
+    spent = (None if gpus is None or commit is None or end is None or end < commit or n <= 0
+             else (end - commit) / 1e9 * gpus / n)  # fmt: skip
+    return SessionFigures(s, gpus, tuple(g.size for g in groups), m, cause, per_reply, generation,
+                          spent)  # fmt: skip
 
 
 # ---------------------------------------------------------------- level inputs
@@ -345,11 +389,14 @@ def price_of(root: Path, level: object) -> tuple[dict[str, object], Input]:
 
 def _baseline(
     root: Path, runs: Sequence[RunView], level: object, rung: object, digest: str, index: str,
-    price: Input,
+    price: Input, tokens: int = 0,
 ) -> tuple[dict[str, object], Input, list[RunView]]:  # fmt: skip
     """The rung's baseline block, its GPU-seconds per reply as a formula input, and the runs
     read. The first run by start time of the rung's serving record under this level that has a
-    full load is used."""
+    full load is used. The block holds the GPU model the run's manifest records and the reply
+    tokens per GPU-second it serves (CO-8, amended 2026-11-16)."""
+    tokens_in = [f"{index}/baseline/gpu_seconds_per_reply",
+                 f"levels/{level_id(level)}.yaml#/request/output_tokens"]  # fmt: skip
     serving = str(field_of(rung, "serving"))
     mine = [r for r in runs
             if r.get("manifest", "serving_model", "id") == serving
@@ -376,11 +423,20 @@ def _baseline(
         missing: dict[str, object] = {
             "serving": serving, "run_id": None, "gpus": None, "concurrency": None,
             "gpu_seconds_per_reply": q, "usd_per_reply": _usd(Scope.PROVE_STEADY, (ref, q), price),
-            "ladder": [], "cause": cause,
+            "ladder": [], "cause": cause, "gpu_model": None,
+            "reply_tokens_per_gpu_second": _served_tokens(q, tokens, tokens_in, None),
         }  # fmt: skip
         return missing, (ref, q), mine
     run, load = found
     q = dict(load.gpu_seconds_per_reply)
+    model = run.get("manifest", "machine", "gpu", "model")
+    model = str(model) if isinstance(model, str) and model else None
+    timed = int_of(field_of(level, "baseline"), "timed_batches", 0)
+    # what the served rate counts, from the records: the timed replies at full load, one run
+    note = (f"one serving run at full load: {timed:,} timed batches of {load.concurrency:,} "
+            f"replies ({timed * load.concurrency:,} replies) on {load.gpus:,} x "
+            f"{model or 'GPU model not recorded'}; one rate over the batches' span, no range"
+            if timed else None)  # fmt: skip
     block: dict[str, object] = {
         "serving": serving,
         "run_id": run.run_id,
@@ -392,6 +448,8 @@ def _baseline(
             {"concurrency": c, "replies_per_gpu_second": dict(rate)} for c, rate in load.ladder
         ],
         "cause": None,
+        "gpu_model": model,
+        "reply_tokens_per_gpu_second": _served_tokens(q, tokens, tokens_in, note),
     }
     return block, (ref, q), mine
 
@@ -414,6 +472,8 @@ def _fidelity(
                  "mean_prefix": c.get("mean_prefix"), "kl": c.get("kl")}
                 for c in doc.get("controls") or [] if isinstance(c, dict)]  # fmt: skip
     bar = doc.get("bar")
+    records = _run_records(path.parent)
+    slots, slots_cause = fidelity_run_slots(records)
     block: dict[str, object] = {
         "path": rel(root, path),
         "bar": {"control": str(bar["control"]), "mean_prefix": bar["mean_prefix"]}
@@ -421,8 +481,20 @@ def _fidelity(
         "controls": controls,
         "cause": None if isinstance(bar, dict) else "no damaged control that every honest "
         "control scores above (FI-5)",
+        # FI-8, FI-9, FM-5: each part of the fidelity run, its engine and the slot count it
+        # stores, and the count FM-5 reads (none for a vLLM part, with why)
+        "runs": [{"part": r.get("part"), "engine": (r.get("engine") or {}).get("tool"),
+                  "slots": r.get("slots")} for r in records],
+        "slots": slots,
+        "slots_cause": slots_cause,
     }  # fmt: skip
     return block, doc if isinstance(doc, dict) else None
+
+
+def _run_records(folder: Path) -> list[dict[str, Any]]:
+    """The rung's fidelity run records: `fidelity-run.json`, then each part's."""
+    paths = [folder / "fidelity-run.json", *sorted(folder.glob("fidelity-run-*.json"))]
+    return [json.loads(p.read_text()) for p in paths if p.is_file()]
 
 
 def _teacher_forced(root: Path, release: str, rung: str) -> dict[str, object] | None:
@@ -476,6 +548,7 @@ class _Row:
     security: dict[str, object] | None
     stated: bool
     petals: dict[str, Petal]
+    relation: dict[str, object]  # SI-4a, `level_statement`
 
     def summary(self, has_baseline: bool) -> RowSummary:
         ms = [f.m for f in self.figures]
@@ -489,7 +562,40 @@ class _Row:
             m=tuple(m for m in ms if m is not None) if steady else (),
             session_mean=statistics.mean(c for c in cost if c is not None) if full else None,
             session=tuple(c for c in cost if c is not None) if full else (),
+            relation=self.relation["stated"] is True,
         )  # fmt: skip
+
+
+def level_statement(props: Mapping[str, object] | None, commit: object) -> dict[str, object]:
+    """SI-4a: whether the properties file, read at the row's commit, records the publisher's
+    statement that an accept means the reply is the committed model's own computation, decoded
+    greedily, on the prompt (`level_statement.accept_is_model_reply`, true with quotes). `read`
+    is false for a file missing, without the fact, or read at another commit; `reading` is true
+    when the fact carries a note (the reader's reading, not one sentence that says it)."""
+    upstream = props.get("upstream") if props else None
+    at_pin = isinstance(upstream, Mapping) and upstream.get("commit") == commit
+    block = props.get("level_statement") if props and at_pin else None
+    block = block if isinstance(block, Mapping) else {}
+    fact = block.get("accept_is_model_reply")
+    fact = fact if isinstance(fact, Mapping) else {}
+    found = fact.get("quotes")
+    quotes = [{"text": str(q["text"]), "url": str(q["url"])}
+              for q in (found if isinstance(found, list) else [])
+              if isinstance(q, Mapping) and q.get("text") and q.get("url")]  # fmt: skip
+    stated = fact.get("value") is True and bool(quotes)
+    read = block.get("sources_read")
+    return {"read": bool(fact), "stated": stated, "reading": stated and bool(fact.get("note")),
+            "quotes": quotes,
+            "sources_read": [str(x) for x in read] if isinstance(read, list) else []}  # fmt: skip
+
+
+def _unranked(row: _Row) -> str | None:
+    """Why a passed row has no position: SI-4a first (no Level 1 statement), then OR-2."""
+    if not row.passed:
+        return None
+    if row.relation["stated"] is not True:
+        return NO_LEVEL_STATEMENT
+    return None if row.stated else NO_SECURITY_LEVEL
 
 
 def _security(level: object, system: str) -> tuple[dict[str, object] | None, bool]:
@@ -525,6 +631,7 @@ def _row_tree(
     price: Input,
     fidelity_rows: Mapping[str, object],
     n: int,
+    tokens: int = 0,
 ) -> dict[str, object]:
     figures = row.figures
     proofs = [f"{f.session.path}/run.json#/proofs" for f in figures]
@@ -562,11 +669,32 @@ def _row_tree(
                             for f in figures], Unit.GPU_S_PER_REQUEST, Scope.WHOLE_WALL,
                            "D-L1-COMMIT-PROVING", [*events, *proofs, *marks], unsplit,
                            no_phase)  # fmt: skip
+    # CO-7 (amended 2026-11-15): the session cost per reply in its timed calls: the `commit`
+    # call, the generation phase where there is one, and the rest (proving, and the seconds
+    # between the calls); every row has the first and the last
+    commit_part = _stat([f.commit for f in figures], Unit.GPU_S_PER_REQUEST, Scope.COMMIT,
+                        "D-L1-COMMIT", events, NullReason.MISSING_INPUT)  # fmt: skip
+    rest = _stat([f.per_reply - f.commit - (f.generation or 0.0)
+                  if f.per_reply is not None and f.commit is not None
+                  and (f.generation is not None or not phased) else None for f in figures],
+                 Unit.GPU_S_PER_REQUEST, Scope.WHOLE_WALL, "D-L1-SESSION-PROVING",
+                 [*events, *proofs, *marks], NullReason.MISSING_INPUT)  # fmt: skip
+    # the generation phase per reply token: its GPU-seconds over N, over the request's reply
+    # tokens (the level's request.output_tokens)
+    per_token = _stat([f.generation / tokens if f.generation is not None and tokens else None
+                       for f in figures], Unit.GPU_S_PER_TOKEN, Scope.WHOLE_WALL,
+                      "D-L1-GENERATION-TOKEN", [*(marks or proofs), "levels/L1.yaml#/request/"
+                                                "output_tokens"], unsplit, no_phase)  # fmt: skip
+    # CO-8 (adopted 2026-11-16): the request's reply tokens over the whole sessions' GPU time
+    reply_tokens = _reply_tokens(
+        figures, tokens, [*events, *proofs, "levels/L1.yaml#/request/output_tokens"]
+    )
     session_generation_in = (f"{index}/session_generation_gpu_seconds_per_reply",
                              session_generation)  # fmt: skip
     commit_proving_in = (f"{index}/session_commit_and_proving_gpu_seconds_per_reply",
                          commit_proving)  # fmt: skip
-    first = (row.sessions.counted_in_order() or row.sessions.all)[0]
+    first = (row.sessions.counted_in_order() or row.sessions.all
+             or [s for s, _ in row.sessions.ineligible])[0]  # fmt: skip
     commit = first.run.get("manifest", "system", "upstream", "commit")
     configuration = first.run.get("manifest", "claim", "configuration")
     return {
@@ -579,7 +707,8 @@ def _row_tree(
         "glyph": glyph(row.petals),
         "ranked": position is not None,
         "position": position,
-        "unranked_reason": NO_SECURITY_LEVEL if row.passed and not row.stated else None,
+        "unranked_reason": _unranked(row),
+        "level_statement": row.relation,
         "multiple": _ratio("D-L1-MULTIPLE", Unit.RATIO, Scope.PROVE_STEADY, steady_in, baseline),
         "session_multiple": _ratio(
             "D-L1-MULTIPLE", Unit.RATIO, Scope.WHOLE_WALL, session_in, baseline
@@ -596,6 +725,10 @@ def _row_tree(
         "session_gpu_seconds_per_reply": session,
         "session_generation_gpu_seconds_per_reply": session_generation,
         "session_commit_and_proving_gpu_seconds_per_reply": commit_proving,
+        "session_commit_gpu_seconds_per_reply": commit_part,
+        "session_proving_gpu_seconds_per_reply": rest,
+        "generation_gpu_seconds_per_reply_token": per_token,
+        "session_reply_tokens_per_gpu_second": reply_tokens,
         "session_generation_multiple": _ratio(
             "D-L1-MULTIPLE", Unit.RATIO, Scope.WHOLE_WALL, session_generation_in, baseline
         ),
@@ -609,6 +742,11 @@ def _row_tree(
         "replaced_sessions": [
             {"run_id": a.run_id, "slot": a.slot, "replaced_by": b.run_id, "cause": why}
             for a, b, why in row.sessions.replaced
+        ],
+        # SE-3b: runs kept out of the release by RFC-0014 §Eligibility, with its reason codes
+        "ineligible_sessions": [
+            {"run_id": s.run_id, "slot": s.slot, "reasons": list(reasons)}
+            for s, reasons in row.sessions.ineligible
         ],
         "fidelity": _row_fidelity(fidelity_rows.get(row.system)),
         "security": row.security,
@@ -634,13 +772,11 @@ def _with_steps(
     randomness = beacon_randomness(root, level_id(level))
     if randomness is None:
         return doc  # no beacon record: FM-4 reads "no step tests stored"
-    run_path = fidelity_path(root, release, str(field_of(rung, "id"))).with_name(
-        "fidelity-run.json"
-    )
-    slots = json.loads(run_path.read_text()).get("slots") if run_path.is_file() else None
+    folder = fidelity_path(root, release, str(field_of(rung, "id"))).parent
+    slots, slots_cause = fidelity_run_slots(_run_records(folder))  # FM-5: every part of the run
     controls: Sequence[object] = field_of(rung, "controls") or ()  # type: ignore[assignment]
     specs = [{k: field_of(c, k) for k in ("id", "kind", "recipe", "type")} for c in controls]
-    return fidelity_with_steps(doc, specs, slots if isinstance(slots, int) else None, randomness)
+    return fidelity_with_steps(doc, specs, slots, randomness, slots_cause)
 
 
 def build_board(root: Path, release: str, level: object) -> dict[str, object]:
@@ -655,6 +791,7 @@ def build_board(root: Path, release: str, level: object) -> dict[str, object]:
     alpha = field_of(field_of(level, "fidelity"), "alpha")  # F5: the step tests' alpha
     level_alpha = float(alpha) if isinstance(alpha, int | float) else None
     runs = [RunView.read(p) for p in release_run_dirs(root, release)]
+    reply_tokens = int_of(field_of(level, "request"), "output_tokens", 0)
     dates: set[str] = set()
     rungs_out, summaries = [], []
     rung_list: Sequence[object] = field_of(level, "rungs") or ()  # type: ignore[assignment]
@@ -662,7 +799,8 @@ def build_board(root: Path, release: str, level: object) -> dict[str, object]:
         rung_id = str(field_of(rung, "id"))
         n = int_of(rung, "requests_per_session", 0)
         base = f"releases/{release}/board.json#/rungs/{ri}"
-        baseline_block, baseline, read = _baseline(root, runs, level, rung, digest, base, price)
+        baseline_block, baseline, read = _baseline(root, runs, level, rung, digest, base, price,
+                                                   reply_tokens)  # fmt: skip
         dates |= {r.run_id[:10] for r in read}
         fidelity_block, fidelity_doc = _fidelity(root, release, rung_id)
         fidelity_doc = _with_steps(root, release, level, rung, fidelity_doc)
@@ -671,19 +809,22 @@ def build_board(root: Path, release: str, level: object) -> dict[str, object]:
         rows = []
         for system, workload in sorted(_workloads(rung).items()):
             sessions = row_sessions(root, release, level, rung_id, system, digest)
-            if not sessions.all:
+            kept_out = [s for s, _ in sessions.ineligible]
+            if not sessions.all and not kept_out:
                 continue  # not run: no row (RFC-0018 §The board file)
-            dates |= {s.run_id[:10] for s in sessions.all}
+            dates |= {s.run_id[:10] for s in (*sessions.all, *kept_out)}
             states = checks_from(root, release, level, rung_id, system, sessions, digest)
             security, stated = _security(level, system)
-            first = (sessions.counted_in_order() or sessions.all)[0]
+            first = (sessions.counted_in_order() or sessions.all or kept_out)[0]
             commit = first.run.get("manifest", "system", "upstream", "commit")
             configuration = first.run.get("manifest", "claim", "configuration")
             coverage = Coverage(_granularity(root, system), _batch_size(root, str(workload)))
+            props = load_properties(root, system)
+            build = load_proof_build(root, release, system)
             petals = statement_petals(
-                load_properties(root, system), {k: v.state for k, v in states.items()},
-                str(commit) if isinstance(commit, str) else None, coverage,
-                load_proof_build(root, release, system),
+                props, {k: v.state for k, v in states.items()},
+                str(commit) if isinstance(commit, str) else None, coverage, build,
+                record_path(release, system) if build is not None else None,
             )  # fmt: skip
             fid = states["fidelity"]
             petals["faithful_model"] = faithful_model(
@@ -693,12 +834,15 @@ def build_board(root: Path, release: str, level: object) -> dict[str, object]:
                 system,
                 _policy(root, system, configuration),
                 level_alpha,
+                str(field_of(field_of(rung, "reference"), "dtype")),
+                _weight_bits(root, str(workload)),
             )
             rows.append(_Row(
                 system, str(workload), sessions,
                 [session_figures(s, n, level) for s in sessions.counted_in_order()],
                 {name: states[name].tree() for name in CHECKS},
                 all(states[name].state == HELD for name in CHECKS), security, stated, petals,
+                level_statement(props, commit),
             ))  # fmt: skip
         has_baseline = baseline[1] is not None and baseline[1].get("value") is not None
         ordered = order([r.summary(has_baseline) for r in rows], float(margin))
@@ -716,7 +860,7 @@ def build_board(root: Path, release: str, level: object) -> dict[str, object]:
             "baseline": baseline_block,
             "fidelity": fidelity_block,
             "rows": [_row_tree(by_system[s.system], f"{base}/rows/{j}", p, baseline, price,
-                               fidelity_rows, n)
+                               fidelity_rows, n, reply_tokens)
                      for j, (s, p) in enumerate(ordered)],
         })  # fmt: skip
         teacher_forced = _teacher_forced(root, release, rung_id)
@@ -752,6 +896,13 @@ def _granularity(root: Path, system: str) -> str | None:
     """How much one proof covers (`proofs.granularity` of system.yaml), the glyph's Coverage."""
     found = _key(root / "systems" / system / "system.yaml", "proofs", "granularity")
     return found if isinstance(found, str) else None
+
+
+def _weight_bits(root: Path, workload: str) -> float | None:
+    """The proved copy's weight bits (`precision.weight_bits.bits` of the workload): a printed
+    sentence of the Fidelity petal reads it, no step does."""
+    found = _key(root / "workloads" / f"{workload}.yaml", "precision", "weight_bits", "bits")
+    return float(found) if isinstance(found, int | float) and not isinstance(found, bool) else None
 
 
 def _batch_size(root: Path, workload: str) -> int | None:

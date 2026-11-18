@@ -13,6 +13,8 @@ CASES = [
     (0, "YES", "accept", "exact-match"),
     (0, "WITHIN LIMITS: clipped-gap C=256 theta=256 cap=0 s=16 sh=8", "accept", "clipped-gap"),
     (1, "NO: statement", "reject", None),
+    (1, "NO: proof-refused", "reject", None),
+    (1, "NO: internal-alloc", "no_verdict", None),  # "Treat it like exit code 5"
     (2, "input-unreadable-proof: x cannot be read: No such file", "invalid_call", None),
     (3, "PART PASSED: key", "invalid_call", None),
     (4, "PLAN ONLY: no proof was checked", "invalid_call", None),
@@ -29,9 +31,14 @@ def test_verdict_map(
     assert adapter.verdict(code, line) == (verdict, policy)
 
 
-@pytest.mark.parametrize(("code", "line"), [(7, "NO: statement"), (0, "NO: statement"), (-9, "")])
+@pytest.mark.parametrize(
+    ("code", "line"),
+    [(7, "NO: statement"), (0, "NO: statement"), (-9, ""), (1, "some progress line"),
+     (1, ""), (1, "NO: "), (1, "NO:proof-refused")],
+)  # fmt: skip
 def test_undocumented_ending_fails(adapter: ModuleType, code: int, line: str) -> None:
-    """Exit 7, exit 0 without an accepting line, and a signal: never a guessed verdict."""
+    """Exit 7, exit 0 without an accepting line, a signal, and exit 1 without the documented
+    `NO: <name>` last line: never a guessed verdict."""
     with pytest.raises(SystemExit, match="not documented"):
         adapter.verdict(code, line)
 
@@ -69,5 +76,16 @@ def test_verify_out_json(
 def test_verify_undocumented_exit(adapter: ModuleType, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("STUB_VERIFY", "7:NO: statement")
     with pytest.raises(SystemExit, match="exit 7"):
+        run(adapter, "verify", verify_job(adapter))
+    assert not adapter.host("/io/out.json").exists()
+
+
+def test_verify_exit_1_without_a_rejection_line(
+    adapter: ModuleType, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Through the stand-in cp_verify: exit 1 whose last line is not `NO: <name>` is an adapter
+    failure, never a rejection, and writes no out.json."""
+    monkeypatch.setenv("STUB_VERIFY", "1:")
+    with pytest.raises(SystemExit, match="exit 1"):
         run(adapter, "verify", verify_job(adapter))
     assert not adapter.host("/io/out.json").exists()

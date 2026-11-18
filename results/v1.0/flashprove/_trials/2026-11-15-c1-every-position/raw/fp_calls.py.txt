@@ -1,0 +1,113 @@
+"""Run cp_verify calls through the FlashProve adapter's `verify` in the pinned image, with the
+harness's own DockerRunner (same docker create arguments as a counted verify). Inputs come from
+the harness record: commitment IDs, verifier-file digests and claimed replies from results/,
+proof bytes from archives whose sha256 the run's digests.txt records.
+
+usage: fp_calls.py ROOT SCRATCH OUT PLAN.json
+PLAN: list of {"name", "proof": KEY, "commitment": KEY, "reply_change": null | {"index": i}}
+KEY: one of the stored sessions below.
+"""
+import hashlib, json, shutil, struct, sys, tarfile, time
+from pathlib import Path
+
+ROOT, SCR, OUT, PLAN = map(Path, sys.argv[1:5])
+sys.path.insert(0, str(ROOT / "harness/src"))
+from iproofs.adapter import DockerRunner  # noqa: E402
+from iproofs.derive import span_seconds  # noqa: E402
+from iproofs.schema import SchemaRegistry  # noqa: E402
+
+# The pinned image (manifest sha256:12611db7...), loaded from its sha256-checked blobs; docker
+# knows a loaded image by its ID, the config digest that manifest names.
+IMAGE = "local/flashprove@sha256:7dafb0f174aee20cc986e71ec40aa2bdbd3dfc558b28dbd7e7a87e21922ba30c"
+RUNS = ROOT / "results/v1.0/flashprove"
+SESS = {  # key: (run dir in results/, proof id, scratch folder with archive and verifier files)
+    "slot1-control": ("2026-11-13-flashprove-l1-maverick-p512-o512-prover-h200-hosted-1", "req-0", "c3"),
+    "slot2": ("2026-11-12-flashprove-l1-maverick-p512-o512-prover-h200-hosted-1", "req-1", "s2"),
+    "slot3": ("2026-11-12-flashprove-l1-maverick-p512-o512-prover-h200-hosted-2", "req-3", "s3"),
+}
+VOCAB = 202048
+
+
+def sha(p: Path) -> str:
+    return "sha256:" + hashlib.sha256(p.read_bytes()).hexdigest()
+
+
+def session(key: str) -> dict:
+    run, pid, k = SESS[key]
+    d = RUNS / run
+    m = json.loads((d / "manifest.json").read_text())
+    r = json.loads((d / "run.json").read_text())
+    digests = dict(l.split("\t") for l in (d / "digests.txt").read_text().splitlines())
+    tar = SCR / "in" / k / "proof.tar"
+    assert sha(tar) == digests[f"archive/{pid}.tar"], (key, "archive digest")
+    vf = {f["name"]: f["digest"] for f in m["commitment"]["verifier_files"]}
+    for n, dg in vf.items():
+        assert sha(SCR / "in" / k / "verifier" / n) == dg, (key, n)
+    row = next(p for p in r["proofs"] if p["proof_id"] == pid)
+    words = struct.unpack("<1026I", (SCR / "lean-in" / k / "request.req").read_bytes())
+    prompt, reply = list(words[:512]), [int(t) for t in row["claimed_output"]]
+    assert list(words[512:1024]) == reply, (key, "reply")
+    pd = m["workload"]["prompt_set_digest"]
+    return {"key": key, "run_id": run, "proof_id": pid, "dir": SCR / "in" / k, "tar": tar,
+            "archive_digest": digests[f"archive/{pid}.tar"], "commitment_id":
+            m["commitment"]["commitment_id"], "verifier_files": vf, "prompt": prompt,
+            "reply": reply, "prompt_set_digest": pd, "slot": m["session"]["slot"],
+            "manifest": m}
+
+
+def main() -> None:
+    reg = SchemaRegistry.from_tree(ROOT / "schema")
+    runner = DockerRunner(reg)
+    plan = json.loads(PLAN.read_text())
+    OUT.mkdir(parents=True, exist_ok=True)
+    cache: dict[str, dict] = {}
+    for call in plan:
+        if (OUT / f"{call['name']}.json").exists():
+            continue
+        a = cache.setdefault(call["proof"], session(call["proof"]))
+        b = cache.setdefault(call["commitment"], session(call["commitment"]))
+        io = OUT / "io" / call["name"]
+        shutil.rmtree(io, ignore_errors=True)
+        (io / "proof").mkdir(parents=True)
+        with tarfile.open(a["tar"]) as t:
+            for mem in t.getmembers():
+                if mem.isfile():
+                    (io / "proof" / Path(mem.name).name).write_bytes(t.extractfile(mem).read())
+        (io / "verifier").mkdir()
+        for n in b["verifier_files"]:
+            shutil.copyfile(b["dir"] / "verifier" / n, io / "verifier" / n)
+        reply = list(a["reply"])
+        change = call.get("reply_change")
+        if change is not None:
+            i = int(change["index"])
+            reply[i] = (reply[i] + 1) % VOCAB
+            change = {"index": i, "token": reply[i], "was": a["reply"][i]}
+        job = {"schema": "adapter-job/1", "contract": "adapter/1", "subcommand": "verify",
+               "run_id": a["run_id"], "workload": {"id": "l1-maverick-p512-o512", "version": 1},
+               "shape": {"prompt_tokens": 512, "output_tokens": 512, "batch_size": 24,
+                         "batches_per_session": 5, "context_window": 1024},
+               "control": True, "commitment_id": b["commitment_id"],
+               "verifier_files": [f"/io/verifier/{n}" for n in b["verifier_files"]],
+               "request": a["prompt"], "claimed_output": reply, "proof_dir": "/io/proof"}
+        (io / "job.json").write_text(json.dumps(job))
+        t0 = time.time()
+        res = runner.run(IMAGE, "verify", io, models_dir=None, gpu=None, cpuset=call.get("cpuset", "0-7"),
+                         mems="0", memory=None, timeout_s=3600,
+                         ro_mounts=[(io / "verifier", "/io/verifier")])
+        out = res.out
+        rec = {"name": call["name"], "proof": {k: a[k] for k in ("key", "run_id", "proof_id", "archive_digest", "slot")},
+               "commitment": {k: b[k] for k in ("key", "run_id", "commitment_id", "slot")},
+               "reply_change": change, "exit_code": res.exit_code,
+               "verdict": None if out is None else out.verdict,
+               "raw_exit_code": None if out is None else out.raw_exit_code,
+               "raw_last_line": None if out is None else out.raw_last_line,
+               "adapter_seconds": None if out is None else out.seconds,
+               "harness_seconds": span_seconds(res.started_mono_ns, res.ended_mono_ns),
+               "stderr_tail": list(res.stderr_tail), "started_unix": t0}
+        (OUT / f"{call['name']}.json").write_text(json.dumps(rec, indent=1) + "\n")
+        print(call["name"], rec["verdict"], rec["raw_exit_code"], rec["raw_last_line"],
+              round(rec["harness_seconds"], 1), flush=True)
+        shutil.rmtree(io)
+
+
+main()

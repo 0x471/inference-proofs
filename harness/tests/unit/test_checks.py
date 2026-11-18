@@ -80,12 +80,29 @@ def test_run_refusal_record_fails_the_slot_at_once(tree: Tree) -> None:
     run_id = row_sessions(tree.root, RELEASE, tree.level, RUNG, SYSTEM).incomplete[0].run_id
     folder = tree.root / "results" / RELEASE / SYSTEM / "refusals"
     folder.mkdir(parents=True)
-    (folder / "slot-1.json").write_text(json.dumps({"run_id": run_id}))
+    at_pin = {"commit": "a" * 40}  # the sessions' upstream commit
+    (folder / "slot-1.json").write_text(json.dumps({"run_id": run_id, "upstream": at_pin}))
     found = checks(tree)["run"]
     assert (found.state, found.cause) == ("failed", None)
     assert found.evidence[0] == f"results/{RELEASE}/{SYSTEM}/refusals/slot-1.json"
-    (folder / "slot-1.json").write_text(json.dumps({"run_id": "another-run"}))
+    (folder / "slot-1.json").write_text(json.dumps({"run_id": "another-run", "upstream": at_pin}))
     with pytest.raises(Exception, match="no incomplete run of slot 1"):
+        checks(tree)
+
+
+def test_a_refusal_at_another_upstream_commit_decides_nothing(tree: Tree) -> None:
+    """SE-5 (amended 2026-11-15): a refusal record made at another upstream commit (SASH's at
+    eb95bfa, whose run was never imported) is a record of that pin; the row at its own commit
+    is decided by its own sessions."""
+    three_sessions(tree)
+    fidelity(tree, {SYSTEM: fidelity_row()})
+    folder = tree.root / "results" / RELEASE / SYSTEM / "refusals"
+    folder.mkdir(parents=True)
+    record = {"run_id": "2026-11-11-sash-not-imported", "upstream": {"commit": "e" * 40}}
+    (folder / "slot-1.json").write_text(json.dumps(record))
+    assert states(tree)["run"] == ("held", None)
+    (folder / "slot-1.json").write_text(json.dumps({"run_id": "x"}))
+    with pytest.raises(Exception, match="names no upstream commit"):
         checks(tree)
 
 
@@ -313,7 +330,8 @@ def reverify(run_dir: Path, *, digest: str = "sha256:" + "ab" * 32) -> None:
     session's manifest records each proof's sha256 as `sha256:abab...`."""
     run = json.loads((run_dir / "run.json").read_text())
     manifest = json.loads((run_dir / "manifest.json").read_text())
-    manifest["proofs"] = [{"proof_id": p["proof_id"], "digest": "sha256:" + "ab" * 32}
+    shape = manifest["proofs"][0]
+    manifest["proofs"] = [{**shape, "proof_id": p["proof_id"], "digest": "sha256:" + "ab" * 32}
                           for p in run["proofs"]]  # fmt: skip
     (run_dir / "manifest.json").write_text(json.dumps(manifest))
     (run_dir / "reverify" / "verify-trace").mkdir(parents=True)
@@ -323,8 +341,8 @@ def reverify(run_dir: Path, *, digest: str = "sha256:" + "ab" * 32) -> None:
         (run_dir / name).write_text(json.dumps(trace()))
         rows.append({"proof_id": p["proof_id"], "verdict": "accept", "trace": name,
                      "proof_digest": digest})  # fmt: skip
-    doc = {"schema": "reverify/1", "run_id": run["run_id"], "image": {"ref": None},
-           "proofs": rows}  # fmt: skip
+    doc = {"schema": "reverify/1", "run_id": run["run_id"],
+           "image": {"ref": manifest["system"]["image"]["ref"]}, "proofs": rows}  # fmt: skip
     (run_dir / "reverify" / "reverify.json").write_text(json.dumps(doc))
 
 
@@ -369,6 +387,78 @@ def test_a_gpu_host_session_without_kept_proofs_gives_its_slot_to_a_later_one(tr
     assert row_sessions(other.root, RELEASE, other.level, RUNG, SYSTEM).replaced == []
 
 
+# ---------------------------------------------------------------- eligibility (SE-3b, RFC-0014)
+
+
+def failed_self_test(m: dict[str, object]) -> None:
+    failed = [{"name": "ST-SAMPLER", "passed": False}, {"name": "ST-JITTER", "passed": False}]
+    m["self_test"] = {"passed": False, "checks": failed}
+
+
+def test_an_ineligible_session_never_counts_or_replaces(tree: Tree) -> None:
+    """SE-3b: SASH's case. Slot 2's first session verified with a GPU visible and kept no proofs;
+    the later session that met CH-4 failed the host's self-test, so RFC-0014 keeps it out of the
+    release: it does not replace the first (SE-3a), the first counts and Verify without weights
+    is undecided; the ineligible one is listed with its reason."""
+    session(tree, 1, 1, control_doc=controls())
+    first = session(tree, 2, 2, traces=trace(gpu=True))
+    session(tree, 3, 3)
+    later = session(tree, 2, 4, manifest_edit=failed_self_test)
+    fidelity(tree, {SYSTEM: fidelity_row()})
+    rows = row_sessions(tree.root, RELEASE, tree.level, RUNG, SYSTEM)
+    assert rows.counted[2].path.endswith(first.name)
+    assert rows.replaced == []
+    assert [(s.path.split("/")[-1], r) for s, r in rows.ineligible] == [
+        (later.name, ("self_test_failed",))
+    ]
+    found = states(tree)
+    assert found["no_weight_file"] == ("undecided", "not resolved")
+    assert not passed(checks(tree))
+
+
+def test_ineligible_runs_are_no_attempts(tree: Tree) -> None:
+    """SE-3b: five runs of slot 3 kept out by RFC-0014 neither count nor fail RUN; RUN waits for
+    an eligible session. A first eligible session counts in place of an earlier ineligible one."""
+    session(tree, 1, 1, control_doc=controls())
+    session(tree, 2, 2)
+    for k in range(4, 9):
+        session(tree, 3, k, manifest_edit=failed_self_test)
+    assert states(tree)["run"] == ("undecided", "not run")
+    good = session(tree, 3, 9)
+    rows = row_sessions(tree.root, RELEASE, tree.level, RUNG, SYSTEM)
+    assert rows.counted[3].path.endswith(good.name)
+    assert states(tree)["run"] == ("held", None)
+
+
+@pytest.mark.parametrize(
+    ("edit", "reason"),
+    [
+        (lambda m: m.update(release="v0.1"), "other_release"),
+        (lambda m: m["harness"].update(git_commit="abc123"), "manifest_invalid"),
+        (lambda m: m["harness"].update(git_dirty=True), "harness_dirty"),
+        (lambda m: m["system"].update(adapter_dirty=True), "adapter_dirty"),
+        (lambda m: m["system"].update(claim_digest="sha256:" + "d" * 64), "claim_card_not_listed"),
+    ],
+)
+def test_each_eligibility_reason_keeps_a_session_out(tree: Tree, edit: object, reason: str) -> None:
+    """RFC-0014 §Eligibility: each reason code alone keeps a complete session from counting."""
+    session(tree, 1, 1, control_doc=controls(), manifest_edit=edit)  # type: ignore[arg-type]
+    rows = row_sessions(tree.root, RELEASE, tree.level, RUNG, SYSTEM)
+    assert rows.counted == {}
+    assert [r for _, r in rows.ineligible] == [(reason,)]
+
+
+def test_a_claim_card_edited_after_the_run_is_not_the_one_in_force(tree: Tree) -> None:
+    """RFC-0014: with no release record, the card a session names must be the repository's card
+    by digest; an edit after the run keeps every session out (a frozen release lists one)."""
+    three_sessions(tree)
+    card = tree.root / "systems" / SYSTEM / "claim.yaml"
+    card.write_text(card.read_text() + "relation: edited\n")
+    rows = row_sessions(tree.root, RELEASE, tree.level, RUNG, SYSTEM)
+    assert rows.counted == {}
+    assert {r for _, r in rows.ineligible} == {("claim_card_not_listed",)}
+
+
 FAILED_ANSWER = ("adapter: prove exited 1: flashprove: cp_prove exited 0, last line "
                  "'p258 end 0'; failed [0], unanswered [] | log: p258 end 0")  # fmt: skip
 DECLARES_FAILED_ANSWER = (
@@ -393,6 +483,9 @@ def test_p1_failed_answer_with_the_honest_twin_accepted_is_refused(tree: Tree) -
     declare(tree, DECLARES_FAILED_ANSWER)
     p1_failed(tree, FAILED_ANSWER)
     assert states(tree)["model"] == ("held", None)
+    # CH-1c: the prover refused by making no proof, so no verifier saw one; the page says which
+    p1 = next(t for t in checks(tree)["model"].trials if t["control"] == "P1")
+    assert (p1["trials"], p1["refused"], p1["no_proof"]) == (3, 3, 3)
 
 
 def test_p1_failed_answer_without_an_accepted_twin_decides_nothing(tree: Tree) -> None:
@@ -411,3 +504,19 @@ def test_p1_failed_answer_on_a_system_that_does_not_declare_it_decides_nothing(
     model = checks(tree)["model"]
     assert model.state == "undecided"
     assert model.note == "P1: no counted trial stored"
+
+
+def test_what_ran_counts_distinct_inputs(tree: Tree) -> None:
+    """CH-1c: the first and last C1 positions, C3 and P1 repeat one changed input three times;
+    the seeded interior positions send three; a void trial is not counted. (The fixture's C2
+    changes position 3 in every trial, so it sends one input too.)"""
+    three_sessions(tree, control_doc=controls(c3=("void", REJECT, REJECT, REJECT)))
+    found = checks(tree)
+    ran = {(t["control"], t["position"]): (t["trials"], t["refused"], t["inputs"])
+           for k in ("model", "prompt", "reply") for t in found[k].trials}  # fmt: skip
+    assert {t["no_proof"] for k in ("model", "prompt", "reply") for t in found[k].trials} == {0}
+    assert ran == {
+        ("P1", None): (3, 3, 1), ("C3", None): (3, 3, 1), ("C2", None): (3, 3, 1),
+        ("C1", "first"): (3, 3, 1), ("C1", "last"): (3, 3, 1), ("C1", "interior"): (3, 3, 3),
+    }  # fmt: skip
+    assert "trials" not in found["run"].tree()

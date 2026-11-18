@@ -16,14 +16,13 @@ from .chrome import (
     HEAD_SCRIPT,
     LEARN_PAGE,
     MANDATE_PAGE,
+    ONLY_RUN,
     SCALE_PAGE,
     SITE_URL,
     counted,
     credit_words,
     font_faces,
-    lead_figure,
-    parts_of,
-    row_cost,
+    only_run,
     rung_of,
     standing,
 )
@@ -51,8 +50,10 @@ from .words import (
     MANDATE_DESC,
     PETAL_NAME,
     PETAL_QUESTION,
+    PETAL_TERM,
     architecture,
     e,
+    release_tail,
 )
 
 # ------------------------------------------------------------------ search
@@ -105,9 +106,11 @@ def search_entries():
             rung["id"],
         )
     # a petal, a check, a figure in one line each (the checks page's: the petal's question, the
-    # check's held rule, what the figure is), a pointer to its rule
+    # check's passing rule, what the figure is), a pointer to its rule; a petal found by its field
+    # term too
     for pid in S.V["petals"]:
-        add("petal", PETAL_NAME[pid], f"{CHECKS_PAGE}#{pid}", PETAL_QUESTION[pid], "")
+        add("petal", PETAL_NAME[pid], f"{CHECKS_PAGE}#{pid}", PETAL_QUESTION[pid], "",
+            PETAL_TERM[pid])  # fmt: skip
     for c in S.V["checks"]:
         add("check", CHECK_NAME[c], f"{CHECKS_PAGE}#{c}", filled(CHECK_LINE[c]), "")
     for f, line in FIGURE_LINE.items():
@@ -118,7 +121,7 @@ def search_entries():
         CHECKS_PAGE,
         CHECKS_DESC,
         PAGE_MARK,
-        "checks figures order rule undecided unranked not tested",
+        "checks figures order rule not decided not ranked not tested",
     )
     add(
         "page",
@@ -173,13 +176,30 @@ GONE = {
 
 # Headers, redirects and cache rules depend on the build's own output (the inline script's hash,
 # the pages written), so the build writes the whole file. Canonical JSON (iproofs fmt).
-def vercel_json():
+def vercel_json(pages=()):
+    pages = list(pages)
     script = hashlib.sha256(HEAD_SCRIPT.encode()).digest()
+    hashes = sorted(
+        {
+            base64.b64encode(hashlib.sha256(block.encode()).digest()).decode()
+            for page in pages
+            for block in re.findall(r'<script type="application/ld\+json">(.*?)</script>', page)
+        }
+    )
+    structured = "".join(f" 'sha256-{h}'" for h in hashes)
+    style_hashes = sorted(
+        {
+            base64.b64encode(hashlib.sha256(block.encode()).digest()).decode()
+            for page in pages
+            for block in re.findall(r"<style>(.*?)</style>", page, re.S)
+        }
+    )
+    styles = "".join(f" 'sha256-{h}'" for h in style_hashes)
     csp = "; ".join(
         [
             "default-src 'self'",
-            f"script-src 'self' 'sha256-{base64.b64encode(script).decode()}' https://cdn.vercel-insights.com",
-            "style-src 'self'",
+            f"script-src 'self' 'sha256-{base64.b64encode(script).decode()}'{structured} https://cdn.vercel-insights.com",
+            f"style-src 'self'{styles}",
             "img-src 'self'",
             "font-src 'self'",
             "connect-src 'self' https://*.vercel-insights.com",
@@ -196,21 +216,35 @@ def vercel_json():
     for sid in S.V["planned"]:
         if sid not in S.PAGE:
             gone[f"/{sid}"] = "/"
+    routes = sorted(p.stem for p in S.HERE.glob("*.html") if p.stem not in {"index", "404"})
+    redirects = {
+        "/system": (first, False),
+        **{src: (dst, src in GONE) for src, dst in gone.items()},
+    }
+    redirects.update({f"/{route}": (f"/{route}", True) for route in routes})
+    aliases = [
+        {"source": f"{src}{suffix}", "destination": dst, "permanent": permanent}
+        for src, (dst, permanent) in sorted(redirects.items())
+        for suffix in ("", ".html", "/")
+        if suffix or src != dst
+    ]
     return {
         "$schema": "https://openapi.vercel.sh/vercel.json",
-        "buildCommand": "rm -rf public && mkdir -p public/og public/fonts && cp *.html words.css words.js search.json public/ && cp og/*.png og/*.svg public/og/ && cp fonts/*.woff2 public/fonts/",
-        "cleanUrls": True,
-        "trailingSlash": False,
+        "buildCommand": "rm -rf public && mkdir -p public/og public/fonts && cp *.html search.json robots.txt sitemap.xml llms.txt public/ && cp og/*.png og/*.svg public/og/ && cp fonts/*.woff2 public/fonts/ && npm ci --include=dev --ignore-scripts && npm run assets",
+        "cleanUrls": False,
         "framework": None,
-        # every commit of the push, not only its last one
-        "ignoreCommand": "git diff --quiet ${VERCEL_GIT_PREVIOUS_SHA:-HEAD^} HEAD -- .",
+        # every commit of the push, not only its last one; a previous commit outside the
+        # deploy clone (a long push) makes git fail, which must build, not fail the deployment
+        "ignoreCommand": (
+            "git diff --quiet ${VERCEL_GIT_PREVIOUS_SHA:-HEAD^} HEAD -- . && exit 0 || exit 1"
+        ),
         "outputDirectory": "public",
+        "rewrites": [{"source": f"/{route}", "destination": f"/{route}.html"} for route in routes],
         "redirects": [
-            {"source": "/system", "destination": first, "permanent": False},
-            {"source": "/system.html", "destination": first, "permanent": False},
+            *aliases,
             *(
-                {"source": src, "destination": dst, "permanent": False}
-                for src, dst in sorted(gone.items())
+                {"source": src, "destination": "/", "permanent": True}
+                for src in ("/index", "/index.html", "/index/")
             ),
             # clients that ask for /favicon.ico get the PNG icon
             {"source": "/favicon.ico", "destination": "/og/icon-32.png", "permanent": False},
@@ -219,8 +253,6 @@ def vercel_json():
             {
                 "source": "/(.*)",
                 "headers": [
-                    # noindex: the site is not announced (README)
-                    {"key": "X-Robots-Tag", "value": "noindex"},
                     {"key": "X-Content-Type-Options", "value": "nosniff"},
                     {"key": "Referrer-Policy", "value": "strict-origin-when-cross-origin"},
                     {"key": "Content-Security-Policy", "value": csp},
@@ -332,16 +364,11 @@ def system_card(pid):
     lines, size = card_name(name_of(row))
     label, lead = lead_fig(row, bare=True)
     n = counted(row)
-    _, f, key = lead_figure(row)
-    if parts := parts_of(row, key):  # CO-7: the two parts beside the figure, by their names alone
-        pts = "".join(f'<span class="pt"><span class="pw">{e(w)}</span>'
-                      f'{fig_html(p, n, sub=BARE)}</span>' for w, p in parts)  # fmt: skip
-        lead = fig_html(f, n, sub=BARE) + f'<span class="pts">{pts}</span>'
     head, _, why = standing(row).partition(": ")
-    if row["position"] is not None:
-        why = f"position {row['position']} of {rung['systems_run']}"
+    if row["position"] is not None:  # OR-4: no count where nothing else ran on the model
+        why = ONLY_RUN if only_run(row) else f"position {row['position']} of {rung['systems_run']}"
     rel = S.V["release"]
-    when = f"Release {rel['id']}" + (f", {rel['date']}" if rel["date"] else "") if rel else ""
+    when = f"Release {release_tail(rel)}" if rel else ""
     weight = 600 if row["position"] is not None else 400
     css = f"""
 .top{{position:absolute;left:0;top:0;width:{CARD_W}px;height:72px;padding:0 64px;display:flex;align-items:center;box-shadow:inset 0 -1px 0 {LINE}}}
@@ -356,12 +383,8 @@ def system_card(pid):
 .fig{{display:flex;align-items:baseline;white-space:nowrap}}
 .lead .fig{{justify-content:flex-end}}
 .n{{letter-spacing:-.04em}}
-.lead .n{{font-size:{68 if parts else 84}px;line-height:.84;font-weight:{weight}}}
-.lead .u{{font-size:{36 if parts else 44}px;font-weight:{weight}}}
-.pts{{display:block;margin-top:10px}}
-.pt{{display:flex;justify-content:flex-end;align-items:baseline;gap:8px;font-size:13px;line-height:18px}}
-.lead .pt .n{{font-size:15px;line-height:18px;font-weight:600;letter-spacing:0}}
-.lead .pt .u{{font-size:13px;font-weight:400}}
+.lead .n{{font-size:84px;line-height:.84;font-weight:{weight}}}
+.lead .u{{font-size:44px;font-weight:{weight}}}
 .sub{{display:block;margin-top:10px;font-size:14px;line-height:18px}}
 .na{{font-size:28px;line-height:1}}
 .low{{position:absolute;left:64px;top:344px;width:690px}}
@@ -386,7 +409,7 @@ def system_card(pid):
     glyph = glyph_svg(6, states(row), names=[PETAL_NAME[p["id"]] for p in row["glyph"]])
     model = (f'{e(rung["model"])}<span>'
              f'{e(architecture(rung["parameters_total"], rung.get("parameters_active")))}</span>')  # fmt: skip
-    cells = ((FIGURE_HEAD["cost"], fig_html(row_cost(row), n, sub=BARE)),
+    cells = ((FIGURE_HEAD["proof-size"], fig_html(row["figures"]["proof_bytes_per_reply"], n, sub=BARE)),
              (FIGURE_HEAD["check-time"],
               fig_html(row["figures"]["verify_seconds_per_reply"], n, sub=BARE)))  # fmt: skip
     small = " sm" if len(why) > WHY_LONG else ""

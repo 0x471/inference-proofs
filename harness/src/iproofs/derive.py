@@ -543,6 +543,17 @@ FORMULAS = {
     "GPU-seconds / N",
     "D-L1-COMMIT-PROVING": "CO-7: mean over counted sessions of the session cost per reply "
     "(CO-1) - the generation phase's GPU-seconds / N",
+    "D-L1-COMMIT": "CO-7 (amended 2026-11-15): mean over counted sessions of (commit.end - "
+    "commit.start) * gpus / N",
+    "D-L1-SESSION-PROVING": "CO-7 (amended 2026-11-15): mean over counted sessions of the session "
+    "cost per reply (CO-1) - the commit part - the generation phase's GPU-seconds / N (0 with "
+    "no phase of its own)",
+    "D-L1-GENERATION-TOKEN": "CO-7 (amended 2026-11-15): mean over counted sessions of the "
+    "generation phase's GPU-seconds / N / the request's reply tokens",
+    "D-L1-REPLY-TOKENS": "CO-8: the request's output_tokens / the mean over counted sessions of "
+    "the session cost per reply (CO-1); range output_tokens / max and / min",
+    "D-L1-SERVED-TOKENS": "CO-8 (amended 2026-11-16): the request's output_tokens / the serving "
+    "baseline's GPU-seconds per reply at full load (CO-4)",
     "D-L1-MULTIPLE": "CO-5: row GPU-seconds per reply / baseline GPU-seconds per reply",
     "D-L1-USD": "GPU-seconds per reply * price per GPU-hour / 3600",
 }
@@ -900,6 +911,39 @@ def session_per_reply(commit_start_ns: int, times_ns: Sequence[int], n: int, gpu
     if n < 1 or not times_ns:
         raise IProofsError(ErrorKind.INTERNAL, "CO-1 over a session with no released proof")
     return (max(times_ns) - commit_start_ns) / 1e9 * gpus / n
+
+
+@dataclass(frozen=True)
+class ReplyTokenRate:
+    """CO-8: reply tokens per GPU-second over whole sessions, with its range and n."""
+
+    value: float
+    low: float
+    high: float
+    n: int
+
+
+def reply_tokens_per_gpu_second(per_reply: Sequence[float], tokens: int) -> ReplyTokenRate:
+    """CO-8 (adopted 2026-11-16): the request's reply tokens over the mean of the counted
+    sessions' GPU-seconds per reply (CO-1, whole sessions); its range is the tokens over the
+    largest and over the smallest session value, and n the sessions. A rate of the mean, not a
+    mean of rates, so it is the same figure the session cost per reply is."""
+    if not per_reply or tokens < 1 or any(v <= 0 for v in per_reply):
+        raise IProofsError(ErrorKind.INTERNAL, "CO-8 needs sessions with a positive GPU time "
+                           "per reply and a request with reply tokens")  # fmt: skip
+    return ReplyTokenRate(tokens / statistics.mean(per_reply), tokens / max(per_reply),
+                          tokens / min(per_reply), len(per_reply))  # fmt: skip
+
+
+def served_reply_tokens_per_gpu_second(tokens: int, gpu_seconds_per_reply: float) -> float:
+    """CO-8 (amended 2026-11-16): the serving baseline's reply tokens per GPU-second, the
+    request's reply tokens over the baseline's GPU-seconds per reply at full load (CO-4). Over a
+    row's own rate (`reply_tokens_per_gpu_second`) it is the row's whole sessions' multiple:
+    (T / b) / (T / s) = s / b."""
+    if tokens < 1 or gpu_seconds_per_reply <= 0:
+        raise IProofsError(ErrorKind.INTERNAL, "CO-8 needs a baseline with a positive GPU time "
+                           "per reply and a request with reply tokens")  # fmt: skip
+    return tokens / gpu_seconds_per_reply
 
 
 def overhead_formula(scope: Scope, *, high: bool = False, warm: bool = False) -> str:

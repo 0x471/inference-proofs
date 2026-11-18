@@ -1,0 +1,14 @@
+{
+  "T": 1024,
+  "bucket_job": "s3",
+  "cp_verify_verdict": "accept",
+  "e": 1023,
+  "prompt_set_digest": "sha256:b5a561c1022835f787cecef0140d86dd397df059479915323afb0cb582602053",
+  "prompt_tokens": 512,
+  "proof_id": "req-3",
+  "r": 511,
+  "reply_tokens": 512,
+  "request_index": 3,
+  "run_id": "2026-11-12-flashprove-l1-maverick-p512-o512-prover-h200-hosted-1",
+  "slot": 3
+}

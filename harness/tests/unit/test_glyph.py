@@ -29,6 +29,7 @@ from iproofs.glyph import (
     PETALS,
     Coverage,
     Petal,
+    control_means,
     faithful_model,
     load_properties,
     machine_checked,
@@ -36,6 +37,7 @@ from iproofs.glyph import (
     not_read_rows,
     properties_problems,
     statement_petals,
+    tokens,
     unforgeable,
     weights_hidden,
 )
@@ -119,6 +121,17 @@ def test_uf8_amber_upper() -> None:
     assert got(uf(terms=[124, 101])) == amber_upper()
     assert got(uf(terms=[100])) == amber_upper()  # 100 is not under 100
     assert got(uf(terms=[100, 128])) == amber_upper()
+
+
+def test_uf_reason_opens_with_the_deciding_fact() -> None:
+    """UF-4 to UF-9 (amended 2026-11-16): a reason's first clause is what decided the step, the
+    stated bound last, so a system page's default line (the first clause) is the deciding fact."""
+    for petal in (uf(adversary="weaker"), uf(terms=[130, 79]), uf(basis="conjectured", terms=[99]),
+                  uf(terms=[128, 130]), uf(terms=[124, 101]), uf(basis="conjectured")):  # fmt: skip
+        clauses = petal.reason.split("; ")
+        assert len(clauses) > 1, petal.step
+        assert not clauses[0].startswith("stated bound"), petal.step
+        assert clauses[-1].startswith("stated bound: "), petal.step
 
 
 @pytest.mark.parametrize(
@@ -215,6 +228,35 @@ def test_mc4_build_failed_or_axioms_differ() -> None:
     assert got(mc(build(axioms=()))) == lowered
     assert got(mc(build(exit_code=1))) == lowered  # M4: built with a nonzero exit is no build
     assert got(mc(build(status="crashed"))) == lowered
+
+
+def test_mc4a_stopped_build_is_hollow() -> None:
+    stopped = {**build(status="stopped", axioms=(), exit_code=124),
+               "stop": {"cause": "timeout", "detail": "the build's own limit"}}  # fmt: skip
+    petal = mc(stopped)
+    assert got(petal) == (None, "proof_build_not_run", "statement", ())
+    assert petal.reason == (
+        "the recorded proof build stopped before a verdict (timeout, exit code 124); it is stated "
+        "for fake-verify, which this row runs; once built: Met at most; statement not reviewed by "
+        "an outside Coq reader"
+    )
+    assert needs(petal) == (None, [("our build of the named theorem, run to a verdict", "us")])
+
+
+def test_formal_carries_the_stored_build_without_our_wrapper() -> None:
+    path = "results/v1.0/proof-build/fake/proof-build.json"
+    stored = {**build(), "argv": ["env", "X=1", "timeout", "-k", "60", "9", "make", "check"],
+              "started_at": "2026-11-15T21:09:43Z", "seconds": 6388.0}  # fmt: skip
+    petal = machine_checked(properties2(), HELD, PIN, stored, path)
+    assert petal.formal is not None
+    assert petal.formal["build"] == {
+        "record": path, "toolchain": {"name": TOOLCHAIN["name"], "version": TOOLCHAIN["version"]},
+        "command": ["X=1", "make", "check"], "started_at": "2026-11-15T21:09:43Z",
+        "seconds": 6388.0,
+        "exit_code": 0, "status": "built", "axioms": ["classic"]}  # fmt: skip
+    absent = machine_checked(properties2(), HELD, PIN, None, None).formal
+    assert absent is not None
+    assert "build" not in absent
 
 
 def test_mc5_no_matching_build_is_hollow() -> None:
@@ -329,10 +371,12 @@ def test_reading_flag_follows_the_notes_read() -> None:
     fact the decision did not read, or no note, leaves it unmarked."""
     noted = {"value": "transparent", "quotes": [quote("q")], "note": "our reading"}
     assert nt(rests_on=noted).reading is True
-    assert got(nt(rests_on=noted)) == GREEN
+    assert got(nt(rests_on=noted)) == amber_upper()  # NT-6, GL-10: a reading is amber at most
     assert nt().reading is False
     assert "reading" not in nt().tree()
     assert nt(rests_on=noted).tree()["reading"] is True
+    assert nt(rests_on=noted).tree()["notes"] == ["our reading"]  # GL-10: printed with the petal
+    assert "notes" not in nt().tree()
     later = {"value": "row", "quotes": [quote("q")], "note": "n"}  # read after the basis fails
     assert uf(basis="conjectured", terms=[100], parameters=later).reading is False
     assert uf(parameters=later).reading is True
@@ -358,23 +402,114 @@ def test_real_properties_files() -> None:
     workload = yaml.safe_load((ROOT / "workloads/l1-maverick-p512-o512.yaml").read_text())
     assert steps("flashprove", workload["shape"]["batch_size"]) == [
         ("amber_lower", None), ("amber_upper", None), (None, "proof_build_not_run"),
-        ("green", None)]  # fmt: skip
+        ("amber_upper", None)]  # fmt: skip
     for batch in (None, 1):
         assert steps("sash", batch) == [("amber_lower", None), ("red", "not_stated"),
-                                        ("red", "not_stated"), ("red", "not_stated")]  # fmt: skip
+                                        ("red", "not_stated"), ("amber_upper", None)]  # fmt: skip
+
+
+def test_gl10_a_reading_is_amber_in_part_at_most() -> None:
+    """GL-10: a statement petal that would be green on a fact with a note is drawn amber in part
+    at most; a green on the publisher's words alone stays green; a reading below green keeps its
+    step."""
+    later = {"value": "row", "quotes": [quote("q")], "note": "n"}
+    noted = statement_petals(properties2(bound={"parameters": later}), HELD, PIN, ONE, None)
+    plain = statement_petals(properties2(), HELD, PIN, ONE, None)
+    assert got(noted["unforgeable"]) == amber_upper()
+    assert noted["unforgeable"].reading is True
+    assert got(plain["unforgeable"]) == GREEN
+    lower = statement_petals(properties2(bound={"parameters": later, "terms": [124, 90]}), HELD,
+                             PIN, ONE, None)  # fmt: skip
+    assert got(lower["unforgeable"]) == amber_lower()
+
+
+@pytest.mark.parametrize(
+    ("formal", "axioms", "step", "top"),
+    [
+        ({}, ("classic",), "green", "green"),  # a Coq build with its declared axiom: no gap named
+        ({"conclusion": "other"}, ("classic",), "amber_lower", "amber_lower"),  # not the model
+        ({"conclusion": "not_stated"}, ("classic",), "amber_lower", "amber_lower"),
+        (
+            {
+                "axioms": ["classic", "sorryAx"],
+                "trusted_base": fact(["classic", "sorryAx"], "classic, sorryAx"),
+            },
+            ("classic", "sorryAx"),
+            "amber_lower",
+            "green",
+        ),  # a gap, declared
+        (
+            {
+                "tool": "Lean 4",
+                "axioms": ["propext", "Quot.sound"],
+                "trusted_base": fact(["propext", "Quot.sound"], "propext, Quot.sound"),
+            },
+            ("propext", "Quot.sound"),
+            "green",
+            "green",
+        ),  # Lean's standard axioms
+        (
+            {
+                "tool": "Lean 4",
+                "axioms": ["propext", "funext"],
+                "trusted_base": fact(["propext", "funext"], "propext, funext"),
+            },
+            ("propext", "funext"),
+            "amber_lower",
+            "green",
+        ),  # an axiom beyond Lean's three: only the build shows it
+        (
+            {"reach": "protocol_and_statement", "conclusion": "other"},
+            ("classic",),
+            "amber_lower",
+            "amber_lower",
+        ),
+        ({"reach": "protocol"}, ("classic",), "amber_lower", "amber_lower"),  # already the floor
+    ],
+)
+def test_mc7_ceiling(formal: dict[str, object], axioms: tuple[str, ...], step: str,
+                     top: str) -> None:  # fmt: skip
+    """MC-7: a step above amber in lesser part needs a conclusion about the model and, built,
+    only the tool's standard axioms; the board's `ceiling` is the most a build could give, read
+    from the statement alone."""
+    props = properties2(formal=formal)
+    assert got(machine_checked(props, HELD, PIN, build(axioms=axioms))) == (
+        step, None, "statement", ())  # fmt: skip
+    unbuilt = machine_checked(props, HELD, PIN, None)
+    assert got(unbuilt) == (None, "proof_build_not_run", "statement", ())
+    assert unbuilt.formal is not None
+    assert unbuilt.formal["ceiling"] == top
+
+
+def test_real_rows_ceiling_and_scope_card() -> None:
+    """MC-7 on the stored files: FlashProve's named theorem is about the integer model, so a
+    matching build could give amber in part at most (never green); SASH states nothing. The
+    two cells that ask a property of the wrong party do not apply on either row."""
+    for system, top in (("flashprove", "amber_upper"), ("sash", "red")):
+        props = load_properties(ROOT, system)
+        assert props is not None
+        pin = str(props["upstream"]["commit"])  # type: ignore[index]
+        formal = statement_petals(props, HELD, pin, ONE, None)["machine_checked"].formal
+        assert formal is not None
+        assert formal["ceiling"] == top
+        card = formal["scope_card"]
+        assert card["soundness"]["prover_run"]["value"] == "does_not_apply"  # type: ignore[index]
+        assert card["zero_knowledge"]["verifier_run"]["value"] == "does_not_apply"  # type: ignore[index]
 
 
 def test_a_silent_red_carries_its_documents_read() -> None:
     """GL-1: a `not_stated` red carries the petal's `sources_read`, each linked at the pin; no
-    other petal carries any. SASH's No third party trusted read four files at 4f41667."""
+    other petal carries any. SASH's Machine-checked read four files at 4f41667; its No third party
+    trusted is a reading since 2026-11-15 (GL-10), not silent, so it carries none."""
     props = load_properties(ROOT, "sash")
     assert props is not None
     pin = str(props["upstream"]["commit"])  # type: ignore[index]
     petals = statement_petals(props, HELD, pin, Coverage("part", 1), None)
     assert "sources_read" not in petals["unforgeable"].tree()
-    got_ = petals["no_trusted_party"].tree()["sources_read"]
+    assert "sources_read" not in petals["no_trusted_party"].tree()
+    got_ = petals["machine_checked"].tree()["sources_read"]
     base = f"https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/{pin}/"
-    docs = ("README.md", "prover/README.md", "docs/statement.md", "prover/src/compose.rs")
+    docs = ("README.md", "prover/README.md", "docs/statement.md", "prover/src/util.rs")
     assert got_ == [{"path": d, "url": base + d} for d in docs]
 
 
@@ -464,6 +599,25 @@ def test_fm4_controls_missing() -> None:
     no_steps = fdoc([7] * 5)
     del no_steps["steps"]
     assert fm(no_steps) == amber_lower("test")
+
+
+def test_fm4_a_missing_rerun_is_named_by_its_recipe() -> None:
+    """A rerun that did not run is named by its recipe, never by its id, in the reason and the
+    next step; a step that stores no list of controls names its fixed pair."""
+    doc = fdoc([7] * 5)
+    doc["controls"] = [{"id": "reference-2", "recipe": "rerun", "status": "failed", "scores": []},
+                       *doc["controls"][1:]]  # type: ignore[index]  # fmt: skip
+    doc["steps"]["green"] = {"controls": ["reference-2", "q8_0"], "value": None,  # type: ignore[index]
+                           "cause": "reference-2 failed"}  # fmt: skip
+    doc["rows"][SYSTEM]["step_tests"]["green"] = None  # type: ignore[index]
+    tree = faithful_model("held", None, doc, SYSTEM, "exact_match").tree()
+    assert "reference-2" not in str(tree["reason"]).replace("(reference-2 failed)", "")
+    assert "between the original run again and the 8-bit copy" in str(tree["reason"])
+    need = {"text": "the original run again run and scored", "by": "us"}
+    assert tree["next"] == {"to": "amber_upper", "needs": [need]}
+    del doc["steps"]["green"]["controls"]  # type: ignore[index]
+    tree = faithful_model("held", None, doc, SYSTEM, "exact_match").tree()
+    assert "between the original run again and the 8-bit copy has no value" in str(tree["reason"])
 
 
 def test_fm5_to_fm7_hand_counted() -> None:
@@ -627,16 +781,16 @@ def test_board_glyph(tmp_path: Path) -> None:
     Q4_K_M 300 on all 15 prompts, T_green = (7650 + 7200) / 30 = 495, T_upper = 390; the row's
     500s give d_green = 150 on each prompt, p = 1 / 2^15."""
     tree = Tree(tmp_path)
-    three_sessions(tree)
     system = tmp_path / "systems" / SYSTEM
+    card = {"system": SYSTEM, "configuration": "default", "card_version": 1,
+            "coverage": {"policy": {"kind": "exact_match"}}}  # fmt: skip
+    system.joinpath("claim.yaml").write_text(yaml.safe_dump(card))  # before the sessions name it
+    three_sessions(tree)
     flags = {"forbidden_flags": ["--unsound-skip-"], "proofs": {"granularity": "request"}}
     system.joinpath("system.yaml").write_text(yaml.safe_dump(flags))
     workload = tmp_path / "workloads" / f"{WORKLOAD}.yaml"
     workload.parent.mkdir()
     workload.write_text(yaml.safe_dump({"shape": {"batch_size": 1}}))
-    system.joinpath("claim.yaml").write_text(
-        yaml.safe_dump({"coverage": {"policy": {"kind": "exact_match"}}})
-    )
     system.joinpath("properties.yaml").write_text(json.dumps(
         properties2(bound={"unit": "proof"}, trust={"rests_on": "not_stated"})))  # fmt: skip
     controls = [{"id": c, "kind": "honest", "recipe": r, "status": "ok", "scores": [s] * 15,
@@ -657,6 +811,7 @@ def test_board_glyph(tmp_path: Path) -> None:
     board = build_board(tree.root, RELEASE, tree.level)
     assert SchemaRegistry.from_tree(ROOT / "schema").errors("board/1", board) == []
     (r,) = board["rungs"][1]["rows"]  # type: ignore[index]
+    assert r["ineligible_sessions"] == []
     assert [p["id"] for p in r["glyph"]] == list(PETALS)
     assert [(p["step"], p["cause"]) for p in r["glyph"]] == [
         ("green", None), ("green", None), ("green", None), (None, "proof_build_not_run"),
@@ -687,3 +842,80 @@ def test_validate_runs_the_offline_checks(tmp_path: Path) -> None:
     system.joinpath("system.yaml").write_text(yaml.safe_dump({"upstream": {"commit": "b" * 40}}))
     release.joinpath("index.json").write_text("{}")
     assert sorted(f.rule for f in g2_glyph(tmp_path, files)) == ["GLYPH", "PROPERTIES"]
+
+
+def test_fm_reason_numbers() -> None:
+    """FM (amended 2026-11-15): the reason's means are computed from the stored scores and
+    printed at three significant digits below 100, whole above: 29.66 is 29.7, a midpoint of
+    47.997 is 48.0, 106.1 is 106, 5.267 is 5.27."""
+    assert [tokens(x) for x in (29.658333, 47.99722, 106.1, 5.2667, 1.4)] == [
+        "29.7", "48.0", "106", "5.27", "1.4"]  # fmt: skip
+    doc = {"controls": [{"id": "reference-2", "recipe": "rerun", "scores": [500, 501]},
+                        {"id": "q8_0", "recipe": "quantize", "scores": [65, 66, 67]},
+                        {"id": "q2_k", "recipe": "quantize", "scores": []}]}  # fmt: skip
+    assert control_means(doc) == {"reference-2": ("the original run again", 500.5),
+                                   "q8_0": ("the 8-bit copy", 66.0)}  # fmt: skip
+
+
+# ---------------------------------------------------------------- the next step (GL-11)
+
+
+def needs(petal: Petal) -> tuple[object, list[tuple[str, str]]]:
+    """A petal's next step as (to, [(need, by)])."""
+    assert petal.next_step is not None
+    found = petal.next_step["needs"]
+    assert isinstance(found, list)
+    return petal.next_step["to"], [(str(n["text"]), str(n["by"])) for n in found]
+
+
+def test_next_is_null_at_green() -> None:
+    """GL-11: a petal at its top step has no next step."""
+    assert uf(terms=[128, 130]).next_step is None
+    assert mc(build()).next_step is None
+    assert uf(terms=[128, 130]).tree()["next"] is None
+
+
+def test_next_uf9_lists_exactly_the_failing_needs_in_order() -> None:
+    """GL-11, UF-9: FlashProve's facts (proved, [124, 101], per proof, together, batch 24,
+    conditions not shown, not stated for the program run) fail the program, batch and conditions
+    clauses only, in UF-9's order; each need is the publisher's. A proved [124, 90] bound that
+    covers the run lacks only the exponent."""
+    flashprove = uf(Coverage("request", 24), unit="proof", terms=[124, 101], batch="together",
+                    conditions_shown=False, program="not_stated")  # fmt: skip
+    to, got_ = needs(flashprove)
+    assert to == "amber_upper"
+    assert [by for _, by in got_] == ["publisher"] * 3
+    assert [n.split(" ")[0:2] for n, _ in got_] == [["stated", "or"], ["stated", "for"],
+                                                    ["its", "conditions"]]  # fmt: skip
+    assert "24-reply batch" in got_[1][0]
+    to, got_ = needs(uf(terms=[124, 90]))
+    assert (to, got_) == ("amber_upper", [("every exponent 100 or more", "publisher")])
+
+
+def test_next_mc5_names_the_build_that_decides_it() -> None:
+    """GL-11, MC-5: a hollow Machine-checked petal names the theorem, the pin, the toolchain and
+    the tool to build with, by us; with no toolchain pinned, the publisher's pin is the need. The
+    reason keeps the ceiling a build could give."""
+    petal = mc(None, reach="protocol_and_statement")
+    to, got_ = needs(petal)
+    assert to is None
+    assert got_ == [(f"our recorded build of Fake.Verifier.sound at {PIN[:7]} with coq 8.20.0, "
+                     "reporting only the declared axioms", "us")]  # fmt: skip
+    assert "once built: Mostly met at most" in petal.reason
+    assert needs(mc(None, toolchain=None)) == (None, [("a pinned toolchain", "publisher")])
+
+
+def test_next_a_reading_targeting_green_needs_the_publisher_sentence() -> None:
+    """GL-10, GL-11: a petal capped at amber_upper by a reading needs the publisher's sentence for
+    green; a reading below amber_upper does not add it (its target is not green)."""
+    later = {"value": "row", "quotes": [quote("q")], "note": "n"}
+    capped = statement_petals(properties2(bound={"parameters": later}), HELD, PIN, ONE, None)
+    to, got_ = needs(capped["unforgeable"])
+    assert to == "green"
+    assert got_ == [("a sentence of the publisher's that says it, in place of our reading",
+                     "publisher")]  # fmt: skip
+    lower = statement_petals(properties2(bound={"parameters": later, "terms": [124, 90]}), HELD,
+                             PIN, ONE, None)  # fmt: skip
+    to, got_ = needs(lower["unforgeable"])
+    assert to == "amber_upper"
+    assert all("our reading" not in n for n, _ in got_)

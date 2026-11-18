@@ -4,17 +4,17 @@ Entry point of the specification corpus. This page is an index and an executive 
 
 ## Executive summary
 
-Several open systems prove that a language model produced a given output. Each publishes its own numbers, on its own model, under its own timing rules, for its own claim, so no two can be read side by side ([PRD §1](PRD.md#1-problem)). This project is a neutral benchmark that removes those differences where they can be removed and labels them where they cannot.
+Several open systems prove that a language model produced a given output. Each publishes its own numbers, on its own model, under its own timing rules, for its own claim, so no two can be read side by side ([PRD §1](PRD.md#1-problem)). This project is a benchmark that removes those differences where they can be removed and labels them where they cannot.
 
 Five mechanisms carry the design:
 
 1. **A claim card beside every number** ([RFC-0002](../rfcs/0002-claim-card.md)). A number is published only with a machine-checkable statement of the relation proved, the security notion, the assumptions, the bound and unbound edges and the residual.
 2. **One labelled-quantity type** ([RFC-0012](../rfcs/0012-schemas-and-serialization.md), [RFC-0004](../rfcs/0004-metrics-timing-grades.md)). Every stored number carries unit, timing scope, grade, evidence tier and source. Derived numbers are recomputed bit for bit by CI from raw ones.
-3. **External measurement of unchanged provers** ([RFC-0005](../rfcs/0005-adapter-contract.md), [RFC-0010](../rfcs/0010-harness-runner.md), [RFC-0011](../rfcs/0011-measurement-and-sampling.md)). Each system runs at a pinned commit inside a hardened, network-less container behind a five-subcommand adapter contract. The harness times calls and proof releases from outside and samples GPU and host resources.
+3. **External measurement of provers at public pins** ([RFC-0005](../rfcs/0005-adapter-contract.md), [RFC-0010](../rfcs/0010-harness-runner.md), [RFC-0011](../rfcs/0011-measurement-and-sampling.md)). Each system runs at a pinned public commit with no source change of ours, behind a five-subcommand adapter contract; Level 1's SASH pin is a pull request this project's owner wrote (see below). Hosted runs, every v1.0 run among them, record the provider's network in their manifests, and the verify trace records the files the verifier opens, not its connections. The harness times calls and proof releases from outside and samples GPU and host resources.
 4. **Adversarial checks applied by the harness** ([RFC-0008](../rfcs/0008-negative-controls.md)). Every verifier faces the same tampering controls, each with an honest twin, so a verifier that accepts everything, or a broken control, is visible.
 5. **Evidence tiers** ([RFC-0007](../rfcs/0007-evidence-tiers-and-reproduction.md)). Every number carries a tier; every stored number is at tier `reported`.
 
-Benchmark release v0.1 covers two systems on their native workloads on one NVIDIA H200 141 GB reference profile ([RFC-0006 §H200 profiles](../rfcs/0006-reference-hardware-and-cost.md#h200-profiles)), SASH zk-inference-prover and FlashProve, plus plain-serving and recompute reference rows ([RFC-0003](../rfcs/0003-workloads.md), [RFC-0015](../rfcs/0015-reference-rows.md)). It publishes no ranking and no aggregate score ([PRD §5](PRD.md#5-non-goals)).
+Level 1 v1.0 ([RFC-0018](../rfcs/0018-level-1-ladder.md)) runs FlashProve on Llama 4 Maverick 17B-128E Instruct and SASH on Llama 3.1 8B Instruct, each at the level's one request, and ranks a passed row only inside its model's rung. Benchmark release v0.1, before it, covered two systems on their native workloads on one NVIDIA H200 141 GB reference profile ([RFC-0006 §H200 profiles](../rfcs/0006-reference-hardware-and-cost.md#h200-profiles)), SASH zk-inference-prover and FlashProve, plus plain-serving and recompute reference rows ([RFC-0003](../rfcs/0003-workloads.md), [RFC-0015](../rfcs/0015-reference-rows.md)). v0.1 published no ranking and no aggregate score ([PRD §5](PRD.md#5-non-goals)).
 
 ## Corpus
 
@@ -64,3 +64,5 @@ Benchmark release v0.1 covers two systems on their native workloads on one NVIDI
 | FlashProve | `anthropics/FlashProve` | `9e2bdd8ff5bf9c62f18263d7dac189b0400b260c` (v0.16.0) |
 
 Full hashes were resolved from the abbreviated pins in the PRD through the GitHub API on 2026-11-03.
+
+Level 1 v1.0 runs SASH at `4f41667297430a598165c4a8604258fe37d952ae`, the head of [pull request #36](https://github.com/sg-ai-safety-hub/zk-inference-prover/pull/36) on 2026-11-12, written by this project's owner and not merged upstream: upstream `eb95bfa` refuses one of the level's prompts ([`systems/sash/README.md`](../systems/sash/README.md)).

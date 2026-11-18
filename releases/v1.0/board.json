@@ -1,5 +1,5 @@
 {
-  "date": "2026-11-13",
+  "date": "2026-11-16",
   "frontier": {
     "rows": [
       "flashprove"
@@ -37,6 +37,7 @@
       "baseline": {
         "cause": null,
         "concurrency": 512,
+        "gpu_model": "NVIDIA H200",
         "gpu_seconds_per_reply": {
           "grade": "derived",
           "null_reason": null,
@@ -277,6 +278,23 @@
             }
           }
         ],
+        "reply_tokens_per_gpu_second": {
+          "grade": "derived",
+          "note": "one serving run at full load: 3 timed batches of 512 replies (1,536 replies) on 4 x NVIDIA H200; one rate over the batches' span, no range",
+          "null_reason": null,
+          "scope": "prove.steady",
+          "source": {
+            "inputs": [
+              "releases/v1.0/board.json#/rungs/0/baseline/gpu_seconds_per_reply",
+              "levels/L1.yaml#/request/output_tokens"
+            ],
+            "kind": "derivation",
+            "ref": "derive:D-L1-SERVED-TOKENS@0.1.0.dev0"
+          },
+          "tier": "reported",
+          "unit": "token/gpu_s",
+          "value": 2668.932082158714
+        },
         "run_id": "2026-11-11-ref-serve-l1-maverick-p512-o512-serving-h200x4-hosted-1",
         "serving": "llama-4-maverick-17b-128e-instruct-fp8",
         "usd_per_reply": {
@@ -353,7 +371,21 @@
             "status": "ok"
           }
         ],
-        "path": "results/v1.0/fidelity/llama-4-maverick/fidelity.json"
+        "path": "results/v1.0/fidelity/llama-4-maverick/fidelity.json",
+        "runs": [
+          {
+            "engine": "vllm",
+            "part": null,
+            "slots": 1
+          },
+          {
+            "engine": "llama.cpp",
+            "part": "controls",
+            "slots": 16
+          }
+        ],
+        "slots": null,
+        "slots_cause": "the vLLM run takes no slot count and sends every prompt in one generate call (FI-9)"
       },
       "id": "llama-4-maverick",
       "model": "Llama 4 Maverick 17B-128E Instruct",
@@ -380,7 +412,25 @@
                 "results/v1.0/flashprove/2026-11-11-flashprove-l1-maverick-p512-o512-prover-h200-hosted-1/controls.json#/controls/2"
               ],
               "note": null,
-              "state": "held"
+              "state": "held",
+              "trials": [
+                {
+                  "control": "P1",
+                  "inputs": 1,
+                  "no_proof": 3,
+                  "position": null,
+                  "refused": 3,
+                  "trials": 3
+                },
+                {
+                  "control": "C3",
+                  "inputs": 1,
+                  "no_proof": 0,
+                  "position": null,
+                  "refused": 3,
+                  "trials": 3
+                }
+              ]
             },
             "no_weight_file": {
               "cause": null,
@@ -398,7 +448,17 @@
                 "results/v1.0/flashprove/2026-11-11-flashprove-l1-maverick-p512-o512-prover-h200-hosted-1/controls.json#/controls/1"
               ],
               "note": null,
-              "state": "held"
+              "state": "held",
+              "trials": [
+                {
+                  "control": "C2",
+                  "inputs": 3,
+                  "no_proof": 0,
+                  "position": null,
+                  "refused": 3,
+                  "trials": 3
+                }
+              ]
             },
             "reply": {
               "cause": null,
@@ -409,7 +469,33 @@
                 "results/v1.0/flashprove/2026-11-11-flashprove-l1-maverick-p512-o512-prover-h200-hosted-1/controls.json#/controls/0"
               ],
               "note": null,
-              "state": "held"
+              "state": "held",
+              "trials": [
+                {
+                  "control": "C1",
+                  "inputs": 1,
+                  "no_proof": 0,
+                  "position": "first",
+                  "refused": 3,
+                  "trials": 3
+                },
+                {
+                  "control": "C1",
+                  "inputs": 1,
+                  "no_proof": 0,
+                  "position": "last",
+                  "refused": 3,
+                  "trials": 3
+                },
+                {
+                  "control": "C1",
+                  "inputs": 3,
+                  "no_proof": 0,
+                  "position": "interior",
+                  "refused": 3,
+                  "trials": 3
+                }
+              ]
             },
             "run": {
               "cause": null,
@@ -432,6 +518,33 @@
             "p_above_bar": 4.9999750001249995e-06,
             "p_below_bar": 1.0
           },
+          "generation_gpu_seconds_per_reply_token": {
+            "grade": "derived",
+            "null_reason": null,
+            "scope": "whole_wall",
+            "source": {
+              "inputs": [
+                "results/v1.0/flashprove/2026-11-11-flashprove-l1-maverick-p512-o512-prover-h200-hosted-1/run.json#/marks",
+                "results/v1.0/flashprove/2026-11-12-flashprove-l1-maverick-p512-o512-prover-h200-hosted-1/run.json#/marks",
+                "results/v1.0/flashprove/2026-11-12-flashprove-l1-maverick-p512-o512-prover-h200-hosted-2/run.json#/marks",
+                "levels/L1.yaml#/request/output_tokens"
+              ],
+              "kind": "derivation",
+              "ref": "derive:D-L1-GENERATION-TOKEN@0.1.0.dev0"
+            },
+            "stats": {
+              "max": 0.45452224376769207,
+              "mean": 0.44916972537278643,
+              "median": 0.44724210178440754,
+              "min": 0.44574483056625974,
+              "n": 3,
+              "n_failed": 0,
+              "stdev": 0.004695481354560543
+            },
+            "tier": "reported",
+            "unit": "gpu_s/token",
+            "value": 0.44916972537278643
+          },
           "generation_multiple": {
             "grade": "derived",
             "null_reason": "not_applicable",
@@ -451,9 +564,197 @@
           "glyph": [
             {
               "basis": "statement",
+              "bound": {
+                "adversary": "any_prover",
+                "after": "q hash queries",
+                "basis": "proved",
+                "batch": "together",
+                "batch_size": 24,
+                "conditions_shown": false,
+                "expression": "q/2^124 + 2^-101",
+                "one_reply": true,
+                "parameters": "row",
+                "program": "not_stated",
+                "q_cross": [
+                  24,
+                  44
+                ],
+                "run": "cp_verify",
+                "said": {
+                  "adversary": {
+                    "plain": "The publisher states the limit \"against a committer and a prover who may both cheat\" (the committer publishes the commitment; the prover makes the proofs). Our rule asks for any cheating prover: one that runs its own machine as it likes, with a limit that does not rely on trusted hardware or an honest outside party. We read the publisher's words as that. The publisher adds that nothing is claimed against a quantum computer; our rule does not ask about one.",
+                    "quotes": [
+                      {
+                        "text": "against a committer and a prover who may both cheat",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L142"
+                      },
+                      {
+                        "text": "so nothing is claimed against a quantum adversary",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L394-L395"
+                      }
+                    ]
+                  },
+                  "after": {
+                    "quotes": [
+                      {
+                        "text": "The Lean verifier accepts a proof of a false claim with probability at most about q/2^124 + 2^-101 after q hash queries (about 124 bits per query; not \"128 bits\")",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/what-is-proved.md#L46-L47"
+                      }
+                    ]
+                  },
+                  "basis": {
+                    "quotes": [
+                      {
+                        "text": "Lean's kernel has checked the proof.",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/what-is-proved.md#L51"
+                      }
+                    ]
+                  },
+                  "batch": {
+                    "quotes": [
+                      {
+                        "text": "**One proof.** N proofs handed in at once under one commitment, or N members of a batch, cost N times that error, taken at the whole list's hash queries; for proofs checked one after another, or members checked in separate sessions, no bound is stated.",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/what-is-proved.md#L66-L68"
+                      },
+                      {
+                        "text": "for separate sessions no theorem states it.",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L373"
+                      }
+                    ]
+                  },
+                  "conditions_shown": {
+                    "plain": "The condition, in the publisher's words: \"public files that are fixed before the hash function is sampled (a provider that tunes them to the real hash function is outside the statement)\". In plain words: the theorem treats the hash function as drawn at random, and it covers only public files chosen before that draw; it says nothing about files a provider tuned to the actual hash function. No file of ours shows when the files we run were fixed, and the publisher writes that the reader must grant it. The publisher also writes that at files other than its stored examples, the theorem may hold only because the verifier rejects every proof. A verifier that rejects every proof never accepts a fake, so there the theorem could hold and still say nothing about fake replies.",
+                    "quotes": [
+                      {
+                        "text": "At all other files in scope nothing is known, so there the theorem may hold only because `verify` rejects everything.",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L314-L315"
+                      },
+                      {
+                        "text": "The proofs from the runs on real weights were checked by `cp_verify` alone; none has been put to the Lean verifier",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/what-is-proved.md#L227-L228"
+                      },
+                      {
+                        "text": "public files that are fixed before the hash function is sampled (a provider that tunes them to the real hash function is outside the statement)",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L149-L150"
+                      },
+                      {
+                        "text": "No file shows that they were fixed before the provider could tune them to the hash function: that you grant.",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/what-is-proved.md#L288-L289"
+                      }
+                    ]
+                  },
+                  "expression": {
+                    "quotes": [
+                      {
+                        "text": "The Lean verifier accepts a proof of a false claim with probability at most about q/2^124 + 2^-101 after q hash queries (about 124 bits per query; not \"128 bits\")",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/what-is-proved.md#L46-L47"
+                      }
+                    ]
+                  },
+                  "parameters": {
+                    "plain": "It states the limit for \"full size, not the small examples\", and we run the full size.",
+                    "quotes": [
+                      {
+                        "text": "**One proof format and model size:** full size, not the small examples",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/what-is-proved.md#L62"
+                      },
+                      {
+                        "text": "Neither figure, 124 bits per query or 128 bits per round, is claimed for the C++ programs.",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/what-is-proved.md#L70"
+                      }
+                    ]
+                  },
+                  "program": {
+                    "quotes": [
+                      {
+                        "text": "Neither figure, 124 bits per query or 128 bits per round, is claimed for the C++ programs.",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/what-is-proved.md#L70"
+                      },
+                      {
+                        "text": "The C++ verifier and the CUDA prover are written to follow the same protocol and are tested against it, not themselves proved.",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/what-is-proved.md#L7-L8"
+                      },
+                      {
+                        "text": "The C++ programs' printed \"bits\" are their own accounting, not a theorem",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/known-limits.md#L65-L66"
+                      }
+                    ]
+                  },
+                  "stated": {
+                    "quotes": [
+                      {
+                        "text": "The Lean verifier accepts a proof of a false claim with probability at most about q/2^124 + 2^-101 after q hash queries (about 124 bits per query; not \"128 bits\")",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/what-is-proved.md#L46-L47"
+                      }
+                    ]
+                  },
+                  "unit": {
+                    "quotes": [
+                      {
+                        "text": "The bound is for one commitment, one prompt, one output, one proof and one call of `verify`.",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L150-L151"
+                      },
+                      {
+                        "text": "**One proof.** N proofs handed in at once under one commitment, or N members of a batch, cost N times that error, taken at the whole list's hash queries; for proofs checked one after another, or members checked in separate sessions, no bound is stated.",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/what-is-proved.md#L66-L68"
+                      }
+                    ]
+                  }
+                },
+                "stated_for": "the Lean verifier",
+                "terms": [
+                  124,
+                  101
+                ],
+                "unit": "proof",
+                "verifiers": {
+                  "run": {
+                    "described": "the publisher's C++ verifier",
+                    "quotes": [
+                      {
+                        "text": "Anyone can check the proof on an ordinary CPU in seconds with `cp_verify`, without the weights.",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/README.md#L15-L16"
+                      }
+                    ]
+                  },
+                  "stated": {
+                    "described": "a verifier the publisher wrote in Lean and proves things about",
+                    "quotes": [
+                      {
+                        "text": "The Lean verifier accepts a proof of a false claim with probability at most about q/2^124 + 2^-101 after q hash queries (about 124 bits per query; not \"128 bits\")",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/what-is-proved.md#L46-L47"
+                      },
+                      {
+                        "text": "Neither figure, 124 bits per query or 128 bits per round, is claimed for the C++ programs.",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/what-is-proved.md#L70"
+                      }
+                    ]
+                  }
+                }
+              },
               "cause": null,
               "id": "unforgeable",
               "lowered_by": [],
+              "next": {
+                "needs": [
+                  {
+                    "by": "publisher",
+                    "text": "stated or proved for cp_verify, the verifier this row runs"
+                  },
+                  {
+                    "by": "publisher",
+                    "text": "stated for each reply of a 24-reply batch checked alone"
+                  },
+                  {
+                    "by": "publisher",
+                    "text": "its conditions shown to hold for this row's files"
+                  }
+                ],
+                "to": "amber_upper"
+              },
+              "notes": [
+                "classical adversaries only (THEOREM.md L394-L395); the files-fixed-before-the-hash condition is counted under the conditions clause"
+              ],
               "quotes": [
                 {
                   "text": "The Lean verifier accepts a proof of a false claim with probability at most about q/2^124 + 2^-101 after q hash queries (about 124 bits per query; not \"128 bits\")",
@@ -516,16 +817,280 @@
                   "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/known-limits.md#L65-L66"
                 }
               ],
+              "read_facts": [
+                {
+                  "fact": "adversary",
+                  "note": "classical adversaries only (THEOREM.md L394-L395); the files-fixed-before-the-hash condition is counted under the conditions clause",
+                  "plain": "The publisher states the limit \"against a committer and a prover who may both cheat\" (the committer publishes the commitment; the prover makes the proofs). Our rule asks for any cheating prover: one that runs its own machine as it likes, with a limit that does not rely on trusted hardware or an honest outside party. We read the publisher's words as that. The publisher adds that nothing is claimed against a quantum computer; our rule does not ask about one.",
+                  "used": true
+                },
+                {
+                  "fact": "parameters",
+                  "note": "the row runs the full-size format at exact match; whether its own files are in scope is the conditions clause; the bound is stated for the Lean verifier and not claimed for cp_verify, which the row runs (the program clause)",
+                  "plain": "It states the limit for \"full size, not the small examples\", and we run the full size.",
+                  "used": false
+                }
+              ],
               "reading": true,
-              "reason": "the bound is stated for a batch checked together, not for a reply checked alone (the row proves 24 replies a batch)",
+              "reason": "not shown to cover this row: none stated for cp_verify, which this row runs; stated for proofs checked together, not for our separate checks of 24-reply batches; its conditions not shown to hold for the row's files; stated bound: at most q/2^124 + 2^-101 per proof, stated for the Lean verifier",
+              "sources": "statement_reading",
+              "sources_count": 1,
               "state": "amber",
-              "step": "amber_lower"
+              "step": "amber_lower",
+              "to_met": [
+                {
+                  "items": [
+                    {
+                      "by": "publisher",
+                      "need": "program",
+                      "run": "cp_verify",
+                      "stated": "the Lean verifier"
+                    },
+                    {
+                      "batch": "together",
+                      "by": "publisher",
+                      "n": 24,
+                      "need": "batch"
+                    },
+                    {
+                      "by": "publisher",
+                      "need": "conditions",
+                      "proved": true
+                    }
+                  ],
+                  "kind": "up",
+                  "to": "amber_upper"
+                },
+                {
+                  "items": [
+                    {
+                      "by": "publisher",
+                      "floor": 128,
+                      "need": "exponent",
+                      "q": true,
+                      "terms": [
+                        124,
+                        101
+                      ]
+                    },
+                    {
+                      "by": "publisher",
+                      "facts": [
+                        "adversary",
+                        "parameters"
+                      ],
+                      "need": "reading"
+                    }
+                  ],
+                  "kind": "up",
+                  "to": "green"
+                }
+              ],
+              "why": {
+                "exps": [
+                  124,
+                  101
+                ],
+                "first": 1,
+                "floor": 80,
+                "last": 3,
+                "least": 101,
+                "q": true,
+                "unit": "proof",
+                "unit_item": null
+              }
             },
             {
               "basis": "statement",
               "cause": null,
+              "forms": [
+                {
+                  "item": "For the interactive protocol (IOP) it is honest-verifier zero knowledge.",
+                  "quotes": [
+                    {
+                      "text": "For the interactive protocol (IOP) it is honest-verifier zero knowledge.",
+                      "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/weight-hiding.md#L3"
+                    }
+                  ]
+                },
+                {
+                  "item": "For the compiled (non-interactive) prover and the Lean verifier that is proved sound, in the random-oracle model, it holds against any verifier within 2^64 hash queries and 688,127 replies",
+                  "quotes": [
+                    {
+                      "text": "For the compiled (non-interactive) prover and the Lean verifier that is proved sound, in the random-oracle model, it holds against any verifier within 2^64 hash queries and 688,127 replies",
+                      "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/weight-hiding.md#L3"
+                    }
+                  ]
+                },
+                {
+                  "item": "up to a statistical distance below 2^-154",
+                  "quotes": [
+                    {
+                      "text": "all that such a verifier sees can be simulated from the public files, the requests and one bit per request (served or refused: a request is refused if it is ill-formed, if the model has no result on it, or if its result is other tokens), up to a statistical distance below 2^-154",
+                      "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/weight-hiding.md#L3"
+                    }
+                  ]
+                },
+                {
+                  "item": "They are for one commitment and one request to a proof",
+                  "quotes": [
+                    {
+                      "text": "They are for one commitment and one request to a proof",
+                      "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/weight-hiding.md#L5"
+                    }
+                  ]
+                },
+                {
+                  "item": "batches, which are what the programs serve, are not covered",
+                  "quotes": [
+                    {
+                      "text": "batches, which are what the programs serve, are not covered",
+                      "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/weight-hiding.md#L5"
+                    }
+                  ]
+                },
+                {
+                  "item": "with the programs' seed (ChaCha20) hiding can be computational at best",
+                  "quotes": [
+                    {
+                      "text": "What Lean proves is statistical, with the hash as a random oracle and for truly random masks; with the programs' seed (ChaCha20) hiding can be computational at best.",
+                      "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/weight-hiding.md#L25"
+                    }
+                  ]
+                },
+                {
+                  "item": "The honest prover in these theorems is a Lean definition, not the CUDA prover.",
+                  "quotes": [
+                    {
+                      "text": "The honest prover in these theorems is a Lean definition, not the CUDA prover.",
+                      "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/weight-hiding.md#L3"
+                    }
+                  ]
+                }
+              ],
+              "hiding": {
+                "at_least": true,
+                "batch_size": 24,
+                "fitted": [
+                  "Settings fitted to the weights.",
+                  "That cp_commit's checks passed.",
+                  "Masked sums of the weights, public for good."
+                ],
+                "listed": true,
+                "programs": "not_stated",
+                "proof": "protocol",
+                "said": {
+                  "programs": {
+                    "plain": "For its programs (the C++ and CUDA code we run), the publisher states an expectation, not a theorem, and says the expectation does not reach a real model's weights or the files fitted to them. We run a real model, so we count no statement for the programs we run.",
+                    "quotes": [
+                      {
+                        "text": "we expect, rather than know, that the programs hide the weights at the default setting, in honest runs, if the provider keeps its duties (this does not reach any real model's weights, or the parameter file and scales fitted to them",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/weight-hiding.md#L3"
+                      },
+                      {
+                        "text": "Anything else is outside it, and so is any real model, the example's too, because it needs a parameter file fitted to it",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/weight-hiding.md#L37"
+                      }
+                    ]
+                  },
+                  "proof": {
+                    "quotes": [
+                      {
+                        "text": "batches, which are what the programs serve, are not covered",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/weight-hiding.md#L5"
+                      }
+                    ]
+                  },
+                  "stated": {
+                    "quotes": [
+                      {
+                        "text": "Zero knowledge, Lean's form of weight hiding, is proved in Lean for the protocol, at [full size](terms.md) and at the exact-match policy, with fresh random masks.",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/weight-hiding.md#L3"
+                      }
+                    ]
+                  },
+                  "verifier_gets_weights": {
+                    "quotes": [
+                      {
+                        "text": "Anyone can check the proof on an ordinary CPU in seconds with `cp_verify`, without the weights.",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/README.md#L15-L16"
+                      }
+                    ]
+                  },
+                  "visible_at_least": {
+                    "quotes": [
+                      {
+                        "text": "At least eleven things are visible",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/docs/what-is-not-hidden.md#L5"
+                      }
+                    ]
+                  },
+                  "visible_listed": {
+                    "quotes": [
+                      {
+                        "text": "At least eleven things are visible",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/docs/what-is-not-hidden.md#L5"
+                      }
+                    ]
+                  },
+                  "zk_kind": {
+                    "quotes": [
+                      {
+                        "text": "What Lean proves is statistical, with the hash as a random oracle and for truly random masks",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/weight-hiding.md#L25"
+                      }
+                    ]
+                  },
+                  "zk_model": {
+                    "quotes": [
+                      {
+                        "text": "For the compiled (non-interactive) prover and the Lean verifier that is proved sound, in the random-oracle model, it holds against any verifier within 2^64 hash queries and 688,127 replies",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/weight-hiding.md#L3"
+                      }
+                    ]
+                  },
+                  "zk_unit": {
+                    "quotes": [
+                      {
+                        "text": "They are for one commitment and one request to a proof",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/weight-hiding.md#L5"
+                      }
+                    ]
+                  }
+                },
+                "stated": true,
+                "verifier_gets_weights": false,
+                "visible_count": 11,
+                "zk_kind": "statistical",
+                "zk_model": "random_oracle",
+                "zk_unit": "request"
+              },
               "id": "weights_hidden",
               "lowered_by": [],
+              "next": {
+                "needs": [
+                  {
+                    "by": "publisher",
+                    "text": "proved for the configuration this row runs, its 24-reply batches included"
+                  },
+                  {
+                    "by": "publisher",
+                    "text": "stated for the programs this row runs"
+                  },
+                  {
+                    "by": "publisher",
+                    "text": "no listed visible value that depends on the weights (3 now)"
+                  },
+                  {
+                    "by": "publisher",
+                    "text": "a sentence of the publisher's that says it, in place of our reading"
+                  }
+                ],
+                "to": "green"
+              },
+              "notes": [
+                "the publisher expects the programs to hide the weights, but says the expectation does not reach a real model's weights or the files fitted to them; the row commits a real model's weights"
+              ],
               "quotes": [
                 {
                   "text": "Zero knowledge, Lean's form of weight hiding, is proved in Lean for the protocol, at [full size](terms.md) and at the exact-match policy, with fresh random masks.",
@@ -552,10 +1117,45 @@
                   "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/docs/what-is-not-hidden.md#L5"
                 }
               ],
+              "read_facts": [
+                {
+                  "fact": "programs",
+                  "note": "the publisher expects the programs to hide the weights, but says the expectation does not reach a real model's weights or the files fitted to them; the row commits a real model's weights",
+                  "plain": "For its programs (the C++ and CUDA code we run), the publisher states an expectation, not a theorem, and says the expectation does not reach a real model's weights or the files fitted to them. We run a real model, so we count no statement for the programs we run.",
+                  "used": true
+                }
+              ],
               "reading": true,
-              "reason": "zero knowledge proved for the protocol only, not stated for its programs, and 3 visible values fitted to the weights",
+              "reason": "zero knowledge (statistical, random-oracle model) proved for the protocol only, one request a proof; not for the row's 24-reply batches; not stated for the programs the row runs; 3 listed values depend on the weights",
+              "sources": "statement_reading",
+              "sources_count": 1,
               "state": "amber",
               "step": "amber_upper",
+              "to_met": [
+                {
+                  "items": [
+                    {
+                      "by": "publisher",
+                      "n": 24,
+                      "need": "zk_run",
+                      "unit": "request"
+                    },
+                    {
+                      "by": "publisher",
+                      "need": "programs",
+                      "programs": "not_stated",
+                      "read": true
+                    },
+                    {
+                      "by": "publisher",
+                      "k": 3,
+                      "need": "fitted"
+                    }
+                  ],
+                  "kind": "up",
+                  "to": "green"
+                }
+              ],
               "visible": [
                 {
                   "item": "Each reply.",
@@ -679,24 +1279,333 @@
                   ],
                   "tag": "fitted_to_weights"
                 }
-              ]
+              ],
+              "visible_at_least": true,
+              "why": {
+                "n": 3
+              }
             },
             {
               "basis": "test",
               "cause": null,
+              "fidelity": {
+                "alpha": 0.05,
+                "bar": {
+                  "control": "q3_k_s",
+                  "display": 11.2
+                },
+                "below_own_width": false,
+                "controls": {
+                  "q2_k": {
+                    "display": 5.1,
+                    "mean": 5.083333333333333,
+                    "words": "q2_k"
+                  },
+                  "q3_k_s": {
+                    "display": 11.2,
+                    "mean": 11.15,
+                    "words": "q3_k_s"
+                  },
+                  "q4_k_m": {
+                    "display": 30.3,
+                    "mean": 30.28611111111111,
+                    "words": "the 4-bit copy"
+                  },
+                  "q8_0": {
+                    "display": 65.7,
+                    "mean": 65.70833333333333,
+                    "words": "the 8-bit copy"
+                  },
+                  "reference-2": {
+                    "display": 500.3,
+                    "mean": 500.34444444444443,
+                    "words": "the original run again"
+                  },
+                  "smaller-model": {
+                    "display": 2.3,
+                    "mean": 2.3333333333333335,
+                    "words": "smaller-model"
+                  }
+                },
+                "display": 29.7,
+                "green": {
+                  "controls": [
+                    "reference-2",
+                    "q8_0"
+                  ],
+                  "display": 283.0,
+                  "shown": false,
+                  "value": 283.0263888888889
+                },
+                "mean": 29.658333333333335,
+                "method": "monte-carlo",
+                "n": 360,
+                "policy_cap": false,
+                "rerun": "reference-2",
+                "rerun_engine": "vllm",
+                "slots": null,
+                "upper": {
+                  "controls": [
+                    "q8_0",
+                    "q4_k_m"
+                  ],
+                  "display": 48.0,
+                  "shown": false,
+                  "value": 47.99722222222222
+                }
+              },
               "id": "faithful_model",
               "lowered_by": [],
+              "next": {
+                "needs": [
+                  {
+                    "by": "publisher",
+                    "text": "replies shown above 48.0 leading tokens on average, halfway between the 8-bit copy and the 4-bit copy; this row has 29.7"
+                  }
+                ],
+                "to": "amber_upper"
+              },
               "quotes": [],
-              "reason": "not shown above the Q8_0 and Q4_K_M midpoint, 48.00 leading tokens",
+              "reason": "not shown above 48.0, halfway between the 8-bit copy (65.7) and the 4-bit copy (30.3); this row matches 29.7 leading tokens of the 16-bit original's replies, on average",
+              "sources": "test",
+              "sources_count": 0,
               "state": "amber",
-              "step": "amber_lower"
+              "step": "amber_lower",
+              "to_met": [
+                {
+                  "items": [
+                    {
+                      "by": "publisher",
+                      "key": "upper",
+                      "need": "above",
+                      "value": 48.0
+                    }
+                  ],
+                  "kind": "up",
+                  "to": "amber_upper"
+                },
+                {
+                  "items": [
+                    {
+                      "by": "publisher",
+                      "key": "green",
+                      "need": "above",
+                      "value": 283.0
+                    },
+                    {
+                      "by": "us",
+                      "engine": "llama.cpp",
+                      "need": "one_at_a_time",
+                      "slots": null,
+                      "vllm": true
+                    }
+                  ],
+                  "kind": "up",
+                  "to": "green"
+                }
+              ]
             },
             {
               "basis": "statement",
-              "cause": "proof_build_not_run",
+              "cause": null,
               "formal": {
+                "build": {
+                  "axioms": [
+                    "Classical.choice",
+                    "Quot.sound",
+                    "propext"
+                  ],
+                  "command": [
+                    "LEAN_NUM_THREADS=64",
+                    "python3",
+                    "-B",
+                    "scripts/check.py",
+                    "--wide-jobs",
+                    "24"
+                  ],
+                  "exit_code": 0,
+                  "record": "results/v1.0/proof-build/flashprove/proof-build.json",
+                  "seconds": 68494.0,
+                  "started_at": "2026-11-16T07:47:47Z",
+                  "status": "built",
+                  "toolchain": {
+                    "name": "leanprover/lean4",
+                    "version": "v4.29.1"
+                  }
+                },
+                "ceiling": "amber_upper",
+                "conclusion": "model",
                 "input_code_unverified": true,
+                "limits": [
+                  {
+                    "plain": "The theorem speaks of the weights read from the files. No theorem ties them to the weights cp_commit committed (cp_commit: the publisher's program that publishes the commitment).",
+                    "quotes": [
+                      {
+                        "text": "\"The model\" means the extracted weights, which no theorem says are the ones `cp_commit` put in",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L227-L228"
+                      }
+                    ]
+                  },
+                  {
+                    "plain": "The soundness theorem is stated for a system whose committer (the part that turns the weights into the commitment) is a placeholder: it returns the same constant for any weights, so it commits to nothing. The publisher's six theorems use another committer, the one its compiler makes, which encodes the weights and hashes the key. The publisher writes that of the placeholder system itself, nothing with content can be stated.",
+                    "quotes": [
+                      {
+                        "text": "the system in the statement of the soundness theorem on `verify` has a constant committer (a committer that returns one constant whatever the weights, and so commits to nothing; the committer of the six lines is another: the one that `compile` makes (`lean/Johnson/Face/Compiler.lean`), which encodes the weights and hashes the key) where its honest committer goes, so of that system itself none of it can be stated with any content",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L700-L704"
+                      }
+                    ]
+                  },
+                  {
+                    "plain": "Scale files, which the theorem allows as inputs, can switch off any of the model's blocks, up to all of them. The publisher worked this out by hand; it is not proved.",
+                    "quotes": [
+                      {
+                        "text": "Scale files in scope can switch off any of the model's blocks, up to all of them (worked out by hand, not proved).",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L229-L231"
+                      }
+                    ]
+                  },
+                  {
+                    "plain": "No theorem describes the five fixed look-up tables in the Lean text.",
+                    "quotes": [
+                      {
+                        "text": "No theorem describes the five constant look-up tables in the Lean text (cosine, sine, the exponential, SiLU and the sigmoid).",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L242-L243"
+                      }
+                    ]
+                  },
+                  {
+                    "plain": "The pinned Lean version, 4.29.1, is older than fixes of publicly known soundness bugs in Lean.",
+                    "quotes": [
+                      {
+                        "text": "the pinned version, 4.29.1, is older than fixes of publicly known soundness bugs in it",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L382-L383"
+                      }
+                    ]
+                  },
+                  {
+                    "plain": "Lean checks that a proof is correct, not that a definition means what it is meant to.",
+                    "quotes": [
+                      {
+                        "text": "the kernel checks proofs, not what a definition means",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/what-is-proved.md#L83"
+                      }
+                    ]
+                  }
+                ],
                 "reach": "protocol_and_statement",
+                "said": {
+                  "conclusion": {
+                    "plain": "Its conclusion is about the model: about the publisher's integer model (a written-out definition, in Lean, of what the model computes) at the weights read from the files. No theorem ties those weights to the ones cp_commit committed (the first limit below). Our rules accept a conclusion about such a definition as one about the model; they do not ask for a theorem that ties its weights to the committed ones.",
+                    "quotes": [
+                      {
+                        "text": "At each position it is the greedy next token after the prompt and the output's own earlier tokens, as an integer program computes it, not the floating-point model.",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L231-L233"
+                      },
+                      {
+                        "text": "\"The model\" means the extracted weights, which no theorem says are the ones `cp_commit` put in",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L227-L228"
+                      },
+                      {
+                        "text": "the system in the statement of the soundness theorem on `verify` has a constant committer (a committer that returns one constant whatever the weights, and so commits to nothing; the committer of the six lines is another: the one that `compile` makes (`lean/Johnson/Face/Compiler.lean`), which encodes the weights and hashes the key) where its honest committer goes, so of that system itself none of it can be stated with any content",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L700-L704"
+                      }
+                    ]
+                  },
+                  "input_code_unverified": {
+                    "quotes": [
+                      {
+                        "text": "Five of the files that this function takes come from a parser outside Lean, of which nothing is proved",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L64-L65"
+                      }
+                    ]
+                  },
+                  "reach": {
+                    "plain": "The theorem covers the whole method, the model's computation included.",
+                    "quotes": [
+                      {
+                        "text": "**Soundness** is proved, in Lean, for the verifier written in Lean",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/what-is-proved.md#L3"
+                      },
+                      {
+                        "text": "At each position it is the greedy next token after the prompt and the output's own earlier tokens, as an integer program computes it, not the floating-point model.",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L231-L233"
+                      },
+                      {
+                        "text": "That this interactive oracle proof is the protocol of the C++ programs is not proved",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L267-L268"
+                      },
+                      {
+                        "text": "Scale files in scope can switch off any of the model's blocks, up to all of them (worked out by hand, not proved).",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L229-L231"
+                      },
+                      {
+                        "text": "No theorem describes the five constant look-up tables in the Lean text (cosine, sine, the exponential, SiLU and the sigmoid).",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L242-L243"
+                      },
+                      {
+                        "text": "the kernel checks proofs, not what a definition means",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/what-is-proved.md#L83"
+                      }
+                    ]
+                  },
+                  "tool": {
+                    "quotes": [
+                      {
+                        "text": "The protocol's soundness is proved in Lean 4.",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/README.md#L26"
+                      },
+                      {
+                        "text": "the pinned version, 4.29.1, is older than fixes of publicly known soundness bugs in it",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L382-L383"
+                      }
+                    ]
+                  },
+                  "toolchain": {
+                    "quotes": [
+                      {
+                        "text": "leanprover/lean4:v4.29.1",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/lean-toolchain#L1"
+                      }
+                    ]
+                  },
+                  "trusted_base": {
+                    "quotes": [
+                      {
+                        "text": "**Lean's kernel and three standard axioms:** `propext`, `Classical.choice`, `Quot.sound`.",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L381"
+                      }
+                    ]
+                  }
+                },
+                "scope_bounds": {
+                  "completeness": {
+                    "quotes": [
+                      {
+                        "text": "at every request that can be served (`CanServe`) and whose output tokens are the model's, the honest proof is rejected with probability at most 2^-40.",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L15-L17"
+                      }
+                    ],
+                    "text": "rejected with probability at most 2^-40"
+                  },
+                  "soundness": {
+                    "quotes": [
+                      {
+                        "text": "a cheating committer and prover with q hash queries between them get the verifier to accept output tokens that are not the model's, at the weights that one extractor reads from the commitment and the committer's hash queries, with probability at most about q/2^124 + 2^-101.",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L7-L10"
+                      }
+                    ],
+                    "text": "q/2^124 + 2^-101"
+                  },
+                  "zero_knowledge": {
+                    "quotes": [
+                      {
+                        "text": "there is a bound that stays at or below 2^-154 within 2^64 hash queries and 688,127 replies, and zero knowledge holds within this bound on the requests that can be served and whose output tokens are the model's",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L20-L22"
+                      }
+                    ],
+                    "text": "at or below 2^-154 within 2^64 hash queries and 688,127 replies"
+                  }
+                },
                 "scope_card": {
                   "completeness": {
                     "protocol": {
@@ -738,13 +1647,8 @@
                       "value": "machine_checked"
                     },
                     "prover_run": {
-                      "quotes": [
-                        {
-                          "text": "The C++ verifier and the CUDA prover are written to follow the same protocol and are tested against it, not themselves proved.",
-                          "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/what-is-proved.md#L7-L8"
-                        }
-                      ],
-                      "value": "tested"
+                      "quotes": [],
+                      "value": "does_not_apply"
                     },
                     "verifier_run": {
                       "quotes": [
@@ -777,7 +1681,7 @@
                     },
                     "verifier_run": {
                       "quotes": [],
-                      "value": "not_stated"
+                      "value": "does_not_apply"
                     }
                   }
                 },
@@ -794,6 +1698,23 @@
               },
               "id": "machine_checked",
               "lowered_by": [],
+              "next": {
+                "needs": [
+                  {
+                    "by": "publisher",
+                    "text": "a theorem covering cp_verify, the verifier code this row runs, from the bytes it reads to its verdict, with its trusted base listed and no input-reading code outside the proof"
+                  },
+                  {
+                    "by": "publisher",
+                    "text": "a sentence of the publisher's that says it, in place of our reading"
+                  }
+                ],
+                "to": "green"
+              },
+              "notes": [
+                "the theorem covers the Lean protocol and states the model as an integer program (THEOREM.md L231-233); the C++ verifier the row runs is tested, not proved (what-is-proved.md L7-8), so the reach stops short of the verifier code this row runs; the model statement is the publisher's Lean integer model, and its tables and its reach at a given scale file are not proved (THEOREM.md L229-L231, L242-L243)",
+                "read 2026-11-15: the conclusion is about the publisher's integer model, a reference definition of the model's computation, at the weights the extractor reads; no theorem ties those weights to the ones cp_commit committed (THEOREM.md L227-L228), and at files other than the stored examples the theorem may hold only because verify rejects everything (L314-L315, under Integrity's conditions clause); and the system in the soundness theorem's statement has a constant committer, which commits to nothing, so of that system none of it can be stated with any content (L700-L704). So the conclusion is about a reference definition of the model, as a step above Partly met needs, and it is not tied to the weights this row commits"
+              ],
               "quotes": [
                 {
                   "text": "**Soundness** is proved, in Lean, for the verifier written in Lean",
@@ -820,6 +1741,14 @@
                   "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/what-is-proved.md#L83"
                 },
                 {
+                  "text": "\"The model\" means the extracted weights, which no theorem says are the ones `cp_commit` put in",
+                  "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L227-L228"
+                },
+                {
+                  "text": "the system in the statement of the soundness theorem on `verify` has a constant committer (a committer that returns one constant whatever the weights, and so commits to nothing; the committer of the six lines is another: the one that `compile` makes (`lean/Johnson/Face/Compiler.lean`), which encodes the weights and hashes the key) where its honest committer goes, so of that system itself none of it can be stated with any content",
+                  "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L700-L704"
+                },
+                {
                   "text": "The protocol's soundness is proved in Lean 4.",
                   "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/README.md#L26"
                 },
@@ -840,16 +1769,76 @@
                   "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L64-L65"
                 }
               ],
+              "read_facts": [
+                {
+                  "fact": "reach",
+                  "note": "the theorem covers the Lean protocol and states the model as an integer program (THEOREM.md L231-233); the C++ verifier the row runs is tested, not proved (what-is-proved.md L7-8), so the reach stops short of the verifier code this row runs; the model statement is the publisher's Lean integer model, and its tables and its reach at a given scale file are not proved (THEOREM.md L229-L231, L242-L243)",
+                  "plain": "The theorem covers the whole method, the model's computation included.",
+                  "used": true
+                },
+                {
+                  "fact": "conclusion",
+                  "note": "read 2026-11-15: the conclusion is about the publisher's integer model, a reference definition of the model's computation, at the weights the extractor reads; no theorem ties those weights to the ones cp_commit committed (THEOREM.md L227-L228), and at files other than the stored examples the theorem may hold only because verify rejects everything (L314-L315, under Integrity's conditions clause); and the system in the soundness theorem's statement has a constant committer, which commits to nothing, so of that system none of it can be stated with any content (L700-L704). So the conclusion is about a reference definition of the model, as a step above Partly met needs, and it is not tied to the weights this row commits",
+                  "plain": "Its conclusion is about the model: about the publisher's integer model (a written-out definition, in Lean, of what the model computes) at the weights read from the files. No theorem ties those weights to the ones cp_commit committed (the first limit below). Our rules accept a conclusion about such a definition as one about the model; they do not ask for a theorem that ties its weights to the committed ones.",
+                  "used": true
+                }
+              ],
               "reading": true,
-              "reason": "no proof build of the named theorem is recorded yet",
-              "state": "hollow",
-              "step": null
+              "reason": "built at 9e2bdd8: the protocol, model included; it is stated for the Lean verifier, not for cp_verify, which this row runs; statement not reviewed by an outside Lean reader",
+              "sources": "build_reading",
+              "sources_count": 2,
+              "state": "amber",
+              "step": "amber_upper",
+              "to_met": [
+                {
+                  "items": [
+                    {
+                      "by": "publisher",
+                      "need": "reach_run",
+                      "run": "cp_verify"
+                    },
+                    {
+                      "by": "publisher",
+                      "facts": [
+                        "reach",
+                        "conclusion"
+                      ],
+                      "need": "reading"
+                    },
+                    {
+                      "by": "us",
+                      "need": "rebuild",
+                      "new": true
+                    }
+                  ],
+                  "kind": "up",
+                  "to": "green"
+                }
+              ],
+              "why": {
+                "gaps": false,
+                "reach": "protocol_and_statement",
+                "read": true,
+                "run": "cp_verify"
+              }
             },
             {
               "basis": "statement",
               "cause": null,
               "id": "no_trusted_party",
               "lowered_by": [],
+              "next": {
+                "needs": [
+                  {
+                    "by": "publisher",
+                    "text": "a sentence of the publisher's, at the pinned commit, that soundness rests on cryptography alone and no setup produced a secret"
+                  }
+                ],
+                "to": "green"
+              },
+              "notes": [
+                "the publisher states soundness at every public setup of three public files, against any committer and prover, with the random-oracle model as its assumption; no sentence says in words that no setup produced a secret, so the petal is read as transparent and graded Mostly met at most (GL-10, amended 2026-11-15)"
+              ],
               "quotes": [
                 {
                   "text": "Six theorems are proved in Lean of one committer, prover and verifier, `compile (flashProve setup)`, at every public setup `setup` (`PublicSetup`: three public files, what the reader returns at them, and `FilesInUse`).",
@@ -880,13 +1869,98 @@
                   "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/README.md#L15-L16"
                 }
               ],
+              "read_facts": [
+                {
+                  "fact": "rests_on",
+                  "note": "the publisher states soundness at every public setup of three public files, against any committer and prover, with the random-oracle model as its assumption; no sentence says in words that no setup produced a secret, so the petal is read as transparent and graded Mostly met at most (GL-10, amended 2026-11-15)",
+                  "plain": "The publisher proves its theorems at every public setup (three public files it names), against any committer and prover. The assumptions it states are the random-oracle model for the hash function (the hash is treated as a perfectly random function), with a second, fixed hash function, built on BLAKE2b's compression function, assumed independent of it, against classical adversaries (not quantum ones). These are idealizations of hash functions, not proved properties of them. None of them needs a secret or a trusted party, and we count them among cryptographic assumptions; this is our reading. The theorem's condition that the public files are fixed before the hash function is drawn is counted under Integrity.",
+                  "used": true
+                }
+              ],
               "reading": true,
-              "reason": "read as resting on cryptographic assumptions alone; no quote says no setup produced a secret",
-              "state": "green",
-              "step": "green"
+              "reason": "cryptography only, as we read the publisher: no setup produced a secret; no quoted sentence says so in words, so Mostly met at most",
+              "sources": "statement_reading",
+              "sources_count": 1,
+              "state": "amber",
+              "step": "amber_upper",
+              "to_met": [
+                {
+                  "items": [
+                    {
+                      "by": "publisher",
+                      "need": "rests_sentence"
+                    }
+                  ],
+                  "kind": "up",
+                  "to": "green"
+                }
+              ],
+              "trust": {
+                "clause": "reading",
+                "publicly_checkable": true,
+                "rests_on": "transparent",
+                "said": {
+                  "publicly_checkable": {
+                    "quotes": [
+                      {
+                        "text": "Anyone can check the proof on an ordinary CPU in seconds with `cp_verify`, without the weights.",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/README.md#L15-L16"
+                      }
+                    ]
+                  },
+                  "rests_on": {
+                    "plain": "The publisher proves its theorems at every public setup (three public files it names), against any committer and prover. The assumptions it states are the random-oracle model for the hash function (the hash is treated as a perfectly random function), with a second, fixed hash function, built on BLAKE2b's compression function, assumed independent of it, against classical adversaries (not quantum ones). These are idealizations of hash functions, not proved properties of them. None of them needs a secret or a trusted party, and we count them among cryptographic assumptions; this is our reading. The theorem's condition that the public files are fixed before the hash function is drawn is counted under Integrity.",
+                    "quotes": [
+                      {
+                        "text": "Six theorems are proved in Lean of one committer, prover and verifier, `compile (flashProve setup)`, at every public setup `setup` (`PublicSetup`: three public files, what the reader returns at them, and `FilesInUse`).",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L3-L5"
+                      },
+                      {
+                        "text": "`Sound` says that there is one extractor such that, whatever the committer and the prover, `verify` accepts a false claim with probability at most the bound at q = a + b.",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L276-L277"
+                      },
+                      {
+                        "text": "public files that are fixed before the hash function is sampled (a provider that tunes them to the real hash function is outside the statement)",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L149-L150"
+                      },
+                      {
+                        "text": "the soundness theorem on `verify` has no hypothesis beyond those in its statement, so nothing more is assumed by that road.",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L413-L414"
+                      },
+                      {
+                        "text": "**The random-oracle model** for the hash, with a second, fixed hash function, built on BLAKE2b's compression function, assumed independent of it, against classical adversaries.",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/what-is-proved.md#L57-L58"
+                      },
+                      {
+                        "text": "the random oracle and the second hash function belong to the statement, not to the proof's axioms.",
+                        "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L159-L160"
+                      }
+                    ]
+                  }
+                }
+              }
             }
           ],
           "incomplete_sessions": [],
+          "ineligible_sessions": [],
+          "level_statement": {
+            "quotes": [
+              {
+                "text": "Under exact match, a `YES` [is meant to show](../docs/limits.md#what-a-yes-covers) that each checked token is the committed integer model's top choice at its position",
+                "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/how-it-works.md#L57-L58"
+              },
+              {
+                "text": "For a prompt of P tokens and a reply of R, r = P − 1 and e = P + R − 1.",
+                "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/how-it-works.md#L49"
+              }
+            ],
+            "read": true,
+            "reading": false,
+            "sources_read": [
+              "guide/how-it-works.md"
+            ],
+            "stated": true
+          },
           "multiple": {
             "grade": "derived",
             "null_reason": "not_applicable",
@@ -1002,6 +2076,32 @@
             "unit": "ratio",
             "value": 118.17703538686106
           },
+          "session_commit_gpu_seconds_per_reply": {
+            "grade": "derived",
+            "null_reason": null,
+            "scope": "commit",
+            "source": {
+              "inputs": [
+                "results/v1.0/flashprove/2026-11-11-flashprove-l1-maverick-p512-o512-prover-h200-hosted-1/run.json#/events",
+                "results/v1.0/flashprove/2026-11-12-flashprove-l1-maverick-p512-o512-prover-h200-hosted-1/run.json#/events",
+                "results/v1.0/flashprove/2026-11-12-flashprove-l1-maverick-p512-o512-prover-h200-hosted-2/run.json#/events"
+              ],
+              "kind": "derivation",
+              "ref": "derive:D-L1-COMMIT@0.1.0.dev0"
+            },
+            "stats": {
+              "max": 15.43781791145,
+              "mean": 14.760935544444445,
+              "median": 14.480061335925,
+              "min": 14.364927385958334,
+              "n": 3,
+              "n_failed": 0,
+              "stdev": 0.5890171989687691
+            },
+            "tier": "reported",
+            "unit": "gpu_s/request",
+            "value": 14.760935544444445
+          },
           "session_generation_gpu_seconds_per_reply": {
             "grade": "derived",
             "null_reason": null,
@@ -1088,6 +2188,67 @@
             "tier": "reported",
             "unit": "ratio",
             "value": 1316.9805257687096
+          },
+          "session_proving_gpu_seconds_per_reply": {
+            "grade": "derived",
+            "null_reason": null,
+            "scope": "whole_wall",
+            "source": {
+              "inputs": [
+                "results/v1.0/flashprove/2026-11-11-flashprove-l1-maverick-p512-o512-prover-h200-hosted-1/run.json#/events",
+                "results/v1.0/flashprove/2026-11-12-flashprove-l1-maverick-p512-o512-prover-h200-hosted-1/run.json#/events",
+                "results/v1.0/flashprove/2026-11-12-flashprove-l1-maverick-p512-o512-prover-h200-hosted-2/run.json#/events",
+                "results/v1.0/flashprove/2026-11-11-flashprove-l1-maverick-p512-o512-prover-h200-hosted-1/run.json#/proofs",
+                "results/v1.0/flashprove/2026-11-12-flashprove-l1-maverick-p512-o512-prover-h200-hosted-1/run.json#/proofs",
+                "results/v1.0/flashprove/2026-11-12-flashprove-l1-maverick-p512-o512-prover-h200-hosted-2/run.json#/proofs",
+                "results/v1.0/flashprove/2026-11-11-flashprove-l1-maverick-p512-o512-prover-h200-hosted-1/run.json#/marks",
+                "results/v1.0/flashprove/2026-11-12-flashprove-l1-maverick-p512-o512-prover-h200-hosted-1/run.json#/marks",
+                "results/v1.0/flashprove/2026-11-12-flashprove-l1-maverick-p512-o512-prover-h200-hosted-2/run.json#/marks"
+              ],
+              "kind": "derivation",
+              "ref": "derive:D-L1-SESSION-PROVING@0.1.0.dev0"
+            },
+            "stats": {
+              "max": 7.950011234666675,
+              "mean": 7.909795765111113,
+              "median": 7.923592080208323,
+              "min": 7.855783980458341,
+              "n": 3,
+              "n_failed": 0,
+              "stdev": 0.048605016115691645
+            },
+            "tier": "reported",
+            "unit": "gpu_s/request",
+            "value": 7.909795765111113
+          },
+          "session_reply_tokens_per_gpu_second": {
+            "grade": "derived",
+            "null_reason": null,
+            "scope": "whole_wall",
+            "source": {
+              "inputs": [
+                "results/v1.0/flashprove/2026-11-11-flashprove-l1-maverick-p512-o512-prover-h200-hosted-1/run.json#/events",
+                "results/v1.0/flashprove/2026-11-12-flashprove-l1-maverick-p512-o512-prover-h200-hosted-1/run.json#/events",
+                "results/v1.0/flashprove/2026-11-12-flashprove-l1-maverick-p512-o512-prover-h200-hosted-2/run.json#/events",
+                "results/v1.0/flashprove/2026-11-11-flashprove-l1-maverick-p512-o512-prover-h200-hosted-1/run.json#/proofs",
+                "results/v1.0/flashprove/2026-11-12-flashprove-l1-maverick-p512-o512-prover-h200-hosted-1/run.json#/proofs",
+                "results/v1.0/flashprove/2026-11-12-flashprove-l1-maverick-p512-o512-prover-h200-hosted-2/run.json#/proofs",
+                "levels/L1.yaml#/request/output_tokens"
+              ],
+              "kind": "derivation",
+              "ref": "derive:D-L1-REPLY-TOKENS@0.1.0.dev0"
+            },
+            "stats": {
+              "max": 2.043616101193619,
+              "mean": 2.0265539466507163,
+              "min": 2.0069062486839435,
+              "n": 3,
+              "n_failed": 0,
+              "stdev": null
+            },
+            "tier": "reported",
+            "unit": "token/gpu_s",
+            "value": 2.0265539466507163
           },
           "session_usd_per_reply": {
             "grade": "derived",
@@ -1287,6 +2448,10 @@
             "median": 508.0,
             "n": 360,
             "percent": 98.97515190972223,
+            "percent_interval": [
+              98.87261284722221,
+              99.07172309027777
+            ],
             "run": "results/v1.0/teacher-forced/llama-4-maverick/run-vllm.json",
             "status": "ok"
           },
@@ -1310,6 +2475,10 @@
             "median": 491.5,
             "n": 360,
             "percent": 96.15776909722223,
+            "percent_interval": [
+              96.0009765625,
+              96.31781684027779
+            ],
             "run": "results/v1.0/teacher-forced/llama-4-maverick/run-controls-q8_0-0.json",
             "status": "ok"
           },
@@ -1333,6 +2502,10 @@
             "median": 431.0,
             "n": 360,
             "percent": 85.54741753472223,
+            "percent_interval": [
+              85.07649739583333,
+              86.04654947916667
+            ],
             "run": "results/v1.0/teacher-forced/llama-4-maverick/run-controls-q4_k_m-0.json",
             "status": "ok"
           },
@@ -1356,6 +2529,10 @@
             "median": 353.0,
             "n": 360,
             "percent": 71.86469184027777,
+            "percent_interval": [
+              70.98958333333333,
+              72.79079861111111
+            ],
             "run": "results/v1.0/teacher-forced/llama-4-maverick/run-controls-q3_k_s.json",
             "status": "ok"
           },
@@ -1379,6 +2556,10 @@
             "median": 313.0,
             "n": 360,
             "percent": 64.09830729166667,
+            "percent_interval": [
+              63.09678819444444,
+              65.15028211805556
+            ],
             "run": "results/v1.0/teacher-forced/llama-4-maverick/run-controls-q2_k.json",
             "status": "ok"
           },
@@ -1394,6 +2575,7 @@
             "median": null,
             "n": 0,
             "percent": null,
+            "percent_interval": null,
             "run": null,
             "status": "failed"
           },
@@ -1417,11 +2599,16 @@
             "median": 248.0,
             "n": 360,
             "percent": 51.68348524305556,
+            "percent_interval": [
+              50.529513888888886,
+              52.87217881944445
+            ],
             "run": "results/v1.0/teacher-forced/llama-4-maverick/run-vllm.json",
             "status": "ok"
           }
         ],
         "gating": false,
+        "interval_rule": "95 % bootstrap interval over the prompts: 10,000 resamples of the n per-prompt scores with replacement, random.Random(seed).choices, seed the first 8 bytes, big-endian, of sha256('fidelity-interval' || 0x00 || utf8(id)); the 251st to the 9,750th sorted mean",
         "label": "computed by the system's own code on the reference reply, not by the proved computation",
         "n": 360,
         "path": "results/v1.0/teacher-forced/llama-4-maverick/teacher-forced-2.json",
@@ -1454,6 +2641,10 @@
             "median": 437.0,
             "n": 360,
             "percent": 86.40407986111111,
+            "percent_interval": [
+              85.94455295138889,
+              86.88151041666666
+            ],
             "run": "results/v1.0/teacher-forced/llama-4-maverick/run-flashprove.json",
             "status": "ok",
             "tests": [
@@ -1564,6 +2755,7 @@
       "baseline": {
         "cause": null,
         "concurrency": 256,
+        "gpu_model": "NVIDIA H200",
         "gpu_seconds_per_reply": {
           "grade": "derived",
           "null_reason": null,
@@ -1804,6 +2996,23 @@
             }
           }
         ],
+        "reply_tokens_per_gpu_second": {
+          "grade": "derived",
+          "note": "one serving run at full load: 3 timed batches of 256 replies (768 replies) on 1 x NVIDIA H200; one rate over the batches' span, no range",
+          "null_reason": null,
+          "scope": "prove.steady",
+          "source": {
+            "inputs": [
+              "releases/v1.0/board.json#/rungs/1/baseline/gpu_seconds_per_reply",
+              "levels/L1.yaml#/request/output_tokens"
+            ],
+            "kind": "derivation",
+            "ref": "derive:D-L1-SERVED-TOKENS@0.1.0.dev0"
+          },
+          "tier": "reported",
+          "unit": "token/gpu_s",
+          "value": 11876.184146671147
+        },
         "run_id": "2026-11-11-ref-serve-l1-l31-8b-p512-o512-serving-h200x1-hosted-1",
         "serving": "llama-3.1-8b-instruct-bf16",
         "usd_per_reply": {
@@ -1964,7 +3173,16 @@
             "status": "ok"
           }
         ],
-        "path": "results/v1.0/fidelity/llama-3.1-8b/fidelity.json"
+        "path": "results/v1.0/fidelity/llama-3.1-8b/fidelity.json",
+        "runs": [
+          {
+            "engine": "llama.cpp",
+            "part": null,
+            "slots": 1
+          }
+        ],
+        "slots": 1,
+        "slots_cause": null
       },
       "id": "llama-3.1-8b",
       "model": "Llama 3.1 8B Instruct",
@@ -1990,15 +3208,33 @@
                 "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-3/controls.json#/controls/2"
               ],
               "note": null,
-              "state": "held"
+              "state": "held",
+              "trials": [
+                {
+                  "control": "P1",
+                  "inputs": 1,
+                  "no_proof": 0,
+                  "position": null,
+                  "refused": 3,
+                  "trials": 3
+                },
+                {
+                  "control": "C3",
+                  "inputs": 1,
+                  "no_proof": 0,
+                  "position": null,
+                  "refused": 3,
+                  "trials": 3
+                }
+              ]
             },
             "no_weight_file": {
               "cause": null,
               "evidence": [
                 "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1/verify-trace/",
                 "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1/reverify/reverify.json",
-                "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2/verify-trace/",
-                "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2/reverify/reverify.json",
+                "results/v1.0/sash/2026-11-16-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1/verify-trace/",
+                "results/v1.0/sash/2026-11-16-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1/reverify/reverify.json",
                 "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-3/verify-trace/",
                 "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-3/reverify/reverify.json"
               ],
@@ -2011,24 +3247,60 @@
                 "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-3/controls.json#/controls/1"
               ],
               "note": null,
-              "state": "held"
+              "state": "held",
+              "trials": [
+                {
+                  "control": "C2",
+                  "inputs": 3,
+                  "no_proof": 0,
+                  "position": null,
+                  "refused": 3,
+                  "trials": 3
+                }
+              ]
             },
             "reply": {
               "cause": null,
               "evidence": [
                 "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1/run.json",
-                "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2/run.json",
+                "results/v1.0/sash/2026-11-16-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1/run.json",
                 "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-3/run.json",
                 "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-3/controls.json#/controls/0"
               ],
               "note": null,
-              "state": "held"
+              "state": "held",
+              "trials": [
+                {
+                  "control": "C1",
+                  "inputs": 1,
+                  "no_proof": 0,
+                  "position": "first",
+                  "refused": 3,
+                  "trials": 3
+                },
+                {
+                  "control": "C1",
+                  "inputs": 1,
+                  "no_proof": 0,
+                  "position": "last",
+                  "refused": 3,
+                  "trials": 3
+                },
+                {
+                  "control": "C1",
+                  "inputs": 3,
+                  "no_proof": 0,
+                  "position": "interior",
+                  "refused": 3,
+                  "trials": 3
+                }
+              ]
             },
             "run": {
               "cause": null,
               "evidence": [
                 "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1/run.json",
-                "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2/run.json",
+                "results/v1.0/sash/2026-11-16-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1/run.json",
                 "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-3/run.json"
               ],
               "note": null,
@@ -2044,6 +3316,25 @@
             "n": 15,
             "p_above_bar": 0.0001220703125,
             "p_below_bar": 1.0
+          },
+          "generation_gpu_seconds_per_reply_token": {
+            "grade": "derived",
+            "note": "no generation phase of its own: generation, if any, is inside the proving interval",
+            "null_reason": "not_applicable",
+            "scope": "whole_wall",
+            "source": {
+              "inputs": [
+                "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1/run.json#/proofs",
+                "results/v1.0/sash/2026-11-16-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1/run.json#/proofs",
+                "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-3/run.json#/proofs",
+                "levels/L1.yaml#/request/output_tokens"
+              ],
+              "kind": "derivation",
+              "ref": "derive:D-L1-GENERATION-TOKEN@0.1.0.dev0"
+            },
+            "tier": "reported",
+            "unit": "gpu_s/token",
+            "value": null
           },
           "generation_multiple": {
             "grade": "derived",
@@ -2064,17 +3355,131 @@
           "glyph": [
             {
               "basis": "statement",
+              "bound": {
+                "adversary": "not_said",
+                "after": null,
+                "basis": "conjectured",
+                "batch": "not_said",
+                "batch_size": 1,
+                "conditions_shown": false,
+                "expression": "100 conjectured bits",
+                "one_reply": false,
+                "parameters": "row",
+                "program": "not_stated",
+                "q_cross": null,
+                "run": "boundary-grid --verify",
+                "said": {
+                  "adversary": {
+                    "quotes": []
+                  },
+                  "basis": {
+                    "described": "a proof library",
+                    "named": "stwo",
+                    "quotes": [
+                      {
+                        "text": "stwo's own conjectured-soundness accounting is security_bits = pow_bits + log_blowup_factor * n_queries so blowup 2 (log_blowup_factor = 1) at 100 conjectured bits means exactly 100 FRI queries and no grinding.",
+                        "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/src/util.rs#L9-L12"
+                      }
+                    ]
+                  },
+                  "batch": {
+                    "quotes": []
+                  },
+                  "conditions_shown": {
+                    "quotes": []
+                  },
+                  "expression": {
+                    "quotes": [
+                      {
+                        "text": "stwo's own conjectured-soundness accounting is security_bits = pow_bits + log_blowup_factor * n_queries so blowup 2 (log_blowup_factor = 1) at 100 conjectured bits means exactly 100 FRI queries and no grinding.",
+                        "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/src/util.rs#L9-L12"
+                      }
+                    ]
+                  },
+                  "parameters": {
+                    "plain": "Its code fixes the settings as constants and asserts 100 bits; no sentence says that the limit is for the settings we run.",
+                    "quotes": [
+                      {
+                        "text": "assert_eq!(cfg.security_bits(), 100, \"security parameter drifted\");",
+                        "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/src/util.rs#L26"
+                      }
+                    ]
+                  },
+                  "program": {
+                    "quotes": []
+                  },
+                  "stated": {
+                    "quotes": [
+                      {
+                        "text": "stwo's own conjectured-soundness accounting is security_bits = pow_bits + log_blowup_factor * n_queries so blowup 2 (log_blowup_factor = 1) at 100 conjectured bits means exactly 100 FRI queries and no grinding.",
+                        "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/src/util.rs#L9-L12"
+                      }
+                    ]
+                  },
+                  "unit": {
+                    "described": "one transformer layer",
+                    "named": "segment",
+                    "quotes": [
+                      {
+                        "text": "A proof made by this prover is about one **segment**: one transformer layer",
+                        "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/docs/statement.md#L3"
+                      }
+                    ]
+                  }
+                },
+                "stated_for": null,
+                "terms": [
+                  100
+                ],
+                "unit": "part",
+                "verifiers": {
+                  "run": {
+                    "check": "verify_composed",
+                    "described": "the publisher's verifier command",
+                    "quotes": [
+                      {
+                        "text": "`verify_composed` -- the only accept path, and what `boundary-grid --verify` runs on every chunk",
+                        "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/README.md#L34-L35"
+                      }
+                    ]
+                  },
+                  "stated": {
+                    "quotes": []
+                  }
+                }
+              },
               "cause": null,
               "id": "unforgeable",
               "lowered_by": [],
+              "next": {
+                "needs": [
+                  {
+                    "by": "publisher",
+                    "text": "stated or proved for boundary-grid --verify, the verifier this row runs"
+                  },
+                  {
+                    "by": "publisher",
+                    "text": "proved, not conjectured"
+                  },
+                  {
+                    "by": "publisher",
+                    "text": "said to hold against any prover"
+                  },
+                  {
+                    "by": "publisher",
+                    "text": "stated per reply, or per proof with one reply a proof"
+                  },
+                  {
+                    "by": "publisher",
+                    "text": "its conditions shown to hold for this row's files"
+                  }
+                ],
+                "to": "amber_upper"
+              },
               "quotes": [
                 {
-                  "text": "so blowup 2 (log_blowup_factor = 1) at 100 conjectured bits means exactly",
-                  "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/src/util.rs#L11"
-                },
-                {
-                  "text": "stwo's own conjectured-soundness accounting is",
-                  "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/src/util.rs#L9"
+                  "text": "stwo's own conjectured-soundness accounting is security_bits = pow_bits + log_blowup_factor * n_queries so blowup 2 (log_blowup_factor = 1) at 100 conjectured bits means exactly 100 FRI queries and no grinding.",
+                  "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/src/util.rs#L9-L12"
                 },
                 {
                   "text": "A proof made by this prover is about one **segment**: one transformer layer",
@@ -2085,15 +3490,141 @@
                   "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/src/util.rs#L26"
                 }
               ],
-              "reason": "the stated bound is conjectured, not proved",
+              "read_facts": [
+                {
+                  "fact": "parameters",
+                  "note": "the security parameters are constants (util.rs L14-L16) and pcs_config() asserts 100 bits (L26); the row runs the sound defaults",
+                  "plain": "Its code fixes the settings as constants and asserts 100 bits; no sentence says that the limit is for the settings we run.",
+                  "used": false
+                }
+              ],
+              "reason": "not shown to cover this row: not stated for boundary-grid --verify, the verifier this row runs; conjectured, not proved; not said which provers it holds against; not per reply; its conditions not shown to hold for the row's files; stated bound: 100 conjectured bits per part of a proof",
+              "sources": "statement",
+              "sources_count": 0,
               "state": "amber",
-              "step": "amber_lower"
+              "step": "amber_lower",
+              "to_met": [
+                {
+                  "items": [
+                    {
+                      "by": "publisher",
+                      "need": "program",
+                      "run": "boundary-grid --verify",
+                      "stated": null
+                    },
+                    {
+                      "basis": "conjectured",
+                      "by": "publisher",
+                      "need": "basis",
+                      "terms": [
+                        100
+                      ]
+                    },
+                    {
+                      "adversary": "not_said",
+                      "by": "publisher",
+                      "need": "adversary"
+                    },
+                    {
+                      "by": "publisher",
+                      "need": "unit",
+                      "unit": "part"
+                    },
+                    {
+                      "by": "publisher",
+                      "need": "conditions",
+                      "proved": false
+                    }
+                  ],
+                  "kind": "up",
+                  "to": "amber_upper"
+                },
+                {
+                  "items": [
+                    {
+                      "by": "publisher",
+                      "floor": 128,
+                      "need": "exponent",
+                      "q": false,
+                      "terms": [
+                        100
+                      ]
+                    },
+                    {
+                      "by": "publisher",
+                      "facts": [
+                        "parameters"
+                      ],
+                      "need": "reading"
+                    }
+                  ],
+                  "kind": "up",
+                  "to": "green"
+                }
+              ],
+              "why": {
+                "exps": [
+                  100
+                ],
+                "first": 1,
+                "floor": 100,
+                "last": 5,
+                "least": 100,
+                "q": false,
+                "unit": "part",
+                "unit_item": 4
+              }
             },
             {
               "basis": "statement",
               "cause": "not_stated",
+              "hiding": {
+                "at_least": false,
+                "batch_size": 1,
+                "fitted": [],
+                "listed": false,
+                "programs": "not_stated",
+                "proof": "none",
+                "said": {
+                  "programs": {
+                    "quotes": []
+                  },
+                  "proof": {
+                    "quotes": []
+                  },
+                  "stated": {
+                    "quotes": []
+                  },
+                  "verifier_gets_weights": {
+                    "quotes": [
+                      {
+                        "text": "The model root is not derivable -- it is the publisher's commitment to weights the verifier does not hold",
+                        "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/README.md#L56-L58"
+                      }
+                    ]
+                  },
+                  "visible_listed": {
+                    "quotes": []
+                  }
+                },
+                "stated": "not_stated",
+                "verifier_gets_weights": false,
+                "visible_count": 0,
+                "zk_kind": null,
+                "zk_model": null,
+                "zk_unit": null
+              },
               "id": "weights_hidden",
               "lowered_by": [],
+              "next": {
+                "needs": [
+                  {
+                    "by": "publisher",
+                    "text": "a statement that the weights stay hidden from the verifier, with a verifier that is not given them"
+                  }
+                ],
+                "to": "amber_lower"
+              },
               "quotes": [
                 {
                   "text": "The model root is not derivable -- it is the publisher's commitment to weights the verifier does not hold",
@@ -2101,6 +3632,8 @@
                 }
               ],
               "reason": "not stated in the publisher's documents read at the pinned commit",
+              "sources": null,
+              "sources_count": 0,
               "sources_read": [
                 {
                   "path": "README.md",
@@ -2121,24 +3654,212 @@
               ],
               "state": "red",
               "step": "red",
+              "to_met": [
+                {
+                  "items": [
+                    {
+                      "by": "publisher",
+                      "need": "hide_statement"
+                    }
+                  ],
+                  "kind": "up",
+                  "to": "amber_lower"
+                },
+                {
+                  "items": [
+                    {
+                      "by": "publisher",
+                      "need": "zk_theorem"
+                    }
+                  ],
+                  "kind": "up",
+                  "to": "amber_upper"
+                },
+                {
+                  "items": [
+                    {
+                      "by": "publisher",
+                      "n": 1,
+                      "need": "zk_run",
+                      "unit": null
+                    },
+                    {
+                      "by": "publisher",
+                      "need": "programs",
+                      "programs": "not_stated",
+                      "read": false
+                    },
+                    {
+                      "by": "publisher",
+                      "need": "visible_list"
+                    }
+                  ],
+                  "kind": "up",
+                  "to": "green"
+                }
+              ],
               "visible": []
             },
             {
               "basis": "test",
               "cause": null,
+              "fidelity": {
+                "alpha": 0.05,
+                "bar": {
+                  "control": "q3_k_s",
+                  "display": 1.4
+                },
+                "below_own_width": true,
+                "controls": {
+                  "drop-every-4th-block": {
+                    "display": 0.2,
+                    "mean": 0.2,
+                    "words": "drop-every-4th-block"
+                  },
+                  "q2_k": {
+                    "display": 1.4,
+                    "mean": 1.4,
+                    "words": "q2_k"
+                  },
+                  "q3_k_s": {
+                    "display": 1.4,
+                    "mean": 1.4,
+                    "words": "q3_k_s"
+                  },
+                  "q4_k_m": {
+                    "display": 5.3,
+                    "mean": 5.266666666666667,
+                    "words": "the 4-bit copy"
+                  },
+                  "q8_0": {
+                    "display": 106.1,
+                    "mean": 106.06666666666666,
+                    "words": "the 8-bit copy"
+                  },
+                  "reference-2": {
+                    "display": 512.0,
+                    "mean": 512.0,
+                    "words": "the original run again"
+                  },
+                  "smaller-model": {
+                    "display": 1.3,
+                    "mean": 1.3333333333333333,
+                    "words": "smaller-model"
+                  }
+                },
+                "display": 31.0,
+                "green": {
+                  "controls": [
+                    "reference-2",
+                    "q8_0"
+                  ],
+                  "display": 309.0,
+                  "shown": false,
+                  "value": 309.03333333333336
+                },
+                "mean": 31.0,
+                "method": "exact",
+                "n": 15,
+                "policy_cap": false,
+                "rerun": "reference-2",
+                "rerun_engine": "llama.cpp",
+                "slots": 1,
+                "upper": {
+                  "controls": [
+                    "q8_0",
+                    "q4_k_m"
+                  ],
+                  "display": 55.7,
+                  "shown": false,
+                  "value": 55.666666666666664
+                }
+              },
               "id": "faithful_model",
               "lowered_by": [],
+              "next": {
+                "needs": [
+                  {
+                    "by": "publisher",
+                    "text": "replies shown above 55.7 leading tokens on average, halfway between the 8-bit copy and the 4-bit copy; this row has 31.0"
+                  }
+                ],
+                "to": "amber_upper"
+              },
               "quotes": [],
-              "reason": "not shown above the Q8_0 and Q4_K_M midpoint, 55.67 leading tokens",
+              "reason": "not shown above 55.7, halfway between the 8-bit copy (106) and the 4-bit copy (5.27); this row matches 31.0 leading tokens of the 16-bit original's replies, on average",
+              "sources": "test",
+              "sources_count": 0,
               "state": "amber",
-              "step": "amber_lower"
+              "step": "amber_lower",
+              "to_met": [
+                {
+                  "items": [
+                    {
+                      "by": "publisher",
+                      "key": "upper",
+                      "need": "above",
+                      "value": 55.7
+                    }
+                  ],
+                  "kind": "up",
+                  "to": "amber_upper"
+                },
+                {
+                  "items": [
+                    {
+                      "by": "publisher",
+                      "key": "green",
+                      "need": "above",
+                      "value": 309.0
+                    }
+                  ],
+                  "kind": "up",
+                  "to": "green"
+                }
+              ]
             },
             {
               "basis": "statement",
               "cause": "not_stated",
               "formal": {
+                "ceiling": "red",
+                "conclusion": "not_stated",
                 "input_code_unverified": null,
+                "limits": [],
                 "reach": "not_stated",
+                "said": {
+                  "conclusion": {
+                    "quotes": []
+                  },
+                  "input_code_unverified": {
+                    "quotes": []
+                  },
+                  "reach": {
+                    "quotes": []
+                  },
+                  "tool": {
+                    "quotes": []
+                  },
+                  "toolchain": {
+                    "quotes": []
+                  },
+                  "trusted_base": {
+                    "quotes": []
+                  }
+                },
+                "scope_bounds": {
+                  "completeness": null,
+                  "soundness": {
+                    "quotes": [
+                      {
+                        "text": "stwo's own conjectured-soundness accounting is security_bits = pow_bits + log_blowup_factor * n_queries so blowup 2 (log_blowup_factor = 1) at 100 conjectured bits means exactly 100 FRI queries and no grinding.",
+                        "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/src/util.rs#L9-L12"
+                      }
+                    ],
+                    "text": "100 conjectured bits"
+                  },
+                  "zero_knowledge": null
+                },
                 "scope_card": {
                   "completeness": {
                     "protocol": {
@@ -2161,7 +3882,7 @@
                     },
                     "prover_run": {
                       "quotes": [],
-                      "value": "not_stated"
+                      "value": "does_not_apply"
                     },
                     "verifier_run": {
                       "quotes": [],
@@ -2179,7 +3900,7 @@
                     },
                     "verifier_run": {
                       "quotes": [],
-                      "value": "not_stated"
+                      "value": "does_not_apply"
                     }
                   }
                 },
@@ -2191,8 +3912,23 @@
               },
               "id": "machine_checked",
               "lowered_by": [],
+              "next": {
+                "needs": [
+                  {
+                    "by": "publisher",
+                    "text": "a named machine-checked soundness theorem of part of the protocol at least, with its tool and toolchain pinned"
+                  },
+                  {
+                    "by": "us",
+                    "text": "then our recorded build of it"
+                  }
+                ],
+                "to": "amber_lower"
+              },
               "quotes": [],
               "reason": "not stated in the publisher's documents read at the pinned commit",
+              "sources": null,
+              "sources_count": 0,
               "sources_read": [
                 {
                   "path": "README.md",
@@ -2212,44 +3948,201 @@
                 }
               ],
               "state": "red",
-              "step": "red"
+              "step": "red",
+              "to_met": [
+                {
+                  "items": [
+                    {
+                      "by": "publisher",
+                      "need": "named_theorem"
+                    },
+                    {
+                      "by": "us",
+                      "need": "rebuild",
+                      "new": false
+                    }
+                  ],
+                  "kind": "up",
+                  "to": "amber_lower"
+                },
+                {
+                  "items": [
+                    {
+                      "by": "publisher",
+                      "need": "whole_method"
+                    }
+                  ],
+                  "kind": "up",
+                  "to": "amber_upper"
+                },
+                {
+                  "items": [
+                    {
+                      "by": "publisher",
+                      "need": "reach_run",
+                      "run": "boundary-grid --verify"
+                    }
+                  ],
+                  "kind": "up",
+                  "to": "green"
+                }
+              ]
             },
             {
               "basis": "statement",
-              "cause": "not_stated",
+              "cause": null,
               "id": "no_trusted_party",
               "lowered_by": [],
+              "next": {
+                "needs": [
+                  {
+                    "by": "publisher",
+                    "text": "a sentence of the publisher's, at the pinned commit, that soundness rests on cryptography alone and no setup produced a secret"
+                  }
+                ],
+                "to": "green"
+              },
+              "notes": [
+                "by the test FlashProve's row meets (GL-10, amended 2026-11-15): a petal is read as transparent when a sentence among its quotes says what soundness rests on and none of it is a setup that produced a secret. SASH states its soundness as stwo's conjectured accounting over the FRI parameters (util.rs L9-L12), and says the setup's two trees are a shape tree the verifier derives from the public parameters and a model tree compared with the published model commitment (prover/README.md L117-L119, docs/statement.md L127-L129). The Fixed statement it calls trusted by the verifier is those parameters and roots (compose.rs L7-L11). No sentence says in words that no setup produced a secret, so read as transparent and graded Mostly met at most, as FlashProve's is"
+              ],
               "quotes": [
+                {
+                  "text": "stwo's own conjectured-soundness accounting is security_bits = pow_bits + log_blowup_factor * n_queries so blowup 2 (log_blowup_factor = 1) at 100 conjectured bits means exactly 100 FRI queries and no grinding.",
+                  "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/src/util.rs#L9-L12"
+                },
+                {
+                  "text": "The preprocessed trace is two committed trees (a shape tree whose root the verifier derives from the public parameters, and a model tree whose root is compared with the published model commitment).",
+                  "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/README.md#L117-L119"
+                },
+                {
+                  "text": "They are committed as a tree of their own, and what says they are the columns the public parameters give is that the verifier **builds that tree itself** and compares its root with the root the statement declares.",
+                  "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/docs/statement.md#L127-L129"
+                },
+                {
+                  "text": "`security` (the FRI parameters and the hash)",
+                  "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/README.md#L324"
+                },
+                {
+                  "text": "`Fixed` — produced at setup, trusted by the verifier: the shape and gadget parameters that determine every column size and selector, the security config, the tree column sizes, and the **pinned preprocessed root** (every table, selector, weight and scale column lives in tree 0, and B4 §3 / B5 / B6 all showed a corrupted table is invisible to everything else).",
+                  "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/src/compose.rs#L7-L11"
+                },
                 {
                   "text": "The **verifier** (`verify_composed`) takes those two byte strings and the //! serialized proof, and nothing else",
                   "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/src/compose.rs#L15-L16"
                 }
               ],
-              "reading": true,
-              "reason": "not stated in the publisher's documents read at the pinned commit",
-              "sources_read": [
+              "read_facts": [
                 {
-                  "path": "README.md",
-                  "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/README.md"
-                },
-                {
-                  "path": "prover/README.md",
-                  "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/README.md"
-                },
-                {
-                  "path": "docs/statement.md",
-                  "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/docs/statement.md"
-                },
-                {
-                  "path": "prover/src/compose.rs",
-                  "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/src/compose.rs"
+                  "fact": "rests_on",
+                  "note": "by the test FlashProve's row meets (GL-10, amended 2026-11-15): a petal is read as transparent when a sentence among its quotes says what soundness rests on and none of it is a setup that produced a secret. SASH states its soundness as stwo's conjectured accounting over the FRI parameters (util.rs L9-L12), and says the setup's two trees are a shape tree the verifier derives from the public parameters and a model tree compared with the published model commitment (prover/README.md L117-L119, docs/statement.md L127-L129). The Fixed statement it calls trusted by the verifier is those parameters and roots (compose.rs L7-L11). No sentence says in words that no setup produced a secret, so read as transparent and graded Mostly met at most, as FlashProve's is",
+                  "plain": "The publisher states its soundness as stwo's conjectured estimate (see Integrity). Its setup commits two trees: a shape tree, whose root the verifier builds itself from the public settings, and a model tree, whose root the verifier compares with the published commitment. It calls some values `Fixed`, \"produced at setup, trusted by the verifier\": the model's shape and the settings of its circuits, the security settings, the trees' column sizes, and the pinned root of the tree that holds every table, weight and scale column. We read \"trusted\" here as: the verifier takes these values as given. They are settings and a tree root, not the weights themselves, and the publisher calls none of them a secret.",
+                  "used": true
                 }
               ],
-              "state": "red",
-              "step": "red"
+              "reading": true,
+              "reason": "cryptography only, as we read the publisher: no setup produced a secret; no quoted sentence says so in words, so Mostly met at most",
+              "sources": "statement_reading",
+              "sources_count": 1,
+              "state": "amber",
+              "step": "amber_upper",
+              "to_met": [
+                {
+                  "items": [
+                    {
+                      "by": "publisher",
+                      "need": "rests_sentence"
+                    }
+                  ],
+                  "kind": "up",
+                  "to": "green"
+                }
+              ],
+              "trust": {
+                "clause": "reading",
+                "publicly_checkable": true,
+                "rests_on": "transparent",
+                "said": {
+                  "publicly_checkable": {
+                    "plain": "The publisher states that the verifier takes two byte strings and the proof, and nothing else. It does not say in words that anyone can check a proof; that is our reading of this sentence.",
+                    "quotes": [
+                      {
+                        "text": "The **verifier** (`verify_composed`) takes those two byte strings and the //! serialized proof, and nothing else",
+                        "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/src/compose.rs#L15-L16"
+                      }
+                    ]
+                  },
+                  "rests_on": {
+                    "plain": "The publisher states its soundness as stwo's conjectured estimate (see Integrity). Its setup commits two trees: a shape tree, whose root the verifier builds itself from the public settings, and a model tree, whose root the verifier compares with the published commitment. It calls some values `Fixed`, \"produced at setup, trusted by the verifier\": the model's shape and the settings of its circuits, the security settings, the trees' column sizes, and the pinned root of the tree that holds every table, weight and scale column. We read \"trusted\" here as: the verifier takes these values as given. They are settings and a tree root, not the weights themselves, and the publisher calls none of them a secret.",
+                    "quotes": [
+                      {
+                        "text": "stwo's own conjectured-soundness accounting is security_bits = pow_bits + log_blowup_factor * n_queries so blowup 2 (log_blowup_factor = 1) at 100 conjectured bits means exactly 100 FRI queries and no grinding.",
+                        "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/src/util.rs#L9-L12"
+                      },
+                      {
+                        "text": "The preprocessed trace is two committed trees (a shape tree whose root the verifier derives from the public parameters, and a model tree whose root is compared with the published model commitment).",
+                        "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/README.md#L117-L119"
+                      },
+                      {
+                        "text": "They are committed as a tree of their own, and what says they are the columns the public parameters give is that the verifier **builds that tree itself** and compares its root with the root the statement declares.",
+                        "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/docs/statement.md#L127-L129"
+                      },
+                      {
+                        "text": "`security` (the FRI parameters and the hash)",
+                        "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/README.md#L324"
+                      },
+                      {
+                        "text": "`Fixed` — produced at setup, trusted by the verifier: the shape and gadget parameters that determine every column size and selector, the security config, the tree column sizes, and the **pinned preprocessed root** (every table, selector, weight and scale column lives in tree 0, and B4 §3 / B5 / B6 all showed a corrupted table is invisible to everything else).",
+                        "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/src/compose.rs#L7-L11"
+                      }
+                    ]
+                  }
+                }
+              }
             }
           ],
           "incomplete_sessions": [],
+          "ineligible_sessions": [
+            {
+              "reasons": [
+                "self_test_failed"
+              ],
+              "run_id": "2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2",
+              "slot": 2
+            }
+          ],
+          "level_statement": {
+            "quotes": [
+              {
+                "text": "Exit status 0 only when every implied link ran and chained on its own /// axis, every tag sits where its statement says it sits, every position's id /// is the prompt's or the previous position's proved argmax",
+                "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/src/boundary.rs#L1120-L1122"
+              },
+              {
+                "text": "the argmax binds the token a head segment emits to the **lowest-indexed** maximum of the logits it computed, which is the rule the model itself decodes by.",
+                "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/docs/statement.md#L147-L149"
+              },
+              {
+                "text": "| # | edge | default | turned off by |",
+                "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/docs/statement.md#L19"
+              },
+              {
+                "text": "| 12 | each matmul's input times the pinned weights into its accumulator | bound | nothing: it is the Freivalds check itself |",
+                "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/docs/statement.md#L32"
+              },
+              {
+                "text": "The other preprocessed tree is the model's, and its root is not derivable by anyone but the publisher: it commits the weights, and the verifier compares it with the published manifest.",
+                "url": "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/docs/statement.md#L134-L136"
+              }
+            ],
+            "read": true,
+            "reading": true,
+            "sources_read": [
+              "prover/src/boundary.rs",
+              "docs/statement.md",
+              "README.md",
+              "prover/README.md"
+            ],
+            "stated": true
+          },
           "multiple": {
             "grade": "derived",
             "null_reason": null,
@@ -2264,7 +4157,7 @@
             },
             "tier": "reported",
             "unit": "ratio",
-            "value": 55938.92636846443
+            "value": 54452.67985272168
           },
           "passed": true,
           "position": 1,
@@ -2275,7 +4168,7 @@
             "source": {
               "inputs": [
                 "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1/run.json#/metrics/proof_bytes_per_request",
-                "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2/run.json#/metrics/proof_bytes_per_request",
+                "results/v1.0/sash/2026-11-16-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1/run.json#/metrics/proof_bytes_per_request",
                 "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-3/run.json#/metrics/proof_bytes_per_request"
               ],
               "kind": "derivation",
@@ -2319,8 +4212,8 @@
               "slot": 1
             },
             {
-              "cause": "its verify ran on a host with a GPU visible and its proofs were not kept to verify again (SE-3a); slot 2 counts 2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2",
-              "replaced_by": "2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2",
+              "cause": "its verify ran on a host with a GPU visible and its proofs were not kept to verify again (SE-3a); slot 2 counts 2026-11-16-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1",
+              "replaced_by": "2026-11-16-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1",
               "run_id": "2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2",
               "slot": 2
             }
@@ -2338,10 +4231,10 @@
             "source": {
               "inputs": [
                 "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1/run.json#/events",
-                "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2/run.json#/events",
+                "results/v1.0/sash/2026-11-16-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1/run.json#/events",
                 "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-3/run.json#/events",
                 "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1/run.json#/proofs",
-                "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2/run.json#/proofs",
+                "results/v1.0/sash/2026-11-16-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1/run.json#/proofs",
                 "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-3/run.json#/proofs"
               ],
               "kind": "derivation",
@@ -2367,6 +4260,32 @@
             "unit": "ratio",
             "value": null
           },
+          "session_commit_gpu_seconds_per_reply": {
+            "grade": "derived",
+            "null_reason": null,
+            "scope": "commit",
+            "source": {
+              "inputs": [
+                "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1/run.json#/events",
+                "results/v1.0/sash/2026-11-16-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1/run.json#/events",
+                "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-3/run.json#/events"
+              ],
+              "kind": "derivation",
+              "ref": "derive:D-L1-COMMIT@0.1.0.dev0"
+            },
+            "stats": {
+              "max": 349.9542500862,
+              "mean": 325.2037677148,
+              "median": 337.0236360934,
+              "min": 288.6334169648,
+              "n": 3,
+              "n_failed": 0,
+              "stdev": 32.32403301014923
+            },
+            "tier": "reported",
+            "unit": "gpu_s/request",
+            "value": 325.2037677148
+          },
           "session_generation_gpu_seconds_per_reply": {
             "grade": "derived",
             "note": "no generation phase of its own: generation, if any, is inside the proving interval",
@@ -2375,7 +4294,7 @@
             "source": {
               "inputs": [
                 "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1/run.json#/proofs",
-                "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2/run.json#/proofs",
+                "results/v1.0/sash/2026-11-16-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1/run.json#/proofs",
                 "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-3/run.json#/proofs"
               ],
               "kind": "derivation",
@@ -2408,10 +4327,10 @@
             "source": {
               "inputs": [
                 "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1/run.json#/events",
-                "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2/run.json#/events",
+                "results/v1.0/sash/2026-11-16-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1/run.json#/events",
                 "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-3/run.json#/events",
                 "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1/run.json#/proofs",
-                "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2/run.json#/proofs",
+                "results/v1.0/sash/2026-11-16-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1/run.json#/proofs",
                 "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-3/run.json#/proofs"
               ],
               "kind": "derivation",
@@ -2419,16 +4338,16 @@
             },
             "stats": {
               "max": 2800.9012595783997,
-              "mean": 2772.159324302533,
-              "median": 2797.6558480602002,
-              "min": 2717.920865269,
+              "mean": 2679.853401692333,
+              "median": 2717.920865269,
+              "min": 2520.7380802296,
               "n": 3,
               "n_failed": 0,
-              "stdev": 46.999904284262364
+              "stdev": 143.9086536768291
             },
             "tier": "reported",
             "unit": "gpu_s/request",
-            "value": 2772.159324302533
+            "value": 2679.853401692333
           },
           "session_multiple": {
             "grade": "derived",
@@ -2444,7 +4363,65 @@
             },
             "tier": "reported",
             "unit": "ratio",
-            "value": 64302.09886587567
+            "value": 62161.00094644772
+          },
+          "session_proving_gpu_seconds_per_reply": {
+            "grade": "derived",
+            "null_reason": null,
+            "scope": "whole_wall",
+            "source": {
+              "inputs": [
+                "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1/run.json#/events",
+                "results/v1.0/sash/2026-11-16-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1/run.json#/events",
+                "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-3/run.json#/events",
+                "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1/run.json#/proofs",
+                "results/v1.0/sash/2026-11-16-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1/run.json#/proofs",
+                "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-3/run.json#/proofs"
+              ],
+              "kind": "derivation",
+              "ref": "derive:D-L1-SESSION-PROVING@0.1.0.dev0"
+            },
+            "stats": {
+              "max": 2450.9470094922,
+              "mean": 2354.6496339775335,
+              "median": 2380.8972291756,
+              "min": 2232.1046632648004,
+              "n": 3,
+              "n_failed": 0,
+              "stdev": 111.75730542492255
+            },
+            "tier": "reported",
+            "unit": "gpu_s/request",
+            "value": 2354.6496339775335
+          },
+          "session_reply_tokens_per_gpu_second": {
+            "grade": "derived",
+            "null_reason": null,
+            "scope": "whole_wall",
+            "source": {
+              "inputs": [
+                "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1/run.json#/events",
+                "results/v1.0/sash/2026-11-16-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1/run.json#/events",
+                "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-3/run.json#/events",
+                "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1/run.json#/proofs",
+                "results/v1.0/sash/2026-11-16-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1/run.json#/proofs",
+                "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-3/run.json#/proofs",
+                "levels/L1.yaml#/request/output_tokens"
+              ],
+              "kind": "derivation",
+              "ref": "derive:D-L1-REPLY-TOKENS@0.1.0.dev0"
+            },
+            "stats": {
+              "max": 0.20311511299633508,
+              "mean": 0.19105522700483202,
+              "min": 0.18279830402770708,
+              "n": 3,
+              "n_failed": 0,
+              "stdev": null
+            },
+            "tier": "reported",
+            "unit": "token/gpu_s",
+            "value": 0.19105522700483202
           },
           "session_usd_per_reply": {
             "grade": "derived",
@@ -2460,7 +4437,7 @@
             },
             "tier": "reported",
             "unit": "USD/request",
-            "value": 4.115886552332511
+            "value": 3.978837897790422
           },
           "sessions": [
             {
@@ -2491,9 +4468,9 @@
                 1,
                 1
               ],
-              "m": 2421.7624822435,
-              "run_id": "2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2",
-              "session": 2797.6558480602002,
+              "m": 2229.539574617,
+              "run_id": "2026-11-16-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1",
+              "session": 2520.7380802296,
               "slot": 2,
               "steady": true
             },
@@ -2523,7 +4500,7 @@
             "source": {
               "inputs": [
                 "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1/run.json#/proofs",
-                "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2/run.json#/proofs",
+                "results/v1.0/sash/2026-11-16-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1/run.json#/proofs",
                 "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-3/run.json#/proofs"
               ],
               "kind": "derivation",
@@ -2540,7 +4517,7 @@
             "source": {
               "inputs": [
                 "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1/run.json#/proofs",
-                "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2/run.json#/proofs",
+                "results/v1.0/sash/2026-11-16-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1/run.json#/proofs",
                 "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-3/run.json#/proofs"
               ],
               "kind": "derivation",
@@ -2548,16 +4525,16 @@
             },
             "stats": {
               "max": 2428.94690599575,
-              "mean": 2411.610492641417,
-              "median": 2421.7624822435,
-              "min": 2384.122089685,
+              "mean": 2347.5361900992502,
+              "median": 2384.122089685,
+              "min": 2229.539574617,
               "n": 3,
               "n_failed": 0,
-              "stdev": 24.07515750693497
+              "stdev": 104.61700143032475
             },
             "tier": "reported",
             "unit": "gpu_s/request",
-            "value": 2411.610492641417
+            "value": 2347.5361900992502
           },
           "steady_proving_gpu_seconds_per_reply": {
             "grade": "derived",
@@ -2567,7 +4544,7 @@
             "source": {
               "inputs": [
                 "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1/run.json#/proofs",
-                "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2/run.json#/proofs",
+                "results/v1.0/sash/2026-11-16-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1/run.json#/proofs",
                 "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-3/run.json#/proofs"
               ],
               "kind": "derivation",
@@ -2591,7 +4568,7 @@
             },
             "tier": "reported",
             "unit": "USD/request",
-            "value": 3.5805716897689925
+            "value": 3.4854391489112477
           },
           "system": "sash",
           "unranked_reason": null,
@@ -2602,7 +4579,7 @@
             "source": {
               "inputs": [
                 "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1/run.json#/metrics/verify_seconds_per_request",
-                "results/v1.0/sash/2026-11-13-sash-l1-l31-8b-p512-o512-prover-h200-hosted-2/run.json#/metrics/verify_seconds_per_request",
+                "results/v1.0/sash/2026-11-16-sash-l1-l31-8b-p512-o512-prover-h200-hosted-1/run.json#/metrics/verify_seconds_per_request",
                 "results/v1.0/sash/2026-11-12-sash-l1-l31-8b-p512-o512-prover-h200-hosted-3/run.json#/metrics/verify_seconds_per_request"
               ],
               "kind": "derivation",
@@ -2610,16 +4587,16 @@
             },
             "stats": {
               "max": 1087.4793005342,
-              "mean": 1079.7332305248,
-              "median": 1087.268625866,
+              "mean": 1077.7476348297334,
+              "median": 1081.3118387808001,
               "min": 1064.4517651742,
               "n": 3,
               "n_failed": 0,
-              "stdev": 13.23455641115888
+              "stdev": 11.920340118579345
             },
             "tier": "reported",
             "unit": "s/request",
-            "value": 1079.7332305248
+            "value": 1077.7476348297334
           },
           "workload": "l1-l31-8b-p512-o512"
         }
@@ -2648,6 +4625,10 @@
             "median": 512.0,
             "n": 15,
             "percent": 100.0,
+            "percent_interval": [
+              100.0,
+              100.0
+            ],
             "run": "results/v1.0/teacher-forced/llama-3.1-8b/run-llama.cpp.json",
             "status": "ok"
           },
@@ -2671,6 +4652,10 @@
             "median": 504.0,
             "n": 15,
             "percent": 98.359375,
+            "percent_interval": [
+              97.6171875,
+              98.984375
+            ],
             "run": "results/v1.0/teacher-forced/llama-3.1-8b/run-llama.cpp.json",
             "status": "ok"
           },
@@ -2694,6 +4679,10 @@
             "median": 467.0,
             "n": 15,
             "percent": 90.63802083333333,
+            "percent_interval": [
+              87.5,
+              93.3984375
+            ],
             "run": "results/v1.0/teacher-forced/llama-3.1-8b/run-llama.cpp.json",
             "status": "ok"
           },
@@ -2717,6 +4706,10 @@
             "median": 401.0,
             "n": 15,
             "percent": 78.0859375,
+            "percent_interval": [
+              73.15104166666667,
+              82.94270833333334
+            ],
             "run": "results/v1.0/teacher-forced/llama-3.1-8b/run-llama.cpp.json",
             "status": "ok"
           },
@@ -2740,6 +4733,10 @@
             "median": 374.0,
             "n": 15,
             "percent": 72.21354166666667,
+            "percent_interval": [
+              65.92447916666667,
+              78.29427083333333
+            ],
             "run": "results/v1.0/teacher-forced/llama-3.1-8b/run-llama.cpp.json",
             "status": "ok"
           },
@@ -2763,6 +4760,10 @@
             "median": 204.0,
             "n": 15,
             "percent": 44.127604166666664,
+            "percent_interval": [
+              38.307291666666664,
+              50.846354166666664
+            ],
             "run": "results/v1.0/teacher-forced/llama-3.1-8b/run-llama.cpp.json",
             "status": "ok"
           },
@@ -2786,11 +4787,16 @@
             "median": 358.0,
             "n": 15,
             "percent": 71.015625,
+            "percent_interval": [
+              64.71354166666666,
+              77.35677083333333
+            ],
             "run": "results/v1.0/teacher-forced/llama-3.1-8b/run-llama.cpp.json",
             "status": "ok"
           }
         ],
         "gating": false,
+        "interval_rule": "95 % bootstrap interval over the prompts: 10,000 resamples of the n per-prompt scores with replacement, random.Random(seed).choices, seed the first 8 bytes, big-endian, of sha256('fidelity-interval' || 0x00 || utf8(id)); the 251st to the 9,750th sorted mean",
         "label": "computed by the system's own code on the reference reply, not by the proved computation",
         "n": 15,
         "path": "results/v1.0/teacher-forced/llama-3.1-8b/teacher-forced.json",
@@ -2823,6 +4829,10 @@
             "median": 471.0,
             "n": 15,
             "percent": 92.03125,
+            "percent_interval": [
+              89.46614583333333,
+              94.46614583333334
+            ],
             "run": "results/v1.0/teacher-forced/llama-3.1-8b/run-sash.json",
             "status": "ok",
             "tests": [
@@ -2949,6 +4959,7 @@
       "baseline": {
         "cause": "no baseline run stored",
         "concurrency": null,
+        "gpu_model": null,
         "gpu_seconds_per_reply": {
           "grade": "derived",
           "null_reason": "missing_input",
@@ -2966,6 +4977,22 @@
         },
         "gpus": null,
         "ladder": [],
+        "reply_tokens_per_gpu_second": {
+          "grade": "derived",
+          "null_reason": "missing_input",
+          "scope": "prove.steady",
+          "source": {
+            "inputs": [
+              "releases/v1.0/board.json#/rungs/2/baseline/gpu_seconds_per_reply",
+              "levels/L1.yaml#/request/output_tokens"
+            ],
+            "kind": "derivation",
+            "ref": "derive:D-L1-SERVED-TOKENS@0.1.0.dev0"
+          },
+          "tier": "reported",
+          "unit": "token/gpu_s",
+          "value": null
+        },
         "run_id": null,
         "serving": "gpt2-fp32",
         "usd_per_reply": {

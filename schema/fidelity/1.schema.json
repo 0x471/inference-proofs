@@ -284,7 +284,7 @@
       "type": "array"
     },
     "step_test": {
-      "$comment": "FM-5, FM-6: the FI-4 one-sided sign-flip test of the row's per-prompt scores over the constant threshold `value`, run on d_i = 2n*s_i - (S_a + S_b)",
+      "$comment": "FM-5, FM-6: the FI-4 one-sided paired sign-flip test of the row over the threshold `value`, run on the per-prompt differences d_i = 2*s_i - (a_i + b_i), a and b the two controls' scores on prompt i (amended 2026-11-15)",
       "additionalProperties": false,
       "properties": {
         "method": {
@@ -537,9 +537,13 @@
       "const": "fidelity/1"
     },
     "slots": {
-      "$comment": "FI-1: the fidelity run's slot count, copied from fidelity-run.json; green needs 1 (FM-5)",
+      "$comment": "FM-5: the highest slot count over the rung's fidelity run records; absent when a record's engine is vLLM; green needs 1",
       "minimum": 1,
       "type": "integer"
+    },
+    "slots_cause": {
+      "$comment": "FM-5 (amended 2026-11-15): why the rung's fidelity runs give no slot count, e.g. a vLLM run, which sends every prompt in one generate call",
+      "type": "string"
     },
     "steps": {
       "$comment": "Faithful model's step thresholds from the rung's honest controls: green from the rerun and Q8_0, upper from Q8_0 and Q4_K_M",

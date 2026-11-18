@@ -1,16 +1,20 @@
 """Synthetic Level 1 records for the checks and board tests (RFC-0018). Not results.
 
-`Tree(root)` copies `levels/L1.yaml` into `root`, writes a price file and the
-systems' forbidden flags, and holds the level as the tree read from the file. `session(...)`
-writes one session's run directory in the shape the runner workstream records under a level
-(`manifest.level`, `manifest.session.slot`, `verify-trace/<proof_id>.json`); `controls(...)`
-builds a `controls.json` whose C1, C2, C3 and P1 trials the test chooses.
+`Tree(root)` copies `levels/L1.yaml` and the schema tree into `root`, writes a price file,
+the systems' forbidden flags and a claim card per system, and holds the level as the tree read
+from the file. `session(...)` writes one session's run directory in the shape the runner
+workstream records under a level (`manifest.level`, `manifest.session.slot`,
+`verify-trace/<proof_id>.json`), its manifest a valid `manifest/1` that RFC-0014 makes eligible
+for the release unless the test edits it (`manifest_edit`); `controls(...)` builds a
+`controls.json` whose C1, C2, C3 and P1 trials the test chooses.
 """
 
+import copy
 import json
 import shutil
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
+from typing import Any
 
 import yaml
 
@@ -26,6 +30,8 @@ SEED = "0x0123456789abcdef"
 OUTPUT = 512
 NS = 1_000_000_000
 REJECT = "rejected"
+# a valid manifest/1 under a level, the base of every session's manifest
+MANIFEST = json.loads((ROOT / "schema/manifest/examples/valid/level-session.json").read_text())
 
 
 class Tree:
@@ -33,7 +39,7 @@ class Tree:
 
     def __init__(self, root: Path) -> None:
         self.root = root
-        for rel in ("levels/L1.yaml",):
+        for rel in ("levels/L1.yaml", "schema"):
             src, dst = ROOT / rel, root / rel
             dst.parent.mkdir(parents=True, exist_ok=True)
             shutil.copytree(src, dst) if src.is_dir() else shutil.copy(src, dst)
@@ -48,6 +54,8 @@ class Tree:
             path = root / "systems" / system / "system.yaml"
             path.parent.mkdir(parents=True)
             path.write_text(yaml.safe_dump({"forbidden_flags": ["--unsound-skip-"]}))
+            self.claim_card(system)
+            self.properties(system, properties2(system=system))
         self.level: dict[str, object] = yaml.safe_load((root / "levels/L1.yaml").read_text())
         self.digest = file_digest(root / "levels/L1.yaml")
 
@@ -60,6 +68,29 @@ class Tree:
         assert isinstance(systems, dict)
         systems[system] = {"security": {"stated": stated, "words": "w", "source": "s"},
                            "model_change": "c"}  # fmt: skip
+
+    def claim_card(self, system: str) -> str:
+        """The digest of `systems/<system>/claim.yaml`, written when missing (RFC-0014: the
+        card a session names is the one in force)."""
+        path = self.root / "systems" / system / "claim.yaml"
+        if not path.is_file():
+            path.parent.mkdir(parents=True, exist_ok=True)
+            card = {"schema": "claim/1", "system": system, "configuration": "default",
+                    "card_version": 1}  # fmt: skip
+            path.write_text(yaml.safe_dump(card))
+        return file_digest(path)
+
+    def properties(self, system: str, doc: dict[str, object] | None) -> None:
+        """`systems/<system>/properties.yaml`: `doc` with the Level 1 statement (SI-4a) unless
+        it holds its own; None removes the file."""
+        path = self.root / "systems" / system / "properties.yaml"
+        if doc is None:
+            path.unlink(missing_ok=True)
+            return
+        upstream = doc.get("upstream")
+        commit = upstream.get("commit") if isinstance(upstream, dict) else PIN
+        doc = {"level_statement": level_statement(commit=str(commit)), **doc}
+        path.write_text(json.dumps(doc))
 
     def run_dir(self, system: str, run_id: str) -> Path:
         return self.root / "results" / RELEASE / system / run_id
@@ -155,6 +186,8 @@ def session(  # noqa: PLR0913 (one keyword per recorded field a test varies)
     digest: str | None = None,
     day: int = 1,
     generation: tuple[float, float] | None = None,
+    manifest_edit: Callable[[dict[str, Any]], None] | None = None,
+    commit_end: float | None = None,
 ) -> Path:
     """One session's run directory; `groups` lists (release second, replies) per group,
     requests numbered in release order, 1 ms apart inside a group."""
@@ -171,7 +204,9 @@ def session(  # noqa: PLR0913 (one keyword per recorded field a test varies)
                          "inputs": [f"{run_id}#/metrics/verify_seconds_total"]}}  # fmt: skip
     run = {"schema": "run/1", "run_id": run_id, "system": system, "control": False,
            "status": "failed" if failure else "completed", "failure": failure,
-           "events": [{"event": "commit.start", "mono_ns": int(commit_start * NS)}],
+           "events": [{"event": "commit.start", "mono_ns": int(commit_start * NS)},
+                      *([] if commit_end is None else
+                        [{"event": "commit.end", "mono_ns": int(commit_end * NS)}])],
            "proofs": [] if failure else proofs,
            "metrics": {"verify_seconds_per_request": metric}}  # fmt: skip
     if generation is not None:
@@ -179,16 +214,23 @@ def session(  # noqa: PLR0913 (one keyword per recorded field a test varies)
             {"name": n, "mono_ns": int(t * NS)}
             for n, t in zip(("generation.start", "generation.end"), generation, strict=True)
         ]
-    manifest = {"schema": "manifest/1", "run_id": run_id,
-                "level": {"id": "L1", "digest": digest or tree.digest},
-                "session": {"slot": slot},
-                "workload": {"id": workload},
-                "claim": {"configuration": "default"},
-                "commitment": {"commitment_id": "honest"},
-                "system": {"adapter_dirty": False, "upstream": {"commit": "a" * 40}},
-                "machine": {"gpu": {"bound_indices": list(range(gpus))}},
-                "commands": [{"step": "prove", "argv": ["prove", *argv],
-                              "started_at": f"2026-12-{day:02d}T00:{k:02d}:00Z"}]}  # fmt: skip
+    manifest = copy.deepcopy(MANIFEST)
+    manifest.update({"run_id": run_id, "release": RELEASE,
+                     "level": {"id": "L1", "digest": digest or tree.digest},
+                     "session": {**manifest["session"], "slot": slot},
+                     "workload": {**manifest["workload"], "id": workload},
+                     "claim": {"system": system, "configuration": "default", "card_version": 1},
+                     "commitment": {**manifest["commitment"], "commitment_id": "honest"},
+                     "machine": {"gpu": {"bound_indices": list(range(gpus))}},
+                     "commands": [{**manifest["commands"][0], "step": "prove",
+                                   "argv": ["prove", *argv],
+                                   "started_at": f"2026-12-{day:02d}T00:{k:02d}:00Z"}],
+                     })  # fmt: skip
+    manifest["system"] = {**manifest["system"], "name": system, "adapter_dirty": False,
+                          "claim_digest": tree.claim_card(system),
+                          "upstream": {"repo": "example/prover", "commit": "a" * 40}}  # fmt: skip
+    if manifest_edit is not None:
+        manifest_edit(manifest)
     (path / "run.json").write_text(json.dumps(run))
     (path / "manifest.json").write_text(json.dumps(manifest))
     if control_doc is not None:
@@ -276,6 +318,14 @@ def _group(
     return out
 
 
+def level_statement(value: bool = True, commit: str = PIN) -> dict[str, object]:
+    """An invented SI-4a fact: the publisher states that an accept is the committed model's own
+    greedy reply to the prompt (`value` false: the file says it does not)."""
+    text = "An accepted proof shows each reply token is the committed model's greedy choice."
+    return {"sources_read": ["README.md"],
+            "accept_is_model_reply": {"value": value, "quotes": [quote(text, commit)]}}  # fmt: skip
+
+
 def properties2(
     *,
     commit: str = PIN,
@@ -297,7 +347,8 @@ def properties2(
          "adversary": fact("any_prover", commit=commit), "parameters": fact("row", commit=commit),
          "conditions_shown": fact(True, commit=commit),
          "program": fact("stated", commit=commit)}  # fmt: skip
-    f = {"reach": fact("verifier_run", commit=commit), "tool": fact("Coq 8.20", commit=commit),
+    f = {"reach": fact("verifier_run", commit=commit), "conclusion": fact("model", commit=commit),
+         "tool": fact("Coq 8.20", commit=commit),
          "toolchain": fact(TOOLCHAIN, "coq 8.20.0", commit),
          "theorem": "Fake.Verifier.sound",
          "theorem_url": f"https://github.com/{REPO}/blob/{commit}/coq/V.v#L4",
@@ -317,6 +368,8 @@ def properties2(
     sources = ["README.md", "docs/a.md"]
     return {"schema": "properties/2", "system": system, "configuration": "default",
             "upstream": {"repo": REPO, "commit": commit}, "read": "2026-11-13",
+            "verifiers": {"run": fact("fake-verify", "run fake-verify", commit),
+                          "stated": {"value": None, "quotes": []}},
             "petals": {
                 "unforgeable": {"sources_read": sources,
                                 "bound": _group(b, bound or {}, commit)},

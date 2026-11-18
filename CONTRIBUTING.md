@@ -1,6 +1,6 @@
 # Contributing
 
-Thank you for helping. This project measures provers; it does not build, rank or certify them. Read [AGENTS.md](AGENTS.md) (rules for every contributor, human or agent), [docs/SPEC.md](docs/SPEC.md) and the RFCs your change touches.
+Thank you for helping. This project runs provers and ranks the systems that pass six checks inside one model's rung ([RFC-0018](rfcs/0018-level-1-ladder.md)); it does not build or certify them. Read [AGENTS.md](AGENTS.md) (rules for every contributor, human or agent), [docs/SPEC.md](docs/SPEC.md) and the RFCs your change touches.
 
 ## Issues
 

@@ -1,0 +1,17 @@
+check.py: the library /work/fp/lean as it was at 17:02:32 UTC: 29550 Lean files, sha256 620d8930cb098593; the copy that is checked: /tmp/lean-check-85dcf588/tree
+ASKING FILES: 13: not built, not replayed, not audited: each is run by the command in its head: Ask/AllCompiledSmall.lean Ask/AllCompiledSmallControls.lean Ask/EntryFilesSmall.lean Ask/EntryParsed.lean Ask/EntryProgram.lean Ask/EntryRecord.lean Ask/KeyCompiledSmall.lean Ask/KeyCompiledSmallControls.lean Ask/KeyThirdChainFull.lean Ask/KeyThirdChainSmall.lean Ask/ProofCompiledSmall.lean Ask/ProofCompiledSmallControls.lean ...
+== tree: every file is a regular file; no two names in a directory differ only in letter case; every import of a module of this library names one of these files; no "module" or "prelude" header; long lines only where a list allows them
+   the Lake files (lakefile.toml, lake-manifest.json, lean-toolchain) have the sha256 that this check.py expects; no lakefile.lean
+   PASSED: 29550 Lean files; 0 problems
+   PASSED: the modules that the kernel replay takes by another call than leanchecker: AtFullSide/: 915, ShapeLines/: 524; they are the pinned ones (WIDE_SUMS)
+   PASSED: asking files (below Ask/; not built, not replayed, not audited): 13; 0 problems
+   PASSED: lines of more than 100 characters: 150598, in 15435 files, all within the rows of long-lines.txt; 0 rows allow more than their file has; 0 problems
+101 s
+Particulars of this run:
+  - tree sha256 620d8930cb09859399d9a75a15878550ee98c6a4b57753f560e33a04c515f5f5, 29550 files
+  - checked with: Audit.lean.in 0413d08f39f4, check.py 417988bee88a, lake-manifest.json 12a047fd42eb, lakefile.toml dc70647e1279, lclib.py 0454dd60883e, lean-toolchain 7dc000621e00
+  - NOT RUN: words, imports, build
+  - 13 asking files, not built, not replayed, not audited
+  - the kernel replay takes 1439 modules by another call than leanchecker, with a larger stack: every module of AtFullSide/, 915 in all, every module of ShapeLines/, 524 in all (what that call does not do: the comment above WIDE_LIBRARIES in check.py; scripts/RULES.txt, "One module is replayed by another call")
+  - this run only read text, and the copy that it checked has been removed
+Partial run passed (tree): only these steps were run

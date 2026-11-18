@@ -6,6 +6,7 @@ its hash. `version` names words.css, words.js and search.json by the first 12 he
 """
 
 import hashlib
+import html
 import json
 import re
 
@@ -17,13 +18,16 @@ from .words import (
     CHECK_NAME,
     FIGURE_HEAD,
     FIGURE_NAME,
-    OF_WHICH,
+    HOW_MULTIPLE,
+    HOW_ON,
     PART_WORD,
     PETAL_NAME,
+    SERVING_GPU,
     STATE_WORD,
-    STEP_WORD,
     WHOLE_SESSIONS,
     e,
+    petal_step,
+    release_tail,
     shown,
 )
 
@@ -64,12 +68,11 @@ def load_faces():
 
 def font_faces(base, site=False):
     """The @font-face rules, with file URLs under base ("/fonts/" on the site, "../fonts/" for cards).
-    On the site the figures' face (Martian Mono) shows a system monospace after 100 ms rather than
-    hiding text while it loads; the display face and the cards wait for their own font."""
+    Site text stays visible while fonts load; preview cards wait for their own font."""
     out = []
     for f in S.FACES:
         stretch = f"font-stretch:{f['stretch']};" if f.get("stretch") else ""
-        display = "fallback" if site and f["fam"] == "Martian Mono" else "block"
+        display = "swap" if site else "block"
         out.append(
             f'@font-face{{font-family:"{f["fam"]}";font-style:normal;font-weight:{f["wt"]};{stretch}'
             f'font-display:{display};src:url({base}{f["file"]}) format("woff2");unicode-range:{f["range"]}}}'
@@ -89,6 +92,21 @@ def version(name):
     """A file's URL with the first 12 hex of its sha256, so it can be cached until it changes
     (words.css, words.js, search.json)."""
     return f"/{name}?v={hashlib.sha256((S.HERE / name).read_bytes()).hexdigest()[:12]}"
+
+
+def page_styles(cls):
+    """Inline the page's existing rules, preserving their cascade and all responsive states."""
+    styles = json.loads((S.HERE / "styles.json").read_text())
+    if styles["source"] != hashlib.sha256((S.HERE / "words.css").read_bytes()).hexdigest():
+        raise RuntimeError("styles.json is stale: run npm run styles in web/ before site build")
+    excluded = set()
+    if "learnpage" not in cls.split():
+        excluded.add("learn")
+    if "scalepage" not in cls.split():
+        excluded.add("scale")
+    if cls == "home":
+        excluded.add("details")
+    return "".join(part["css"] for part in styles["sections"] if part["scope"] not in excluded)
 
 
 # The one inline script, before the first paint: it marks that script runs (html.js) and that
@@ -233,7 +251,7 @@ def footer():
     if rel is not None:
         board = rel["board"]
         where = link(board) if board.startswith("releases/") else None
-        tail = rel["id"] + (f", {rel['date']}" if rel["date"] else "")
+        tail = release_tail(rel)
         parts.append(f'<a class="nw" href="{e(where)}"><span class="fk">Release</span> '
                      f'<span class="fv">{e(tail)}</span></a>' if where
                      else f'<span class="nw">Release {e(tail)}</span><code>{e(board)}</code>')  # fmt: skip
@@ -278,17 +296,22 @@ def new_tab(html):
 def page(title, desc, body, cls, path, card):
     """One page. path: its address under the site ("" for the home); card: its preview card's name,
     or None for a page that is never shared (the 404)."""
-    meta = share_meta(title, desc, path, card) if card else '<meta name="robots" content="noindex">'
+    title, desc = SEARCH_COPY.get(path, (title, desc))
+    meta = (
+        share_meta(title, desc, path, card, body)
+        if card
+        else '<meta name="robots" content="noindex">'
+    )
     return (
         f'<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">'
-        # the stylesheet before the inline script: its @view-transition rule is then known when the
+        # the styles before the inline script: the @view-transition rule is then known when the
         # page is revealed, so a transition into it is not skipped
-        f'{preloads()}<link rel="stylesheet" href="{version("words.css")}">'
+        f"{preloads()}<style>{page_styles(cls)}</style>"
         f"<script>{HEAD_SCRIPT}</script>"
         f'<title>{e(full_title(title))}</title><meta name="description" content="{e(desc)}">'
         f'<meta name="color-scheme" content="dark"><meta name="theme-color" content="{GROUND}">'
         f'{meta}{icon_links()}</head><body class="{cls}">{new_tab(body)}'
-        f'<p class="sr" aria-live="polite" id="live"></p><script src="{version("words.js")}" defer></script>'
+        f'<p class="sr" role="status" aria-atomic="true" id="live"></p><script src="{version("words.js")}" defer></script>'
         f'<script defer src="https://cdn.vercel-insights.com/v1/script.js"></script></body></html>'
     )
 
@@ -325,21 +348,18 @@ def cards_record():
 
 def card_alt(card):
     """The picture in words, from the same data the picture draws: the system and its model, the
-    band's figure, the standing, cost and verify time per reply, the petals. Each figure with its
+    band's figure, the standing, proof size and verify time per reply, the petals. Each figure with its
     unit, as the picture prints it."""
     if card == "home":
         return "Inference proofs."
     row = S.PAGE[card]
-    _, f, key = lead_figure(row)
-    lead = f"{FIGURE_HEAD['multiple']}: {fig_words(f)}"
-    if parts := parts_of(row, key):  # CO-7: "of which" once, before both parts
-        lead += f", {OF_WHICH} " + " and ".join(f"{w} {fig_words(p)}" for w, p in parts)
-    figs = [(FIGURE_HEAD["cost"], row_cost(row)),
+    lead = lead_words(row)
+    figs = [(FIGURE_HEAD["proof-size"], row["figures"]["proof_bytes_per_reply"]),
             (FIGURE_HEAD["check-time"], row["figures"]["verify_seconds_per_reply"])]  # fmt: skip
     cells = ". ".join(f"{k}: {fig_words(v)}" for k, v in figs)
     states = "; ".join(
-        f"{PETAL_NAME[p['id']]}: {STEP_WORD[p['step']]}"
-        + (f", {CAUSE_WORD[p['cause']]}" if p["cause"] is not None else "")
+        f"{PETAL_NAME[p['id']]}: {petal_step(p)}"
+        + (f", {CAUSE_WORD[p['cause']]}" if p["step"] is None else "")
         for p in row["glyph"]
     )
     name = S.V["systems"][row["system"]]["name"]
@@ -378,15 +398,32 @@ SPLITS = {"multiple": (("proving", "proving_multiple"), ("generation", "generati
 
 
 def lead_figure(row):
-    """A row's one figure (CO-5): the multiple of serving; with no steady state, the whole
-    sessions' multiple, named so in its label; else the multiple's null. Returns (label, figure,
-    its key in the row's figures)."""
+    """A row's one figure (CO-5, amended 2026-11-15): the whole sessions' multiple, named so in
+    its label, on every row that has one, so the rows of a rung print one scope; else the steady
+    multiple (or its null). The order rule still reads the steady multiple (OR-3): this changes
+    what is printed, never a position. Returns (label, figure, its key in the row's figures)."""
     figs = row["figures"]
-    if not has(figs["multiple"]) and has(figs["session_multiple"]):
+    if has(figs["session_multiple"]):
         n = rung_of(row)["requests_per_session"]
         return (f"{FIGURE_NAME['multiple']}, {WHOLE_SESSIONS.format(n=n)}",
                 figs["session_multiple"], "session_multiple")  # fmt: skip
     return FIGURE_NAME["multiple"], figs["multiple"], "multiple"
+
+
+def gpu_name(row):
+    """The GPU the row's counted sessions ran on, as their manifests record it (the facts file's
+    short name); the serving GPU where no manifest is stored."""
+    seen = (row.get("machine") or {}).get("gpu_model") or []
+    return " or ".join(seen) if seen else SERVING_GPU
+
+
+def how_computed(row):
+    """The headline in one plain sentence (B5): what is divided by what, at which scope, on
+    which GPUs, at one GPU price, by the figure the row prints (`lead_figure`)."""
+    _, _, key = lead_figure(row)
+    gpu = gpu_name(row)
+    on = HOW_ON[gpu == SERVING_GPU].format(gpu=gpu, serving=SERVING_GPU)
+    return HOW_MULTIPLE[key].format(on=on)
 
 
 def parts_of(row, key):
@@ -396,29 +433,65 @@ def parts_of(row, key):
     return parts if parts and all(has(f) for _, f in parts) else []
 
 
-def row_cost(row):
-    """The cost per reply at the multiple's own scope: steady when the row has a steady
-    multiple, else its whole sessions, so one row never mixes two scopes."""
-    figs = row["figures"]
-    steady = figs["multiple"].get("value") is not None
-    return figs["steady_usd_per_reply" if steady else "session_usd_per_reply"]
+def rate_pair(row):
+    """The two rates the headline is made of (CO-8, amended 2026-11-16): the row's reply tokens
+    per GPU-second over whole sessions and its model's serving baseline's, as (proved, served,
+    proved GPU, served GPU); None where the row's figure is not the whole sessions' multiple or
+    either rate is missing, so served over proved is always the multiple printed above it."""
+    proved = row["figures"].get("session_reply_tokens_per_gpu_second")
+    b = rung_of(row)["baseline"] or {}
+    served = b.get("reply_tokens_per_gpu_second")
+    if lead_figure(row)[2] != "session_multiple" or not (has(proved) and has(served)):
+        return None
+    return proved, served, gpu_name(row), serving_gpu(b)
+
+
+def serving_gpu(b):
+    """The GPU a model's serving baseline ran on, by its short name (CO-4: H200)."""
+    return (b or {}).get("gpu") or SERVING_GPU
+
+
+def only_run(row):
+    """Whether the row is the only system run on its model (OR-4, amended 2026-11-15): its
+    position is then printed unfilled, with no count, since nothing on the model was ranked
+    against it."""
+    return rung_of(row)["systems_run"] == 1
+
+
+ONLY_RUN = "only system run on this model"
+
+
+def share_words(row):
+    """A system page in a sentence (its description and share text, depth 0): the system, its
+    model and standing and its one figure, as the card prints them (its two parts are the system
+    page's Cost block's, CO-7, amended 2026-11-17)."""
+    name = S.V["systems"][row["system"]]["name"]
+    said = standing(row)  # a state word is lower case in prose
+    return f"{name} on {rung_of(row)['model']}, {said[0].lower() + said[1:]}. {lead_words(row)}."
+
+
+def lead_words(row):
+    """The row's one figure in words: "Cost vs serving: 1,317×". Its two parts are not said here
+    (CO-7, amended 2026-11-17: not every system times them apart, so they are no surface figure)."""
+    _, f, _ = lead_figure(row)
+    return f"{FIGURE_HEAD['multiple']}: {fig_words(f)}"
 
 
 def not_passed(row):
-    """The standing of a row that has not passed: "not passed" with a failed check, "not passed
-    yet" while every check not held is undecided (RFC-0018: an undecided check is never worded as
-    a failure)."""
+    """The standing of a row that has not passed (RFC-0018 §2.3, amended 2026-11-16): "Not
+    passed" with a failed check, "Not passed yet" while every check not passed is not decided (a
+    check not decided is never worded as a failure)."""
     failed = any(c["state"] == "failed" for c in row["checks"])
-    return "not passed" if failed else "not passed yet"
+    return "Not passed" if failed else "Not passed yet"
 
 
 def standing(row):
-    """Passed (a system on a model, SI-6), passed and unranked with why, or not passed with the
-    checks not held (SI-1), each named as a check."""
+    """Passed (a system on a model, SI-6), Passed, not ranked with why, or Not passed with the
+    checks not passed (SI-1), each named as a check."""
     if row["passed"] and not row["ranked"]:
-        return f"passed, unranked: {row['unranked_reason']}"
+        return f"Passed, not ranked: {row['unranked_reason']}"
     if row["passed"]:
-        return "passed"
+        return "Passed"
     missing = [f"{CHECK_NAME[c['id']]} check {STATE_WORD[c['state']]}" for c in row["checks"]
                if c["state"] != "held"]  # fmt: skip
     return f"{not_passed(row)}: " + ", ".join(missing) if missing else not_passed(row)
@@ -433,7 +506,50 @@ def card_current(card):
     )
 
 
-def share_meta(title, desc, path, card):
+# Search copy describes the existing page; it never changes the visible heading or lead.
+SEARCH_COPY = {
+    "": (
+        "Provable inference benchmark",
+        "Compare proof-of-inference systems on open-weights models: six checks, proving cost vs serving, proof size, verification time and fidelity.",
+    ),
+    "deployment": (
+        "AI treaty verification and deployments",
+        "How proofs of inference could support a hypothetical US-China AI agreement: model commitments, sampled replies, trusted traffic records and verification limits.",
+    ),
+    "glossary": (
+        "Provable inference glossary",
+        "Definitions for proof of inference, zero knowledge, soundness, model commitments, quantization, fidelity and trusted execution environments.",
+    ),
+    "learn": (
+        "Learn about proofs of inference",
+        "Learn what a proof of inference shows, how verification works, and how to interpret benchmark costs, model fidelity and AI treaty proposals.",
+    ),
+}
+
+# Topics are local to pages that discuss them, not claims about a system's guarantees.
+PAGE_TOPICS = {
+    "": ("Proof of inference", "Verifiable inference", "LLM inference benchmarks", "NVIDIA H200"),
+    "scale": ("Proving cost", "Proof size", "Verification time", "NVIDIA H200"),
+    "checks": ("Inference verification", "Negative controls", "Model fidelity", "NVIDIA H200"),
+    "mandate": ("Benchmark methodology", "Reproducible research"),
+    "learn": ("Proof of inference", "AI verification"),
+    "proof-of-inference": ("Proof of inference", "Model commitments", "Verification limits"),
+    "how-a-check-works": ("Inference verification", "Model commitments", "Proving cost"),
+    "deployment": (
+        "AI treaty verification",
+        "International AI agreements",
+        "Hypothetical US-China AI agreement",
+        "Trusted execution environments",
+        "Traffic sampling",
+    ),
+    "method": ("Benchmark methodology", "Proving cost", "Model fidelity"),
+    "statement": ("Verifiable computation", "Quantization", "Soundness"),
+    "forward-pass": ("Verifiable computation", "Sumcheck", "Matrix multiplication"),
+    "glossary": ("Proof of inference", "Zero knowledge", "Soundness", "Model fidelity"),
+}
+
+
+def share_meta(title, desc, path, card, body):
     url = f"{SITE_URL}/{path}"
     if card != "home" and not card_current(card):
         card = "home"
@@ -442,6 +558,8 @@ def share_meta(title, desc, path, card):
     full = full_title(title)
     alt = card_alt(card)
     tags = [
+        ("name", "robots", "index, follow, max-image-preview:large"),
+        ("property", "og:locale", "en_US"),
         ("property", "og:type", "website"),
         ("property", "og:site_name", "Inference proofs"),
         ("property", "og:title", full),
@@ -458,6 +576,58 @@ def share_meta(title, desc, path, card):
         ("name", "twitter:image", img),
         ("name", "twitter:image:alt", alt),
     ]
-    return f'<link rel="canonical" href="{e(url)}">' + "".join(
-        f'<meta {k}="{v}" content="{e(c)}">' for k, v, c in tags
-    )
+    data = {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        "@id": url,
+        "url": url,
+        "name": full,
+        "description": desc,
+        "inLanguage": "en",
+        "isPartOf": {
+            "@type": "WebSite",
+            "@id": f"{SITE_URL}/#website",
+            "url": f"{SITE_URL}/",
+            "name": "Inference proofs",
+        },
+    }
+    topics = PAGE_TOPICS.get(path, ("Proof of inference", "Model fidelity", "Proving cost"))
+    data["about"] = [{"@type": "Thing", "name": topic} for topic in topics]
+    data["keywords"] = list(topics)
+    # Section names and citation anchors come from the rendered headings, never a second outline.
+    parts = [
+        {
+            "@type": "WebPageElement",
+            "@id": f"{url}#{anchor}",
+            "name": html.unescape(re.sub(r"<[^>]+>", "", label)),
+        }
+        for anchor, label in re.findall(r'<h2\b[^>]*\bid="([^"]+)"[^>]*>(.*?)</h2>', body, re.S)
+    ]
+    if parts:
+        data["hasPart"] = parts
+    data["isPartOf"]["sameAs"] = S.REPO_URL
+    data["primaryImageOfPage"] = {
+        "@type": "ImageObject",
+        "url": img,
+        "caption": alt,
+        "width": CARD_W * CARD_SCALE,
+        "height": CARD_H * CARD_SCALE,
+    }
+    if path:
+        crumbs = [("Inference proofs", f"{SITE_URL}/")]
+        if learn_page(path) or path == "glossary":
+            crumbs.append(("Learn", f"{SITE_URL}/learn"))
+        crumbs.append((title, url))
+        data["breadcrumb"] = {
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+                {"@type": "ListItem", "position": i, "name": name, "item": address}
+                for i, (name, address) in enumerate(crumbs, 1)
+            ],
+        }
+    structured = json.dumps(data, ensure_ascii=False, separators=(",", ":")).replace("<", "\\u003c")
+    return (
+        f'<script type="application/ld+json">{structured}</script>'
+        f'<link rel="canonical" href="{e(url)}">'
+        '<link rel="help" type="text/plain" href="/llms.txt" title="Site guide for agents">'
+    ) + "".join(f'<meta {k}="{v}" content="{e(c)}">' for k, v, c in tags)

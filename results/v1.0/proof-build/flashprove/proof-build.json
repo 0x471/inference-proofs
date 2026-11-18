@@ -1,0 +1,61 @@
+{
+  "argv": [
+    "env",
+    "LEAN_NUM_THREADS=64",
+    "timeout",
+    "-k",
+    "60",
+    "72000",
+    "python3",
+    "-B",
+    "scripts/check.py",
+    "--wide-jobs",
+    "24"
+  ],
+  "axioms_reported": [
+    "propext",
+    "Classical.choice",
+    "Quot.sound"
+  ],
+  "exit_code": 0,
+  "last_lines": [
+    "  - 64 Lean processes at a time in \"lake build\", at most (the caller's LEAN_NUM_THREADS)",
+    "  - 220 theorems with lists and declarations in the listing (listing-for.txt; 0: all closed ones and all headlines)",
+    "  - 24 replays by the other call at a time, at most (--wide-jobs)",
+    "  - 0 closed top theorems",
+    "  - 10776 general theorems",
+    "  - 0 schemes named",
+    "  - 0 allowed steps",
+    "  - 0 headlines with named binders",
+    "  - 8520 declarations that program Lean (macros, notations, elaborators)",
+    "  - 9883 copies of theorems that are in more than one module, each checked",
+    "  - 0 closed theorems WITHOUT their declarations in the listing",
+    "  - 0 of closed theorems",
+    "  - 0 names declared in more than one module that are not copies of one theorem (if not 0, no file can import the whole library)",
+    "  - 7888 declarations that program Lean in the modules below one named theorem, AT LEAST",
+    "  - 0 verdicts on binders or on Classical.choice (top-theorems.txt has no closed line and no headline)",
+    "  - 13 asking files, not built, not replayed, not audited",
+    "  - the kernel replay takes 1439 modules by another call than leanchecker, with a larger stack: every module of AtFullSide/, 915 in all, every module of ShapeLines/, 524 in all; all names: ~/scratch/lean-check-fd954dd1/replay-other-call.txt (what that call does not do: the comment above WIDE_LIBRARIES in check.py; scripts/RULES.txt, \"One module is replayed by another call\")",
+    "  - the copy that was checked, with its packages and compiled files, has been removed",
+    "  - the logs and the listing are in ~/scratch/lean-check-fd954dd1",
+    "All steps passed: tree, words, imports, build (kernel replay, audit). This script runs no mutation tests and no second, independent proof checker (see lean/scripts/README.md). The result is about the compiled definitions: read the listing, not the source; the kernel replay took 1439 modules by another call than leanchecker: see the lines above (at least 7888 declarations program Lean in the modules below one named theorem); no theorem got a verdict on binders or on Classical.choice (every line of top-theorems.txt says general)"
+  ],
+  "schema": "proof-build/1",
+  "seconds": 68494.0,
+  "started_at": "2026-11-16T07:47:47Z",
+  "status": "built",
+  "system": "flashprove",
+  "theorem": {
+    "name": "VerifierAndGoals.AtTheName.sound_of_verify_at",
+    "url": "https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/Johnson/Goal/Skeleton/SoundOfVerifyAt.lean#L69"
+  },
+  "toolchain": {
+    "image": "sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852",
+    "name": "leanprover/lean4",
+    "version": "v4.29.1"
+  },
+  "upstream": {
+    "commit": "9e2bdd8ff5bf9c62f18263d7dac189b0400b260c",
+    "repo": "anthropics/FlashProve"
+  }
+}

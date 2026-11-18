@@ -109,6 +109,9 @@
 #                         place of a commit step after each file's sha256 is checked
 #   IPROOFS_STORED_DIR    controls only: a read-only mount of the stored run (`hf jobs run -v
 #                         hf://buckets/<namespace>/<bucket>/RUN_PATH:/stored:ro`)
+#   IPROOFS_REQUIRE_SELFTEST  1: a run stops right after a failed self-test, before any weights
+#                         are fetched (exit 5), so a session never runs on a host it cannot count
+#                         on (RFC-0014: a run whose machine self-test failed is ineligible)
 # shellcheck disable=SC2329  # finish and upload run from the EXIT trap
 set -uo pipefail
 
@@ -703,7 +706,12 @@ EOF
   log "hosted self-test (RFC-0011)"
   env -u HF_TOKEN "$IP" machine-record --hosted "${GPU_ARGS[@]}" --provider "$PROVIDER" --selftest \
     --results "$DEV" > "$OUT/selftest.json"
-  log "self-test exit $?"
+  SELFTEST=$?
+  log "self-test exit $SELFTEST"
+  if [ "$MODE" = run ] && [ "$SELFTEST" -ne 0 ] && [ "${IPROOFS_REQUIRE_SELFTEST:-0}" = 1 ]; then
+    log "IPROOFS_REQUIRE_SELFTEST=1 and the self-test failed: stopping before any weights; start the job again for another host"
+    exit 5
+  fi
 fi
 
 [ "$MODE" = probe ] && exit 0

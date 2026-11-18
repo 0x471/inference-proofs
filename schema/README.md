@@ -42,16 +42,18 @@ Schemas in the RFC-0012 catalogue that have landed, with their Python model in `
 | `target/1` | `targets/<author>/<id>.yaml` | none (read as a tree) |
 | `perturbed-commitment/1` | `results/<release>/<system>/_controls/<workload>/perturbed.json` | `PerturbedCommitmentRecord` |
 | `site-facts/1` | `web/_data/facts.json` | `SiteFacts`, `SiteInfo`, `ModelFacts`, `RowFacts`, `LicenceFacts`, `StatusFacts` |
-| `criteria/1` | `web/_data/criteria.json` | none (read as a tree) |
+| `criteria/1` | `web/_data/criteria.json` (deleted 2026-11-15: it held RFC-0016's vocabulary (Formally verified "yes" from documents), which no page reads; the v0.1 record is in git history at b9dfa3e) | none (read as a tree) |
 | `level/1` | `levels/L<k>.yaml` (RFC-0018) | none (read by `iproofs.level`) |
 | `beacon/1` | `levels/L<k>-beacon.json`, the drand round the prompts are drawn from (RFC-0018 PR-2) | none (read as a tree) |
 | `verify-trace/1` | `<run-dir>/verify-trace/<proof-id>.json`, the file opens of one verify call (RFC-0018 CH-4) | none (read as a tree) |
-| `fidelity/1` | `results/<release>/fidelity/<rung>/fidelity.json` (RFC-0018 FI-8), with the run's slot count, Faithful model's two step thresholds and each row's tests over them (optional, 2026-11-13) | none (read as a tree) |
+| `fidelity/1` | `results/<release>/fidelity/<rung>/fidelity.json` (RFC-0018 FI-8), with the run's slot count, the Fidelity petal's two step thresholds and each row's tests over them (optional, 2026-11-13) | none (read as a tree) |
 | `fidelity-run/1` | `results/<release>/fidelity/<rung>/fidelity-run.json`, the record of one fidelity run | none (read as a tree) |
-| `board/1` | `releases/<release>/board.json`, what the site reads (RFC-0018 §The board file); each row's five petals carry step, cause, basis, the checks that lowered them and `reading` when a fact the decision read is the reader's reading (changed in place 2026-11-13, before any release froze) | none (read as a tree) |
+| `board/1` | `releases/<release>/board.json`, what the site reads (RFC-0018 §The board file); each row's five petals carry step, cause, basis, the checks that lowered them and `reading` when a fact the decision read is the reader's reading (changed in place 2026-11-13, before any release froze; `ineligible_sessions` added in place 2026-11-15) | none (read as a tree) |
 | `properties/1` | `systems/<name>/properties.yaml`, the statement petals of the glyph as typed states; replaced by `properties/2` (2026-11-13) | none (read as a tree) |
 | `properties/2` | `systems/<name>/properties.yaml`, the facts each statement petal is computed from, with their deciding quotes at the pin (RFC-0018 GL-1); `bound.batch`, `bound.program` and `formal.toolchain` added in place 2026-11-13 | none (read as a tree) |
+| `refusal/1` | `results/<release>/<system>/refusals/slot-<k>.json`, a refusal by a system's own code with the upstream commit it was made at (RFC-0018 SE-5, 2026-11-15) | none (read as a tree) |
 | `proof-build/1` | `results/<release>/proof-build/<system>/proof-build.json`, one build of the theorem a properties file names, under the toolchain it pins (same spelling) in a digested image, and the axioms it reports (RFC-0018 MC-4, MC-5) | none (read as a tree) |
+| `verifier-trial/1` | `results/<release>/<system>/_trials/<trial id>/trial.json`, verify calls on stored proofs outside any session's suite (a second verifier, the C3 null twin, C1 at every position); it gates nothing (RFC-0008 §Verifier trials, 2026-11-15) | none (read as a tree) |
 
 ## Examples rule
 
