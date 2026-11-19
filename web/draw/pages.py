@@ -61,7 +61,7 @@ from .overview import (
     whole_note,
 )
 from .petal import chip, glyph_section, quote_links, state_word
-from .plots import axis_svg, dot_plot, fid_svg, hbar, lin_x, log_extent, log_x
+from .plots import axis_svg, decade_words, dot_plot, fid_svg, hbar, lin_x, log_extent, log_x
 from .words import (
     BASIS_BITS,
     BASIS_READING,
@@ -909,9 +909,18 @@ def ladder_html(rung):
     ladder = [c for c in b.get("ladder") or [] if c["rate"] is not None]
     if not ladder:
         return ""
-    rows = [[f"{c['concurrency']:,}" + (" (full load)" if c["concurrency"] == b["concurrency"]
-                                       else ""),
-             fig_html(c["rate"], sub=BARE)] for c in ladder]  # fmt: skip
+    top = max(c["rate"]["value"] for c in ladder) if all(has(c["rate"]) for c in ladder) else 0
+    rows = []
+    for c in ladder:
+        full = c["concurrency"] == b["concurrency"]
+        # each rate a bar from zero on one scale, the ladder's highest rate; full load in paper
+        bar = (
+            hbar([(c["rate"]["value"], "bp" if full else "bg")], top, h=8, cls="hb lbar")
+            if top > 0
+            else ""
+        )
+        rows.append([f"{c['concurrency']:,}" + (" (full load)" if full else ""),
+                     f'<span class="lrt">{fig_html(c["rate"], sub=BARE)}{bar}</span>'])  # fmt: skip
     return (f'<h3 class="sub-h">Serving ladder, {len(ladder):,} concurrencies</h3>'
             + stacked(["Concurrent requests", "Rate"], rows))  # fmt: skip
 
@@ -1650,64 +1659,58 @@ def rates_tile(row):
     return tile
 
 
-def cost_plot(row):
-    """CO-8 and CO-7 drawn (one figure, on the multiple's decade axis): serving at 1×, beside its
-    rate; this system's mark at the band's multiple, beside the proved rate; its two parts, where
-    the row times them apart, each at its own multiple beside its figure. The rates are aligned
-    on their decimal point, as the tile they replace was. Every place is a stored value (served
-    over proved is the multiple: `rate_pair`); the multiple itself is the band's alone. None
-    where the row has no rate pair (the tiles print what it has)."""
+def rates_plot(row):
+    """CO-8 drawn: the two rates the band's multiple divides, each a mark at its own rate on one
+    decade axis of reply tokens per GPU-second, beside its figure: this system's proved rate the
+    solid mark, its model's served rate the outlined one, so the distance between the two marks
+    is the multiple. The figures are aligned on their decimal point, as in the tile this
+    replaces. Every place is a stored value; the multiple itself is the band's alone. None where
+    the row has no rate pair, a rate is not above zero or the two ran on different GPUs (one
+    axis holds one unit): the tile then prints what the row has."""
     pair = rate_pair(row)
     if pair is None:
         return None
     proved, served, gp, sg = pair
-    _, lead, key = lead_figure(row)
-    parts = parts_of(row, key)
-    n = counted(row)
-    rates = [fig_html(proved, n, sub=BARE, unit=RATE_PER.format(gpu=gp)),
-             fig_html(served, sub=BARE, unit=RATE_PER.format(gpu=sg))]  # fmt: skip
-    nums = [re.search(r'<span class="n">([^<]*)</span>', h)[1].partition(".") for h in rates]
+    if gp != sg or min(proved["value"], served["value"]) <= 0:
+        return None
+    lines = [("me", RATE_PROVED, proved, counted(row), "me"), ("sv", "served", served, None, "ref")]
+    shown = [fig_html(f, k, sub=BARE, unit=RATE_PER.format(gpu=gp)) for _, _, f, k, _ in lines]
+    nums = [re.search(r'<span class="n">([^<]*)</span>', h)[1].partition(".") for h in shown]
     whole, frac = max(len(a) for a, _, _ in nums), max(len(d + b) for _, d, b in nums)
-    figs = [*(on_point(h, whole, frac) for h in rates),
-            *(fig_html(f, n, sub=BARE, note=whole_note(row, key)) for _, f in parts)]  # fmt: skip
-    vals = [v for v in (lead["value"], *(f["value"] for _, f in parts)) if v > 0]
-    lo, hi = log_extent([1.0, *vals])
-
-    def at(v):
-        return log_x(v, lo, hi) if v > 0 else None
-
+    lo, hi = log_extent([proved["value"], served["value"]])
     grid = [log_x(10**k, lo, hi) for k in range(lo, hi + 1)]
-    ticks = [(g, f"{10**k:,}×" if k >= 0 else f"{10**k:.{-k}f}×")
-             for g, k in zip(grid, range(lo, hi + 1), strict=True)]  # fmt: skip
+    ticks = [(g, decade_words(k)) for g, k in zip(grid, range(lo, hi + 1), strict=True)]
     minor = [log_x(m * 10**k, lo, hi) for k in range(lo, hi) for m in (2, 5)]
-    rows = [("sv", "served", figs[1], at(1.0), "ref"),
-            ("me", e(RATE_PROVED), figs[0], at(lead["value"]), "me")]  # fmt: skip
-    if parts:
-        rows.append(("pg", defined(PARTS_HEAD, "multiple")))
-        rows += [("pt", part_term(w), h, at(f["value"]), "part")
-                 for (w, f), h in zip(parts, figs[2:], strict=True)]  # fmt: skip
-    caption = e(f"{FIGURE_HEAD['multiple']}, {SCALE_LOG}")
+    rows = [(cls, e(w), on_point(h, whole, frac), log_x(f["value"], lo, hi), kind)
+            for (cls, w, f, _, kind), h in zip(lines, shown, strict=True)]  # fmt: skip
+    caption = e(f"{RATE_PER.format(gpu=gp)}, {SCALE_LOG}")
     return dot_plot(defined(FIGURE_HEAD["rate"], "rate"), caption, axis_svg(ticks, minor), grid,
-                    rows, RATE_ANCHOR)  # fmt: skip
+                    rows, RATE_ANCHOR, mean(COST_MEAN["rate"]))  # fmt: skip
 
 
 def parts_tile(row):
     """CO-7 (amended 2026-11-17): the band's multiple in its two parts, commit and proving then
-    generation, each with its unit; printed only here, on the system page, and only for a row that
+    generation, each with its unit, and the two as one bar from zero, split where the first ends; printed only here, on the system page, and only for a row that
     times them apart. None otherwise."""
     _, _, key = lead_figure(row)
     parts = parts_of(row, key)
     if not parts:
         return None
     n = counted(row)
-    figs = [(part_term(w), fig_html(f, n, sub=BARE, note=whole_note(row, key))) for w, f in parts]
-    return f'<span class="rts">{lines_html(figs)}</span>' + mean(COST_MEAN["parts"])
+    figs = [(f'<span class="ptk {c}">{part_term(w)}</span>',
+             fig_html(f, n, sub=BARE, note=whole_note(row, key)))
+            for (w, f), c in zip(parts, ("pp", "pg"), strict=True)]  # fmt: skip
+    # the two parts end to end, from zero to their sum, each in the ink of its word's mark
+    segs = [(f["value"], c) for (_, f), c in zip(parts, ("bp", "bg"), strict=True)]
+    whole = sum(v for v, _ in segs)
+    bar = hbar(segs, whole, h=10, cls="hb pbar") if whole > 0 and min(segs)[0] >= 0 else ""
+    return f'<span class="rts">{lines_html(figs)}</span>{bar}' + mean(COST_MEAN["parts"])
 
 
 def cost_block(row):
     """The Cost block (CO-1 to CO-8), led by its figures: the two rates the band's multiple
-    divides and its two parts where the row times them apart (CO-7, printed nowhere else), drawn
-    on the multiple's axis (`cost_plot`; as tiles where the row has no rate pair), then verify
+    divides, drawn on one axis (`rates_plot`; a tile where the row has no rate pair), its two
+    parts where the row times them apart (CO-7, printed nowhere else), verify
     time, proof size and, small, the cost in USD; what they share (scope,
     n, GPUs, evidence) once over them. How each side ran, every GPU time and the serving ladder
     one click down (`cost_html`)."""
@@ -1723,11 +1726,11 @@ def cost_block(row):
                                  ("size", figs["proof_bytes_per_reply"])) if has(f)]  # fmt: skip
     tier = evidence_words(shown) if shown else ""
     cells = []
-    plot = cost_plot(row)  # the two rates and the parts, drawn; else as tiles
+    plot = rates_plot(row)  # the two rates, drawn; else as a tile
     rates = None if plot else rates_tile(row)
     if rates:
         cells.append((defined(FIGURE_HEAD["rate"], "rate"), rates, RATE_ANCHOR))
-    if not plot and (split := parts_tile(row)):
+    if split := parts_tile(row):
         cells.append((defined(PARTS_HEAD, "multiple"), split, "parts"))
     for k, f in (("check-time", figs["verify_seconds_per_reply"]),
                  ("proof-size", figs["proof_bytes_per_reply"])):  # fmt: skip
@@ -1754,17 +1757,18 @@ def cost_block(row):
     )
 
 
-def fidelity_plot(row, tf, mine):
-    """SI-9 drawn: top-token agreement on one axis, zoomed to the tens that hold the drawn
-    values and up to 100 %, each end labelled; the model's quantized copies (FI-2) as outlined
-    marks and this system as the one solid mark, one row each, highest first as the table one
-    click down orders them, each beside its labelled figure. A copy that did not run prints
-    "not run" and is not drawn. None where nothing ran."""
+def fidelity_plot(row, fid, tf, mine):
+    """SI-9 drawn: top-token agreement on one axis, from the ten under the lowest drawn value
+    (90 % at most) to 100 %, each end labelled; the rows of the table one click down (Q48: the
+    model's quantized copies and the bar's row) as outlined marks and this system as the one
+    solid mark, one row each, highest first as the table orders them, each beside its labelled
+    figure. A copy that did not run prints "not run" and is not drawn. None where nothing ran."""
 
     def ok(t):
         return t is not None and t["status"] == "ok" and t.get("percent") is not None
 
-    copies = [c for c in tf.get("controls") or [] if FID_COPY.match(c["id"])]
+    bar = ((fid or {}).get("bar") or {}).get("control")
+    copies = [c for c in tf.get("controls") or [] if c["id"] == bar or FID_COPY.match(c["id"])]
     drawn = [t["percent"] for t in (mine, *copies) if ok(t)]
     if not drawn:
         return None
@@ -1801,7 +1805,7 @@ def fidelity_block(row):
     fid, tf = rung["fidelity"], rung.get("teacher_forced")
     mine = (tf or {}).get("rows", {}).get(row["system"]) if tf else None
     cells = []
-    plot = fidelity_plot(row, tf, mine) if tf and mine is not None else None
+    plot = fidelity_plot(row, fid, tf, mine) if tf and mine is not None else None
     if tf and mine is not None and not plot:
         sub = [f"top-token agreement, n\u00a0=\u00a0{mine['n']:,} prompts"]
         cells.append((defined(FIGURE_HEAD["fidelity"], FIGURE_ANCHOR["fidelity"]),
@@ -1840,12 +1844,9 @@ def fidelity_block(row):
     )
 
 
-SES_CELL = ' class="ses"'  # the Session cell, its bar beside its figure (words.css)
-
-
 def sessions_block(row):
     """SE-3: the counted sessions in one table (slot, run, the whole session's GPU time per
-    reply beside its bar, the sessions' bars on one scale, its generation part, the steady one or why there is none), the release groups once
+    reply, its generation part, the steady one or why there is none), the release groups once
     over it; the sessions not counted, by kind and count, in view, and listed one click down."""
     rec = row["record"]
     if not row["sessions"]:
@@ -1859,20 +1860,15 @@ def sessions_block(row):
              (M_COL, term(M_COL, "Steady state")),
              *([("Release groups", e("Release groups"))] if len(groups) > 1 else [])]  # fmt: skip
     trs = []
-    # each session's GPU time per reply as a bar from zero, on one scale: the longest fills it
-    top = max((s["session"] for s in row["sessions"] if s["session"] is not None), default=None)
     for k, s in enumerate(row["sessions"]):
         at = f"{rec}/sessions/{k}"
         g = s.get("generation_gpu_seconds_per_reply")
-        bar = hbar([(s["session"], "bs")], top, h=10) if s["session"] is not None else ""
         cells = [str(s["slot"]), run_link(row, s["run_id"]),
-                 f'<span class="sesb">{bar}{plain(s["session"], GPU_S, f"{at}/session", whole)}'
-                 "</span>",
+                 plain(s["session"], GPU_S, f"{at}/session", whole),
                  *([plain(g, GPU_S, f"{at}/generation_gpu_seconds_per_reply", whole)] if gen else []),
                  steady_cell(s, at, steady),
                  *([f"{len(s['groups']):,}"] if len(groups) > 1 else [])]  # fmt: skip
-        trs.append("<tr>" + "".join(f'<td data-l="{e(h)}"{SES_CELL if h == "Session" else ""}>'
-                                    f"{c}</td>"
+        trs.append("<tr>" + "".join(f'<td data-l="{e(h)}">{c}</td>'
                                     for (h, _), c in zip(heads, cells, strict=True)) + "</tr>")  # fmt: skip
     ths = "".join(f'<th scope="col">{h}</th>' for _, h in heads)
     table = (

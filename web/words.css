@@ -1396,8 +1396,8 @@ a.pvd:hover { text-decoration: underline 2px; text-underline-offset: 4px; }
    plot on the one axis drawn over them; this system's mark solid paper, serving and the copies outlined, the parts
    small and muted. On a narrower screen each plot takes the block's width under its words */
 .dp { display: grid; grid-template-columns: max-content max-content minmax(0, 1fr); column-gap: 24px; padding: var(--s4) 24px var(--s3) 13px; border-bottom: 1px solid var(--rule); }
-.dph { grid-column: 1 / 3; align-self: end; padding-bottom: 7px; font: var(--f-label); letter-spacing: var(--track); text-transform: uppercase; color: var(--muted); }
-.dph a, .dpg a { color: inherit; }
+.dph { grid-column: 1 / 3; align-self: start; font: var(--f-label); letter-spacing: var(--track); text-transform: uppercase; color: var(--muted); }
+.dph a { color: inherit; }
 .dpc { display: block; margin-bottom: var(--s2); font: var(--f-label); letter-spacing: var(--track); text-transform: uppercase; color: var(--muted); }
 .dpr { display: contents; }
 .dpw, .dpf { align-self: center; }
@@ -1407,18 +1407,34 @@ a.pvd:hover { text-decoration: underline 2px; text-underline-offset: 4px; }
 .dpf .fig .n { font-size: 18px; }
 .dpr:not(.me) .dpf .fig .n { font-weight: 500; }
 .dp .np .n { padding-left: var(--pl); padding-right: var(--pr); }
-.dpg { grid-column: 1 / -1; padding: var(--s3) 0 var(--s1); font: var(--f-label); letter-spacing: var(--track); text-transform: uppercase; color: var(--muted); }
+.dpm { grid-column: 1 / -1; padding-top: var(--s2); }
+.dpm .mean { font: 400 12px/18px var(--mono); color: var(--muted); }
 .dpl, .dax { display: block; overflow: visible; }
 .dpl .gd { stroke: var(--line); stroke-width: 1px; }
 .dpl .tk { stroke: var(--line); stroke-width: 1px; }
 .dpl .mk.me rect { fill: var(--paper); }
 .dpl .mk.ref rect { fill: var(--ground); stroke: var(--muted); stroke-width: 1.5px; }
-.dpl .mk.part rect { fill: var(--muted); }
 .dax :is(.mj, .mn) { stroke: var(--rule); stroke-width: 1px; }
 .dax .tl { fill: var(--muted); font: 400 11px/1 var(--mono); font-stretch: 87.5%; font-variant-numeric: tabular-nums; }
 .dax .tl.n { display: none; }
-/* the tiles under a Cost drawing: verify time, proof size and cost, in even columns */
-@media (min-width: 761px) { .syspage #cost .tiles.drawn { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+/* the tiles under the Cost drawing: verify time, proof size and cost in even columns; before them, where the row
+   times them apart, the multiple's two parts with their bar, in a wider one */
+@media (min-width: 761px) {
+  .syspage #cost .tiles.drawn { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .syspage #cost .tiles.drawn:has(> #parts) { grid-template-columns: minmax(0, 1.5fr) repeat(3, minmax(0, 1fr)); }
+  .syspage #cost .tiles.drawn:has(> #parts) > div, .syspage #cost .tiles.drawn:has(> #parts) > #parts { grid-row: auto; grid-column: auto; }
+}
+/* the multiple's two parts end to end, from zero to their sum (plots.hbar), a mark of each part's ink before its
+   word; the serving ladder's rates as bars from zero on one scale, full load in paper */
+.tiles .pbar { height: 10px; margin-top: var(--s3); }
+.ptk:before { content: ""; display: inline-block; width: 10px; height: 4px; margin: 0 6px 2px 0; background: var(--paper); vertical-align: middle; }
+.ptk.pg:before { background: var(--rule); }
+.lrt { display: grid; grid-template-columns: 22ch minmax(0, 1fr); column-gap: 16px; align-items: center; }
+.lrt .lbar { height: 8px; }
+@media (max-width: 760px) {
+  .lrt { grid-template-columns: minmax(0, 1fr); row-gap: 6px; }
+  .lrt .fig { flex-wrap: wrap; }
+}
 @media (max-width: 1000px) {
   .dp { grid-template-columns: max-content minmax(0, 1fr); column-gap: 16px; padding-right: 16px; }
   .dph, .dpa, .dpl { grid-column: 1 / -1; }
@@ -1433,13 +1449,6 @@ a.pvd:hover { text-decoration: underline 2px; text-underline-offset: 4px; }
   .dpf { min-width: 0; }
   .dpf .fig { flex-wrap: wrap; }
   .dpf .fig .n { font-size: 16px; }
-}
-/* a counted session's GPU time per reply: its bar from zero, the sessions on one scale, then its figure */
-.sesb { display: flex; align-items: center; gap: 14px; }
-.sesb .hb { flex: 0 0 auto; width: 200px; height: 10px; }
-@media (max-width: 760px) {
-  .rt.stk td.ses { grid-column: 1 / -1; }
-  .sesb .hb { flex: 1 1 0; width: auto; min-width: 0; }
 }
 @media (forced-colors: active) {
   .dpl, .dax { forced-color-adjust: none; }

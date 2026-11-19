@@ -1,5 +1,6 @@
-"""The drawings of a system page: bars of one row's GPU times per reply, the fidelity tracks and
-the dot plots that open its Cost and Fidelity blocks.
+"""The drawings of a system page: bars of one row's GPU times per reply, of its multiple's two
+parts and of its model's serving ladder, the fidelity tracks and the dot plots that open its Cost
+and Fidelity blocks.
 Every mark is geometry from a stored value of one row or one model: no number is typed here, and
 nothing is ranked across models (RFC-0018 OR-1). Each bar sits beside its labelled figure.
 
@@ -69,11 +70,16 @@ PLOT_WIDE, PLOT_NARROW = 560, 280
 
 
 def log_extent(vals):
-    """The decades a multiple's axis draws, (lo, hi): from 1× (or the decade under the smallest
-    value) to one past the largest's, never fewer than two."""
-    lo = min(0, math.floor(math.log10(min(vals))))
+    """The decades an axis draws for values above zero, (lo, hi): from the decade under the
+    smallest to the one past the largest, never fewer than two."""
+    lo = math.floor(math.log10(min(vals)))
     hi = math.floor(math.log10(max(vals))) + 1
     return lo, max(hi, lo + 2)
+
+
+def decade_words(k):
+    """A decade as an axis prints it (0.1, 1, 10, 1,000): a place on the scale, not a figure."""
+    return f"{10**k:,}" if k >= 0 else f"{10**k:.{-k}f}"
 
 
 def log_x(v, lo, hi):
@@ -93,15 +99,18 @@ def pc(x):
 def axis_svg(ticks, minor=()):
     """The axis over a dot plot: a tick at each of `ticks` ((x, words), evenly spaced, the first
     and last the axis's ends), a short one at each of `minor` (x), and the words in two sets,
-    for a wide plot and a phone's: every k-th from the first, k the least for which two never
-    meet (an end's label, set inside the plot, beside a centred one is the worst pair)."""
+    for a wide plot and a phone's: every k-th, k the least step that lands on both ends (so a
+    mark never stands past the last labelled tick) and keeps two words from meeting (an end's
+    label, set inside the plot, beside a centred one is the worst pair)."""
     out = [f'<line class="mn" x1="{pc(x)}" x2="{pc(x)}" y1="23" y2="{AX_H}"/>' for x in minor]
     out += [f'<line class="mj" x1="{pc(x)}" x2="{pc(x)}" y1="17" y2="{AX_H}"/>' for x, _ in ticks]
     w = max(len(t) for _, t in ticks) * ADV
     last = len(ticks) - 1
     for cls, width in (("w", PLOT_WIDE), ("n", PLOT_NARROW)):
         d = width / last
-        k = next(k for k in range(1, last + 1) if k * d >= 1.5 * w + 12 or k == last)
+        k = next(
+            k for k in range(1, last + 1) if last % k == 0 and (k * d >= 1.5 * w + 12 or k == last)
+        )
         for i in range(0, last + 1, k):
             x, words = ticks[i]
             anchor = "start" if i == 0 else "end" if i == last else "middle"
@@ -113,32 +122,28 @@ def axis_svg(ticks, minor=()):
 
 def dot_svg(x, kind, grid):
     """One row's plot: the axis's lines (`grid`, x), a track, and the row's mark at x (kind: me,
-    this system's figure, solid; ref, serving or a copy, an outline; part, a part of this
-    system's figure, small); the lines only where x is None (a figure not measured)."""
+    this system's figure, solid; ref, serving or a copy, an outline); the lines only where x is None (a figure not measured)."""
     out = [f'<line class="gd" x1="{pc(g)}" x2="{pc(g)}" y1="0" y2="{ROW_H}"/>' for g in grid]
     out.append(f'<line class="tk" x1="0%" x2="100%" y1="{ROW_H / 2:g}" y2="{ROW_H / 2:g}"/>')
     if x is not None:
-        r = {"me": 6, "ref": 5, "part": 4}[kind]
+        r = {"me": 6, "ref": 5}[kind]
         out.append(f'<svg class="mk {kind}" x="{pc(x)}" y="{ROW_H / 2:g}" overflow="visible">'
                    f'<rect x="{-r}" y="{-r}" width="{2 * r}" height="{2 * r}"/></svg>')  # fmt: skip
     return (f'<svg class="dpl" width="100%" height="{ROW_H}" aria-hidden="true" '
             f'focusable="false">{"".join(out)}</svg>')  # fmt: skip
 
 
-def dot_plot(head, caption, axis, grid, rows, at=""):
-    """A dot plot as markup: its head (the figure's name, linked) and the axis's caption over
-    the axis, then one row each (cls, word, figure, x or None, kind, or a head of a group of
-    rows as (cls, words) alone); the words and figures are text a reader reads, the plots
+def dot_plot(head, caption, axis, grid, rows, at="", foot=""):
+    """A dot plot as markup: its head (the figure's name, linked) beside the axis's caption, the
+    axis, then one row each (cls, word, figure, x or None, kind) and, under them, `foot` (a
+    figure's few words of meaning); the words and figures are text a reader reads, the plots
     aria-hidden beside them."""
     out = [f'<div class="dph">{head}</div><div class="dpa"><span class="dpc">{caption}</span>'
            f"{axis}</div>"]  # fmt: skip
-    for r in rows:
-        if len(r) == 2:
-            cls, words = r
-            out.append(f'<div class="dpg {cls}">{words}</div>')
-            continue
-        cls, word, fig, x, kind = r
+    for cls, word, fig, x, kind in rows:
         out.append(f'<div class="dpr {cls}"><span class="dpw">{word}</span>'
                    f'<span class="dpf">{fig}</span>{dot_svg(x, kind, grid)}</div>')  # fmt: skip
+    if foot:
+        out.append(f'<div class="dpm">{foot}</div>')
     place = f' id="{at}"' if at else ""
     return f'<div class="dp"{place}>{"".join(out)}</div>'
