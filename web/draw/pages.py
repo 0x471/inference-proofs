@@ -1694,8 +1694,10 @@ def rates_plot(row):
     rows = [(cls, e(w), on_point(h, whole, frac), log_x(f["value"], lo, hi), kind)
             for (cls, w, f, _, kind), h in zip(lines, shown, strict=True)]  # fmt: skip
     caption = e(f"{RATE_PER.format(gpu=gp)}, {SCALE_LOG}")
+    # the stretch between the two marks, shaded: what the multiple measures
+    between = tuple(x for *_, x, _ in rows)
     return dot_plot(defined(FIGURE_HEAD["rate"], "rate"), caption, axis_svg(ticks, minor), grid,
-                    rows, RATE_ANCHOR, mean(COST_MEAN["rate"]))  # fmt: skip
+                    rows, RATE_ANCHOR, mean(COST_MEAN["rate"]), between)  # fmt: skip
 
 
 def parts_tile(row):
@@ -1713,7 +1715,7 @@ def parts_tile(row):
     # the two parts end to end, from zero to their sum, each in the ink of its word's mark
     segs = [(f["value"], c) for (_, f), c in zip(parts, ("bp", "bg"), strict=True)]
     whole = sum(v for v, _ in segs)
-    bar = hbar(segs, whole, h=10, cls="hb pbar") if whole > 0 and min(segs)[0] >= 0 else ""
+    bar = hbar(segs, whole, h=14, cls="hb pbar") if whole > 0 and min(segs)[0] >= 0 else ""
     return f'<span class="rts">{lines_html(figs)}</span>{bar}' + mean(COST_MEAN["parts"])
 
 

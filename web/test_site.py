@@ -214,9 +214,12 @@ def test_system_page_drawings_sit_where_the_figures_say(board_site: Any) -> None
         for width in (plots.PLOT_WIDE, plots.PLOT_BESIDE, plots.PLOT_NARROW):
             shown = plots.labelled(ticks, width)
             assert (shown[0], shown[-1]) == (0, count - 1), (count, width)
-            room = 1.5 * 7 * plots.ADV + 12  # the widest pair: an end's label beside a centred one
-            gaps = [(b - a) * width / (count - 1) for a, b in pairwise(shown)]
-            assert all(g >= room for g in gaps) or len(shown) == 2, (count, width)
+            # seven characters of 7.8 px: an end's words start or end on its tick, the others
+            # are centred, and no two stand closer than 10 px
+            edges = [(x, x + 54.6) if i == 0 else (x - 54.6, x) if i == count - 1
+                     else (x - 27.3, x + 27.3)
+                     for i in shown for x in [i * width / (count - 1)]]  # fmt: skip
+            assert all(b[0] - a[1] >= 10 - 1e-9 for a, b in pairwise(edges)), (count, width)
     release = ROOT / "releases/v1.0/board.json"
     if not release.exists():
         return

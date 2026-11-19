@@ -1395,30 +1395,38 @@ a.pvd:hover { text-decoration: underline 2px; text-underline-offset: 4px; }
 /* a block's drawing (Cost, Fidelity: plots.dot_plot): one row per figure, its word, its figure and its plot, every
    plot on the one axis drawn over them; this system's mark solid paper, serving and the copies outlined, its figure
    small and muted. On a narrower screen each plot takes the block's width under its words */
-.dp { display: grid; grid-template-columns: max-content max-content minmax(0, 1fr); column-gap: 24px; padding: var(--s4) 24px var(--s3) 13px; border-bottom: 1px solid var(--rule); }
+.dp { display: grid; grid-template-columns: max-content max-content minmax(0, 1fr); column-gap: 32px; padding: 28px 24px 32px 13px; border-bottom: 1px solid var(--rule); }
 .dph { grid-column: 1 / 3; align-self: start; font: var(--f-label); letter-spacing: var(--track); text-transform: uppercase; color: var(--muted); }
 .dph a { color: inherit; }
-.dpc { display: block; margin-bottom: var(--s2); font: var(--f-label); letter-spacing: var(--track); text-transform: uppercase; color: var(--muted); }
+.dpc { display: block; margin-bottom: 14px; font: var(--f-label); letter-spacing: var(--track); text-transform: uppercase; color: var(--muted); }
 .dpr { display: contents; }
 .dpw, .dpf { align-self: center; }
-.dpw { font: 400 12px/18px var(--mono); color: var(--muted); white-space: nowrap; }
+.dpw { font: 400 13px/20px var(--mono); color: var(--muted); white-space: nowrap; }
 .dpr.me .dpw { font-weight: 600; color: var(--paper); }
 .dpf .fig { flex-wrap: nowrap; white-space: nowrap; }
-.dpf .fig .n { font-size: 18px; }
+.dpf .fig .n { font-size: 22px; }
+.dpf .fig .u { font-size: 13px; }
 .dpr:not(.me) .dpf .fig .n { font-weight: 400; }
 .dp .np .n { padding-left: var(--pl); padding-right: var(--pr); }
-.dpm { grid-column: 1 / -1; padding-top: var(--s2); }
+.dpm { grid-column: 1 / -1; padding-top: 18px; }
 .dpm .mean { font: 400 12px/18px var(--mono); color: var(--muted); }
 .dpl, .dax { display: block; overflow: visible; }
 .dpl .gd { stroke: var(--line); stroke-width: 1px; }
-.dpl .tk { stroke: var(--line); stroke-width: 1px; }
+/* a dotted guide from a row's words to its mark; the stretch between the two rates, lifted */
+.dpl .tk { stroke: var(--rule); stroke-width: 1px; stroke-dasharray: 1 7; }
+.dpl .sp { fill: var(--lift); }
 .dpl .mk.me rect { fill: var(--paper); }
-.dpl .mk.ref rect { fill: var(--ground); stroke: var(--muted); stroke-width: 1.5px; }
+.dpl .mk.ref rect { fill: var(--ground); stroke: var(--muted); stroke-width: 2px; }
 .dax :is(.mj, .mn) { stroke: var(--rule); stroke-width: 1px; }
-.dax .tl { fill: var(--muted); font: 400 11px/1 var(--mono); font-stretch: 87.5%; font-variant-numeric: tabular-nums; }
-.dax .tl.n { display: none; }
+.dax .tl { fill: var(--muted); font: 400 12px/1 var(--mono); font-stretch: 87.5%; font-variant-numeric: tabular-nums; }
+.dax .tl:is(.w, .n) { display: none; }
+@media (max-width: 1200px) { .dax .tl.x { display: none; } .dax .tl.w { display: inline; } }
 /* the tiles under the Cost drawing: verify time, proof size and cost in even columns; before them, where the row
    times them apart, the multiple's two parts with their bar, in a wider one */
+/* room: a drawing's tiles and a system page's blocks stand further apart than a ruled list's lines */
+.tiles.drawn > div { padding-top: 24px; padding-bottom: 30px; }
+.syspage .blk + .blk { margin-top: 96px; }
+@media (max-width: 760px) { .syspage .blk + .blk { margin-top: 72px; } }
 @media (min-width: 761px) {
   .syspage :is(#cost, #fidelity) .tiles.drawn { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   /* the parts take a line of their own over the three, and from 1201 px the first of four columns */
@@ -1432,8 +1440,8 @@ a.pvd:hover { text-decoration: underline 2px; text-underline-offset: 4px; }
 @media (min-width: 561px) and (max-width: 760px) { #fidelity .tiles.drawn > div:last-child:nth-child(odd) { grid-column: 1 / -1; } }
 /* the multiple's two parts end to end, from zero to their sum (plots.hbar), a mark of each part's ink before its
    word; the serving ladder's rates as bars from zero on one scale, full load in paper */
-.tiles .pbar { height: 10px; margin-top: var(--s3); }
-.ptk:before { content: ""; display: inline-block; width: 10px; height: 4px; margin: 0 6px 2px 0; background: var(--paper); vertical-align: middle; }
+.tiles .pbar { height: 14px; margin-top: 18px; }
+.ptk:before { content: ""; display: inline-block; width: 12px; height: 6px; margin: 0 8px 2px 0; background: var(--paper); vertical-align: middle; }
 .ptk.pg:before { background: var(--rule); }
 .lrt { display: grid; grid-template-columns: 22ch minmax(0, 1fr); column-gap: 16px; align-items: center; }
 .lrt .lbar { height: 8px; }
@@ -1447,13 +1455,13 @@ a.pvd:hover { text-decoration: underline 2px; text-underline-offset: 4px; }
   #cost .dp { grid-template-columns: max-content minmax(0, 1fr); column-gap: 16px; padding-right: 16px; }
   #cost :is(.dph, .dpa, .dpl) { grid-column: 1 / -1; }
   #cost .dph { padding-bottom: var(--s2); }
-  #cost :is(.dpw, .dpf) { padding-top: var(--s2); }
+  #cost :is(.dpw, .dpf) { padding-top: 18px; }
 }
 @media (max-width: 760px) {
   .dp { grid-template-columns: max-content minmax(0, 1fr); column-gap: 16px; padding-right: 16px; }
   .dph, .dpa, .dpl { grid-column: 1 / -1; }
   .dph { padding-bottom: var(--s2); }
-  .dpw, .dpf { padding-top: var(--s2); }
+  .dpw, .dpf { padding-top: 18px; }
 }
 @media (max-width: 600px) {
   .dax .tl.w { display: none; }
@@ -1462,13 +1470,15 @@ a.pvd:hover { text-decoration: underline 2px; text-underline-offset: 4px; }
   .dpw { max-width: 10ch; white-space: normal; }
   .dpf { min-width: 0; }
   .dpf .fig { flex-wrap: wrap; }
-  .dpf .fig .n { font-size: 16px; }
+  .dpf .fig .n { font-size: 18px; }
+  .dp { padding-top: 22px; padding-bottom: 26px; }
   /* a plot stands between the two rates, so they no longer line up on the point: each starts at its line's edge */
   .dp .np .n { padding-left: 0; padding-right: 0; }
 }
 @media (forced-colors: active) {
   .dpl, .dax { forced-color-adjust: none; }
   .dpl :is(.gd, .tk), .dax :is(.mj, .mn) { stroke: GrayText; }
+  .dpl .sp { fill: Canvas; }
   .dpl .mk.ref rect { fill: Canvas; stroke: CanvasText; }
   .dpl .mk.me rect { fill: CanvasText; stroke: CanvasText; }
   .dax .tl { fill: CanvasText; }
