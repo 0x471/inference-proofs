@@ -61,7 +61,17 @@ from .overview import (
     whole_note,
 )
 from .petal import chip, glyph_section, quote_links, state_word
-from .plots import axis_svg, decade_words, dot_plot, fid_svg, hbar, lin_x, log_extent, log_x
+from .plots import (
+    PLOT_BESIDE,
+    axis_svg,
+    decade_words,
+    dot_plot,
+    fid_svg,
+    hbar,
+    lin_x,
+    log_extent,
+    log_x,
+)
 from .words import (
     BASIS_BITS,
     BASIS_READING,
@@ -1760,39 +1770,44 @@ def cost_block(row):
 def fidelity_plot(row, fid, tf, mine):
     """SI-9 drawn: top-token agreement on one axis, from the ten under the lowest drawn value
     (90 % at most) to 100 %, each end labelled; the rows of the table one click down (Q48: the
-    model's quantized copies and the bar's row) as outlined marks and this system as the one
-    solid mark, one row each, highest first as the table orders them, each beside its labelled
-    figure. A copy that did not run prints "not run" and is not drawn. None where nothing ran."""
+    model's quantized copies and the bar's row, FI-3's in their order then any only this pass
+    has) as outlined marks and this system as the one solid mark, one row each, highest first as
+    the table orders them, each beside its labelled figure. A row that did not run prints "not
+    run" and is not drawn. n is said once, in the caption, where the drawn rows share it; else
+    under each figure. None where nothing ran."""
 
     def ok(t):
         return t is not None and t["status"] == "ok" and t.get("percent") is not None
 
-    bar = ((fid or {}).get("bar") or {}).get("control")
-    copies = [c for c in tf.get("controls") or [] if c["id"] == bar or FID_COPY.match(c["id"])]
-    drawn = [t["percent"] for t in (mine, *copies) if ok(t)]
-    if not drawn:
-        return None
-    lo = min(10 * math.floor(min(drawn) / 10), 90)
-    grid = [lin_x(v, lo, 100) for v in range(lo, 101, 10)]
-    ticks = [(lin_x(v, lo, 100), f"{v} %") for v in range(lo, 101, 10)]
-
-    def row_of(t, cls, word, kind):
-        x = lin_x(t["percent"], lo, 100) if ok(t) else None
-        return (fid_score(t, None), (cls, word, agree_html(t, tf, []), x, kind))
-
     def named(cid):
         name, title = control_name(cid)
         words = name.partition(" (")[0]
-        if cid in FIDELITY_AGAINST:
-            return term(words, "Q8_0 and Q4_K_M")
-        return f'<span title="{e(title)}">{e(words)}</span>'
+        said = term(words, "Q8_0 and Q4_K_M") if cid in FIDELITY_AGAINST else e(words)
+        return f'<span title="{e(title)}">{said}</span>' if title else said
 
-    rows = [row_of(mine, "me", e(name_of(row)), "me")]
-    rows += [row_of(c, "cp", named(c["id"]), "ref") for c in copies]
-    rows = [r for _, r in sorted(rows, key=lambda r: r[0], reverse=True)]
-    caption = e(f"top-token agreement, n\u00a0=\u00a0{mine['n']:,} prompts")
+    bar = ((fid or {}).get("bar") or {}).get("control")
+    fcs = {c["id"]: c for c in (fid or {}).get("controls") or []}
+    tcs = {c["id"]: c for c in tf.get("controls") or []}
+    ids = [i for i in (*fcs, *(k for k in tcs if k not in fcs)) if i == bar or FID_COPY.match(i)]
+    lines = [(mine, row["fidelity"], "me", e(name_of(row)), "me"),
+             *((tcs.get(i), fcs.get(i), "cp", named(i), "ref") for i in ids)]  # fmt: skip
+    drawn = [t for t, *_ in lines if ok(t)]
+    if not drawn:
+        return None
+    lo = min(10 * math.floor(min(t["percent"] for t in drawn) / 10), 90)
+    grid = [lin_x(v, lo, 100) for v in range(lo, 101, 10)]
+    ticks = [(x, f"{v} %") for x, v in zip(grid, range(lo, 101, 10), strict=True)]
+    ns = {t["n"] for t in drawn}  # one n for the drawing, or each row's under its figure
+    rows = []
+    for t, _, cls, word, kind in sorted(lines, key=lambda r: fid_score(r[0], r[1]), reverse=True):
+        own = [f"n\u00a0=\u00a0{t['n']:,} prompts"] if ok(t) and len(ns) > 1 else []
+        x = lin_x(t["percent"], lo, 100) if ok(t) else None
+        rows.append((cls, word, agree_html(t, tf, own), x, kind))
+    caption = "top-token agreement"
+    if len(ns) == 1:
+        caption += f", n\u00a0=\u00a0{next(iter(ns)):,} prompts"
     head = defined(FIGURE_HEAD["fidelity"], FIGURE_ANCHOR["fidelity"])
-    return dot_plot(head, caption, axis_svg(ticks), grid, rows)
+    return dot_plot(head, e(caption), axis_svg(ticks, wide=PLOT_BESIDE), grid, rows)
 
 
 def fidelity_block(row):
@@ -1839,7 +1854,7 @@ def fidelity_block(row):
                   fig_html(kl) if has(kl) else '<span class="na">not measured</span>', ""))  # fmt: skip
     return (
         (plot or "")
-        + tiles(cells)
+        + tiles(cells, "drawn" if plot else "")
         + dig("The copies, the tests and the sources", fidelity_html(row))
     )
 

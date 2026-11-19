@@ -16,8 +16,6 @@ the row's figure; ticks are its counted sessions, or a range its stored minimum 
 are positions only: no quotient computed here is printed.
 """
 
-import math
-
 from . import state as S
 from .chrome import (
     CHECKS_PAGE,
@@ -43,6 +41,7 @@ from .overview import (
     standing_html,
 )
 from .pages import section, title_band
+from .plots import decade_words, log_extent, log_x, pc
 from .words import (
     FIGURE_HEAD,
     FIGURE_RULE,
@@ -146,27 +145,16 @@ def extent(vals, ratio=False):
     largest's, never fewer than two; a multiple's axis starts at 1× at most. None with no value."""
     if not vals:
         return None
-    lo = math.floor(math.log10(min(vals)))
-    if ratio:
-        lo = min(0, lo)
-    hi = math.floor(math.log10(max(vals))) + 1
-    return lo, max(hi, lo + 2)
+    lo, hi = log_extent(vals)
+    return (min(0, lo), hi) if ratio else (lo, hi)
 
 
-def pos(v, lo, hi):
-    """A value's place on the axis, in percent of the plot's width."""
-    return 100 * (math.log10(v) - lo) / (hi - lo)
-
-
-def pct(x):
-    return f"{x:.2f}%"
+pos, pct = log_x, pc  # a value's place on the axis, in percent of the plot's width, and as written
 
 
 def tick_words(k, unit):
     """A decade as the axis prints it: a display word, not a measurement."""
-    if unit == "ratio":
-        return f"{10**k:,}×"
-    return f"{10**k:,}" if k >= 0 else f"{10**k:.{-k}f}"
+    return f"{decade_words(k)}×" if unit == "ratio" else decade_words(k)
 
 
 def labelled(lo, hi, unit, width):

@@ -64,9 +64,10 @@ def fid_svg(value, bar, top, kind, h=18):
 # width and no inline style is needed. A mark is a position only: no number is printed here.
 AX_H, ROW_H = 30, 30  # the axis's height and a row's plot's, in px
 ADV = 7.15  # an 11 px tick label's advance per character, in px (scale.py: ADV * TICK_PX)
-# the narrowest plot each set of tick labels is drawn for (words.css shows one): a desktop's
-# plot beside its words, and a phone's under them (a 320 px screen)
-PLOT_WIDE, PLOT_NARROW = 560, 280
+# the narrowest plot each set of tick labels is drawn for (words.css shows one), measured in the
+# browser: the Cost plot from 601 px (under its words up to 1000 px, beside them from there), the
+# Fidelity plot beside its words from 761 px, and a phone's under them on a 320 px screen
+PLOT_WIDE, PLOT_BESIDE, PLOT_NARROW = 536, 440, 259
 
 
 def log_extent(vals):
@@ -96,24 +97,29 @@ def pc(x):
     return f"{x:.2f}%"
 
 
-def axis_svg(ticks, minor=()):
+def labelled(ticks, width):
+    """The ticks whose words a plot `width` px wide prints, by index: the first and the last,
+    and between them every k-th from the first that stands a label's room from the last."""
+    last = len(ticks) - 1
+    room = 1.5 * max(len(t) for _, t in ticks) * ADV + 12
+    d = width / last
+    k = next(k for k in range(1, last + 1) if k * d >= room or k == last)
+    return [i for i in range(0, last, k) if i == 0 or (last - i) * d >= room] + [last]
+
+
+def axis_svg(ticks, minor=(), wide=PLOT_WIDE):
     """The axis over a dot plot: a tick at each of `ticks` ((x, words), evenly spaced, the first
     and last the axis's ends), a short one at each of `minor` (x), and the words in two sets,
-    for a wide plot and a phone's: every k-th, k the least step that lands on both ends (so a
-    mark never stands past the last labelled tick) and keeps two words from meeting (an end's
-    label, set inside the plot, beside a centred one is the worst pair)."""
+    for a wide plot (`wide` px at its narrowest) and a phone's: both ends always, so a mark
+    never stands past the last labelled tick, and between them every k-th from the first, k the
+    least step that keeps two words from meeting (an end's label, set inside the plot, beside a
+    centred one is the worst pair); one too close to the last tick's is left out."""
     out = [f'<line class="mn" x1="{pc(x)}" x2="{pc(x)}" y1="23" y2="{AX_H}"/>' for x in minor]
     out += [f'<line class="mj" x1="{pc(x)}" x2="{pc(x)}" y1="17" y2="{AX_H}"/>' for x, _ in ticks]
-    w = max(len(t) for _, t in ticks) * ADV
-    last = len(ticks) - 1
-    for cls, width in (("w", PLOT_WIDE), ("n", PLOT_NARROW)):
-        d = width / last
-        k = next(
-            k for k in range(1, last + 1) if last % k == 0 and (k * d >= 1.5 * w + 12 or k == last)
-        )
-        for i in range(0, last + 1, k):
+    for cls, width in (("w", wide), ("n", PLOT_NARROW)):
+        for i in labelled(ticks, width):
             x, words = ticks[i]
-            anchor = "start" if i == 0 else "end" if i == last else "middle"
+            anchor = "start" if i == 0 else "end" if i == len(ticks) - 1 else "middle"
             out.append(f'<text class="tl {cls}" x="{pc(x)}" y="11" text-anchor="{anchor}">'
                        f"{words}</text>")  # fmt: skip
     return (f'<svg class="dax" width="100%" height="{AX_H}" aria-hidden="true" '
