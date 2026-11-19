@@ -365,11 +365,10 @@ def test_cost_block_figures_share_the_bands_scope(board_site: Any) -> None:
     """CO-5 (amended 2026-11-17): the figures that lead a system page's Cost block (the two rates
     and the cost in USD; the multiple is the band's alone) are of the scope the band prints, so
     the block never sets a steady figure beside a whole-session one. In the example board
-    FlashProve has both scopes: its Cost tiles name the proved rate and session_usd_per_reply,
-    never multiple or steady_usd_per_reply."""
+    FlashProve has both scopes: its Cost drawing and tiles name the proved rate and
+    session_usd_per_reply, never multiple or steady_usd_per_reply."""
     text = html.unescape((board_site.out / "flashprove.html").read_text())
-    block = re.search(r'<section class="blk" id="cost".*?<dl class="figs tiles">(.*?)</dl>', text,
-                      re.S)  # fmt: skip
+    block = re.search(r'<section class="blk" id="cost"(.*?)</dl>', text, re.S)
     assert block
     pointers = set(re.findall(r"record: [^#]+#(/[^;\"]+)", block[1]))
     at = "/rungs/0/rows/0/"
