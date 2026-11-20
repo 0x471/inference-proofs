@@ -329,7 +329,7 @@ def has_short(p, row, petals):  # noqa: PLR0911, PLR0912 (one clause per rule pa
     if pid == "weights_hidden":
         if cause == "not_stated":
             tail = (
-                "; they say the verifier is not given them"
+                ", but they say the verifier is not given them"
                 if f.get("verifier_gets_weights") is False
                 else ""
             )
@@ -339,7 +339,7 @@ def has_short(p, row, petals):  # noqa: PLR0911, PLR0912 (one clause per rule pa
         if cause == "stated":
             return "the publisher states that a proof does not hide the weights"
         if step == "amber_lower":
-            return "a statement that a proof hides the weights; no theorem"
+            return "a statement that a proof hides the weights, but no theorem"
         if f.get("proof") == "configuration_run":
             return "a theorem that a proof of what we run hides the weights"
         said = "a theorem that the method hides the weights"
@@ -351,8 +351,8 @@ def has_short(p, row, petals):  # noqa: PLR0911, PLR0912 (one clause per rule pa
             return p["reason"]
         c = f["controls"]
         return (f"replies match the original's for their first {tenth(f['display'])} tokens on "
-                f"average; our 8-bit copy {tenth(c['q8_0']['display'])}, our 4-bit copy "
-                f"{tenth(c['q4_k_m']['display'])}")  # fmt: skip
+                f"average, against {tenth(c['q8_0']['display'])} for our 8-bit copy and "
+                f"{tenth(c['q4_k_m']['display'])} for our 4-bit copy")  # fmt: skip
     if pid == "machine_checked":
         formal = p.get("formal") or {}
         tool = str(formal.get("tool") or "").split(" ")[0]
@@ -364,11 +364,11 @@ def has_short(p, row, petals):  # noqa: PLR0911, PLR0912 (one clause per rule pa
         if cause == "proof_build_not_run":
             build = formal.get("build") or {}
             if build.get("status") == "stopped":
-                return f"a {tool} theorem is named; our rebuild stopped before a verdict"
-            return f"a {tool} theorem is named; we have not rebuilt it yet"
+                return f"a {tool} theorem is named, but our rebuild stopped before a verdict"
+            return f"a {tool} theorem is named, but we have not rebuilt it yet"
         reach = formal.get("reach")
         k = len(formal.get("limits") or [])
-        lim = f"; the publisher states {k} limits the grade does not count" if k else ""
+        lim = f", and the publisher states {k} limits the grade does not count" if k else ""
         if reach == "verifier_run":
             return f"a {tool} theorem we rebuilt, about {run}, the verifier we run{lim}"
         if reach == "protocol_and_statement":
@@ -381,8 +381,8 @@ def has_short(p, row, petals):  # noqa: PLR0911, PLR0912 (one clause per rule pa
         if step == "green":
             return "cryptographic assumptions only and no setup secret, in the publisher's words"
         if f.get("clause") == "reading":
-            return ("on our reading, cryptographic assumptions only and no setup secret; the "
-                    "publisher does not say so in one sentence")  # fmt: skip
+            return ("on our reading, cryptographic assumptions only and no setup secret, but "
+                    "the publisher does not say so in one sentence")  # fmt: skip
         if f.get("clause") == "ceremony":
             return "a setup secret made in an open ceremony with a public record"
         return p["reason"]
@@ -532,14 +532,14 @@ def item_long(it, p, row, petals, mixed):  # noqa: PLR0912, PLR0915 (one sentenc
         trial = trial_of(row)
         aside = ""
         if trial and stated:
-            aside = (f" (Outside the grade, our trial had {stated} accept {trial['accepted']:,} of "
-                     f"{count(trial['honest'], 'honest proof')} at the files we run; see "
-                     f"{PETAL_NAME['machine_checked']}.)")  # fmt: skip
+            aside = (f" Outside the grade, in our trial under {PETAL_NAME['machine_checked']}, "
+                     f"{stated} accepted {trial['accepted']:,} of "
+                     f"{count(trial['honest'], 'honest proof')} at the files we run.")  # fmt: skip
         said = f"{head} {today}{aside}"
     elif need == "exponent":
         floor, terms = it["floor"], it.get("terms") or []
         if f.get("basis") == "conjectured" or (len(terms) == 1 and not it.get("q")):
-            today = f"Today about 2^-{terms[0]} ({terms[0]} bits)." if terms else ""
+            today = f"Today it is about 2^-{terms[0]} ({terms[0]} bits)." if terms else ""
         else:
             written = [f"q × 2^-{t}" if i == 0 and it.get("q") else f"2^-{t}"
                        for i, t in enumerate(terms)]  # fmt: skip
@@ -559,7 +559,7 @@ def item_long(it, p, row, petals, mixed):  # noqa: PLR0912, PLR0915 (one sentenc
         if it.get("programs") == "expected":
             said += " Today it states an expectation, not a statement."
         elif it.get("read"):
-            said += " Today we count none for the programs we run; this is our reading."
+            said += " Today, on our reading, we count none for the programs we run."
     elif need == "visible_list":
         said = ("A published list of what stays visible, with nothing on it that depends on the "
                 "weights.")  # fmt: skip
@@ -578,8 +578,8 @@ def item_long(it, p, row, petals, mixed):  # noqa: PLR0912, PLR0915 (one sentenc
         names = {"upper": ("our 8-bit copy", "our 4-bit copy"),
                  "green": ("the original run a second time", "our 8-bit copy")}[it["key"]]  # fmt: skip
         said = (f"An average shown above {tenth(t['display'])} tokens, halfway between {names[0]} "
-                f"({sig(a['mean'])}) and {names[1]} ({sig(b['mean'])}). Today "
-                f"{sig(fd['mean'])}, not shown above it.")  # fmt: skip
+                f"({sig(a['mean'])}) and {names[1]} ({sig(b['mean'])}). Today the average is "
+                f"{sig(fd['mean'])} tokens, not shown above it.")  # fmt: skip
         if it is first_above(p):
             said += (f" The number format of the copy {name_of(row)} proves is the publisher's "
                      "choice, so this item is the publisher's.")  # fmt: skip
@@ -593,8 +593,8 @@ def item_long(it, p, row, petals, mixed):  # noqa: PLR0912, PLR0915 (one sentenc
         tokens = (S.V.get("request") or {}).get("output_tokens")
         if rerun and f.get("rerun_engine") == "vllm" and tokens and rerun["mean"] < tokens:
             said += (f" The original run a second time, in vLLM, scores {sig(rerun['mean'])}, not "
-                     f"{tokens}; the {tenth(f['green']['display'])} threshold is computed from "
-                     "that score.")  # fmt: skip
+                     f"{tokens}, and the {tenth(f['green']['display'])} threshold is computed "
+                     "from that score.")  # fmt: skip
     elif need == "named_theorem":
         said = ("A named theorem, checked by a proof-checking program such as Lean, that at least "
                 "part of the method refuses fake replies, with the program's version pinned.")  # fmt: skip
@@ -673,7 +673,7 @@ def runs_words(fid):
             parts.append(f"{who} got every prompt in one call, in vLLM")
         elif r.get("slots") is not None:
             parts.append(f"{who} ran {r['slots']} at a time, in {r.get('engine')}")
-    return "; ".join(parts) if parts else "no slot count is recorded"
+    return ", and ".join(parts) if parts else "no slot count is recorded"
 
 
 # ------------------------------------------------------------------ the closed row (amended 2026-11-17)
@@ -716,7 +716,7 @@ def has_tiny(p, row, petals):  # noqa: PLR0911, PLR0912 (one phrase per rule pat
         return "a zero-knowledge theorem for the method"
     if pid == "faithful_model" and f:
         fig = fidelity_figures(p)
-        return f"{fig['own']} matched tokens; 8-bit copy {fig['q8']}, 4-bit copy {fig['q4']}"
+        return f"{fig['own']} matched tokens (8-bit copy {fig['q8']}, 4-bit copy {fig['q4']})"
     if pid == "machine_checked":
         formal = p.get("formal") or {}
         tool = str(formal.get("tool") or "").split(" ")[0]
@@ -849,9 +849,9 @@ def has_unforgeable(p, row, petals):  # noqa: PLR0912, PLR0915 (one paragraph pe
         q = f.get("q_cross")
         if q:
             k = len(f["terms"]) - 1
-            said += (" Here q is the number of hash queries a cheater makes: how many times it "
-                     "runs the hash function while searching for a proof that passes. The other "
-                     f"{'part is' if k == 1 else 'parts are'} fixed; the first grows with q. It "
+            said += (" Here q counts the hash queries a cheater makes, each a run of the hash "
+                     "function while it searches for a proof that passes. The other "
+                     f"{'part is' if k == 1 else 'parts are'} fixed, but the first grows with q. It "
                      f"reaches 2^-100 at 2^{q[0]} queries and 2^-80 at 2^{q[1]} queries.")  # fmt: skip
         batch = next((i for i, it in enumerate(items_of(p), 1) if it["need"] == "batch"), None)
         if f.get("unit") == "proof" and f.get("one_reply") and batch:
@@ -867,7 +867,7 @@ def has_unforgeable(p, row, petals):  # noqa: PLR0912, PLR0915 (one paragraph pe
         if b.get("named"):
             said += (f" The figure comes from the accounting of {b['named']}, "
                      f"{b.get('described') or 'as the publisher states'}.")  # fmt: skip
-        said += " Conjectured: it rests on an unproven assumption, not a theorem."
+        said += " Conjectured means it rests on an unproven assumption, not a theorem."
         out.append(p_(e(said)))
     else:
         out.append(p_(e(f"The publisher states a limit, {expr} {per}, and does not say whether it "
@@ -876,7 +876,7 @@ def has_unforgeable(p, row, petals):  # noqa: PLR0912, PLR0915 (one paragraph pe
         q = (unit_said.get("quotes") or [None])[0]
         quote = f" ({q_html(q)})" if q else ""
         out.append(p_(f"One {e(unit_said['named'])} proves {e(unit_said.get('described') or 'part of a reply')}"
-                      f"{quote}. A reply passes through every layer of the model, and the publisher "
+                      f"{quote}. A reply passes through every layer of the model, but the publisher "
                       "states no limit for a whole reply."))  # fmt: skip
     rq = ((vs.get("run") or {}).get("quotes") or [None])[0]
     run_d = (vs.get("run") or {}).get("described")
@@ -892,8 +892,8 @@ def has_unforgeable(p, row, petals):  # noqa: PLR0912, PLR0915 (one paragraph pe
         ) == "tested"
         no_claim = f.get("program") not in ("proved", "stated")
         if tested and no_claim:
-            said += e(f" The publisher states that {run} is tested, not proved, and claims no "
-                      "limit for it.")  # fmt: skip
+            said += e(f" For {run}, the publisher states that it is tested, not proved, and claims "
+                      "no limit.")  # fmt: skip
         elif tested:
             said += e(f" The publisher states that {run} is tested, not proved.")
         elif no_claim:
@@ -906,7 +906,7 @@ def has_unforgeable(p, row, petals):  # noqa: PLR0912, PLR0915 (one paragraph pe
             else ""
         )
         check = (vs.get("run") or {}).get("check")
-        runs = f", which runs the publisher's check, {e(check)}, as the publisher states ({q_html(rq)})" \
+        runs = f". The publisher states that this command runs the publisher's check, {e(check)} ({q_html(rq)})" \
             if check and rq else (f" ({q_html(rq)})" if rq else "")  # fmt: skip
         said = f"The publisher names no verifier for this figure{e(adv)}. We run {run_words}{runs}."
         if check and unit_said.get("named") and rq and "chunk" in rq["text"]:
@@ -929,13 +929,13 @@ def why_html(p, row, petals):
         items = f"item {i}" if i == j else f"items {i} to {j}"
         said = f"{step}: the limit is not shown to cover what we run ({items} under Missing)."
         if w["floor"] == 80:
-            said += f" Its exponents as written: {and_list(str(t) for t in w['exps'])}."
+            said += f" Its exponents, as written, are {and_list(str(t) for t in w['exps'])}."
         else:
-            said += f" It is not a theorem; its exponent: {w['least']}."
+            said += f" It is not a theorem, and its exponent is {w['least']}."
         return p_(e(said), "pwy")
     if p["id"] == "weights_hidden":
         n = w["n"]
-        return p_(e(f"{step}: a zero-knowledge theorem, at least for the method. Met needs the "
+        return p_(e(f"{step}: there is a zero-knowledge theorem, at least for the method. Met needs the "
                     f"{count(n, 'item')} under Missing."), "pwy")  # fmt: skip
     if p["id"] == "machine_checked":
         run = w.get("run")
@@ -957,9 +957,9 @@ def has_weights_hidden(p, row, petals):  # noqa: PLR0912 (one paragraph per fact
                 "not say whether a proof reveals the weights.")  # fmt: skip
         html = e(said)
         if f.get("verifier_gets_weights") is False:
-            html += " They do state that the verifier does not hold the weights" + \
+            html += " They state that the verifier does not hold the weights" + \
                 (f" ({q_html(vq)})" if vq else "") + \
-                ". Not holding the weights is not the same as a proof hiding them."  # fmt: skip
+                ", but that does not mean a proof hides them."  # fmt: skip
         return [p_(html)]
     if f.get("verifier_gets_weights") is True:
         out.append(
@@ -978,19 +978,20 @@ def has_weights_hidden(p, row, petals):  # noqa: PLR0912 (one paragraph per fact
                 "sees could have been produced without the weights.")  # fmt: skip
         kind, model = f.get("zk_kind"), f.get("zk_model")
         if kind == "statistical":
-            said += (" It is statistical: the two can differ only by a tiny amount the publisher "
-                     "bounds (its figures are under the field's terms below)")  # fmt: skip
-            said += (", and it treats the hash function as perfectly random (the random-oracle "
-                     "model)." if model == "random_oracle" else ".")  # fmt: skip
+            said += (" It is statistical, which means the two can differ only by a tiny amount "
+                     "that the publisher bounds, in figures given under the field's terms below.")  # fmt: skip
+            said += (" It also treats the hash function as perfectly random, an assumption called "
+                     "the random-oracle model." if model == "random_oracle" else "")  # fmt: skip
         elif kind:
             said += f" It is {kind}."
         n = f.get("batch_size")
         if f.get("proof") == "protocol":
-            said += (" The theorem is about the method, the protocol as the publisher defines it"
-                     + (in_tool or "") + ", not about the programs we run")  # fmt: skip
-            said += ", and for one request per proof." if f.get("zk_unit") == "request" else "."
+            said += (" The theorem is about the method (the protocol as the publisher defines it"
+                     + (in_tool or "") + "), not about the programs we run")  # fmt: skip
+            said += (", and it covers one request per proof." if f.get("zk_unit") == "request"
+                     else ".")  # fmt: skip
             if f.get("zk_unit") == "request" and n and n > 1:
-                said += f" We run batches of {n} replies, which it does not cover."
+                said += f" But we run batches of {n} replies, which it does not cover."
         else:
             said += " It covers what we run."
         out.append(p_(e(said)))
@@ -1055,24 +1056,26 @@ def has_faithful(p, row, petals):
                     f"{sig(f['mean'])} tokens, up to the first difference{most}.")))  # fmt: skip
     rerun = c[f["rerun"]]["mean"] if f.get("rerun") in c else None
     every = (
-        f" (every token: {tokens} is the most a reply has)"
+        f" (every token, since {tokens} is the most a reply has)"
         if rerun is not None and tokens and rerun == tokens
         else ""
     )
     bar = f.get("bar") or {}
     m = re.match(r"q(\d)", str(bar.get("control") or ""))
     bar_bits = f" ({m.group(1)}-bit)" if m else ""
-    scale = []
+    scale = []  # (who, what it scores): the first takes the verb, the others share it
     if rerun is not None:
-        scale.append(f"the original model run a second time, {sig(rerun)}{every}")
+        scale.append(("the original model run a second time", f"{sig(rerun)}{every}"))
     scale += [
-        f"our 8-bit copy, {sig(c['q8_0']['mean'])}",
-        f"our 4-bit copy, {sig(c['q4_k_m']['mean'])}",
+        ("our 8-bit copy", sig(c["q8_0"]["mean"])),
+        ("our 4-bit copy", sig(c["q4_k_m"]["mean"])),
     ]
     if bar.get("display") is not None:
-        scale.append(f"and a copy we damaged on purpose{bar_bits}, {sig((c.get(bar.get('control')) or {}).get('mean', bar['display']))}, "
-                     "the pass bar every system must beat")  # fmt: skip
-    out.append(p_(e("For scale, the same score on the same prompts: " + "; ".join(scale) + ".")))
+        scale.append((f"a copy we damaged on purpose{bar_bits}",
+                      f"{sig((c.get(bar.get('control')) or {}).get('mean', bar['display']))}, "
+                      "the pass bar every system must beat"))  # fmt: skip
+    said = and_list([f"{scale[0][0]} scores {scale[0][1]}", *(f"{w} {v}" for w, v in scale[1:])])
+    out.append(p_(e(f"For scale, we scored other runs on the same prompts: {said}.")))
     out.append(p_(e(proved_sentence(row, f))))
     if f.get("slots") == 1:
         out.append(p_(e("Our run sent one request at a time, as Met needs.")))
@@ -1094,8 +1097,8 @@ def proved_sentence(row, f):
            "integer": "integers"}.get(a)  # fmt: skip
     wword = FORMAT_WORD.get(w, "")
     if isinstance(bits, int | float) and pr.get("bits_covers") == "part":
-        said = (f"{name} proves a copy with {bits_words(bits)}-bit {wword} weights for part of its "
-                "weights, as the publisher states; the publisher states no width for the rest.")  # fmt: skip
+        said = (f"The publisher states that {name} proves a copy with {bits_words(bits)}-bit "
+                f"{wword} weights for part of its weights, and states no width for the rest.")  # fmt: skip
     elif isinstance(bits, int | float):
         said = (f"{name} proves a copy with {wword + ' ' if wword else ''}weights of "
                 f"{bits_words(bits)} bits each on average")  # fmt: skip
@@ -1135,9 +1138,9 @@ def has_machine_checked(p, row, petals):  # noqa: PLR0912 (one paragraph per fac
         return [p_(e(cap(has_short(p, row, petals)) + "."))]
     tool = str(formal.get("tool") or "").split(" ")[0]
     who = stated or "its verifier"
-    said = (f"The publisher proves in {tool}, a program that checks every step of a proof, a "
-            f"theorem that {who} refuses fake replies, up to the chance limit under "
-            f"{PETAL_NAME['unforgeable']}.")  # fmt: skip
+    said = (f"The publisher proves, in {tool}, a theorem that {who} refuses fake replies, up to "
+            f"the chance limit under {PETAL_NAME['unforgeable']}. {tool} is a program that checks "
+            "every step of a proof.")  # fmt: skip
     noted = {f["fact"] for f in used_facts(p)}
     if formal.get("reach") == "protocol_and_statement":
         said += " The theorem's statement includes the model's computation" + (
@@ -1149,13 +1152,14 @@ def has_machine_checked(p, row, petals):  # noqa: PLR0912 (one paragraph per fac
         if build.get("status") == "built" and build.get("exit_code") == 0:
             axioms = build.get("axioms") or []
             said = (f"We rebuilt it at the version we ran ({pin7(row)}) with the {tool} version the "
-                    f"publisher pins, {version}. It checked: exit code 0 after "
+                    f"publisher pins, {version}. It checked: the publisher's check command exited with code 0 after "
                     f"{secs(build['seconds'])} ({hours(build['seconds'])}).")  # fmt: skip
             if axioms and p["step"] in ("amber_upper", "green"):
                 said += (f" It uses only {tool}'s {number(len(axioms))} standard axioms, the basic "
                          f"assumptions any {tool} proof may use, so no step is skipped.")  # fmt: skip
             if formal.get("limits"):
-                said += f" {tool} itself is trusted; see the limits below."
+                said += (f" {tool} itself is trusted, and the limits the publisher states are "
+                         "listed below.")  # fmt: skip
         elif build.get("status") == "stopped":
             said = (
                 f"Our rebuild at {pin7(row)} stopped before a verdict ({secs(build['seconds'])})."
@@ -1171,7 +1175,7 @@ def has_machine_checked(p, row, petals):  # noqa: PLR0912 (one paragraph per fac
         ) == "tested"
         said = e(
             f"It does not reach {run_named(row, petals)}"
-            + ("; the publisher states that one is tested, not proved" if tested else "")
+            + (f". The publisher states that {run} is tested, not proved" if tested else "")
             + "."
         )
         if formal.get("input_code_unverified") is True:
@@ -1181,8 +1185,8 @@ def has_machine_checked(p, row, petals):  # noqa: PLR0912 (one paragraph per fac
             )
         out.append(p_(said))
     if formal.get("theorem"):
-        out.append(p_(e(f"No review of the theorem's statement by an outside {tool} expert is "
-                        "recorded.")))  # fmt: skip
+        out.append(p_(e(f"We hold no record of a review of the theorem's statement by an outside "
+                        f"{tool} expert.")))  # fmt: skip
     out.append(reading_html(p))
     return out
 
@@ -1214,9 +1218,9 @@ def has_trust(p, row, petals):
     rests = next((r for r in used_facts(p) if r["fact"] == "rests_on"), None)
     if rests:
         out.append(p_(quoted(rests["plain"] or rests["note"])))
-        out.append(p_(e("So, on our reading: soundness rests on cryptographic assumptions only, "
-                        "and no setup step produced a secret. The publisher does not say this in "
-                        "one sentence.")))  # fmt: skip
+        out.append(p_(e("So, on our reading, soundness rests on cryptographic assumptions only, "
+                        "and no setup step produced a secret. But the publisher does not say this "
+                        "in one sentence.")))  # fmt: skip
     else:
         out.append(p_(e(cap(has_short(p, row, petals)) + ".")))
     return out
@@ -1365,13 +1369,13 @@ def trial_words(t):
     for k in t["changes"]:
         what = TRIAL_CHANGE.get(k, k)
         refused = t["changed_rejected"] == t["changed"]
-        said += (f" As a check that it can refuse, we also gave it {what}; "
-                 + ("it refused it." if refused and t["changed"] == 1 else
+        said += (f" As a check that it can refuse, we also gave it {what}, and "
+                 + ("it refused that proof." if refused and t["changed"] == 1 else
                     f"it refused {t['changed_rejected']:,} of {t['changed']:,}."))  # fmt: skip
     if t.get("seconds_min") is not None:
         lo, hi = f"{t['seconds_min']:,.0f}", f"{t['seconds_max']:,.0f}"
         span = lo if lo == hi else f"{lo} to {hi}"
-        said += (f" {span}\u00a0s per proof, {KEPT_TIME} (n\u00a0=\u00a0"
+        said += (f" {cap(KEPT_TIME)} reads {span}\u00a0s per proof (n\u00a0=\u00a0"
                  f"{n - t.get('no_verdict', 0):,}).")  # fmt: skip
     return e(said)
 
@@ -1411,7 +1415,7 @@ def terms_html(p, row, petals):  # noqa: PLR0912, PLR0915 (one sentence per fact
             + "."
         )
         n = f.get("batch_size")
-        out.append(f"Batch: {yes_no(f.get('batch'))}; ours is {count(n, 'reply', 'replies') if n else 'not recorded'}"
+        out.append(f"Batch: {yes_no(f.get('batch'))}. Ours is {count(n, 'reply', 'replies') if n else 'not recorded'}"
                    + (", each verified in its own call" if n and n > 1 else "") + ".")  # fmt: skip
         out.append(f"Parameters: {yes_no(f.get('parameters'))}{r('parameters')}.")
         out.append(f"Conditions shown for our files: {yes_no(f.get('conditions_shown'))}.")
@@ -1451,9 +1455,9 @@ def terms_html(p, row, petals):  # noqa: PLR0912, PLR0915 (one sentence per fact
         alpha = f.get("alpha")
         u, g = f["upper"], f["green"]
         out.append(f"Above T_upper, {tenth(u['display'])} (Mostly met): "
-                   f"{'shown' if u['shown'] else 'not shown'}; above T_green, "
-                   f"{tenth(g['display'])} (Met): {'shown' if g['shown'] else 'not shown'}; "
-                   f"paired sign-flip test per prompt{method}, alpha {alpha}.")  # fmt: skip
+                   f"{'shown' if u['shown'] else 'not shown'}. Above T_green, "
+                   f"{tenth(g['display'])} (Met): {'shown' if g['shown'] else 'not shown'}. "
+                   f"Test: paired sign-flip per prompt{method}, alpha {alpha}.")  # fmt: skip
         pw = proved_words(row, long=True)
         if pw:
             out.append(cap(pw) + ".")
@@ -1466,7 +1470,7 @@ def terms_html(p, row, petals):  # noqa: PLR0912, PLR0915 (one sentence per fact
                 if len(fid.get("runs") or ()) > 1 else "the whole run"  # fmt: skip
             slots.append(f"no count for {who} (vLLM, one call)" if run.get("engine") == "vllm"
                          else f"{run.get('slots')} for {who} ({run.get('engine')})")  # fmt: skip
-        out.append(f"Requests at a time (slots): {'; '.join(slots) or yes_no(None)}.")
+        out.append(f"Requests at a time (slots): {and_list(slots) or yes_no(None)}.")
     elif pid == "machine_checked":
         formal = p.get("formal") or {}
         if formal.get("tool") or formal.get("theorem"):

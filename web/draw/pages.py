@@ -437,9 +437,10 @@ def statement_given(row, st, rid):  # noqa: PLR0911 (one return per row)
         said = (f"{st['proof_files']:,} {'file' if st['proof_files'] == 1 else 'files'}: "
                 f"<code>{e(kinds)}</code>") if kinds else "its files"  # fmt: skip
         if st["reply"] == "proof":
-            said += "; the reply is read from the proof, not given"
+            said += ". The verifier is not given the reply and reads it from the proof"
         if st.get("proof_caveat"):
-            said += f"; {e(st['proof_caveat'])}"
+            cav = st["proof_caveat"]
+            said += f". {e(cav[:1].upper() + cav[1:])}"
         return said
     if rid == "decoding":
         return e(f"{req['decoding']}, at every reply position")
@@ -508,6 +509,12 @@ def decide_html(c, note):
             f"{e(NEXT_BY[(by,)])}</p>")  # fmt: skip
 
 
+def sentences(parts):
+    """Words of a labelled line, one sentence per part: the first stays in lower case after its
+    label, as the block's other lines do; each later one opens with a capital."""
+    return ". ".join([parts[0], *(s[:1].upper() + s[1:] for s in parts[1:])])
+
+
 def trials_html(trials):
     """What a check's counted trials sent (RFC-0018 CH-1c), from the board: per control and
     position, the trials, the inputs they sent and how many were refused, so three trials of one
@@ -523,10 +530,10 @@ def trials_html(trials):
         none, by = t.get("no_proof", 0), t["refused"] - t.get("no_proof", 0)
         how = [f"in {none:,}, {TRIAL_NO_PROOF}"] if none else []
         how += [f"{by:,} {TRIAL_REFUSED}"] if by or not none else []
-        return f"{TRIAL_WHAT[(t['control'], t['position'])]}: {n:,} trials, {sent}; " \
-            + ", ".join(how)  # fmt: skip
+        return f"{TRIAL_WHAT[(t['control'], t['position'])]}: {n:,} trials, {sent}, and " \
+            + ", and ".join(how)  # fmt: skip
 
-    words = "; ".join(one(t) for t in trials)
+    words = sentences([one(t) for t in trials]) + "."
     return f'<p class="cn"><span class="k">{e(TRIALS_HEAD)}</span> {e(words)}</p>'
 
 
@@ -545,7 +552,9 @@ def kept_html(row, place):
     for t in row.get("trials_kept") or ():
         if t["place"] != place:
             continue
-        said = [f"{t['accepted']:,} of {counted_words(t['honest'], 'honest proof')} accepted"
+        who = t["verifier"] if place == TRIAL_OTHER else "the verifier"
+        said = [f"{who} accepted {t['accepted']:,} of "
+                f"{counted_words(t['honest'], 'honest proof')}"
                 + (f" ({t['counted']:,} from counted sessions)" if t["counted"] < t["honest"]
                    else "")]  # fmt: skip
         said += [f"{KEPT_CHANGE.get(k, k)}: {t['changed_rejected']:,} of {t['changed']:,} refused"
@@ -555,10 +564,9 @@ def kept_html(row, place):
             span = lo if lo == hi else f"{lo} to {hi}"
             said.append(f"{span}\u00a0s per proof, {KEPT_TIME}, n\u00a0=\u00a0"
                         f"{t['honest'] - t['no_verdict']:,}")  # fmt: skip
-        who = f"{t['verifier'][0].upper()}{t['verifier'][1:]}, " if place == TRIAL_OTHER else ""
         means = " ".join(KEPT_MEANS[k] for k in t["changes"]
                          if k in KEPT_MEANS and t["changed_rejected"] == t["changed"])  # fmt: skip
-        words = f"{who}{'; '.join(said)}." + (f" {means}" if means else "")
+        words = sentences(said) + "." + (f" {means}" if means else "")
         rec = (
             f'<a class="ev" href="{e(link(t["record"]))}" title="{e(t["record"])}">trial record</a>'
         )
@@ -684,7 +692,7 @@ def sessions_html(row, counted_table=True):
             [
                 str(s["slot"]) if s["slot"] is not None else "",
                 run_link(row, s["run_id"]),
-                e("; ".join(s["words"])),
+                e(SEP.join(s["words"])),
             ]
             for s in row["ineligible"]
         ]
@@ -839,7 +847,7 @@ def verifying_html(row):
                           t["place"] == TRIAL_OTHER and u.lower() in t["verifier"].lower()
                           for t in row.get("trials_kept") or ()) else "")
                       for u in st["untimed"])  # fmt: skip
-    return (f'<p class="rb"><span class="k">Verifying</span> <span>{" ".join(said)}; '
+    return (f'<p class="rb"><span class="k">Verifying</span> <span>{" ".join(said)}{e(SEP)}'
             f"{e(timed)}{untimed}</span></p>")  # fmt: skip
 
 
@@ -857,7 +865,7 @@ def format_html(p):
         return e(f"{FORMAT_HEAD}: not stated")
     quotes = {q["url"]: q for k in ("weights", "activations") for q in fmt[k]["quotes"]}
     silent = [k for k in ("weights", "activations") if fmt[k]["value"] not in FORMAT_WORD]
-    tail = "".join(f"; {k}' format not stated" for k in silent)
+    tail = "".join(f", and the {k}' format is not stated" for k in silent)
     return (e(", ".join(words)) + ", as the publisher states: " + quote_links(list(quotes.values()))
             + e(tail))  # fmt: skip
 
@@ -879,8 +887,8 @@ def proved_html(row):
             how = f'<a href="{e(p["bits_source"])}">{e(how)}</a>'
         part = " for part of the weights" if p["bits_covers"] == "part" else ""
         said += f", {e(n)} bits per weight{e(part)}, {how}"
-    if fmt := format_html(p):
-        said += f"; {fmt}"
+    if fmt := format_html(p):  # a sentence of its own (escaped words open it)
+        said += f". {fmt[:1].upper()}{fmt[1:]}"
     return f'<p class="rb"><span class="k">Proved</span> <span>{said}</span></p>'
 
 
@@ -895,7 +903,7 @@ def generation_html(row):
     quote = f'<a class="qt" href="{e(gen["url"])}">\u201c{e(gen["quote"])}\u201d</a>'
     sub = SEP.join(w for w in (range_words(f), f"n\u00a0=\u00a0{f['n']}" if f["n"] else "") if w)
     return (f'<p class="rb"><span class="k">Generation</span> <span>{e(gen["words"])} '
-            f"{quote}; {fig_html(f, sub=sub)}</span></p>")  # fmt: skip
+            f"{quote}{e(SEP)}{fig_html(f, sub=sub)}</span></p>")  # fmt: skip
 
 
 def size_html(row):
@@ -975,7 +983,7 @@ def evidence_words(named):
 
     if len(tiers) == 1:
         return linked(next(iter(tiers)))
-    return "; ".join(f"{linked(w)}: {e(', '.join(low_first(k) for k in ks))}"
+    return e(SEP).join(f"{linked(w)}: {e(', '.join(low_first(k) for k in ks))}"
                      for w, ks in tiers.items())  # fmt: skip
 
 
@@ -1046,7 +1054,7 @@ def cost_html(row):
     m_title = f' title="{e(M_NAME)}"'
     cells = "".join(f"<div><dt{m_title if k == M_HEAD else ''}>{e(beside_unit(k))}</dt>"
                     f"<dd>{v}</dd></div>" for k, v in rows)  # fmt: skip
-    against = (f'; <a href="#proved">{e(PROVED_LINK[0])}</a>{e(PROVED_LINK[1])}'
+    against = (f'{e(SEP)}<a href="#proved">{e(PROVED_LINK[0])}</a>{e(PROVED_LINK[1])}'
                if row.get("precision") else "")  # fmt: skip
     serving = (f'<p class="rb"><span class="k">Serving</span> <span>{e(serving_words(base))}'
                f"{against}</span></p>" if line else "")  # fmt: skip
@@ -1255,7 +1263,7 @@ def own_rows(row, tf, any_kl, heads):
         if tf_mine is not None and tf_mine["failed"]:
             causes = sorted({f["cause"] for f in tf_mine["failed"]})
             sub.append(TF_FAILED.format(k=len(tf_mine["failed"]), n=tf_mine["n"]) + ": "
-                       + "; ".join(causes))  # fmt: skip
+                       + SEP.join(causes))  # fmt: skip
         cells.append(agree_html(tf_mine, tf, sub))
     if mine is not None:
         prefix = plain(mine["mean_prefix"], "tokens", row["record"] + "/fidelity/mean_prefix",
@@ -1407,13 +1415,13 @@ def fid_limits(rung, tf):
             slots = "one request" if r["slots"] == 1 else f"{r['slots']:,} requests"
             parts.append(LIM_LLAMA.format(part=part, slots=slots))
     if parts:
-        line = LIM_ENGINES.format(parts="; ".join(parts))
+        line = LIM_ENGINES.format(parts=", and ".join(parts))
         out.append(line)
     corpus = S.V.get("corpus")
     if corpus and corpus["texts"]:
         out.append(LIM_PROMPTS.format(tokens=S.V["request"]["prompt_tokens"], texts=corpus["texts"],
                                       hosts=", ".join(corpus["hosts"]),
-                                      licences="; ".join(corpus["licences"])))  # fmt: skip
+                                      licences=", ".join(corpus["licences"])))  # fmt: skip
     return out
 
 
@@ -1510,7 +1518,9 @@ def given_short(st, rid):
         return e(said)
     if rid == "proof":
         said = counted_words(st["proof_files"], "file")
-        said = e(said + ("; the reply is read from it" if st["reply"] == "proof" else ""))
+        them = "them" if st["proof_files"] > 1 else "it"
+        said = e(said + (f", and the verifier reads the reply from {them}"
+                         if st["reply"] == "proof" else ""))  # fmt: skip
         if st.get("proof_caveat"):  # a gap in our own verdict stays in view (law 2)
             cav = st["proof_caveat"]
             said += (f'<span class="sub cav">{e(cav[:1].upper() + cav[1:])}. '
@@ -1911,8 +1921,8 @@ SHARE = (
     "Copied",
 )  # the share group: its name, its actions, done
 # the card link's title (D4): what clicking it does, said before it is clicked
-SHARE_CARD_TITLE = ("This page's share card: an image of its glyph and figure, the one a link "
-                    "preview shows. Opens in a new tab, to save or share.")  # fmt: skip
+SHARE_CARD_TITLE = ("This page's share card is an image of its glyph and figure, the one a link "
+                    "preview shows. It opens in a new tab, where you can save or share it.")  # fmt: skip
 
 
 def share_html(row):
@@ -2212,12 +2222,12 @@ def build_checks():
     # what the glyph is and what its petals rest on, at the head of their rules (§The glyph, GL-1,
     # GL-2, GL-8, FM-2, MC-5, §Reading the tables)
     summary = (
-        "The glyph shows how close a row is to a perfect prover, one petal per property. Petals "
-        "are never added up. Four petals are read from the publisher's documents at the pinned "
-        "commit. Fidelity is measured by our fidelity run, and is not decided whenever the "
-        "Fidelity check is. A failed check sets Failed on the petals whose claim it contradicts, "
-        "a check not decided lowers none, and a passed check raises none. On any doubt the lower "
-        "step wins."
+        "The glyph shows how close a row is to a perfect prover, one petal per property, and the "
+        "petals are never added up. We grade four of them on the publisher's documents at the "
+        "pinned commit. We grade the fifth, Fidelity, on our fidelity run, and it is not decided "
+        "whenever the Fidelity check is. A failed check sets Failed on the petals whose claim it "
+        "contradicts, a check not decided lowers none, and a passed check raises none. On any "
+        "doubt, the lower step wins."
     )
     # the step words once, each on its chip (the inks are drawn, never named: SI-6)
     legend = ('<p class="rd slg">' + " ".join(step_chip(k) for k in STEP_WORD) + "</p>"
@@ -2309,7 +2319,7 @@ def build_mandate():
             if n:
                 said.append(one.format(n="one" if n == 1 else f"{n:,}", name=name_of(r),
                                        **{noun: noun if n == 1 else f"{noun}s"}))  # fmt: skip
-        return "; ".join(said) or none
+        return ", and ".join(said) or none
 
     names["se3a"] = e(by_row("replaced", SE3A_ROW, SE3A_NONE, "slot"))
     names["se3b"] = e(by_row("ineligible", SE3B_ROW, SE3B_NONE, "session"))

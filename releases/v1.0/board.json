@@ -582,7 +582,7 @@
                 "run": "cp_verify",
                 "said": {
                   "adversary": {
-                    "plain": "The publisher states the limit \"against a committer and a prover who may both cheat\" (the committer publishes the commitment; the prover makes the proofs). Our rule asks for any cheating prover: one that runs its own machine as it likes, with a limit that does not rely on trusted hardware or an honest outside party. We read the publisher's words as that. The publisher adds that nothing is claimed against a quantum computer; our rule does not ask about one.",
+                    "plain": "The publisher states the limit \"against a committer and a prover who may both cheat\" (the committer publishes the commitment, and the prover makes the proofs). Our rule asks for a limit against any cheating prover, one that runs its own machine as it likes, and the limit must not rely on trusted hardware or an honest outside party. We read the publisher's words as that limit. The publisher adds that nothing is claimed against a quantum computer, but our rule does not ask about one.",
                     "quotes": [
                       {
                         "text": "against a committer and a prover who may both cheat",
@@ -623,7 +623,7 @@
                     ]
                   },
                   "conditions_shown": {
-                    "plain": "The condition, in the publisher's words: \"public files that are fixed before the hash function is sampled (a provider that tunes them to the real hash function is outside the statement)\". In plain words: the theorem treats the hash function as drawn at random, and it covers only public files chosen before that draw; it says nothing about files a provider tuned to the actual hash function. No file of ours shows when the files we run were fixed, and the publisher writes that the reader must grant it. The publisher also writes that at files other than its stored examples, the theorem may hold only because the verifier rejects every proof. A verifier that rejects every proof never accepts a fake, so there the theorem could hold and still say nothing about fake replies.",
+                    "plain": "The publisher states the condition as \"public files that are fixed before the hash function is sampled (a provider that tunes them to the real hash function is outside the statement)\". In plain words, the theorem treats the hash function as drawn at random and covers only public files chosen before that draw, so it says nothing about files a provider tuned to the actual hash function. No file of ours shows when the files we run were fixed, and the publisher writes that the reader must grant it. The publisher also writes that at files other than its stored examples, the theorem may hold only because the verifier rejects every proof. A verifier that rejects every proof never accepts a fake, so there the theorem could hold and still say nothing about fake replies.",
                     "quotes": [
                       {
                         "text": "At all other files in scope nothing is known, so there the theorem may hold only because `verify` rejects everything.",
@@ -753,7 +753,7 @@
                 "to": "amber_upper"
               },
               "notes": [
-                "classical adversaries only (THEOREM.md L394-L395); the files-fixed-before-the-hash condition is counted under the conditions clause"
+                "Classical adversaries only (THEOREM.md L394-L395), and the files-fixed-before-the-hash condition is counted under the conditions clause."
               ],
               "quotes": [
                 {
@@ -820,13 +820,13 @@
               "read_facts": [
                 {
                   "fact": "adversary",
-                  "note": "classical adversaries only (THEOREM.md L394-L395); the files-fixed-before-the-hash condition is counted under the conditions clause",
-                  "plain": "The publisher states the limit \"against a committer and a prover who may both cheat\" (the committer publishes the commitment; the prover makes the proofs). Our rule asks for any cheating prover: one that runs its own machine as it likes, with a limit that does not rely on trusted hardware or an honest outside party. We read the publisher's words as that. The publisher adds that nothing is claimed against a quantum computer; our rule does not ask about one.",
+                  "note": "Classical adversaries only (THEOREM.md L394-L395), and the files-fixed-before-the-hash condition is counted under the conditions clause.",
+                  "plain": "The publisher states the limit \"against a committer and a prover who may both cheat\" (the committer publishes the commitment, and the prover makes the proofs). Our rule asks for a limit against any cheating prover, one that runs its own machine as it likes, and the limit must not rely on trusted hardware or an honest outside party. We read the publisher's words as that limit. The publisher adds that nothing is claimed against a quantum computer, but our rule does not ask about one.",
                   "used": true
                 },
                 {
                   "fact": "parameters",
-                  "note": "the row runs the full-size format at exact match; whether its own files are in scope is the conditions clause; the bound is stated for the Lean verifier and not claimed for cp_verify, which the row runs (the program clause)",
+                  "note": "The row runs the full-size format at exact match. Whether its own files are in scope falls under the conditions clause, and the bound is stated for the Lean verifier and not claimed for cp_verify, which the row runs (the program clause).",
                   "plain": "It states the limit for \"full size, not the small examples\", and we run the full size.",
                   "used": false
                 }
@@ -1089,7 +1089,7 @@
                 "to": "green"
               },
               "notes": [
-                "the publisher expects the programs to hide the weights, but says the expectation does not reach a real model's weights or the files fitted to them; the row commits a real model's weights"
+                "The publisher expects the programs to hide the weights, but says the expectation does not reach a real model's weights or the files fitted to them, and the row commits a real model's weights."
               ],
               "quotes": [
                 {
@@ -1120,7 +1120,7 @@
               "read_facts": [
                 {
                   "fact": "programs",
-                  "note": "the publisher expects the programs to hide the weights, but says the expectation does not reach a real model's weights or the files fitted to them; the row commits a real model's weights",
+                  "note": "The publisher expects the programs to hide the weights, but says the expectation does not reach a real model's weights or the files fitted to them, and the row commits a real model's weights.",
                   "plain": "For its programs (the C++ and CUDA code we run), the publisher states an expectation, not a theorem, and says the expectation does not reach a real model's weights or the files fitted to them. We run a real model, so we count no statement for the programs we run.",
                   "used": true
                 }
@@ -1438,7 +1438,7 @@
                 "input_code_unverified": true,
                 "limits": [
                   {
-                    "plain": "The theorem speaks of the weights read from the files. No theorem ties them to the weights cp_commit committed (cp_commit: the publisher's program that publishes the commitment).",
+                    "plain": "The theorem speaks of the weights read from the files, but no theorem ties them to the weights committed by cp_commit, the publisher's program that publishes the commitment.",
                     "quotes": [
                       {
                         "text": "\"The model\" means the extracted weights, which no theorem says are the ones `cp_commit` put in",
@@ -1447,7 +1447,7 @@
                     ]
                   },
                   {
-                    "plain": "The soundness theorem is stated for a system whose committer (the part that turns the weights into the commitment) is a placeholder: it returns the same constant for any weights, so it commits to nothing. The publisher's six theorems use another committer, the one its compiler makes, which encodes the weights and hashes the key. The publisher writes that of the placeholder system itself, nothing with content can be stated.",
+                    "plain": "The soundness theorem is stated for a system whose committer (the part that turns the weights into the commitment) is a placeholder: it returns the same constant for any weights, so it commits to nothing. The publisher's six theorems use another committer, the one its compiler makes, which encodes the weights and hashes the key. The publisher writes that nothing with content can be stated of the placeholder system itself.",
                     "quotes": [
                       {
                         "text": "the system in the statement of the soundness theorem on `verify` has a constant committer (a committer that returns one constant whatever the weights, and so commits to nothing; the committer of the six lines is another: the one that `compile` makes (`lean/Johnson/Face/Compiler.lean`), which encodes the weights and hashes the key) where its honest committer goes, so of that system itself none of it can be stated with any content",
@@ -1456,7 +1456,7 @@
                     ]
                   },
                   {
-                    "plain": "Scale files, which the theorem allows as inputs, can switch off any of the model's blocks, up to all of them. The publisher worked this out by hand; it is not proved.",
+                    "plain": "Scale files, which the theorem allows as inputs, can switch off any of the model's blocks, up to all of them. The publisher worked this out by hand, and it is not proved.",
                     "quotes": [
                       {
                         "text": "Scale files in scope can switch off any of the model's blocks, up to all of them (worked out by hand, not proved).",
@@ -1495,7 +1495,7 @@
                 "reach": "protocol_and_statement",
                 "said": {
                   "conclusion": {
-                    "plain": "Its conclusion is about the model: about the publisher's integer model (a written-out definition, in Lean, of what the model computes) at the weights read from the files. No theorem ties those weights to the ones cp_commit committed (the first limit below). Our rules accept a conclusion about such a definition as one about the model; they do not ask for a theorem that ties its weights to the committed ones.",
+                    "plain": "Its conclusion is about the model: about the publisher's integer model (a written-out definition, in Lean, of what the model computes) at the weights read from the files. No theorem ties those weights to the ones cp_commit committed (the first limit below). But our rules accept a conclusion about such a definition as one about the model, and they do not ask for a theorem that ties its weights to the committed ones.",
                     "quotes": [
                       {
                         "text": "At each position it is the greedy next token after the prompt and the output's own earlier tokens, as an integer program computes it, not the floating-point model.",
@@ -1712,8 +1712,8 @@
                 "to": "green"
               },
               "notes": [
-                "the theorem covers the Lean protocol and states the model as an integer program (THEOREM.md L231-233); the C++ verifier the row runs is tested, not proved (what-is-proved.md L7-8), so the reach stops short of the verifier code this row runs; the model statement is the publisher's Lean integer model, and its tables and its reach at a given scale file are not proved (THEOREM.md L229-L231, L242-L243)",
-                "read 2026-11-15: the conclusion is about the publisher's integer model, a reference definition of the model's computation, at the weights the extractor reads; no theorem ties those weights to the ones cp_commit committed (THEOREM.md L227-L228), and at files other than the stored examples the theorem may hold only because verify rejects everything (L314-L315, under Integrity's conditions clause); and the system in the soundness theorem's statement has a constant committer, which commits to nothing, so of that system none of it can be stated with any content (L700-L704). So the conclusion is about a reference definition of the model, as a step above Partly met needs, and it is not tied to the weights this row commits"
+                "The theorem covers the Lean protocol and states the model as an integer program (THEOREM.md L231-233). The C++ verifier the row runs is tested, not proved (what-is-proved.md L7-8), so the reach stops short of the verifier code this row runs. The model statement is the publisher's Lean integer model, and its tables and its reach at a given scale file are not proved (THEOREM.md L229-L231, L242-L243).",
+                "Read 2026-11-15: the conclusion is about the publisher's integer model, a reference definition of the model's computation, at the weights the extractor reads. No theorem ties those weights to the ones cp_commit committed (THEOREM.md L227-L228), and at files other than the stored examples the theorem may hold only because verify rejects everything (L314-L315, under Integrity's conditions clause). Also, the system in the soundness theorem's statement has a constant committer, which commits to nothing, so of that system none of it can be stated with any content (L700-L704). So the conclusion is about a reference definition of the model, as a step above Partly met needs, but it is not tied to the weights this row commits."
               ],
               "quotes": [
                 {
@@ -1772,14 +1772,14 @@
               "read_facts": [
                 {
                   "fact": "reach",
-                  "note": "the theorem covers the Lean protocol and states the model as an integer program (THEOREM.md L231-233); the C++ verifier the row runs is tested, not proved (what-is-proved.md L7-8), so the reach stops short of the verifier code this row runs; the model statement is the publisher's Lean integer model, and its tables and its reach at a given scale file are not proved (THEOREM.md L229-L231, L242-L243)",
+                  "note": "The theorem covers the Lean protocol and states the model as an integer program (THEOREM.md L231-233). The C++ verifier the row runs is tested, not proved (what-is-proved.md L7-8), so the reach stops short of the verifier code this row runs. The model statement is the publisher's Lean integer model, and its tables and its reach at a given scale file are not proved (THEOREM.md L229-L231, L242-L243).",
                   "plain": "The theorem covers the whole method, the model's computation included.",
                   "used": true
                 },
                 {
                   "fact": "conclusion",
-                  "note": "read 2026-11-15: the conclusion is about the publisher's integer model, a reference definition of the model's computation, at the weights the extractor reads; no theorem ties those weights to the ones cp_commit committed (THEOREM.md L227-L228), and at files other than the stored examples the theorem may hold only because verify rejects everything (L314-L315, under Integrity's conditions clause); and the system in the soundness theorem's statement has a constant committer, which commits to nothing, so of that system none of it can be stated with any content (L700-L704). So the conclusion is about a reference definition of the model, as a step above Partly met needs, and it is not tied to the weights this row commits",
-                  "plain": "Its conclusion is about the model: about the publisher's integer model (a written-out definition, in Lean, of what the model computes) at the weights read from the files. No theorem ties those weights to the ones cp_commit committed (the first limit below). Our rules accept a conclusion about such a definition as one about the model; they do not ask for a theorem that ties its weights to the committed ones.",
+                  "note": "Read 2026-11-15: the conclusion is about the publisher's integer model, a reference definition of the model's computation, at the weights the extractor reads. No theorem ties those weights to the ones cp_commit committed (THEOREM.md L227-L228), and at files other than the stored examples the theorem may hold only because verify rejects everything (L314-L315, under Integrity's conditions clause). Also, the system in the soundness theorem's statement has a constant committer, which commits to nothing, so of that system none of it can be stated with any content (L700-L704). So the conclusion is about a reference definition of the model, as a step above Partly met needs, but it is not tied to the weights this row commits.",
+                  "plain": "Its conclusion is about the model: about the publisher's integer model (a written-out definition, in Lean, of what the model computes) at the weights read from the files. No theorem ties those weights to the ones cp_commit committed (the first limit below). But our rules accept a conclusion about such a definition as one about the model, and they do not ask for a theorem that ties its weights to the committed ones.",
                   "used": true
                 }
               ],
@@ -1837,7 +1837,7 @@
                 "to": "green"
               },
               "notes": [
-                "the publisher states soundness at every public setup of three public files, against any committer and prover, with the random-oracle model as its assumption; no sentence says in words that no setup produced a secret, so the petal is read as transparent and graded Mostly met at most (GL-10, amended 2026-11-15)"
+                "The publisher states soundness at every public setup of three public files, against any committer and prover, with the random-oracle model as its assumption. No sentence says in words that no setup produced a secret, so we read the petal as transparent and grade it Mostly met at most (GL-10, amended 2026-11-15)."
               ],
               "quotes": [
                 {
@@ -1872,8 +1872,8 @@
               "read_facts": [
                 {
                   "fact": "rests_on",
-                  "note": "the publisher states soundness at every public setup of three public files, against any committer and prover, with the random-oracle model as its assumption; no sentence says in words that no setup produced a secret, so the petal is read as transparent and graded Mostly met at most (GL-10, amended 2026-11-15)",
-                  "plain": "The publisher proves its theorems at every public setup (three public files it names), against any committer and prover. The assumptions it states are the random-oracle model for the hash function (the hash is treated as a perfectly random function), with a second, fixed hash function, built on BLAKE2b's compression function, assumed independent of it, against classical adversaries (not quantum ones). These are idealizations of hash functions, not proved properties of them. None of them needs a secret or a trusted party, and we count them among cryptographic assumptions; this is our reading. The theorem's condition that the public files are fixed before the hash function is drawn is counted under Integrity.",
+                  "note": "The publisher states soundness at every public setup of three public files, against any committer and prover, with the random-oracle model as its assumption. No sentence says in words that no setup produced a secret, so we read the petal as transparent and grade it Mostly met at most (GL-10, amended 2026-11-15).",
+                  "plain": "The publisher proves its theorems at every public setup (three public files it names), against any committer and prover. It assumes the random-oracle model, which treats the hash function as perfectly random. It also assumes that a second, fixed hash function, built on BLAKE2b's compression function, is independent of the first. The publisher's theorems are stated against classical adversaries, not quantum ones. These are idealizations of hash functions, not proved properties of them. On our reading, none of them needs a secret or a trusted party, and we count them among cryptographic assumptions. The theorem's condition that the public files are fixed before the hash function is drawn is counted under Integrity.",
                   "used": true
                 }
               ],
@@ -1909,7 +1909,7 @@
                     ]
                   },
                   "rests_on": {
-                    "plain": "The publisher proves its theorems at every public setup (three public files it names), against any committer and prover. The assumptions it states are the random-oracle model for the hash function (the hash is treated as a perfectly random function), with a second, fixed hash function, built on BLAKE2b's compression function, assumed independent of it, against classical adversaries (not quantum ones). These are idealizations of hash functions, not proved properties of them. None of them needs a secret or a trusted party, and we count them among cryptographic assumptions; this is our reading. The theorem's condition that the public files are fixed before the hash function is drawn is counted under Integrity.",
+                    "plain": "The publisher proves its theorems at every public setup (three public files it names), against any committer and prover. It assumes the random-oracle model, which treats the hash function as perfectly random. It also assumes that a second, fixed hash function, built on BLAKE2b's compression function, is independent of the first. The publisher's theorems are stated against classical adversaries, not quantum ones. These are idealizations of hash functions, not proved properties of them. On our reading, none of them needs a secret or a trusted party, and we count them among cryptographic assumptions. The theorem's condition that the public files are fixed before the hash function is drawn is counted under Integrity.",
                     "quotes": [
                       {
                         "text": "Six theorems are proved in Lean of one committer, prover and verifier, `compile (flashProve setup)`, at every public setup `setup` (`PublicSetup`: three public files, what the reader returns at them, and `FilesInUse`).",
@@ -3397,7 +3397,7 @@
                     ]
                   },
                   "parameters": {
-                    "plain": "Its code fixes the settings as constants and asserts 100 bits; no sentence says that the limit is for the settings we run.",
+                    "plain": "Its code fixes the settings as constants and asserts 100 bits, but no sentence says that the limit is for the settings we run.",
                     "quotes": [
                       {
                         "text": "assert_eq!(cfg.security_bits(), 100, \"security parameter drifted\");",
@@ -3493,8 +3493,8 @@
               "read_facts": [
                 {
                   "fact": "parameters",
-                  "note": "the security parameters are constants (util.rs L14-L16) and pcs_config() asserts 100 bits (L26); the row runs the sound defaults",
-                  "plain": "Its code fixes the settings as constants and asserts 100 bits; no sentence says that the limit is for the settings we run.",
+                  "note": "The security parameters are constants (util.rs L14-L16), and pcs_config() asserts 100 bits (L26). The row runs the sound defaults.",
+                  "plain": "Its code fixes the settings as constants and asserts 100 bits, but no sentence says that the limit is for the settings we run.",
                   "used": false
                 }
               ],
@@ -4003,7 +4003,7 @@
                 "to": "green"
               },
               "notes": [
-                "by the test FlashProve's row meets (GL-10, amended 2026-11-15): a petal is read as transparent when a sentence among its quotes says what soundness rests on and none of it is a setup that produced a secret. SASH states its soundness as stwo's conjectured accounting over the FRI parameters (util.rs L9-L12), and says the setup's two trees are a shape tree the verifier derives from the public parameters and a model tree compared with the published model commitment (prover/README.md L117-L119, docs/statement.md L127-L129). The Fixed statement it calls trusted by the verifier is those parameters and roots (compose.rs L7-L11). No sentence says in words that no setup produced a secret, so read as transparent and graded Mostly met at most, as FlashProve's is"
+                "We apply the test FlashProve's row meets: we read a petal as transparent when a sentence among its quotes says what soundness rests on and none of it is a setup that produced a secret (GL-10, amended 2026-11-15). SASH states its soundness as stwo's conjectured accounting over the FRI parameters (util.rs L9-L12). It says the setup's two trees are a shape tree the verifier derives from the public parameters and a model tree compared with the published model commitment (prover/README.md L117-L119, docs/statement.md L127-L129). The Fixed statement it calls trusted by the verifier is those parameters and roots (compose.rs L7-L11). No sentence says in words that no setup produced a secret, so we read the petal as transparent and grade it Mostly met at most, as FlashProve's is."
               ],
               "quotes": [
                 {
@@ -4034,8 +4034,8 @@
               "read_facts": [
                 {
                   "fact": "rests_on",
-                  "note": "by the test FlashProve's row meets (GL-10, amended 2026-11-15): a petal is read as transparent when a sentence among its quotes says what soundness rests on and none of it is a setup that produced a secret. SASH states its soundness as stwo's conjectured accounting over the FRI parameters (util.rs L9-L12), and says the setup's two trees are a shape tree the verifier derives from the public parameters and a model tree compared with the published model commitment (prover/README.md L117-L119, docs/statement.md L127-L129). The Fixed statement it calls trusted by the verifier is those parameters and roots (compose.rs L7-L11). No sentence says in words that no setup produced a secret, so read as transparent and graded Mostly met at most, as FlashProve's is",
-                  "plain": "The publisher states its soundness as stwo's conjectured estimate (see Integrity). Its setup commits two trees: a shape tree, whose root the verifier builds itself from the public settings, and a model tree, whose root the verifier compares with the published commitment. It calls some values `Fixed`, \"produced at setup, trusted by the verifier\": the model's shape and the settings of its circuits, the security settings, the trees' column sizes, and the pinned root of the tree that holds every table, weight and scale column. We read \"trusted\" here as: the verifier takes these values as given. They are settings and a tree root, not the weights themselves, and the publisher calls none of them a secret.",
+                  "note": "We apply the test FlashProve's row meets: we read a petal as transparent when a sentence among its quotes says what soundness rests on and none of it is a setup that produced a secret (GL-10, amended 2026-11-15). SASH states its soundness as stwo's conjectured accounting over the FRI parameters (util.rs L9-L12). It says the setup's two trees are a shape tree the verifier derives from the public parameters and a model tree compared with the published model commitment (prover/README.md L117-L119, docs/statement.md L127-L129). The Fixed statement it calls trusted by the verifier is those parameters and roots (compose.rs L7-L11). No sentence says in words that no setup produced a secret, so we read the petal as transparent and grade it Mostly met at most, as FlashProve's is.",
+                  "plain": "The publisher states its soundness as stwo's conjectured estimate (see Integrity). Its setup commits two trees: a shape tree, whose root the verifier builds itself from the public settings, and a model tree, whose root the verifier compares with the published commitment. It calls some values `Fixed`, \"produced at setup, trusted by the verifier\". It lists them as the model's shape and the settings of its circuits, the security settings, the trees' column sizes, and the pinned root of the tree that holds every table, weight and scale column. We read \"trusted\" here to mean that the verifier takes these values as given. These are settings and a tree root, not the weights themselves, and the publisher calls none of them a secret.",
                   "used": true
                 }
               ],
@@ -4063,7 +4063,7 @@
                 "rests_on": "transparent",
                 "said": {
                   "publicly_checkable": {
-                    "plain": "The publisher states that the verifier takes two byte strings and the proof, and nothing else. It does not say in words that anyone can check a proof; that is our reading of this sentence.",
+                    "plain": "The publisher states that the verifier takes two byte strings and the proof, and nothing else. We read this sentence to mean that anyone can check a proof, but the publisher does not say so in words.",
                     "quotes": [
                       {
                         "text": "The **verifier** (`verify_composed`) takes those two byte strings and the //! serialized proof, and nothing else",
@@ -4072,7 +4072,7 @@
                     ]
                   },
                   "rests_on": {
-                    "plain": "The publisher states its soundness as stwo's conjectured estimate (see Integrity). Its setup commits two trees: a shape tree, whose root the verifier builds itself from the public settings, and a model tree, whose root the verifier compares with the published commitment. It calls some values `Fixed`, \"produced at setup, trusted by the verifier\": the model's shape and the settings of its circuits, the security settings, the trees' column sizes, and the pinned root of the tree that holds every table, weight and scale column. We read \"trusted\" here as: the verifier takes these values as given. They are settings and a tree root, not the weights themselves, and the publisher calls none of them a secret.",
+                    "plain": "The publisher states its soundness as stwo's conjectured estimate (see Integrity). Its setup commits two trees: a shape tree, whose root the verifier builds itself from the public settings, and a model tree, whose root the verifier compares with the published commitment. It calls some values `Fixed`, \"produced at setup, trusted by the verifier\". It lists them as the model's shape and the settings of its circuits, the security settings, the trees' column sizes, and the pinned root of the tree that holds every table, weight and scale column. We read \"trusted\" here to mean that the verifier takes these values as given. These are settings and a tree root, not the weights themselves, and the publisher calls none of them a secret.",
                     "quotes": [
                       {
                         "text": "stwo's own conjectured-soundness accounting is security_bits = pow_bits + log_blowup_factor * n_queries so blowup 2 (log_blowup_factor = 1) at 100 conjectured bits means exactly 100 FRI queries and no grinding.",

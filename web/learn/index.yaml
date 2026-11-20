@@ -3,8 +3,8 @@
 # web/draw/learn.py reads. A slug is the page's address on the site.
 title: Learn
 lead: >-
-  A proof of inference lets anyone check, without the model's weights, that a reply is what a
-  model, committed in advance, produces for its prompt.
+  Say a provider sends a reply to a prompt. A proof of inference lets anyone check, without the
+  model's weights, that the reply is what a model committed in advance produces for that prompt.
 tracks:
   - id: policy
     name: For policy readers
@@ -23,8 +23,9 @@ tracks:
       - slug: deployment
         title: Deployments and treaties
         summary: >-
-          Proving costs a large multiple of serving, and checking needs no weights or trusted
-          chip. A treaty could prove replies sampled from a trusted record.
+          Proving a reply costs a large multiple of serving it, but checking the proof needs no
+          weights and no trusted chip. Under a treaty, an operator could prove replies sampled
+          from a trusted record.
   - id: engineering
     name: For prover teams and engineers
     reader: ""
@@ -47,4 +48,4 @@ tracks:
 glossary:
   slug: glossary
   title: Glossary
-  summary: The ladder's words and the field's.
+  summary: Each entry defines one word the ladder uses or one term of the field.
