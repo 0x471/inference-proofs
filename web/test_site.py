@@ -8,10 +8,12 @@ import html
 import json
 import math
 import re
+from itertools import pairwise
 from pathlib import Path
 from typing import Any
 
 WEB = Path(__file__).resolve().parent
+ROOT = WEB.parent
 
 FIG = re.compile(
     r'<span class="fig" title="([^"]*)"><span class="n">([^<]*)</span>'
@@ -187,6 +189,52 @@ SCALE_ROW = re.compile(
 
 def at(lo: int, hi: int, v: float) -> str:
     return f"{100 * (math.log10(v) - lo) / (hi - lo):.2f}%"
+
+
+def test_system_page_drawings_sit_where_the_figures_say(board_site: Any) -> None:
+    """RFC-0018 Q50: a system page's marks are geometry from the board. Hand-computed for the
+    example board: FlashProve's rates, 10.27 proved and 849.9 served tokens/s, span the decades
+    10 to 1,000, so the marks stand at (log10 10.2742 - 1) / 2 = 0.59 % and (log10 849.92 - 1) / 2
+    = 96.47 %; SASH's two parts, 358.479 and 71.0, cut their bar at 358.479 / 429.479 = 834.68 of
+    1,000. On the release board, each Fidelity mark stands at its entry's percent on the axis from
+    the ten under the lowest to 100 %. An axis labels both its ends at any count of ticks."""
+    board, out = board_site.board, pages(board_site.out)
+    row, base = board["rungs"][0]["rows"][0], board["rungs"][0]["baseline"]
+    rates = (row["session_reply_tokens_per_gpu_second"]["value"],
+             base["reply_tokens_per_gpu_second"]["value"])  # fmt: skip
+    marks = re.findall(r'<svg class="mk (me|ref)" x="([^"]+)"', out["flashprove.html"])
+    assert marks == [("me", at(1, 3, rates[0])), ("ref", at(1, 3, rates[1]))]
+    assert [x for _, x in marks] == ["0.59%", "96.47%"]
+    assert re.findall(r'class="hb pbar".*?<rect class="bp" x="0.00" width="([^"]+)"',
+                      out["sash.html"]) == ["834.68"]  # fmt: skip
+    plots = board_site.build.draw.plots
+    assert f"{plots.lin_x(92.03, 70, 100):.2f}" == "73.43"  # (92.03 - 70) / 30
+    for count in range(3, 13):
+        ticks = [(100 * i / (count - 1), "100,000") for i in range(count)]
+        for width in (plots.PLOT_WIDE, plots.PLOT_BESIDE, plots.PLOT_NARROW):
+            shown = plots.labelled(ticks, width)
+            assert (shown[0], shown[-1]) == (0, count - 1), (count, width)
+            # seven characters of 7.8 px: an end's words start or end on its tick, the others
+            # are centred, and no two stand closer than 10 px
+            edges = [(x, x + 54.6) if i == 0 else (x - 54.6, x) if i == count - 1
+                     else (x - 27.3, x + 27.3)
+                     for i in shown for x in [i * width / (count - 1)]]  # fmt: skip
+            assert all(b[0] - a[1] >= 10 - 1e-9 for a, b in pairwise(edges)), (count, width)
+    release = ROOT / "releases/v1.0/board.json"
+    if not release.exists():
+        return
+    for rung in json.loads(release.read_text())["rungs"]:
+        tf = rung.get("teacher_forced")
+        for system, mine in ((tf or {}).get("rows") or {}).items():
+            page = (WEB / f"{system}.html").read_text()
+            block = page[page.index('id="fidelity"') :].split("</section>")[0]
+            bar = ((rung.get("fidelity") or {}).get("bar") or {}).get("control")
+            rows = [mine, *(c for c in tf["controls"] if c["id"] == bar or c["id"][:1] == "q")]
+            low = min(
+                90, 10 * math.floor(min(c["percent"] for c in rows if c["status"] == "ok") / 10)
+            )
+            me = re.findall(r'<svg class="mk me" x="([^"]+)"', block)
+            assert me == [f"{100 * (mine['percent'] - low) / (100 - low):.2f}%"], system
 
 
 def test_scale_positions_are_the_boards(board_site: Any) -> None:
@@ -365,11 +413,10 @@ def test_cost_block_figures_share_the_bands_scope(board_site: Any) -> None:
     """CO-5 (amended 2026-11-17): the figures that lead a system page's Cost block (the two rates
     and the cost in USD; the multiple is the band's alone) are of the scope the band prints, so
     the block never sets a steady figure beside a whole-session one. In the example board
-    FlashProve has both scopes: its Cost tiles name the proved rate and session_usd_per_reply,
-    never multiple or steady_usd_per_reply."""
+    FlashProve has both scopes: its Cost drawing and tiles name the proved rate and
+    session_usd_per_reply, never multiple or steady_usd_per_reply."""
     text = html.unescape((board_site.out / "flashprove.html").read_text())
-    block = re.search(r'<section class="blk" id="cost".*?<dl class="figs tiles">(.*?)</dl>', text,
-                      re.S)  # fmt: skip
+    block = re.search(r'<section class="blk" id="cost"(.*?)<details', text, re.S)
     assert block
     pointers = set(re.findall(r"record: [^#]+#(/[^;\"]+)", block[1]))
     at = "/rungs/0/rows/0/"

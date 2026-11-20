@@ -1392,6 +1392,106 @@ a.pvd:hover { text-decoration: underline 2px; text-underline-offset: 4px; }
 .lost a:active { box-shadow: inset 9px 0 0 var(--cobalt); }
 .anim .lost a { transition: box-shadow var(--quick), background-color var(--quick); }
 
+/* a block's drawing (Cost, Fidelity: plots.dot_plot): one row per figure, its word, its figure and its plot, every
+   plot on the one axis drawn over them; this system's mark solid paper, serving and the copies outlined, its figure
+   small and muted. On a narrower screen each plot takes the block's width under its words */
+.dp { display: grid; grid-template-columns: max-content max-content minmax(0, 1fr); column-gap: 32px; padding: 28px 24px 32px 13px; border-bottom: 1px solid var(--rule); }
+.dph { grid-column: 1 / 3; align-self: start; font: var(--f-label); letter-spacing: var(--track); text-transform: uppercase; color: var(--muted); }
+.dph a { color: inherit; }
+.dpc { display: block; margin-bottom: 14px; font: var(--f-label); letter-spacing: var(--track); text-transform: uppercase; color: var(--muted); }
+.dpr { display: contents; }
+.dpw, .dpf { align-self: center; }
+.dpw { font: 400 13px/20px var(--mono); color: var(--muted); white-space: nowrap; }
+.dpr.me .dpw { font-weight: 600; color: var(--paper); }
+.dpf .fig { flex-wrap: nowrap; white-space: nowrap; }
+.dpf .fig .n { font-size: 22px; }
+.dpf .fig .u { font-size: 13px; }
+.dpr:not(.me) .dpf .fig .n { font-weight: 400; }
+.dp .np .n { padding-left: var(--pl); padding-right: var(--pr); }
+.dpm { grid-column: 1 / -1; padding-top: 18px; }
+.dpm .mean { font: 400 12px/18px var(--mono); color: var(--muted); }
+.dpl, .dax { display: block; overflow: visible; }
+.dpl .gd { stroke: var(--line); stroke-width: 1px; }
+/* a dotted guide from a row's words to its mark; the stretch between the two rates, lifted */
+.dpl .tk { stroke: var(--rule); stroke-width: 1px; stroke-dasharray: 1 7; }
+.dpl .sp { fill: var(--lift); }
+.dpl .mk.me rect { fill: var(--paper); }
+.dpl .mk.ref rect { fill: var(--ground); stroke: var(--muted); stroke-width: 2px; }
+.dax :is(.mj, .mn) { stroke: var(--rule); stroke-width: 1px; }
+.dax .tl { fill: var(--muted); font: 400 12px/1 var(--mono); font-stretch: 87.5%; font-variant-numeric: tabular-nums; }
+.dax .tl:is(.w, .n) { display: none; }
+@media (max-width: 1200px) { .dax .tl.x { display: none; } .dax .tl.w { display: inline; } }
+/* the tiles under the Cost drawing: verify time, proof size and cost in even columns; before them, where the row
+   times them apart, the multiple's two parts with their bar, in a wider one */
+/* room: a drawing's tiles and a system page's blocks stand further apart than a ruled list's lines */
+.tiles.drawn > div { padding-top: 24px; padding-bottom: 30px; }
+.syspage .blk + .blk { margin-top: 96px; }
+@media (max-width: 760px) { .syspage .blk + .blk { margin-top: 72px; } }
+@media (min-width: 761px) {
+  .syspage :is(#cost, #fidelity) .tiles.drawn { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  /* the parts take a line of their own over the three, and from 1201 px the first of four columns */
+  .syspage #cost .tiles.drawn:has(> #parts) > div { grid-row: auto; grid-column: auto; }
+  .syspage #cost .tiles.drawn:has(> #parts) > #parts { grid-row: auto; grid-column: 1 / -1; }
+}
+@media (min-width: 1201px) {
+  .syspage #cost .tiles.drawn:has(> #parts) { grid-template-columns: minmax(0, 1.7fr) repeat(3, minmax(0, 1fr)); }
+  .syspage #cost .tiles.drawn:has(> #parts) > #parts { grid-column: auto; }
+}
+@media (min-width: 561px) and (max-width: 760px) { #fidelity .tiles.drawn > div:last-child:nth-child(odd) { grid-column: 1 / -1; } }
+/* the multiple's two parts end to end, from zero to their sum (plots.hbar), a mark of each part's ink before its
+   word; the serving ladder's rates as bars from zero on one scale, full load in paper */
+.tiles .pbar { height: 14px; margin-top: 18px; }
+.ptk:before { content: ""; display: inline-block; width: 12px; height: 6px; margin: 0 8px 2px 0; background: var(--paper); vertical-align: middle; }
+.ptk.pg:before { background: var(--rule); }
+.lrt { display: grid; grid-template-columns: 22ch minmax(0, 1fr); column-gap: 16px; align-items: center; }
+.lrt .lbar { height: 8px; }
+@media (max-width: 760px) {
+  .lrt { grid-template-columns: minmax(0, 1fr); row-gap: 6px; }
+  .lrt .fig .n { font-size: 14px; }
+}
+/* narrower, each plot takes the block's width under its words: the Cost plot, whose figures carry a long unit,
+   up to 1000 px; the Fidelity plot on a phone */
+@media (max-width: 1000px) {
+  #cost .dp { grid-template-columns: max-content minmax(0, 1fr); column-gap: 16px; padding-right: 16px; }
+  #cost :is(.dph, .dpa, .dpl) { grid-column: 1 / -1; }
+  #cost .dph { padding-bottom: var(--s2); }
+  #cost :is(.dpw, .dpf) { padding-top: 18px; }
+}
+@media (max-width: 760px) {
+  .dp { grid-template-columns: max-content minmax(0, 1fr); column-gap: 16px; padding-right: 16px; }
+  .dph, .dpa, .dpl { grid-column: 1 / -1; }
+  .dph { padding-bottom: var(--s2); }
+  .dpw, .dpf { padding-top: 18px; }
+}
+@media (max-width: 600px) {
+  .dax .tl.w { display: none; }
+  .dax .tl.n { display: inline; }
+  /* a long word takes two lines, so a rate and its unit keep one */
+  .dpw { max-width: 10ch; white-space: normal; }
+  .dpf { min-width: 0; }
+  .dpf .fig { flex-wrap: wrap; }
+  .dpf .fig .n { font-size: 18px; }
+  .dp { padding-top: 22px; padding-bottom: 26px; }
+  /* a plot stands between the two rates, so they no longer line up on the point: each starts at its line's edge */
+  .dp .np .n { padding-left: 0; padding-right: 0; }
+}
+@media (forced-colors: active) {
+  .dpl, .dax { forced-color-adjust: none; }
+  .dpl :is(.gd, .tk), .dax :is(.mj, .mn) { stroke: GrayText; }
+  .dpl .sp { fill: Canvas; }
+  .dpl .mk.ref rect { fill: Canvas; stroke: CanvasText; }
+  .dpl .mk.me rect { fill: CanvasText; stroke: CanvasText; }
+  .dax .tl { fill: CanvasText; }
+  /* the bars and the marks before the parts' words keep two inks */
+  .hb, .ptk:before { forced-color-adjust: none; }
+  .hb .tk { fill: GrayText; }
+  .hb :is(.bs, .bp) { fill: CanvasText; }
+  .hb .bg { fill: GrayText; }
+  .hb .cut { stroke: Canvas; }
+  .ptk:before { background: CanvasText; }
+  .ptk.pg:before { background: GrayText; }
+}
+@media print { .ptk:before { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
 /* ---------------------------------------------------------------- the probe: a figure's labels, shown where it is pointed at (words.js) */
 /* the pointer can rest on it (to read or select it); in a window too short for it, it scrolls inside */
 .probe { position: fixed; z-index: 40; left: 0; top: 0; width: max-content; max-width: min(400px, calc(100vw - 2 * var(--gut))); margin: 0; padding: 10px 12px 11px; overflow: auto; background: var(--ground); box-shadow: inset 0 0 0 1px var(--rule), inset 0 3px 0 var(--cobalt); font: 400 11px/16px var(--mono); color: var(--paper); }
@@ -2181,6 +2281,8 @@ ol.ls > li:before { counter-increment: n; content: counter(n); position: absolut
 .tiles .usd .tls { row-gap: var(--s2); }
 .tiles .usd .tf .fig .n { font-size: 14px; letter-spacing: 0; }
 .tiles .usd .tf .fig { flex-wrap: nowrap; white-space: nowrap; }
+/* three tiles on a narrow desktop: a long USD figure takes its unit under it */
+@media (min-width: 761px) and (max-width: 900px) { .tiles.drawn .usd .tf .fig { flex-wrap: wrap; white-space: normal; } }
 /* the two rates on their decimal point: the whole digits right-aligned, the fraction after them */
 .tiles .rts .np .n { padding-left: var(--pl); padding-right: var(--pr); }
 .np.pl0 { --pl: 0ch; } .np.pl1 { --pl: 1ch; } .np.pl2 { --pl: 2ch; } .np.pl3 { --pl: 3ch; } .np.pl4 { --pl: 4ch; } .np.pl5 { --pl: 5ch; } .np.pl6 { --pl: 6ch; } .np.pl7 { --pl: 7ch; } .np.pl8 { --pl: 8ch; } .np.pl9 { --pl: 9ch; }

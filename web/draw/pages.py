@@ -61,7 +61,17 @@ from .overview import (
     whole_note,
 )
 from .petal import chip, glyph_section, quote_links, state_word
-from .plots import fid_svg, hbar
+from .plots import (
+    PLOT_BESIDE,
+    axis_svg,
+    decade_words,
+    dot_plot,
+    fid_svg,
+    hbar,
+    lin_x,
+    log_extent,
+    log_x,
+)
 from .words import (
     BASIS_BITS,
     BASIS_READING,
@@ -155,6 +165,7 @@ from .words import (
     REASON_LINK,
     RECORD_WORD,
     REPLY_TOKENS_HEAD,
+    SCALE_LOG,
     SCOPE_BOUND_HEAD,
     SCOPE_CARD_HEAD,
     SCOPE_CARD_WORD,
@@ -908,9 +919,18 @@ def ladder_html(rung):
     ladder = [c for c in b.get("ladder") or [] if c["rate"] is not None]
     if not ladder:
         return ""
-    rows = [[f"{c['concurrency']:,}" + (" (full load)" if c["concurrency"] == b["concurrency"]
-                                       else ""),
-             fig_html(c["rate"], sub=BARE)] for c in ladder]  # fmt: skip
+    top = max(c["rate"]["value"] for c in ladder) if all(has(c["rate"]) for c in ladder) else 0
+    rows = []
+    for c in ladder:
+        full = c["concurrency"] == b["concurrency"]
+        # each rate a bar from zero on one scale, the ladder's highest rate; full load in paper
+        bar = (
+            hbar([(c["rate"]["value"], "bp" if full else "bg")], top, h=8, cls="hb lbar")
+            if top > 0
+            else ""
+        )
+        rows.append([f"{c['concurrency']:,}" + (" (full load)" if full else ""),
+                     f'<span class="lrt">{fig_html(c["rate"], sub=BARE)}{bar}</span>'])  # fmt: skip
     return (f'<h3 class="sub-h">Serving ladder, {len(ladder):,} concurrencies</h3>'
             + stacked(["Concurrent requests", "Rate"], rows))  # fmt: skip
 
@@ -1435,13 +1455,14 @@ def dig(label, inner):
             f'<div class="dig-in">{inner}</div></details>')  # fmt: skip
 
 
-def tiles(cells):
-    """A block's figures as the Figures row draws them: each (head, figure html, id or "")."""
+def tiles(cells, cls=""):
+    """A block's figures as the Figures row draws them: each (head, figure html, id or ""); `cls`
+    a class more (words.css: "drawn", the tiles under a drawing)."""
     out = []
     for k, v, at in cells:
         place = f' id="{at}"' if at else ""
         out.append(f"<div{place}><dt>{k}</dt><dd>{v}</dd></div>")
-    return f'<dl class="figs tiles">{"".join(out)}</dl>'
+    return f'<dl class="figs tiles{f" {cls}" if cls else ""}">{"".join(out)}</dl>'
 
 
 def scope_html(*parts):
@@ -1648,22 +1669,60 @@ def rates_tile(row):
     return tile
 
 
+def rates_plot(row):
+    """CO-8 drawn: the two rates the band's multiple divides, each a mark at its own rate on one
+    decade axis of reply tokens per GPU-second, beside its figure: this system's proved rate the
+    solid mark, its model's served rate the outlined one, so the distance between the two marks
+    is the multiple. The figures are aligned on their decimal point, as in the tile this
+    replaces. Every place is a stored value; the multiple itself is the band's alone. None where
+    the row has no rate pair, a rate is not above zero or the two ran on different GPUs (one
+    axis holds one unit): the tile then prints what the row has."""
+    pair = rate_pair(row)
+    if pair is None:
+        return None
+    proved, served, gp, sg = pair
+    if gp != sg or min(proved["value"], served["value"]) <= 0:
+        return None
+    lines = [("me", RATE_PROVED, proved, counted(row), "me"), ("sv", "served", served, None, "ref")]
+    shown = [fig_html(f, k, sub=BARE, unit=RATE_PER.format(gpu=gp)) for _, _, f, k, _ in lines]
+    nums = [re.search(r'<span class="n">([^<]*)</span>', h)[1].partition(".") for h in shown]
+    whole, frac = max(len(a) for a, _, _ in nums), max(len(d + b) for _, d, b in nums)
+    lo, hi = log_extent([proved["value"], served["value"]])
+    grid = [log_x(10**k, lo, hi) for k in range(lo, hi + 1)]
+    ticks = [(g, decade_words(k)) for g, k in zip(grid, range(lo, hi + 1), strict=True)]
+    minor = [log_x(m * 10**k, lo, hi) for k in range(lo, hi) for m in (2, 5)]
+    rows = [(cls, e(w), on_point(h, whole, frac), log_x(f["value"], lo, hi), kind)
+            for (cls, w, f, _, kind), h in zip(lines, shown, strict=True)]  # fmt: skip
+    caption = e(f"{RATE_PER.format(gpu=gp)}, {SCALE_LOG}")
+    # the stretch between the two marks, shaded: what the multiple measures
+    between = tuple(x for *_, x, _ in rows)
+    return dot_plot(defined(FIGURE_HEAD["rate"], "rate"), caption, axis_svg(ticks, minor), grid,
+                    rows, RATE_ANCHOR, mean(COST_MEAN["rate"]), between)  # fmt: skip
+
+
 def parts_tile(row):
     """CO-7 (amended 2026-11-17): the band's multiple in its two parts, commit and proving then
-    generation, each with its unit; printed only here, on the system page, and only for a row that
+    generation, each with its unit, and the two as one bar from zero, split where the first ends; printed only here, on the system page, and only for a row that
     times them apart. None otherwise."""
     _, _, key = lead_figure(row)
     parts = parts_of(row, key)
     if not parts:
         return None
     n = counted(row)
-    figs = [(part_term(w), fig_html(f, n, sub=BARE, note=whole_note(row, key))) for w, f in parts]
-    return f'<span class="rts">{lines_html(figs)}</span>' + mean(COST_MEAN["parts"])
+    figs = [(f'<span class="ptk {c}">{part_term(w)}</span>',
+             fig_html(f, n, sub=BARE, note=whole_note(row, key)))
+            for (w, f), c in zip(parts, ("pp", "pg"), strict=True)]  # fmt: skip
+    # the two parts end to end, from zero to their sum, each in the ink of its word's mark
+    segs = [(f["value"], c) for (_, f), c in zip(parts, ("bp", "bg"), strict=True)]
+    whole = sum(v for v, _ in segs)
+    bar = hbar(segs, whole, h=14, cls="hb pbar") if whole > 0 and min(segs)[0] >= 0 else ""
+    return f'<span class="rts">{lines_html(figs)}</span>{bar}' + mean(COST_MEAN["parts"])
 
 
 def cost_block(row):
     """The Cost block (CO-1 to CO-8), led by its figures: the two rates the band's multiple
-    divides, its two parts where the row times them apart (CO-7, printed nowhere else), verify
+    divides, drawn on one axis (`rates_plot`; a tile where the row has no rate pair), its two
+    parts where the row times them apart (CO-7, printed nowhere else), verify
     time, proof size and, small, the cost in USD; what they share (scope,
     n, GPUs, evidence) once over them. How each side ran, every GPU time and the serving ladder
     one click down (`cost_html`)."""
@@ -1679,7 +1738,8 @@ def cost_block(row):
                                  ("size", figs["proof_bytes_per_reply"])) if has(f)]  # fmt: skip
     tier = evidence_words(shown) if shown else ""
     cells = []
-    rates = rates_tile(row)
+    plot = rates_plot(row)  # the two rates, drawn; else as a tile
+    rates = None if plot else rates_tile(row)
     if rates:
         cells.append((defined(FIGURE_HEAD["rate"], "rate"), rates, RATE_ANCHOR))
     if split := parts_tile(row):
@@ -1703,21 +1763,67 @@ def cost_block(row):
                       f'<span class="usd">{lines_html(under)}</span>', ""))  # fmt: skip
     return (
         scope_html(scope, gpus, tier)
-        + tiles(cells)
+        + (plot or "")
+        + tiles(cells, "drawn" if plot else "")
         + dig("GPU time, hardware and serving", cost_html(row))
     )
 
 
+def fidelity_plot(row, fid, tf, mine):
+    """SI-9 drawn: top-token agreement on one axis, from the ten under the lowest drawn value
+    (90 % at most) to 100 %, each end labelled; the rows of the table one click down (Q48: the
+    model's quantized copies and the bar's row, FI-3's in their order then any only this pass
+    has) as outlined marks and this system as the one solid mark, one row each, highest first as
+    the table orders them, each beside its labelled figure. A row that did not run prints "not
+    run" and is not drawn. n is said once, in the caption, where the drawn rows share it; else
+    under each figure. None where nothing ran."""
+
+    def ok(t):
+        return t is not None and t["status"] == "ok" and t.get("percent") is not None
+
+    def named(cid):
+        name, title = control_name(cid)
+        words = name.partition(" (")[0]
+        said = term(words, "Q8_0 and Q4_K_M") if cid in FIDELITY_AGAINST else e(words)
+        return f'<span title="{e(title)}">{said}</span>' if title else said
+
+    bar = ((fid or {}).get("bar") or {}).get("control")
+    fcs = {c["id"]: c for c in (fid or {}).get("controls") or []}
+    tcs = {c["id"]: c for c in tf.get("controls") or []}
+    ids = [i for i in (*fcs, *(k for k in tcs if k not in fcs)) if i == bar or FID_COPY.match(i)]
+    lines = [(mine, row["fidelity"], "me", e(name_of(row)), "me"),
+             *((tcs.get(i), fcs.get(i), "cp", named(i), "ref") for i in ids)]  # fmt: skip
+    drawn = [t for t, *_ in lines if ok(t)]
+    if not drawn:
+        return None
+    lo = min(10 * math.floor(min(t["percent"] for t in drawn) / 10), 90)
+    grid = [lin_x(v, lo, 100) for v in range(lo, 101, 10)]
+    ticks = [(x, f"{v} %") for x, v in zip(grid, range(lo, 101, 10), strict=True)]
+    ns = {t["n"] for t in drawn}  # one n for the drawing, or each row's under its figure
+    rows = []
+    for t, _, cls, word, kind in sorted(lines, key=lambda r: fid_score(r[0], r[1]), reverse=True):
+        own = [f"n\u00a0=\u00a0{t['n']:,} prompts"] if ok(t) and len(ns) > 1 else []
+        x = lin_x(t["percent"], lo, 100) if ok(t) else None
+        rows.append((cls, word, agree_html(t, tf, own), x, kind))
+    caption = "top-token agreement"
+    if len(ns) == 1:
+        caption += f", n\u00a0=\u00a0{next(iter(ns)):,} prompts"
+    head = defined(FIGURE_HEAD["fidelity"], FIGURE_ANCHOR["fidelity"])
+    return dot_plot(head, e(caption), axis_svg(ticks, wide=PLOT_BESIDE), grid, rows)
+
+
 def fidelity_block(row):
-    """The Fidelity block (SI-9): the Fidelity figure with its n, what the row proves, the 8-bit
-    and 4-bit copies, the Fidelity check's state with the matched leading tokens and the bar,
+    """The Fidelity block (SI-9): the Fidelity figure with its n among the quantized copies, drawn
+    on one axis (`fidelity_plot`; as tiles, with the 8-bit and 4-bit copies, where none ran), what
+    the row proves, the Fidelity check's state with the matched leading tokens and the bar,
     and KL to the original or "not measured" (law 2). Every copy, the tests, the publisher's words
     on the number format and the run's sources one click down (`fidelity_html`)."""
     rung = rung_of(row)
     fid, tf = rung["fidelity"], rung.get("teacher_forced")
     mine = (tf or {}).get("rows", {}).get(row["system"]) if tf else None
     cells = []
-    if tf and mine is not None:
+    plot = fidelity_plot(row, fid, tf, mine) if tf and mine is not None else None
+    if tf and mine is not None and not plot:
         sub = [f"top-token agreement, n\u00a0=\u00a0{mine['n']:,} prompts"]
         cells.append((defined(FIGURE_HEAD["fidelity"], FIGURE_ANCHOR["fidelity"]),
                       agree_html(mine, tf, sub), ""))  # fmt: skip
@@ -1726,7 +1832,7 @@ def fidelity_block(row):
         p = row["precision"]
         cells.append((term("Proved", "Proved"),
                       f'<span class="pw">{e(proved)}</span>{mean(p["proved"])}', "proved"))  # fmt: skip
-    if tf:
+    if tf and not plot:
         by = {c["id"]: c for c in tf.get("controls") or []}
         copies = [(e(COPY_WORD[i]), agree_html(by[i], tf, [])) for i in FIDELITY_AGAINST if i in by]
         if copies:
@@ -1748,7 +1854,11 @@ def fidelity_block(row):
     kl = (row["fidelity"] or {}).get("kl")
     cells.append((defined(FIGURE_NAME["kl"], "kl"),
                   fig_html(kl) if has(kl) else '<span class="na">not measured</span>', ""))  # fmt: skip
-    return tiles(cells) + dig("The copies, the tests and the sources", fidelity_html(row))
+    return (
+        (plot or "")
+        + tiles(cells, "drawn" if plot else "")
+        + dig("The copies, the tests and the sources", fidelity_html(row))
+    )
 
 
 def sessions_block(row):
