@@ -234,14 +234,38 @@ def where(d):
     return parts[-1]
 
 
-def run_link(row, run_id):
-    """A run by date and ordinal (its id in the title), linked to its record."""
+def run_path(system, run_id, name="run.json"):
+    """A file of a run's directory (RFC-0009 §Storage), by its path in the repository; None where
+    the board is not a release's (a preview), so no run directory stands behind it."""
     rel = S.V["release"]
-    label = f'<span title="{e(run_id)}">{e(where(run_id))}</span>'
     if rel is None or not str(rel["board"]).startswith("releases/"):
-        return f'<span class="rid">{label}</span>'
-    path = f"results/{rel['id']}/{row['system']}/{run_id}/run.json"
+        return None
+    return f"results/{rel['id']}/{system}/{run_id}/{name}"
+
+
+# the system whose runs are the serving baselines (inputs.engine reads its pin)
+SERVING_SYSTEM = "ref-serve"
+
+
+def run_link(row, run_id, system=None):
+    """A run by date and ordinal (its id in the title), linked to its record."""
+    path = run_path(system or row["system"], run_id)
+    if path is None:
+        return f'<span class="rid"><span title="{e(run_id)}">{e(where(run_id))}</span></span>'
     return f'<a class="rid" href="{e(link(path))}" title="{e(run_id)}">{e(where(run_id))}</a>'
+
+
+# a counted run's records beside its run.json (RFC-0009 §Storage): what it ran with, and what
+# the harness logged
+RUN_RECORDS = (("manifest", "manifest.json"), ("log", "logs/harness.jsonl"))
+
+
+def run_records(row, run_id):
+    """A run linked to its record, then to its manifest and its harness log, each piece kept
+    whole (the file's path in its title)."""
+    paths = [(w, run_path(row["system"], run_id, name)) for w, name in RUN_RECORDS]
+    return kept(run_link(row, run_id), *(f'<a class="rid" href="{e(link(p))}" title="{e(p)}">'
+                                         f"{e(w)}</a>" for w, p in paths if p))  # fmt: skip
 
 
 def run_words(path):
@@ -851,6 +875,31 @@ def verifying_html(row):
             f"{e(timed)}{untimed}</span></p>")  # fmt: skip
 
 
+def ran_html(row):
+    """The Ran on line: where the counted sessions ran and what with, as their manifests record
+    it (the provider, the image by its digest, the harness and adapter commits, each linked at
+    its full hash); each distinct value where the sessions differ."""
+    mc = row.get("machine") or {}
+    if not mc.get("provider"):
+        return ""
+
+    def commit(h):
+        return f'<a href="{e(S.REPO_URL)}/commit/{e(h)}" title="{e(h)}"><code>{e(h[:8])}</code></a>'
+
+    def image(ref):
+        name, _, digest = ref.rpartition("@")
+        short = f"{name.rsplit('/', 1)[-1]}@{digest[:15]}" if digest else ref
+        return f'<code title="{e(ref)}">{e(short)}</code>'
+
+    said = [e(words_or(mc["provider"]))]
+    if mc.get("image"):
+        said.append("image " + " or ".join(image(r) for r in mc["image"]))
+    for word, key in (("harness", "harness_commit"), ("adapter", "adapter_commit")):
+        if mc.get(key):
+            said.append(f"{word} " + " or ".join(commit(h) for h in mc[key]))
+    return f'<p class="rb"><span class="k">Ran on</span> <span>{", ".join(said)}</span></p>'
+
+
 def format_html(p):
     """The proved copy's number format in words, as the publisher states it (RFC-0018 SI-9,
     amended 2026-11-16): "integer weights, fixed-point activations, as the publisher states",
@@ -1056,8 +1105,11 @@ def cost_html(row):
                     f"<dd>{v}</dd></div>" for k, v in rows)  # fmt: skip
     against = (f'{e(SEP)}<a href="#proved">{e(PROVED_LINK[0])}</a>{e(PROVED_LINK[1])}'
                if row.get("precision") else "")  # fmt: skip
+    # the serving run, linked to its record as a session is
+    run = (f" ({run_link(row, base['run_id'], SERVING_SYSTEM)})"
+           if line and base.get("run_id") else "")  # fmt: skip
     serving = (f'<p class="rb"><span class="k">Serving</span> <span>{e(serving_words(base))}'
-               f"{against}</span></p>" if line else "")  # fmt: skip
+               f"{run}{against}</span></p>" if line else "")  # fmt: skip
     whole = e(whole_line(row, n)).replace(
         "whole sessions", term("whole sessions", "Whole session"), 1
     )
@@ -1070,7 +1122,7 @@ def cost_html(row):
                 "</span></p>" if shown else "")  # fmt: skip
     missing.pop(NO_STEADY_WORD, None)  # the sessions table prints each session's none and why
     return (f"{serving}{proving}{generation_html(row)}"
-            f"{verifying_html(row)}{size_html(row)}{reply_tokens_html(row)}{evidence}"
+            f"{verifying_html(row)}{size_html(row)}{reply_tokens_html(row)}{evidence}{ran_html(row)}"
             f"{cost_bars(row, drawn)}"
             f'<dl class="parts">{cells}</dl>{missing_html(missing)}{ladder_html(rung)}')  # fmt: skip
 
@@ -1890,7 +1942,7 @@ def sessions_block(row):
     for k, s in enumerate(row["sessions"]):
         at = f"{rec}/sessions/{k}"
         g = s.get("generation_gpu_seconds_per_reply")
-        cells = [str(s["slot"]), run_link(row, s["run_id"]),
+        cells = [str(s["slot"]), run_records(row, s["run_id"]),
                  plain(s["session"], GPU_S, f"{at}/session", whole),
                  *([plain(g, GPU_S, f"{at}/generation_gpu_seconds_per_reply", whole)] if gen else []),
                  steady_cell(s, at, steady),

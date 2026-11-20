@@ -9,7 +9,7 @@ The prompts are windows of public-domain books, cut with a seed from a [public r
 ## Commit, prove, verify
 
 :::figure flow
-The prover keeps the [[weights]], and the [[verifier]] gets the [[commitment]], the prompt, the reply and the proof, never the weights. An accepted proof says that the reply is the greedy reply of the copy the prover committed to. That claim is called [the statement](/statement).
+The prover keeps the [[weights]], and the [[verifier]] gets the [[commitment]], the prompt, the reply and the proof, never the weights. But not being given the weights is not the same as the weights staying hidden, since SASH states no hiding property and FlashProve proves [[zero knowledge]] for its protocol, not for the programs we run ([Confidentiality](/checks#weights_hidden)). An accepted proof says that the reply is the greedy reply of the copy the prover committed to. That claim is called [the statement](/statement).
 :::
 
 ## Six checks

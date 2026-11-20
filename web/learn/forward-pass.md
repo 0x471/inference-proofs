@@ -43,7 +43,9 @@ Generating a 512-token reply takes 512 passes in a row, but proving it can take 
 
 ## Zero knowledge
 
-Each opening reveals a linear equation over the weights, so an opening does not hide them. For the [Confidentiality](/checks#weights_hidden) petal, we read what publishers state and prove.
+When the prover commits to the weights, for example as the root of a [[Merkle tree]], it is bound to them, but that alone does not keep the proof from revealing them, which takes [[zero knowledge]] on top. Each opening reveals a linear equation over the weights, so an opening does not hide them. For the [Confidentiality](/checks#weights_hidden) petal, we read what publishers state and prove.
+
+A verifier works at its random test points and on the openings there, not on the whole pass, and its cost differs by system ([verify time on the ladder](/)).
 
 ## What an accepted proof rests on
 

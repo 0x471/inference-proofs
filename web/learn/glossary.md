@@ -178,6 +178,10 @@ A lookup argument is a proof that every value in a long list appears in a fixed 
 
 A proof is machine-checked when a proof assistant's kernel, such as Lean's, has checked it. What it takes on trust, such as the kernel and its axioms, is its trusted base. The [[formally verified|Formally verified]] petal grades how far such a proof of soundness reaches.
 
+### Merkle tree
+
+A tree of hashes built over a list of values. Each leaf is the hash of one value, each node above is the hash of its children, and the root at the top fixes every value under it, so the root is a [[commitment]] to them all. To open one value, the prover sends it with the hashes beside its path, and the verifier hashes up the path and compares the result with the root. FlashProve's commitment ID is a hash of, among other values, "the Merkle root and shape of the first weight table" ([its guide](https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/how-it-works.md?plain=1#L32-L37)).
+
 ### Met, Mostly met, Partly met
 
 Met is a petal's top step, Mostly met the step below it, and Partly met the lowest step above Not met. Each petal's rule on the [checks page](/checks#glyph) says what each needs. The site draws the steps as inks, and no printed word names an ink.

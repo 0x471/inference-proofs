@@ -19,6 +19,7 @@ Whoever acts on the verdict (a customer, an auditor, a regulator or an inspector
 - That the model is safe, or how it was trained.
 - What surrounds the model. A router, an output filter or a system prompt the verifier is not given can change what a user gets.
 - That the prompt and the reply stay private. The verifier reads them and other values, such as the model's sizes.
+- That the weights stay hidden. The verifier is not given them, but that is not the same as hiding them, and each system's [Confidentiality](/checks#weights_hidden) petal reads what its publisher states and proves.
 - That a proof will arrive. An operator can refuse or stall, and a contract or a treaty has to say what follows.
 - That nobody can forge one. [[Soundness]] rests on cryptographic assumptions, some of them conjectures, on code without bugs and, in some systems, on a trusted third party. [SASH's publisher](https://www.aisafety.sg/research/what-proving-llm-inference-actually-costs-research-note) writes that "bugs in deployed proof systems have let provers prove false statements before".
 

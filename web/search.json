@@ -783,6 +783,16 @@
     {
       "group": "Glossary",
       "kind": "term",
+      "meta": "A tree of hashes built over a list of values.",
+      "name": "Merkle tree",
+      "pie": "",
+      "terms": "merkle tree a tree of hashes built over a list of values.",
+      "tier": 4.2,
+      "url": "/glossary#merkle-tree"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
       "meta": "Met is a petal's top step, Mostly met the step below it, and Partly met the lowest step above Not met.",
       "name": "Met, Mostly met, Partly met",
       "pie": "",

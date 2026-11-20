@@ -55,7 +55,9 @@ Level 1 v1.0 ([RFC-0018](../rfcs/0018-level-1-ladder.md)) runs FlashProve on Lla
 | [0018](../rfcs/0018-level-1-ladder.md) | Level 1: the ladder, six checks, cost and fidelity | the level file, rungs, the common request, beacon prompts, sessions, the release-group steady rule, the serving ladder, the six checks, fidelity and KL, the five-petal glyph and its decision tables, the order rule, the board file, the site. Wins over earlier RFCs for a Level 1 release |
 | [0017](../rfcs/0017-requests-tasks-and-tested-states.md) | Requests, tasks and tested states | the request as the unit a reader compares, the per-request figures, the task rule, the median; then what the next runs add: control coverage, a baseline at the proved precision, one row per verifier |
 
-## Pinned upstreams for v0.1
+## Pinned upstreams
+
+Release v0.1 pinned these commits. Level 1 pins each system in `systems/<name>/system.yaml`.
 
 | System | Repository | Commit |
 |---|---|---|

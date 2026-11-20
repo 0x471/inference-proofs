@@ -57,6 +57,8 @@ Some rules added to [RFC-0018](repo:rfcs/0018-level-1-ladder.md) after the last 
 
 ## Getting a row
 
+A row is one system on one model of [the ladder](/), and the level chooses those models, never an entrant ([LV-2](repo:rfcs/0018-level-1-ladder.md#levels)). We run every row's three counted sessions ourselves, so a run you make elsewhere can go in the issue, but it is not a counted session.
+
 To get a system on the ladder, [open an issue](https://github.com/ai-verification-observatory/inference-proofs/issues) naming the upstream repository, the full commit hash and the workloads the system supports. The adapter then lands by pull request ([Writing an adapter](repo:systems/README.md)). A system with another statement or another kind of check is listed after the ladder as not run.
 
 When a changed input is accepted in our adapter, the check does not fail yet. It fails only once the system's own command, run outside the adapter, accepts that input too. Until then the check reads not decided, and we tell the publisher under [embargo](repo:SECURITY.md).
