@@ -23,11 +23,12 @@ import html
 import re
 
 from . import state as S
-from .chrome import LEARN_PAGE, footer, header, link, page
+from .chrome import LEARN_PAGE, MANDATE_PAGE, footer, header, link, page
 from .figures import EXPLORERS, FIGURES, MEASURED, STAGE_WORD
 from .glossary import Halt, defs, glossary, glossary_entries, plain, slug, squeeze, term  # noqa: F401
-from .overview import nobreak
-from .words import curly, e, quoted
+from .ladder import nobreak
+from .pages import mandate_parts
+from .words import MANDATE_BELIEF, curly, e, quoted
 
 # ------------------------------------------------------------------ inline
 TOKEN = re.compile(
@@ -453,8 +454,9 @@ def count(n, word):
 
 def build_hub():
     """The hub: the two tracks as two cells on the band's edge (a track's reader line in its
-    cell, none when it has none), each over its pages in reading order; then the glossary's
-    count of terms and every term."""
+    cell, none when it has none), each over its pages in reading order; then the mandate (its
+    belief and its sections, each a link into its page, which stands under Learn) and the
+    glossary's count of terms and every term."""
     lv = S.V["learn"]
     ways = "".join(
         f'<a class="lway" href="#{e(t["id"])}"><span class="lwn">{e(t["name"])}</span>'
@@ -481,12 +483,19 @@ def build_hub():
     both = (f'<section class="lgl" id="terms" aria-labelledby="h-terms"><h2 class="trh lgh" '
             f'id="h-terms"><a href="/{g["slug"]}">{e(g["title"])}</a></h2>'
             f'<p class="hs">{count(len(found), "term")}</p><ul class="lgt">{names}</ul></section>')  # fmt: skip
+    # the mandate: who runs the site, what it does and how to check it, a page under Learn
+    parts = "".join(f'<li><a href="{MANDATE_PAGE}#{sid}">{e(title)}</a></li>'
+                    for sid, title in mandate_parts())  # fmt: skip
+    mandate = (f'<section class="lgl" id="mandate" aria-labelledby="h-mandate"><h2 class="trh lgh" '
+               f'id="h-mandate"><a href="{MANDATE_PAGE}">Mandate</a></h2>'
+               f'<p class="hs">{e(MANDATE_BELIEF)}</p><ul class="lgt">{parts}</ul></section>')  # fmt: skip
     body = f"""
 {header("learn")}
 <main id="main">
   {band("", lv["title"], lv["lead"], f'<nav class="lways" aria-label="Tracks">{ways}</nav>')}
   <div class="wrap">
     <div class="trks">{"".join(track_html(t) for t in tracks())}</div>
+    {mandate}
     {both}
   </div>
 </main>

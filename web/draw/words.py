@@ -965,15 +965,19 @@ REASON_LINK = {
     ("CHECK_MORE", "bar"): ("bar", "/method#the-checks"),
     ("ORDER_RULE", "models"): ("across models", "/method"),
 }
-# ------------------------------------------------------------------ the scale page (RFC-0018 SI-7)
+# ------------------------------------------------------------------ the overview page (RFC-0018 SI-7)
 SCALE_LOG = "log scale"  # beside an axis's unit
 SCALE_SERVING = "Serving"  # a lane's foot: serving's line and its stored figure
-# a model no system has run on (the ladder, the scale page); its serving line keeps "not run yet"
+# a model no system has run on (the ladder, the overview page); its serving line keeps "not run yet"
 SCALE_NOT_RUN = "no system run yet"
-# the start of the scale page's description and search line, before its figures' names
-SCALE_LEAD = "Every system run, on a log axis"
+# the start of the overview page's description and search line, before its figures' names
+OVERVIEW_LEAD = "Every system run, on a log axis"
 # beside the size tab of the frontier's rung on the ladder (OR-6: the largest with a passed row)
 FRONTIER_WORD = "Largest model with a passed row"
+# ------------------------------------------------------------------ the autoresearch page
+# announced, not open yet: the tab's word, the page's title, and what the page says
+AUTORESEARCH_TITLE = "Autoresearch"
+AUTORESEARCH_SOON = "Coming soon"
 # ------------------------------------------------------------------ the mandate page
 # The headline, then who runs it, its ties, what we do, what we do not do, how to check us and how
 # a row is changed, with the dated corrections: each line

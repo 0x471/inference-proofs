@@ -372,7 +372,7 @@
     pnav.classList.toggle('stuck', !!mast && mast.getBoundingClientRect().bottom < pnav.getBoundingClientRect().top - 1);
     // the title slides into the strip or out of it: the marked label is made whole again once it has (below)
     if (wasStuck !== pnav.classList.contains('stuck')) requestAnimationFrame(rewhole);
-    // the scale page's strip marks the figure drawn, not the section in view (below)
+    // the overview page's strip marks the figure drawn, not the section in view (below)
     if (panels.length) { petalSpy(); return; }
     let k = -1;
     // a section is in view once its top has passed a third of the window under the strip (48 px at least); of two
@@ -458,10 +458,10 @@
   const stripTitle = strip && $('.ps-t', strip);
   if (stripTitle) stripTitle.addEventListener('transitionend', (ev) => { if (ev.propertyName === 'max-width') rewhole(); });
 
-  // ------------------------------------------------------------ the scale page: its strip picks the one figure drawn, and
+  // ------------------------------------------------------------ the overview page: its strip picks the one figure drawn, and
   // the address keeps it (no history entry, no scroll); an address naming none draws the first. With no script every
   // figure is drawn
-  const panels = body.classList.contains('scalepage') ? secs.filter(Boolean) : [];
+  const panels = body.classList.contains('overviewpage') ? secs.filter(Boolean) : [];
   const pick = (id, keep) => {
     const k = Math.max(0, panels.findIndex((s) => s.id === id));
     panels.forEach((s, i) => { s.hidden = i !== k; });
@@ -627,7 +627,7 @@
   };
   let col = [12, 12];  // the column's sides, read once when the probe is filled
   let near = [];  // the page's other labelled things, read once when the probe is filled
-  let titles = [];  // the models' names and size tabs (the ladder, the Scale page), read with them
+  let titles = [];  // the models' names and size tabs (the ladder, the Overview page), read with them
   // Next to the figure, inside the window, never over it: under the figure and the line under it, over its name,
   // over the figure, beside it on the right, then on the left. The first of these places that covers no other figure
   // and no model's name; else the first that covers no model's name; else the first that covers only neighbours (a
@@ -687,7 +687,7 @@
     probe.scrollTop = 0;
     size = [probe.offsetWidth, probe.offsetHeight];
     col = gutters(el, size[0]);
-    // a model's head (its name) on the ladder and the Scale page is never covered either
+    // a model's head (its name) on the ladder and the Overview page is never covered either
     near = $$(`${FIG}, .rh, .lh`, main).filter((e) => e !== el && !e.contains(el) && !el.contains(e));
     titles = $$('.rm, .ln, .rk', main);
     // nor the name and petals of the figure's own row
@@ -803,7 +803,7 @@
     const focused = () => !!at && (at === document.activeElement || at.closest('a.flk') === document.activeElement);
     away.push(() => { if (!at) return; if (byKey && focused()) place(at); else { clearPetal(); hide(); } });
     // a figure's labels reach the keyboard too: outside links, a figure takes focus and shows them, on the ladder's
-    // and the Scale page's rows as everywhere
+    // and the Overview page's rows as everywhere
     $$('.fig[title], .na[title], .part[title]', main).forEach((el) => { if (!el.closest('a')) el.tabIndex = 0; });
     // Escape puts the labels away. Labels shown by the keyboard and cut by a short window scroll with the arrows while
     // their figure has focus; at either end the arrow is left to the browser, which scrolls the page

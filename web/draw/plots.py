@@ -61,7 +61,7 @@ def fid_svg(value, bar, top, kind, h=18):
 # ------------------------------------------------------------------ a dot plot: named rows, one axis
 # The Cost and Fidelity blocks open with one: each row a word, its labelled figure and its plot,
 # every plot on the axis drawn once over them. A plot is SVG with no viewBox: every horizontal
-# coordinate is a percentage of its cell (as on the Scale page), so text keeps its size at any
+# coordinate is a percentage of its cell (as on the Overview page), so text keeps its size at any
 # width and no inline style is needed. A mark is a position only: no number is printed here.
 AX_H, ROW_H = 40, 48  # the axis's height and a row's plot's, in px: a row has room around its mark
 ADV = 7.8  # a 12 px tick label's advance per character, in px (Martian Mono at 87.5 %: 0.65 em)

@@ -14,7 +14,7 @@ def test_page_styles_keep_shared_rules(board_site: Any) -> None:
     sections = json.loads((board_site.out / "styles.json").read_text())["sections"]
     home = build.page_styles("home")
     learn = build.page_styles("system learnpage")
-    scale = build.page_styles("system scalepage")
+    scale = build.page_styles("system overviewpage")
     system = build.page_styles("system syspage")
     assert ".gpk{" in home  # Glossary previews also appear outside Learn.
     assert ".ln{" in home  # Scale and 404 cards share name typography.
@@ -25,7 +25,7 @@ def test_page_styles_keep_shared_rules(board_site: Any) -> None:
         else:
             assert css not in home
             assert (css in learn) == (scope in {"learn", "details"})
-            assert (css in scale) == (scope in {"scale", "details"})
+            assert (css in scale) == (scope in {"overview", "details"})
             assert (css in system) == (scope == "details")
     assert len(home) < sum(len(p["css"]) for p in sections) * 0.6
 

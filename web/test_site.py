@@ -277,12 +277,12 @@ def test_system_page_drawings_sit_where_the_figures_say(board_site: Any) -> None
 
 
 def test_scale_positions_are_the_boards(board_site: Any) -> None:
-    """RFC-0018 SI-7: on the scale page, each mark sits where its row's printed figure falls on
+    """RFC-0018 SI-7: on the overview page, each mark sits where its row's printed figure falls on
     the figure's one decade grid, its session ticks where the board's sessions fall, serving's
     line where the rung's baseline falls; a row not passed is an outline; lanes and rows keep the
     board's order. The extents and two positions are hand-computed for the example board."""
     board = board_site.board
-    text = pages(board_site.out)["scale.html"]
+    text = pages(board_site.out)["overview.html"]
     lanes = SCALE_LANE.findall(text)
     assert len(lanes) == 3  # one table per figure, every lane under its one axis
     seen: dict[str, list[str]] = {}
@@ -330,10 +330,10 @@ def test_session_parts_print_on_the_system_page_only(board_site: Any) -> None:
     parts, and they print only under Cost on its system page (not every system times them apart,
     so no surface carries them). In the example board SASH's session is 604.9 GPU-s per reply, of
     which 100.0 generation and 504.9 commit and proving: both parts' figures are on its page, and
-    neither is on the ladder, the Scale page or the card."""
+    neither is on the ladder, the Overview page or the card."""
     out = board_site.out
     at = "/rungs/1/rows/0/session_"
-    for page in ("index.html", "scale.html", "sash.html", "og/sash.html"):
+    for page in ("index.html", "overview.html", "sash.html", "og/sash.html"):
         text = html.unescape((out / page).read_text())
         for part in ("generation_multiple", "commit_and_proving_multiple"):
             assert (f"{at}{part}" in text) == (page == "sash.html"), (page, part)

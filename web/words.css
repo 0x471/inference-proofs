@@ -697,14 +697,23 @@ a.fig.fp:hover .n { text-decoration: underline; text-decoration-thickness: 1px; 
   .rung > .none { margin-top: 12px; font-size: 24px; }
 }
 /* a narrow phone: the multiple a step smaller */
+/* the five tabs keep to a phone's window: each takes its word's width and a share of what is left, and the
+   room beside a word and between its letters steps down with the window */
+@media (max-width: 760px) {
+  .tabs .tab { flex: 1 1 auto; padding-inline: 6px; }
+}
+@media (max-width: 400px) {
+  .tabs .tab { padding-inline: 4px; }
+}
 @media (max-width: 374px) {
   .lad .cm .fig .n { font-size: 24px; }
+  .top .tabs { letter-spacing: .04em; }
 }
 /* the narrowest phones: a smaller name and multiple; the sessions table's units under their numbers, in every
    cell alike */
 @media (max-width: 350px) {
-  /* the five tabs keep to the window: less room beside each word */
-  .tabs .tab { padding-inline: 3px; }
+  /* the five tabs keep to the window: less room beside each word, in smaller letters */
+  .tabs .tab { padding-inline: 3px; font-size: 10px; }
   .sname { font-size: 24px; line-height: 22px; }
   .lad .cm .fig .n { font-size: 22px; }
   /* a system's page keeps to the window too: the Cost block's scope words may break, and a long figure of the
@@ -715,18 +724,18 @@ a.fig.fp:hover .n { text-decoration: underline; text-decoration-thickness: 1px; 
   .rt.stk:not(.fid) .fig .u { flex-basis: 100%; }
 }
 
-/* ---------------------------------------------------------------- names shared by the Scale page and 404 cards */
+/* ---------------------------------------------------------------- names shared by the Overview page and 404 cards */
 .ln { display: block; margin: 12px 0 0; font: 900 30px/.95 var(--disp); letter-spacing: -.005em; text-wrap: balance; }
 @media (max-width: 760px) { .ln { font-size: 28px; } }
 .lx, .ax { display: block; overflow: visible; }
 
-/* ---------------------------------------------------------------- the scale page: every row on a decade axis, one figure at a time (scale.py).
+/* ---------------------------------------------------------------- the overview page: every row on a decade axis, one figure at a time (overview.py).
    A section per figure (with script the strip picks the one drawn): one table, its axis once at the head, a
    group (lane) per model under a cobalt rule, every lane on the one decade grid. A mark carries standing, never a state ink: passed a paper square,
    not passed a ground square in a muted outline; its sessions' ticks and range in the same ink */
-.scalepage .blk > .sect { margin: 0; padding-bottom: var(--s4); border-bottom: 1px solid var(--rule); font: 900 28px/1 var(--disp); letter-spacing: 0; text-transform: none; color: var(--paper); }
-html.js .scalepage .scl-panel > .sect { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; padding: 0; border: 0; }
-html.js .scalepage .scl-panel { margin-top: 0; }
+.overviewpage .blk > .sect { margin: 0; padding-bottom: var(--s4); border-bottom: 1px solid var(--rule); font: 900 28px/1 var(--disp); letter-spacing: 0; text-transform: none; color: var(--paper); }
+html.js .overviewpage .scl-panel > .sect { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; padding: 0; border: 0; }
+html.js .overviewpage .scl-panel { margin-top: 0; }
 .scl .grp > th:first-child { padding: var(--s6) 0 var(--s3); border-bottom: 0; color: var(--paper); }
 .scl .lane:first-of-type .grp > th:first-child { padding-top: 24px; }
 .lh { display: block; border-top: 3px solid var(--cobalt); }
@@ -810,7 +819,7 @@ html.js .scalepage .scl-panel { margin-top: 0; }
 }
 @media print {
   .scl-panel[hidden] { display: block; }
-  html.js .scalepage .scl-panel > .sect { position: static; width: auto; height: auto; clip-path: none; padding-bottom: 14px; border-bottom: 1px solid var(--rule); }
+  html.js .overviewpage .scl-panel > .sect { position: static; width: auto; height: auto; clip-path: none; padding-bottom: 14px; border-bottom: 1px solid var(--rule); }
 }
 @media (forced-colors: active) {
   .lx, .ax { forced-color-adjust: none; }
@@ -821,6 +830,8 @@ html.js .scalepage .scl-panel { margin-top: 0; }
   .ax .tl { fill: CanvasText; }
 }
 
+/* ---------------------------------------------------------------- a page announced and not open yet (autoresearch): two words under its band */
+.soon { margin: var(--s7) 0 0; padding-bottom: var(--s4); border-bottom: 1px solid var(--line); font: 800 22px/1 var(--disp); color: var(--muted); }
 /* ---------------------------------------------------------------- a section label: small capitals over a rule */
 .sect { font: var(--f-label); color: var(--muted); text-transform: uppercase; letter-spacing: var(--track); margin: 0; padding-bottom: 12px; border-bottom: 1px solid var(--rule); }
 /* a section's heading (the system, checks, mandate and 404 pages, the systems not run): a modest
@@ -1382,7 +1393,7 @@ a.pvd:hover { text-decoration: underline 2px; text-underline-offset: 4px; }
 .lost .ln { font: 900 32px/.95 var(--disp); text-wrap: balance; }
 .lsys a { grid-template-columns: 50px minmax(0, 1fr); column-gap: 16px; row-gap: 6px; align-items: start; }
 .lsys svg { grid-row: 1 / span 2; }
-/* the glyph's top level with the name's line (the scale page's name margin is not this cell's) */
+/* the glyph's top level with the name's line (the overview page's name margin is not this cell's) */
 .lsys .ln { margin-top: 0; }
 .lsys .lp { font: var(--f-meta); letter-spacing: 0; text-transform: none; }
 .lost a:hover { background: var(--lift); box-shadow: inset 3px 0 0 var(--cobalt); }

@@ -19,7 +19,7 @@ import re
 from . import state as S
 from .chrome import CHECKS_PAGE, counted, has, lead_figure, rung_of, standing
 from .glossary import term
-from .overview import (
+from .ladder import (
     BARE,
     baseline_html,
     fig_html,
