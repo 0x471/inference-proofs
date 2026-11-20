@@ -462,18 +462,8 @@
   // the address keeps it (no history entry, no scroll); an address naming none draws the first. With no script every
   // figure is drawn
   const panels = body.classList.contains('overviewpage') ? secs.filter(Boolean) : [];
-  // where each system's mark, pole and flag stand in a panel, by system and part
+  // where each system stands in a panel (its box holds its mark and its flag)
   const stands = (panel) => new Map($$('[data-s]', panel).map((el) => [el.dataset.s + ' ' + el.classList[0], [el, el.getBoundingClientRect()]]));
-  // a drawing set by size whose rungs meet in this browser (another face, a larger text size) is set one rung under
-  // the other instead, as the build does where the sizes leave no room
-  const fit = (panel) => {
-    const ov = panel && $('.ov.osc', panel);
-    if (!ov || narrowPlot.matches) return;
-    const rungs = $$('.org', ov);
-    const meet = rungs.some((g, i) => i < rungs.length - 1 && Math.max(...$$('.orh, .ofl', g).map((el) => el.getBoundingClientRect().bottom)) > rungs[i + 1].getBoundingClientRect().top - 4);
-    if (meet) { ov.classList.remove('osc'); ov.classList.add('oev'); }
-  };
-  const narrowPlot = matchMedia('(max-width: 900px)');
   const pick = (id, keep) => {
     const k = Math.max(0, panels.findIndex((s) => s.id === id));
     const from = panels.find((s) => !s.hidden);
@@ -492,7 +482,6 @@
     }
     links.forEach((a, i) => { a.classList.toggle('on', i === k); if (i === k) a.setAttribute('aria-current', 'true'); else a.removeAttribute('aria-current'); snug(a); });
     if (links[k]) whole(links[k], 'auto');
-    fit(panels[k]);
     if (!keep) return;
     if (was && links[k]) say(links[k].textContent);
     history.replaceState(null, '', `#${panels[k].id}`);
@@ -508,7 +497,6 @@
     }));
     // an address that names no figure (the skip link's #main) leaves the figure drawn as it is
     addEventListener('hashchange', () => { const id = decodeURIComponent(location.hash.slice(1)); if (panels.some((s) => s.id === id)) pick(id); });
-    addEventListener('resize', () => fit(panels.find((s) => !s.hidden)), { passive: true });
   }
   if (strip) strip.addEventListener('focusin', (ev) => { const a = ev.target.closest('a'); if (a && a.matches(':focus-visible')) whole(a, 'auto'); });
   // on a phone, a jump within the page first sets the bar as the scroll will leave it (away on the way down, back on
@@ -717,7 +705,7 @@
     size = [probe.offsetWidth, probe.offsetHeight];
     col = gutters(el, size[0]);
     // a model's head (its name) on the ladder and the Overview page is never covered either
-    near = $$(`${FIG}, .rh, .lh, .orh, .ov .mk`, main).filter((e) => e !== el && !e.contains(el) && !el.contains(e));
+    near = $$(`${FIG}, .rh, .lh, .ov .mk`, main).filter((e) => e !== el && !e.contains(el) && !el.contains(e));
     titles = $$('.rm, .ln, .rk', main);
     // nor the name and petals of the figure's own row
     const own = el.closest('.row');

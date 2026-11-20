@@ -218,25 +218,24 @@ def test_every_rung_not_run_without_a_board(empty_site: Path) -> None:
 
 
 OVERVIEW_PANEL = re.compile(
-    r'<div class="ov (osc|oev)(?: oln)?" id="ov-([a-z-]+)" data-lo="(-?\d+)" data-hi="(-?\d+)">(.*?)'
-    r'(?=<section class="blk ovp"|<section class="notrun"|</main>)',
+    r'<div class="ov" id="ov-([a-z-]+)"(?: data-xlo="(-?\d+)" data-xhi="(-?\d+)" '
+    r'data-ylo="(-?\d+)" data-yhi="(-?\d+)")?>(.*?)(?=<section class="blk ovp"|<section class="omd")',
     re.S,
 )
 
 
-def overview_rungs(dim: str, body: str) -> list[tuple[str, str]]:
-    """A panel's rungs as (model id, markup), in the page's order."""
-    return re.findall(
-        rf'<section class="org" id="ov-{dim}-([^"]+)"[^>]*>(.*?)</section>', body, re.S
-    )
+def overview_panels(text: str) -> dict[str, tuple[tuple[int, ...] | None, str]]:
+    """The Overview page's sections by figure: the two axes' ends (xlo, xhi, ylo, yhi), or None
+    where the section draws no plot, and the section's markup."""
+    return {dim: (tuple(int(v) for v in ends) if ends[0] else None, body)
+            for dim, *ends, body in OVERVIEW_PANEL.findall(text)}  # fmt: skip
 
 
-def overview_boxes(dim: str, body: str) -> list[tuple[str, str, str]]:
-    """A panel's systems as (ok or np, " nov" where no mark is drawn, page)."""
-    return re.findall(rf'<div class="obx (ok|np)( nov)?" id="ob-{dim}-([^"]+)">', body)
-
-
-OVERVIEW_FLAG = re.compile(r'<div class="ofl row[^"]*" data-s="([^"]+)">(.*?)<p class="st">', re.S)
+def overview_place(text: str, name: str, key: str) -> str:
+    """A custom property the page's own rules set on the element with that id."""
+    found = re.search(rf"#{re.escape(name)}\{{[^}}]*--{key}:([^;}}]+)", text.replace("\\", ""))
+    assert found, name
+    return found[1]
 
 
 def at(lo: int, hi: int, v: float) -> str:
@@ -290,108 +289,82 @@ def test_system_page_drawings_sit_where_the_figures_say(board_site: Any) -> None
 
 
 def test_overview_positions_are_the_boards(board_site: Any) -> None:
-    """RFC-0018 SI-7: on the Overview page, each mark stands where its row's printed figure falls
-    on the figure's one axis, its session ticks where the board's sessions fall, serving's mark at
-    1x where the rung has a baseline; a row not passed is an outline; rungs and rows keep the
-    board's order, and a rung stands at its parameter count on the size axis. The extents, two
-    places across and one down are hand-computed for the example board."""
+    """RFC-0018 SI-7: on the Overview page a system's mark stands where its two printed figures
+    meet, cost vs serving across and the section's figure up, each on its one axis over the
+    whole board, its session ticks where the board's sessions fall; a row not passed is an
+    outline; the systems keep the board's order. The extents and two places are hand-computed
+    for the example board."""
     board = board_site.board
     text = pages(board_site.out)["overview.html"]
-    panels = {dim: (mode, int(lo), int(hi), body) for mode, dim, lo, hi, body
-              in OVERVIEW_PANEL.findall(text)}  # fmt: skip
-    assert list(panels) == ["multiple", "proof-size", "check-time", "fidelity"]
-
-    def place(name: str, key: str) -> str:
-        found = re.search(rf"#{re.escape(name)}\{{--{key}:([^;}}]+)", text.replace("\\", ""))
-        assert found, name
-        return found[1]
-
-    for dim in ("multiple", "proof-size", "check-time"):
-        mode, lo, hi, body = panels[dim]
-        assert mode == "osc"  # the example's three models leave room: the rungs are set by size
-        rungs = overview_rungs(dim, body)
-        assert [rid for rid, _ in rungs] == [r["id"] for r in board["rungs"]]
-        for rung, (rid, section) in zip(board["rungs"], rungs, strict=True):
-            states = {page: (state, bool(nov)) for state, nov, page in overview_boxes(dim, section)}
-            flags = OVERVIEW_FLAG.findall(section)
-            # a box holds the boxes before it, so the flags read in the board's order
-            assert [page for page, _ in flags] == [r["system"] for r in rung["rows"]], (dim, rid)
-            ticks: list[str] = []
-            for row, (page, flag) in zip(rung["rows"], flags, strict=True):
-                title = FIG.search(flag)
-                assert title, (dim, page)
-                pointer = re.search(r"record: [^#]+#(/[^;\"]+)", html.unescape(title[1]))
-                assert pointer
-                stored = resolve(board, pointer[1])
-                assert resolve(board, pointer[1].rsplit("/", 1)[0])["system"] == row["system"]
-                assert states[page] == ("ok" if row["passed"] else "np", False), (dim, page)
-                v = stored["value"] * (1e-6 if stored["unit"] == "B/request" else 1)
-                assert place(f"ob-{dim}-{page}", "x") == at(lo, hi, v), (dim, page)
-                # CO-5 (amended 2026-11-15): the whole sessions' scope wherever the row has it
-                steady = row["session_multiple"]["value"] is None
-                runs = [s["m" if steady else "session"] for s in row["sessions"]]
-                if dim == "multiple":
-                    b = rung["baseline"]["gpu_seconds_per_reply"]["value"]
-                    ticks += [at(lo, hi, r / b) for r in runs if r is not None]
-            assert re.findall(r'<line class="ss (?:ok|np)" x1="([^"]+)"', section) == ticks
-            served = (rung["baseline"] or {}).get("reply_tokens_per_gpu_second") or {}
-            serving = dim == "multiple" and rung["rows"] and served.get("value")
-            assert re.findall(r'<svg class="rfm" x="([^"]+)"', section) == (
-                [at(lo, hi, 1.0)] if serving else []
-            ), (dim, rid)
+    panels = overview_panels(text)
+    assert list(panels) == ["check-time", "proof-size", "fidelity"]
+    figure = {"check-time": "verify_seconds_per_reply", "proof-size": "proof_bytes_per_reply"}
+    for dim, key in figure.items():
+        ends, body = panels[dim]
+        assert ends is not None, dim
+        xlo, xhi, ylo, yhi = ends
+        boxes = re.findall(rf'<div class="obx (ok|np)[^"]*" id="ob-{dim}-([^"]+)"', body)
+        assert [page for _, page in boxes] == [r["system"] for r in rows(board)], dim
+        ticks: list[str] = []
+        for (state, page), rung in zip(boxes, [g for g in board["rungs"] for _ in g["rows"]],
+                                       strict=True):  # fmt: skip
+            row = next(r for r in rung["rows"] if r["system"] == page)
+            assert state == ("ok" if row["passed"] else "np"), (dim, page)
+            # CO-5 (amended 2026-11-15): the whole sessions' scope wherever the row has it
+            steady = row["session_multiple"]["value"] is None
+            x = row["multiple" if steady else "session_multiple"]["value"]
+            y = row[key]["value"] * (1e-6 if row[key]["unit"] == "B/request" else 1)
+            assert overview_place(text, f"ob-{dim}-{page}", "x") == at(xlo, xhi, x), (dim, page)
+            assert overview_place(text, f"ob-{dim}-{page}", "y") == at(ylo, yhi, y), (dim, page)
+            b = rung["baseline"]["gpu_seconds_per_reply"]["value"]
+            runs = [s["m" if steady else "session"] for s in row["sessions"]]
+            ticks += [at(xlo, xhi, r / b) for r in runs if r is not None]
+        assert re.findall(r'<svg class="ss (?:ok|np)" x="([^"]+)"', body) == ticks, dim
     # hand-computed: the multiple from 1x to 1,000x (sessions up to 612 / 1.408 = 434.6x);
     # FlashProve at its whole sessions' scope, 49.83 / 0.6024 = 82.72x (log10 / 3 = 63.92 %), not
     # its steady 68.31x; its proof, 18.79 MB between 1 and 100 MB (log10 / 2 = 63.70 %)
-    assert [panels[d][1:3] for d in ("multiple", "proof-size", "check-time")] == [
-        (0, 3), (0, 2), (0, 2)]  # fmt: skip
-    assert place("ob-multiple-flashprove", "x") == "63.92%"
-    assert place("ob-proof-size-flashprove", "x") == "63.70%"
-    # and down: 400B parameters under the 1T decade, 130 px a decade below 28 px of room:
-    # 28 + (12 - log10(4e11)) x 130 = 28 + 0.39794 x 130 = 79.7 px
-    assert place("ov-multiple-llama-4-maverick", "y") == "79.7px"
-    # a board with no Fidelity figure draws no Fidelity axis and no mark: each flag says the check's state
-    boxes = overview_boxes("fidelity", panels["fidelity"][3])
-    assert boxes
-    assert all(nov for _, nov, _ in boxes)
+    assert panels["check-time"][0] == (0, 3, 0, 2)
+    assert panels["proof-size"][0] == (0, 3, 0, 2)
+    assert overview_place(text, "ob-proof-size-flashprove", "x") == "63.92%"
+    assert overview_place(text, "ob-proof-size-flashprove", "y") == "63.70%"
+    # a board with no Fidelity figure draws no Fidelity plot: every row is listed under its head
+    ends, body = panels["fidelity"]
+    assert ends is None
+    assert re.findall(r'<li class="(?:ok|np)" id="of-fidelity-([^"]+)"', body) == [
+        r["system"] for r in rows(board)
+    ]
 
 
 def test_overview_fidelity_positions_are_the_boards(release_site: Any, board_site: Any) -> None:
-    """RFC-0018 SI-7 (amended 2026-11-20): on the Overview page's Fidelity drawing each mark stands
-    at its row's `percent`, and each of its model's 8-bit and 4-bit copies at its own, on one
-    axis from the ten under the lowest drawn value to 100 %. The axis's rule is hand-computed:
-    over 86.4, 85.5 and 96.2 % it runs from 80, where 86.4 % stands at (86.4 - 80) / 20 = 32 %
-    of the way; a value of 0 % is drawn, at the axis's start."""
+    """RFC-0018 SI-7 (amended 2026-11-20): on the Overview page's Fidelity plot a mark stands at
+    its row's `percent` up, on an axis from the ten under the lowest drawn value to 100 %, and at
+    its multiple across. The axis's rule is hand-computed: over 86.4 and 92.0 % it runs from 80,
+    where 86.4 % stands at (86.4 - 80) / 20 = 32 % of the way; a value of 0 % is drawn, at the
+    axis's start."""
     build = board_site.build
-    assert build.share_extent([86.4, 85.5, 96.2]) == (80, 100)
+    assert build.share_extent([86.4, 92.0]) == (80, 100)
     assert build.pc(build.lin_x(86.4, 80, 100)) == "32.00%"
     assert build.share_extent([0.0, 96.2]) == (0, 100)
     assert build.share_extent([97.0, 99.0]) == (90, 100)  # never a narrower stretch than 10 %
     board = release_site.board
     text = pages(release_site.out)["overview.html"]
-    panels = {
-        dim: (int(lo), int(hi), body) for _, dim, lo, hi, body in OVERVIEW_PANEL.findall(text)
-    }
-    lo, hi, body = panels["fidelity"]
+    ends, _ = overview_panels(text)["fidelity"]
+    assert ends is not None, "the release draws no Fidelity figure"
+    xlo, xhi, lo, hi = ends
     drawn: list[float] = []
-    for rung, (_, section) in zip(board["rungs"], overview_rungs("fidelity", body), strict=True):
+    for rung in board["rungs"]:
         tf = rung.get("teacher_forced") or {}
-        rows = [(r["system"], (tf.get("rows") or {}).get(r["system"], {}).get("percent"))
-                for r in rung["rows"]]  # fmt: skip
-        copies = {c["id"]: c["percent"] for c in tf.get("controls") or []
-                  if c["id"] in ("q8_0", "q4_k_m") and c["status"] == "ok"}  # fmt: skip
-        want = sorted(copies.values()) if rung["rows"] else []
-        assert re.findall(r'<svg class="rfm" x="([^"]+)"', section) == [
-            f"{100 * (v - lo) / (hi - lo):.2f}%" for v in want
-        ], rung["id"]
-        drawn += want
-        for system, percent in rows:
+        for row in rung["rows"]:
+            percent = (tf.get("rows") or {}).get(row["system"], {}).get("percent")
             if percent is None:
                 continue
-            found = re.search(rf"#ob-fidelity-{re.escape(system)}\{{--x:([^;}}]+)", text)
-            assert found, system
-            assert found[1] == f"{100 * (percent - lo) / (hi - lo):.2f}%", system
+            name = f"ob-fidelity-{row['system']}"
+            assert overview_place(text, name, "y") == f"{100 * (percent - lo) / (hi - lo):.2f}%"
+            steady = row["session_multiple"]["value"] is None
+            x = row["multiple" if steady else "session_multiple"]["value"]
+            assert overview_place(text, name, "x") == at(xlo, xhi, x), name
             drawn.append(percent)
-    assert drawn, "the release draws no Fidelity figure"
+    assert drawn
     assert (lo, hi) == (min(90, 10 * math.floor(min(drawn) / 10)), 100)
 
 

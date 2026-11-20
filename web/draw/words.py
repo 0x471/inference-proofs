@@ -971,9 +971,9 @@ SCALE_SERVING = "Serving"  # a lane's foot: serving's line and its stored figure
 # a model no system has run on (the ladder, the overview page); its serving line keeps "not run yet"
 SCALE_NOT_RUN = "no system run yet"
 # the start of the overview page's description and search line, before its figures' names
-OVERVIEW_LEAD = "Every system run, each on its model's rung by size"
-# the head of the size axis, down the drawing's right side
-SIZE_AXIS = "parameters, log scale"
+OVERVIEW_LEAD = "Every system run, on one plot"
+# over the rows a plot of the overview page could not place: one of their two figures is missing
+OVERVIEW_OFF = "Not on the plot, a figure missing"
 # beside the size tab of the frontier's rung on the ladder (OR-6: the largest with a passed row)
 FRONTIER_WORD = "Largest model with a passed row"
 # ------------------------------------------------------------------ the autoresearch page
