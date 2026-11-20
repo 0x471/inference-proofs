@@ -731,16 +731,18 @@ a.fig.fp:hover .n { text-decoration: underline; text-decoration-thickness: 1px; 
 
 /* ---------------------------------------------------------------- the overview page: every system on one plot, two figures at a time (overview.py).
    A section per figure that runs up (with script the strip picks the one drawn, and each system moves to its new
-   place); cost vs serving runs across. A system is a mark where its two figures meet (--x across, --y up) and a
-   flag beside it: its glyph, drawn at its model's step of size (--u), its name, its model, the two figures and
-   its standing. A mark carries standing, never a state ink: passed a paper square, not passed a ground square in
-   a paper outline; its sessions' ticks and its figures' ranges in paper. Under the sections the models, each with
-   the size its glyphs are drawn at, then the systems not run */
-.overviewpage { --ph: 560px; --oyw: 84px; }
+   place); cost vs serving runs across. The page holds many systems, so a system on the plot is little: its glyph
+   without its petals' names where its two figures meet (--x across, --y up), drawn at its model's step of size
+   (--u), and its name beside it; a row not passed says so under its name. Its line (its glyph with the petals
+   named, its position, model, two figures and standing) stands at the section's head while the system is in hand
+   on a wide screen; a phone's plot leads to the system's page. Under the sections the models, each with the glyph at the size its
+   systems' are drawn at, then the systems not run */
+.overviewpage { --ph: 560px; --oyw: 84px; --ohh: 132px; }
 .ovp { margin-top: var(--s7); }
 /* every plot starts at one height, so a figure picked moves the systems only */
 .overviewpage .wrap > .ovp:first-child, html.js .overviewpage .wrap > .ovp { margin-top: var(--s5); }
-.ovh { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--s2) var(--s4); padding: 0 0 var(--s5) var(--oyw); }
+.ov { position: relative; }
+.ovh { display: flex; flex-wrap: wrap; align-items: baseline; align-content: flex-end; gap: var(--s2) var(--s4); padding: 0 0 var(--s5) var(--oyw); }
 .ovt { margin: 0; font: 900 44px/.92 var(--disp); letter-spacing: -.005em; }
 .ovt a, .oxh a { text-decoration: none; }
 .ovt a:hover, .oxh a:hover { text-decoration: underline; text-decoration-thickness: 3px; text-underline-offset: 5px; }
@@ -756,66 +758,55 @@ a.fig.fp:hover .n { text-decoration: underline; text-decoration-thickness: 1px; 
 .oxh { grid-column: 2; display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: baseline; gap: var(--s1) var(--s3); margin: var(--s2) 0 0; font: 900 22px/1 var(--disp); }
 /* the plot: its two edges are the axes; a system's box is a point in it */
 .ovb { position: relative; isolation: isolate; height: var(--ph); container-type: size; box-shadow: inset 1px 0 0 var(--rule), inset 0 -1px 0 var(--rule); }
-.ovg, .ovm { position: absolute; inset: 0; overflow: visible; pointer-events: none; }
-.ovg { z-index: -2; }
-.ovm { z-index: -1; }
+.ovg { position: absolute; z-index: -2; inset: 0; overflow: visible; pointer-events: none; }
 .ovg line { stroke: var(--line); stroke-width: 1px; }
-.ovm line { stroke: var(--paper); stroke-width: 1.5px; }
-.ovm .rg { stroke-width: 2px; stroke-linecap: round; }
 .obx { position: absolute; left: var(--x); bottom: var(--y); width: 0; height: 0; }
-.mk { position: absolute; z-index: 2; left: 0; top: 0; width: 14px; height: 14px; translate: -50% -50%; background: var(--paper); box-shadow: 0 0 0 3px var(--ground); }
-.np > .mk { background: var(--ground); box-shadow: inset 0 0 0 2px var(--paper), 0 0 0 3px var(--ground); }
-/* a flag: right of and under its mark, or left of it (.r), or over it (.u), as the build places it */
-.ofl { display: flex; align-items: flex-start; column-gap: 14px; cursor: pointer; }
-/* the flag hangs on a pole from its mark: the pole is the flag's edge on the mark's side */
-.obx > .ofl { position: absolute; left: 0; top: 0; width: max-content; max-width: 70cqw; padding: var(--s4) var(--s3) var(--s3) var(--s4); box-shadow: inset 1px 0 0 var(--rule); }
-.obx.r > .ofl { left: auto; right: 0; padding: var(--s4) var(--s4) var(--s3) var(--s3); box-shadow: inset -1px 0 0 var(--rule); }
-.obx.u > .ofl { top: auto; bottom: 0; padding-top: var(--s3); padding-bottom: var(--s4); }
-.ov .glyph { flex: none; width: calc(53px * var(--u)); height: calc(29px * var(--u)); }
-.ov .glyph .pie-svg { width: 100%; height: 100%; }
+/* a mark: the glyph centred on the point, a ring of ground around it, and the name beside it (left of it: .r) */
+.mk { position: absolute; left: 0; top: 0; text-decoration: none; }
+.mk:focus-visible { outline: none; }
+.gm { position: absolute; left: 0; top: 0; width: calc(25px * var(--u)); height: calc(31px * var(--u)); translate: -50% -50%; box-shadow: 0 0 0 2px var(--ground); background: var(--ground); }
+.gm .pie-svg, .gsw .pie-svg { display: block; width: 100%; height: 100%; }
+.onw { position: absolute; left: calc(12.5px * var(--u) + 8px); top: 0; translate: 0 -50%; display: flex; flex-direction: column; white-space: nowrap; }
+.r .onw { left: auto; right: calc(12.5px * var(--u) + 8px); align-items: flex-end; }
+.onm { font: 900 20px/22px var(--disp); }
+.ons { font: 400 10px/14px var(--mono); color: var(--muted); }
+/* the system in hand: a cobalt ring around its glyph, two lines from it to the axes, its name underlined; the
+   others dim, never hidden */
+.gx, .gy { position: absolute; z-index: -1; background: var(--cobalt); opacity: 0; pointer-events: none; }
+.gx { left: -1px; top: 0; width: 2px; height: calc(var(--yf) * 100cqh); }
+.gy { right: 0; top: -1px; height: 2px; width: calc(var(--xf) * 100cqw); }
+.obx:has(.mk:is(:hover, :focus-visible)) { z-index: 3; }
+.obx:has(.mk:is(:hover, :focus-visible)) > :is(.gx, .gy) { opacity: 1; }
+.mk:is(:hover, :focus-visible) .gm { box-shadow: 0 0 0 2px var(--ground), 0 0 0 4px var(--cobalt); }
+.mk:is(:hover, :focus-visible) .onm { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px; }
+.ovb:has(.mk:is(:hover, :focus-visible)) .obx:not(:has(.mk:is(:hover, :focus-visible))) > .mk { opacity: .45; }
+.anim :is(.mk, .gx, .gy) { transition: opacity var(--quick); }
+/* a system's line: its glyph with its petals named, then its words */
+.oli, .oof ul { list-style: none; margin: 0; padding: 0; }
+.ofl { display: flex; align-items: flex-start; column-gap: 14px; }
+.ov .ofl .glyph { flex: none; }
 .ofw { min-width: 0; }
 .ofw p { margin: 0; }
 .ofn { display: flex; align-items: center; column-gap: 10px; }
 .ov .pos .pn { width: 28px; height: 28px; font-size: 22px; }
 .ov .pos .of { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-.ov .sname { font-size: 30px; line-height: 28px; white-space: nowrap; }
-.ofm { display: flex; align-items: baseline; column-gap: var(--s2); margin-top: var(--s2); font: var(--f-meta); color: var(--muted); }
-.ofw .ofm { margin-top: var(--s2); }
+.ov .sname { font-size: 30px; line-height: 28px; }
+.ofw .ofm { display: flex; align-items: baseline; column-gap: var(--s2); margin-top: var(--s2); font: var(--f-meta); color: var(--muted); }
 .ofm .rk { flex: none; padding: 2px 6px 3px; font-size: 11px; }
 .off { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--s1) var(--s4); margin-top: var(--s3); }
 .ov .off .fig .n { font-size: 20px; }
 .ov .off .sub { margin-top: var(--s1); max-width: 44ch; }
 .ov .st { margin-top: var(--s2); color: var(--paper); }
-/* the system in hand: its flag lifts (as a ladder row in hand), two lines lead from its mark to the axes, and the
-   other flags dim and their marks grey, never hidden */
-.gx, .gy { position: absolute; z-index: 1; background: var(--cobalt); opacity: 0; pointer-events: none; }
-.gx { left: -1px; top: 0; width: 2px; height: calc(var(--yf) * 100cqh); }
-.gy { right: 0; top: -1px; height: 2px; width: calc(var(--xf) * 100cqw); }
-.ov .ofl:is(:hover, :focus-within, .cur) { background: var(--lift); box-shadow: none; }
-.ov .obx > .ofl:is(:hover, :focus-within, .cur) { box-shadow: inset 2px 0 0 var(--cobalt); }
-.ov .obx.r > .ofl:is(:hover, :focus-within, .cur) { box-shadow: inset -2px 0 0 var(--cobalt); }
-.ov .ofl:is(:hover, :focus-within, .cur) > * { background: none; box-shadow: none; }
-.obx:has(> :is(.ofl, .mk):is(:hover, :focus-within)) { z-index: 3; }
-.obx:has(> :is(.ofl, .mk):is(:hover, :focus-within)) > :is(.gx, .gy) { opacity: 1; }
-.obx:has(> :is(.ofl, .mk):is(:hover, :focus-within)) > .mk { box-shadow: 0 0 0 3px var(--ground), 0 0 0 5px var(--cobalt); }
-.np:has(> :is(.ofl, .mk):is(:hover, :focus-within)) > .mk { box-shadow: inset 0 0 0 2px var(--paper), 0 0 0 3px var(--ground), 0 0 0 5px var(--cobalt); }
-.ovb:has(:is(.ofl, .mk):is(:hover, :focus-within)) .obx:not(:has(> :is(.ofl, .mk):is(:hover, :focus-within))) > .ofl { opacity: .55; }
-.ovb:has(:is(.ofl, .mk):is(:hover, :focus-within)) .obx:not(:has(> :is(.ofl, .mk):is(:hover, :focus-within))) > .mk { background: var(--rule); }
-.ovb:has(:is(.ofl, .mk):is(:hover, :focus-within)) .np:not(:has(> :is(.ofl, .mk):is(:hover, :focus-within))) > .mk { background: var(--ground); box-shadow: inset 0 0 0 2px var(--rule), 0 0 0 3px var(--ground); }
-.anim :is(.ofl, .gx, .gy) { transition: opacity var(--quick), background-color var(--quick); }
-.anim .mk { transition: background-color var(--quick), box-shadow var(--quick); }
-/* the drawn systems as a list: a phone's only (its plot holds a mark and a name) */
-.oli { display: none; }
+.ov .ofl:is(:hover, :focus-within, .cur), .ov .ofl:is(:hover, :focus-within, .cur) > * { background: none; box-shadow: none; }
 /* the rows a plot could not place, and a section with no row */
 .oof { margin: var(--s6) 0 0 var(--oyw); padding-top: var(--s3); border-top: 1px solid var(--rule); }
 .oof .k { margin: 0; font: var(--f-label); color: var(--muted); text-transform: uppercase; letter-spacing: var(--track); }
-.oof ul { list-style: none; display: flex; flex-wrap: wrap; gap: var(--s5) var(--s6); margin: var(--s4) 0 0; padding: 0; }
+.oof ul { display: flex; flex-wrap: wrap; gap: var(--s5) var(--s6); margin-top: var(--s4); }
 .onr { margin: 0; padding: var(--s3) 0 0; font: 800 22px/1 var(--disp); color: var(--muted); }
-/* the models: each under a cobalt rule, beside the size its systems' glyphs are drawn at (the glyph's stem and frame) */
+/* the models: each under a cobalt rule, beside the glyph, in the frame's ink, at the size its systems' are drawn at */
 .okm { list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--s6); margin: var(--s7) 0 0; padding: 0; }
-.okm li { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: var(--s4); align-items: start; border-top: 3px solid var(--cobalt); }
-.gsw { display: block; width: calc(53px * var(--u)); height: calc(29px * var(--u)); margin-top: var(--s4); }
-.gsw .pie-svg { width: 100%; height: 100%; }
+.okm li { display: grid; grid-template-columns: 48px minmax(0, 1fr); column-gap: var(--s4); align-items: start; border-top: 3px solid var(--cobalt); }
+.gsw { display: block; justify-self: center; width: calc(25px * var(--u)); height: calc(31px * var(--u)); margin-top: var(--s4); }
 .okm .rf { display: block; margin: var(--s2) 0 0; }
 .okm .ln { margin-top: var(--s3); font-size: 26px; }
 .lf { display: block; margin: 8px 0 0; font: var(--f-meta); color: var(--muted); }
@@ -823,12 +814,20 @@ a.fig.fp:hover .n { text-decoration: underline; text-decoration-thickness: 1px; 
 .lsv .k { font: var(--f-label); color: var(--muted); text-transform: uppercase; letter-spacing: var(--track); }
 .lsv .fig { display: inline-flex; }
 .lsv .fig .n { font-size: 14px; letter-spacing: 0; }
+/* a wide screen: the line of the system in hand stands at the section's head, right of the figure's name (the
+   page's own rules show it); the other lines are kept for a screen reader, and one that takes focus shows too */
+@media (min-width: 761px) {
+  .ovh { min-height: var(--ohh); }
+  .oli li { position: absolute; top: 0; right: 0; max-width: calc(100% - var(--oyw) - 260px); padding-left: var(--s4); box-shadow: inset 2px 0 0 var(--cobalt); clip-path: inset(50%); opacity: 0; pointer-events: none; }
+  .oli li:focus-within { clip-path: none; opacity: 1; pointer-events: auto; }
+  .oli .sname { white-space: nowrap; }
+}
 /* a narrower plot: fewer tick words */
 @media (max-width: 1180px) {
   .ox .tl.x { display: none; }
   .ox .tl.w { display: inline; }
 }
-/* a phone: a shorter plot, a narrower axis, a flag's glyph over its words and both smaller */
+/* a phone: a shorter plot, a narrower axis, smaller names; a mark leads to its system's page */
 @media (max-width: 760px) {
   .overviewpage { --ph: 440px; --oyw: 52px; }
   .ox .tl.w { display: none; }
@@ -836,21 +835,18 @@ a.fig.fp:hover .n { text-decoration: underline; text-decoration-thickness: 1px; 
   .oy .tl { font-size: 10px; }
   .ovt { font-size: 36px; }
   .oxh { font-size: 18px; }
-  /* on the plot a flag is its name; the rest stands in the list under the plot */
-  .obx > .ofl { max-width: 60cqw; padding: 6px 8px; }
-  .obx.u > .ofl { padding: 6px 8px; }
-  .obx > .ofl > .glyph, .obx > .ofl :is(.ofm, .off, .st) { display: none; }
-  .ov .glyph, .gsw { width: calc(53px * var(--u) * .62); height: calc(29px * var(--u) * .62); }
-  .ov .sname { font-size: 22px; line-height: 22px; }
-  .oli { list-style: none; display: grid; row-gap: 0; margin: var(--s5) 0 0; padding: 0; }
-  .oli li { padding: var(--s4) 0; border-top: 1px solid var(--line); }
-  .oli li:last-child { border-bottom: 1px solid var(--line); }
-  .oli .sname { white-space: normal; }
-  .okm { grid-template-columns: minmax(0, 1fr); gap: var(--s5); }
-  .ov .off .fig .n { font-size: 15px; }
-  .ofm { font-size: 11px; line-height: 15px; }
-  .ov .off .sub { max-width: 26ch; }
-  .okm { margin-top: var(--s6); }
+  .onm { font-size: 16px; line-height: 18px; }
+  /* the lines are a screen reader's here; one that takes focus stands under the plot */
+  .oli li { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .oli li:focus-within { position: static; width: auto; height: auto; overflow: visible; clip-path: none; padding: var(--s4) 0; }
+  .ov .ofl .glyph { width: 112px; height: 61px; }
+  .ov .ofl .glyph .pie-svg { width: 100%; height: 100%; }
+  .ov .sname { font-size: 24px; line-height: 24px; }
+  .ov .off .fig .n { font-size: 16px; }
+  .ofw .ofm { font-size: 11px; line-height: 15px; }
+  .ov .off .sub { max-width: 28ch; }
+  .oof { margin-left: 0; }
+  .okm { grid-template-columns: minmax(0, 1fr); gap: var(--s5); margin-top: var(--s6); }
 }
 /* a phone: no position square, as on the ladder's phone (a screen reader still reads the position) */
 @media (max-width: 560px) {
@@ -862,14 +858,11 @@ a.fig.fp:hover .n { text-decoration: underline; text-decoration-thickness: 1px; 
 }
 @media print {
   .ovp[hidden] { display: block; }
-  .obx > .mk { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  .oli li { position: static; clip-path: none; opacity: 1; box-shadow: none; padding: var(--s3) 0; }
 }
-/* forced colours: the marks are drawn with a background, which the system would drop */
 @media (forced-colors: active) {
-  .obx > :is(.mk, .gx, .gy) { forced-color-adjust: none; }
-  .obx > .mk { background: CanvasText; box-shadow: 0 0 0 3px Canvas; }
-  .obx.np > .mk { background: Canvas; box-shadow: inset 0 0 0 2px CanvasText, 0 0 0 3px Canvas; }
-  .obx > :is(.gx, .gy) { background: Highlight; }
+  .gx, .gy { forced-color-adjust: none; background: Highlight; }
+  .mk:is(:hover, :focus-visible) .gm { outline: 2px solid Highlight; outline-offset: 2px; }
 }
 /* ---------------------------------------------------------------- a page announced and not open yet (autoresearch): two words under its band */
 .soon { margin: var(--s7) 0 0; padding-bottom: var(--s4); border-bottom: 1px solid var(--line); font: 800 22px/1 var(--disp); color: var(--muted); }

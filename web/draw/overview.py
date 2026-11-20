@@ -1,18 +1,20 @@
-"""The Overview page (`overview.html`, RFC-0018 SI-7): every system run on one drawing, two
-figures at a time. Cost vs serving runs across; verify time, proof size or Fidelity runs up
-(USD is printed under Cost on a system's page only).
+"""The Overview page (`overview.html`, RFC-0018 SI-7): every system run on one plot, two figures
+at a time. Cost vs serving runs across; verify time, proof size or Fidelity runs up (USD is
+printed under Cost on a system's page only).
 
 Each figure that runs up is a section; the strip of sections picks the one drawn (words.js,
 which moves each system to its new place), and with no script all three are drawn. A section is
-one plot: a system is a mark where its two stored figures meet, and beside the mark its flag:
-its glyph, drawn larger the larger its model (`unit_of`: a step of size, not an area to
-measure; the model's size is printed in the flag), its position and name, its model, the two
-figures as `fig_html` prints them (their labels in their titles, and in full on the system's
-page the name links to) and its standing. A row with a figure missing has no place on the plot:
-it is listed under it, with what is missing said in words. Under the sections the models stand
-once, largest first, each with the size its systems' glyphs are drawn at, and a model no system
-has run on says so. The systems not run stand under them by their reason, as on the ladder: no
-figure of ours places them.
+one plot. The page is made to hold many systems, so a system on the plot is little: its glyph,
+without its petals' names, where its two stored figures meet, drawn larger the larger its model
+(`unit_of`: a step of size, not an area to measure), and its name beside it; a row that has
+not passed says so under its name. What else a row holds (its position, its model, the two
+figures as `fig_html` prints them, their labels in their titles, its standing, its glyph with
+its petals named) is its line of the section's list: on a wide screen the line of the system in
+hand stands at the section's head, and under 761 px the whole list stands under the plot. A row
+with a figure missing has no place on the plot: it is listed under it, with what is missing
+said in words. Under the sections the models stand once, largest first, each with the glyph at
+the size its systems' are drawn at, and a model no system has run on says so. The systems not
+run stand under them by their reason, as on the ladder: no figure of ours places them.
 
 Every system shares the two axes (`extent` over the whole board), so a change of scale between
 models is seen by position; nothing is ranked, divided or ordered across models, and no mark
@@ -20,10 +22,11 @@ joins two systems.
 
 A mark is a position only. Its place is a custom property set by the page's own rules
 (`place_css`: `--x` across, `--y` up, and the glyph's unit `--u`), written here from the view,
-so text keeps its size at any width and no inline style is needed. The axes, the grid and the
-sessions' ticks are SVG with no viewBox, each coordinate a percentage of the plot. A flag stands
-on the side of its mark where it meets no other flag (`flag_sides`, on a plot of the size a wide
-screen draws). No quotient computed here is printed.
+so text keeps its size at any width and no inline style is needed; the same rules show the line
+of the system in hand (`hand_css`). The axes and the grid are SVG with no viewBox, each
+coordinate a percentage of the plot. A name stands on the side of its mark where it meets
+least (`name_sides`, on a plot of the size a wide screen draws). No quotient computed here is
+printed.
 """
 
 import math
@@ -38,6 +41,7 @@ from .chrome import (
     has,
     header,
     lead_figure,
+    not_passed,
     page,
     pnav,
 )
@@ -93,34 +97,38 @@ ADV, TICK_PX = 0.65, 11
 # a narrower one (from 761 px) and a phone of 320 px
 PLOT_FULL, PLOT_WIDE, PLOT_NARROW = 960, 600, 240
 AXIS_H = 34  # the axis under the plot
-# The plot `flag_sides` places the flags on, in px (a wide screen's), and a flag's parts there:
-# the glyph's size per unit, the room between it and the words, the words' width at least, a
-# character of a name and of a model's line, the words' height, the flag's padding, and how far
-# a flag stands from its mark
+# The plot `name_sides` places the names on, in px (a wide screen's), and a mark's parts there:
+# the short glyph's size per unit, the room between it and its name, a character of a name (Big
+# Shoulders at 20 px), a name's line and the line under it of a row not passed
 PLOT_W, PLOT_H = 1100, 560
-GLYPH_W, GLYPH_H, GLYPH_GAP, WORDS_W, NAME_CH, LINE_CH, WORDS_H, FLAG_PAD, FLAG_OFF = (
-    53, 29, 14, 230, 14, 7, 104, 20, 12)  # fmt: skip
-# a glyph's unit, in px, by its model's size: UNIT at 100M parameters and UNIT_STEP more for each
-# decade, between UNIT_LEAST and UNIT_MOST (the ladder's is 3)
-UNIT, UNIT_STEP, UNIT_LEAST, UNIT_MOST = 1.6, 0.5, 1.4, 3.8
+GLYPH_W, GLYPH_H, NAME_GAP, NAME_CH, NAME_H, NOTE_H = 25, 31, 8, 9.5, 22, 14
+# a mark's glyph: its unit, in px, by its model's size: UNIT at 100M parameters and UNIT_STEP more
+# for each decade, between UNIT_LEAST and UNIT_MOST (so 124M, 8B and 400B draw glyphs about 21,
+# 33 and 43 px wide)
+UNIT, UNIT_STEP, UNIT_LEAST, UNIT_MOST = 0.8, 0.25, 0.7, 1.9
+
+
+def selector(eid):
+    """An id as a selector: an id may hold a dot ("llama-3.1-8b"), which a selector escapes."""
+    return "#" + re.sub(r"([^A-Za-z0-9_-])", r"\\\1", eid)
 
 
 def place_css(eid, **places):
     """One rule of the page's own: the custom properties that place the element with this id
-    (a mark's `x` and `y`, a glyph's unit `u`). An id may hold a dot ("llama-3.1-8b"), which a
-    selector escapes."""
-    name = re.sub(r"([^A-Za-z0-9_-])", r"\\\1", eid)
-    return f"#{name}{{{';'.join(f'--{k}:{v}' for k, v in places.items())}}}"
+    (a mark's `x` and `y`, a glyph's unit `u`)."""
+    return f"{selector(eid)}{{{';'.join(f'--{k}:{v}' for k, v in places.items())}}}"
+
+
+def hand_css(dim, mark, line):
+    """One rule of the page's own: while the mark with id `mark` is in hand (pointed at, or
+    holding focus), the list's line with id `line` is the one shown at the section's head."""
+    return (f"{selector(f'ov-{dim}')}:has({selector(mark)}:is(:hover,:focus-within)) "
+            f"{selector(line)}{{clip-path:none;opacity:1}}")  # fmt: skip
 
 
 # ------------------------------------------------------------------ what a system draws, per figure
 def read(v, unit):
     return v * READING.get(unit, 1) if v is not None else None
-
-
-def baseline_value(rung, key):
-    b = rung["baseline"]
-    return b[key]["value"] if b and has(b[key]) else None
 
 
 def figure_of(row, dim):
@@ -147,32 +155,6 @@ def value_of(row, dim, unit):
     return v if v is not None and v > 0 else None
 
 
-def ticks_of(row, dim, rung):
-    """Where the counted sessions sit, in the axis's unit: the multiple from each session's GPU
-    time at the printed figure's scope (the whole session, or m where the row has only a steady
-    figure), placed by the rung's serving GPU time; none for the other figures, which store no
-    value per session."""
-    if dim != "multiple":
-        return []
-    steady = lead_figure(row)[2] == "multiple"
-    vals = [s.get("m" if steady else "session") for s in row["sessions"]]
-    b = baseline_value(rung, "gpu_seconds_per_reply")
-    return [v / b for v in vals if v is not None and v > 0] if b else []
-
-
-def spread_of(row, dim, rung, unit):
-    """(ticks, range) on this figure's axis: the row's sessions, and the stretch they cover (or
-    the figure's stored minimum and maximum where no session value is stored)."""
-    ticks = ticks_of(row, dim, rung)
-    stats = (figure_of(row, dim) or {}).get("stats") or {}
-    if len(ticks) > 1:
-        return ticks, (min(ticks), max(ticks))
-    if not ticks and stats.get("min") is not None and stats.get("max") is not None:
-        span = (read(stats["min"], unit), read(stats["max"], unit))
-        return ticks, span if span[0] > 0 else None
-    return ticks, None
-
-
 def drawn(row, dim, unit):
     """(x, y) in the axes' units where the row has both figures, else None: such a row has no
     place on the plot and is listed under it."""
@@ -181,16 +163,11 @@ def drawn(row, dim, unit):
 
 
 def values(dim, unit, rungs, other):
-    """Every value this figure's axis holds on these rungs, for the rows drawn against `other`
-    (the figure on the plot's second axis, as (dim, unit)): figures, sessions and ranges."""
-    out = []
-    for rung in rungs:
-        for row in rung["rows"]:
-            if value_of(row, dim, unit) is None or value_of(row, *other) is None:
-                continue
-            ticks, span = spread_of(row, dim, rung, unit)
-            out += [value_of(row, dim, unit), *ticks, *(span or ())]
-    return [v for v in out if v is not None and (v > 0 or dim == "fidelity")]
+    """Every value this figure's axis holds on these rungs: the figure of each row drawn against
+    `other` (the figure on the plot's second axis, as (dim, unit))."""
+    out = [value_of(row, dim, unit) for rung in rungs for row in rung["rows"]
+           if value_of(row, dim, unit) is not None and value_of(row, *other) is not None]  # fmt: skip
+    return [v for v in out if v > 0 or dim == "fidelity"]
 
 
 # ------------------------------------------------------------------ an axis
@@ -288,80 +265,75 @@ def grid_svg(across, up):
             f"{''.join(lines)}</svg>")  # fmt: skip
 
 
-def spread_svg(points, across, up, dim, unit):
-    """Each drawn row's spread behind its mark: its sessions as ticks on the stretch they cover,
-    across (the multiple), and the stretch from its stored minimum to maximum, up (the figure
-    that stores no value per session)."""
-    out = []
-    for row, rung, x, y in points:
-        cls = "ok" if row["passed"] else "np"
-        px, py = pc(across["at"](x)), pc(100 - up["at"](y))
-        ticks, span = spread_of(row, ACROSS[0], rung, ACROSS[1])
-        if span is not None:
-            out.append(f'<line class="rg {cls}" x1="{pc(across["at"](span[0]))}" '
-                       f'x2="{pc(across["at"](span[1]))}" y1="{py}" y2="{py}"/>')  # fmt: skip
-        # as tall as the mark, so sessions under it hide behind it and only a spread one shows
-        out += [f'<svg class="ss {cls}" x="{pc(across["at"](t))}" y="{py}" overflow="visible">'
-                '<line y1="-7" y2="7"/></svg>' for t in ticks]  # fmt: skip
-        _, rise = spread_of(row, dim, rung, unit)
-        if rise is not None:
-            out.append(f'<line class="rg {cls}" x1="{px}" x2="{px}" '
-                       f'y1="{pc(100 - up["at"](rise[0]))}" y2="{pc(100 - up["at"](rise[1]))}"/>')  # fmt: skip
-    return (f'<svg class="ovm" width="100%" height="100%" aria-hidden="true" focusable="false">'
-            f"{''.join(out)}</svg>") if out else ""  # fmt: skip
-
-
-# ------------------------------------------------------------------ a system: its mark and its flag
+# ------------------------------------------------------------------ a system on the plot
 def unit_of(rung):
-    """The unit a model's systems' glyphs are drawn at, in px: a step up for each decade of its
-    parameters, so a larger model's glyph is larger. A step of size, not a measure: the model's
-    size is printed in the flag and under the plots."""
+    """The unit a model's systems' glyphs are drawn at on the plot, in px: a step up for each
+    decade of its parameters, so a larger model's glyph is larger. A step of size, not a
+    measure: the model's size is printed in the system's line and under the plots."""
     step = UNIT + UNIT_STEP * (math.log10(rung["parameters_total"]) - 8)
     return round(min(UNIT_MOST, max(UNIT_LEAST, step)), 2)
 
 
-def flag_size(row, rung, dim):
-    """A flag's (width, height) on the plot `flag_sides` places it on, in px, a little over what
-    is drawn: its glyph beside its words."""
-    u = unit_of(rung)
-    words = max(WORDS_W, 38 + NAME_CH * len(name_of(row)), 60 + LINE_CH * len(rung["model"]))
-    tall = WORDS_H + (60 if dim == "fidelity" else 0) + (0 if row["passed"] else 20)
-    return (GLYPH_W * u + GLYPH_GAP + words + FLAG_PAD, max(GLYPH_H * u, tall) + FLAG_PAD)
-
-
-def flag_sides(points, across, up, dim):
-    """The side of its mark each flag stands on, as (left, over) per point, in the points'
-    order: of the four sides, the one where the flag covers least of the flags placed before
-    it, of the other marks and of what lies outside the plot. With nothing to avoid, a flag
-    stands toward the middle of the plot."""
-    spots = [(across["at"](x) * PLOT_W / 100, (100 - up["at"](y)) * PLOT_H / 100)
-             for _, _, x, y in points]  # fmt: skip
-    placed, sides = [], []
+def name_sides(points, across, up):
+    """The side of its mark each name stands on, True for its left, per point, in the points'
+    order: the side where the name covers least of the names placed before it, of the other
+    marks and of what lies outside the plot; the right with nothing to choose between them."""
+    spots = []
+    for row, rung, x, y in points:
+        u = unit_of(rung)
+        cx, cy = across["at"](x) * PLOT_W / 100, (100 - up["at"](y)) * PLOT_H / 100
+        tall = NAME_H + (0 if row["passed"] else NOTE_H)
+        spots.append((cx, cy, GLYPH_W * u / 2, GLYPH_H * u / 2, NAME_CH * len(name_of(row)), tall))
 
     def over(a, b):
         wide = max(0, min(a[2], b[2]) - max(a[0], b[0]))
         return wide * max(0, min(a[3], b[3]) - max(a[1], b[1]))
 
-    for (row, rung, _, _), (px, py) in zip(points, spots, strict=True):
-        w, h = flag_size(row, rung, dim)
-        left, above = px > PLOT_W / 2, py > PLOT_H / 2
+    placed, sides = [], []
+    for i, (cx, cy, gw, _, w, h) in enumerate(spots):
         best = None
-        for lf, ov in ((left, above), (left, not above), (not left, above), (not left, not above)):
-            x0 = px - FLAG_OFF - w if lf else px + FLAG_OFF
-            y0 = py - FLAG_OFF - h if ov else py + FLAG_OFF
-            box = (x0, y0, x0 + w, y0 + h)
+        for left in (False, True):
+            x0 = cx - gw - NAME_GAP - w if left else cx + gw + NAME_GAP
+            box = (x0, cy - h / 2, x0 + w, cy + h / 2)
             cost = 3 * (w * h - over(box, (0, 0, PLOT_W, PLOT_H))) + sum(
                 over(box, b) for b in placed
             )
-            cost += sum(4000 for sx, sy in spots if (sx, sy) != (px, py)
-                        and box[0] - 9 < sx < box[2] + 9 and box[1] - 9 < sy < box[3] + 9)  # fmt: skip
+            cost += sum(over(box, (sx - sw, sy - sh, sx + sw, sy + sh))
+                        for j, (sx, sy, sw, sh, _, _) in enumerate(spots) if j != i)  # fmt: skip
             if best is None or cost < best[0] - 1:  # a px² apart: the first of two alike stands
-                best = (cost, lf, ov, box)
-        placed.append(best[3])
-        sides.append((best[1], best[2]))
+                best = (cost, left, box)
+        placed.append(best[2])
+        sides.append(best[1])
     return sides
 
 
+def marks_html(points, across, up, dim, css):
+    """The drawn rows, in the board's order: each a box at its place holding the two lines that
+    lead from it to the axes when it is in hand and its mark, a link to the system's page: its
+    glyph without its petals' names, at its model's step of size, and beside it its name and,
+    for a row that has not passed, that it has not (a bad result is said in words wherever the
+    row is). Each box's place and unit, and the rule that shows its line of the list while it is
+    in hand, go to `css`."""
+    out = []
+    for (row, rung, x, y), left in zip(points, name_sides(points, across, up), strict=True):
+        fx, fy = across["at"](x), up["at"](y)
+        bid = f"ob-{dim}-{row['page']}"
+        css.append(place_css(bid, x=pc(fx), y=pc(fy), xf=f"{fx / 100:.4f}", yf=f"{fy / 100:.4f}",
+                             u=unit_of(rung)))  # fmt: skip
+        css.append(hand_css(dim, bid, f"ol-{dim}-{row['page']}"))
+        state = "ok" if row["passed"] else "np"
+        note = "" if row["passed"] else f'<span class="ons">{e(not_passed(row))}</span>'
+        out.append(
+            f'<div class="obx {state}{" r" if left else ""}" id="{bid}" data-s="{e(row["page"])}">'
+            '<i class="gx"></i><i class="gy"></i>'
+            f'<a class="mk" href="{e(href(row))}"><span class="gm" aria-hidden="true">'
+            f"{glyph_svg(ROW_GLYPH, states(row))}</span>"
+            f'<span class="onw"><span class="onm">{e(name_of(row))}</span>{note}</span></a></div>'
+        )
+    return "".join(out)
+
+
+# ------------------------------------------------------------------ a system's line
 def figure_html(row, dim):
     """The row's figure as the ladder prints it (the multiple's two parts are the system page's,
     CO-7; Fidelity with what the row proves and its model's two copies under it, SI-9)."""
@@ -373,10 +345,10 @@ def figure_html(row, dim):
     return fig_html(f, counted(row), sub=BARE, note=scope_note(row, f))
 
 
-def flag_html(row, rung, dim):
-    """A system's flag: its glyph (its size its model's step, `unit_of`), then its position and
-    name, its model with its size in a tab, the two figures, across first, and its standing.
-    The petals in words for a screen reader stand after the name they belong to."""
+def line_html(row, rung, dim):
+    """A system's line: its glyph with its petals named, then its position and name, its model
+    with its size in a tab, the two figures, across first, and its standing. The petals in
+    words for a screen reader stand after the name they belong to."""
     at, name = e(href(row)), e(name_of(row))
     arms = glyph_svg(ROW_GLYPH, states(row), names=[PETAL_NAME[p["id"]] for p in row["glyph"]])
     return (
@@ -391,54 +363,23 @@ def flag_html(row, rung, dim):
     )
 
 
-def systems_html(points, across, up, dim, css):
-    """The drawn rows, in the board's order: each a box at its place holding its mark, the two
-    lines that lead from it to the axes when it is in hand, and its flag on the side
-    `flag_sides` gives it. Each box's place and its glyph's unit go to `css`."""
-    out = []
-    sides = flag_sides(points, across, up, dim)
-    for (row, rung, x, y), (left, over) in zip(points, sides, strict=True):
-        fx, fy = across["at"](x), up["at"](y)
-        bid = f"ob-{dim}-{row['page']}"
-        css.append(place_css(bid, x=pc(fx), y=pc(fy), xf=f"{fx / 100:.4f}", yf=f"{fy / 100:.4f}",
-                             u=unit_of(rung)))  # fmt: skip
-        side = (" r" if left else "") + (" u" if over else "")
-        state = "ok" if row["passed"] else "np"
-        at = e(href(row))
-        out.append(
-            f'<div class="obx {state}{side}" id="{bid}" data-s="{e(row["page"])}">'
-            '<i class="gx"></i><i class="gy"></i>'
-            f'<a class="mk" href="{at}" tabindex="-1" aria-hidden="true"></a>'
-            f"{flag_html(row, rung, dim)}</div>"
-        )
-    return "".join(out)
+def list_html(points, dim):
+    """The drawn rows' lines, in the board's order. On a wide screen the line of the system in
+    hand stands at the section's head and the others are kept for a screen reader only (words.css,
+    and `hand_css` for the line in hand); under 761 px the whole list stands under the plot."""
+    items = "".join(f'<li class="{"ok" if row["passed"] else "np"}" id="ol-{dim}-{row["page"]}">'
+                    f"{line_html(row, rung, dim)}</li>" for row, rung, _, _ in points)  # fmt: skip
+    return f'<ul class="oli">{items}</ul>'
 
 
-def list_html(points, dim, css):
-    """The drawn rows once more as a list, in the board's order, for a phone: its plot has room
-    for a mark and a name, so each system's glyph, model, figures and standing stand under it
-    (words.css shows the list under 761 px only, where a flag on the plot is its name alone)."""
-    items = []
-    for row, rung, _, _ in points:
-        bid = f"ol-{dim}-{row['page']}"
-        css.append(place_css(bid, u=unit_of(rung)))
-        items.append(f'<li class="{"ok" if row["passed"] else "np"}" id="{bid}">'
-                     f"{flag_html(row, rung, dim)}</li>")  # fmt: skip
-    return f'<ul class="oli">{"".join(items)}</ul>'
-
-
-def off_html(rows, dim, css):
-    """The rows with a figure missing here, under the plot: each its flag, which says what is
+def off_html(rows, dim):
+    """The rows with a figure missing here, under the plot: each its line, which says what is
     missing in words (a null figure's reason, a Fidelity that reads as the check's state)."""
     if not rows:
         return ""
-    items = []
-    for row, rung in rows:
-        bid = f"of-{dim}-{row['page']}"
-        css.append(place_css(bid, u=unit_of(rung)))
-        items.append(f'<li class="{"ok" if row["passed"] else "np"}" id="{bid}">'
-                     f"{flag_html(row, rung, dim)}</li>")  # fmt: skip
-    return f'<div class="oof"><p class="k">{e(OVERVIEW_OFF)}</p><ul>{"".join(items)}</ul></div>'
+    items = "".join(f'<li class="{"ok" if row["passed"] else "np"}">{line_html(row, rung, dim)}</li>'
+                    for row, rung in rows)  # fmt: skip
+    return f'<div class="oof"><p class="k">{e(OVERVIEW_OFF)}</p><ul>{items}</ul></div>'
 
 
 # ------------------------------------------------------------------ a section, the models, the page
@@ -462,8 +403,8 @@ def unit_words(dim, unit):
 
 def panel_html(dim, unit, css):
     """One section: the figure that runs up, named at its head with its unit, the plot with its
-    two axes, and under the plot the rows it could not place. With no row to place, the plot is
-    left out; with no row at all the section says so."""
+    two axes, the drawn rows' lines, and the rows the plot could not place. With no row to
+    place, the plot is left out; with no row at all the section says so."""
     rungs = S.V["rungs"]
     pairs = [(row, rung) for rung in rungs for row in rung["rows"]]
     points = [(row, rung, *xy) for row, rung in pairs if (xy := drawn(row, dim, unit))]
@@ -479,26 +420,25 @@ def panel_html(dim, unit, css):
     else:
         plot = (
             f'<div class="ovq">{up_svg(up)}<div class="ovb">{grid_svg(across, up)}'
-            f"{spread_svg(points, across, up, dim, unit)}"
-            f"{systems_html(points, across, up, dim, css)}</div>{across_svg(across)}"
+            f"{marks_html(points, across, up, dim, css)}</div>{across_svg(across)}"
             f'<p class="oxh">{named(ACROSS[0])}<span class="al">{unit_words(*ACROSS)}</span></p>'
-            f"</div>{list_html(points, dim, css)}"
+            f"</div>{list_html(points, dim)}"
         )
         data = (f' data-xlo="{across["lo"]}" data-xhi="{across["hi"]}" data-ylo="{up["lo"]}" '
                 f'data-yhi="{up["hi"]}"')  # fmt: skip
     return (f'<section class="blk ovp" id="{dim}" aria-labelledby="h-{dim}">'
-            f'<div class="ov" id="ov-{dim}"{data}>{head}{plot}{off_html(off, dim, css)}</div>'
+            f'<div class="ov" id="ov-{dim}"{data}>{head}{plot}{off_html(off, dim)}</div>'
             "</section>")  # fmt: skip
 
 
 def models_html(css):
     """The models, once under the sections, largest first: each its size in a tab (the
-    frontier's marked, OR-6), its name, its architecture and its serving rate, beside the size
-    its systems' glyphs are drawn at; a model no system has run on says so."""
+    frontier's marked, OR-6), its name, its architecture and its serving rate, beside the glyph
+    in the frame's ink at the size its systems' are drawn at on the plots; a model no system has
+    run on says so."""
     front = S.V["frontier"]
     # the glyph with no state, in the frame's ink (as the checks page's key draws it)
-    key = glyph_svg(ROW_GLYPH, ["key"] * len(S.V["petals"]),
-                    names=[PETAL_NAME[p] for p in S.V["petals"]])  # fmt: skip
+    key = glyph_svg(ROW_GLYPH, ["key"] * len(S.V["petals"]))
     items = []
     for rung in S.V["rungs"]:
         total, active = rung["parameters_total"], rung.get("parameters_active")

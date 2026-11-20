@@ -705,7 +705,7 @@
     size = [probe.offsetWidth, probe.offsetHeight];
     col = gutters(el, size[0]);
     // a model's head (its name) on the ladder and the Overview page is never covered either
-    near = $$(`${FIG}, .rh, .lh, .ov .mk`, main).filter((e) => e !== el && !e.contains(el) && !el.contains(e));
+    near = $$(`${FIG}, .rh, .lh`, main).filter((e) => e !== el && !e.contains(el) && !el.contains(e));
     titles = $$('.rm, .ln, .rk', main);
     // nor the name and petals of the figure's own row
     const own = el.closest('.row');

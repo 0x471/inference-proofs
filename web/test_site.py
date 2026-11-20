@@ -291,9 +291,8 @@ def test_system_page_drawings_sit_where_the_figures_say(board_site: Any) -> None
 def test_overview_positions_are_the_boards(board_site: Any) -> None:
     """RFC-0018 SI-7: on the Overview page a system's mark stands where its two printed figures
     meet, cost vs serving across and the section's figure up, each on its one axis over the
-    whole board, its session ticks where the board's sessions fall; a row not passed is an
-    outline; the systems keep the board's order. The extents and two places are hand-computed
-    for the example board."""
+    whole board; a row not passed is marked so and says so; the systems keep the board's
+    order. The extents and two places are hand-computed for the example board."""
     board = board_site.board
     text = pages(board_site.out)["overview.html"]
     panels = overview_panels(text)
@@ -305,21 +304,19 @@ def test_overview_positions_are_the_boards(board_site: Any) -> None:
         xlo, xhi, ylo, yhi = ends
         boxes = re.findall(rf'<div class="obx (ok|np)[^"]*" id="ob-{dim}-([^"]+)"', body)
         assert [page for _, page in boxes] == [r["system"] for r in rows(board)], dim
-        ticks: list[str] = []
         for (state, page), rung in zip(boxes, [g for g in board["rungs"] for _ in g["rows"]],
                                        strict=True):  # fmt: skip
             row = next(r for r in rung["rows"] if r["system"] == page)
             assert state == ("ok" if row["passed"] else "np"), (dim, page)
+            mark = re.search(rf'id="ob-{dim}-{re.escape(page)}".*?</div>', body, re.S)
+            assert mark
+            assert ("Not passed" in mark[0]) == (not row["passed"]), (dim, page)
             # CO-5 (amended 2026-11-15): the whole sessions' scope wherever the row has it
             steady = row["session_multiple"]["value"] is None
             x = row["multiple" if steady else "session_multiple"]["value"]
             y = row[key]["value"] * (1e-6 if row[key]["unit"] == "B/request" else 1)
             assert overview_place(text, f"ob-{dim}-{page}", "x") == at(xlo, xhi, x), (dim, page)
             assert overview_place(text, f"ob-{dim}-{page}", "y") == at(ylo, yhi, y), (dim, page)
-            b = rung["baseline"]["gpu_seconds_per_reply"]["value"]
-            runs = [s["m" if steady else "session"] for s in row["sessions"]]
-            ticks += [at(xlo, xhi, r / b) for r in runs if r is not None]
-        assert re.findall(r'<svg class="ss (?:ok|np)" x="([^"]+)"', body) == ticks, dim
     # hand-computed: the multiple from 1x to 1,000x (sessions up to 612 / 1.408 = 434.6x);
     # FlashProve at its whole sessions' scope, 49.83 / 0.6024 = 82.72x (log10 / 3 = 63.92 %), not
     # its steady 68.31x; its proof, 18.79 MB between 1 and 100 MB (log10 / 2 = 63.70 %)
@@ -330,7 +327,9 @@ def test_overview_positions_are_the_boards(board_site: Any) -> None:
     # a board with no Fidelity figure draws no Fidelity plot: every row is listed under its head
     ends, body = panels["fidelity"]
     assert ends is None
-    assert re.findall(r'<li class="(?:ok|np)" id="of-fidelity-([^"]+)"', body) == [
+    listed = re.search(r'<div class="oof">(.*)', body, re.S)
+    assert listed
+    assert re.findall(r'<a class="sname" href="/([^"]+)"', listed[1]) == [
         r["system"] for r in rows(board)
     ]
 
