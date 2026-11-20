@@ -92,11 +92,36 @@ With the bytes, these need a CPU only:
 
 ## Tier 3: rerun (GPU)
 
-A rerun is a new record, never a replacement for a stored one. It needs H200 GPUs and the weights, fetched by public source and checked by content hash (`iproofs fetch-model`):
+Outside reruns are a non-goal of Level 1 (RFC-0018 §Non-Goals, RFC-0007 §Non-Goals). The harness records every quantity as `reported`, and the `reproduced` tier is reserved, with no definition yet (RFC-0007). A rerun is a new record: it replaces no stored run and does not change the board. Nobody else has rerun any Level 1 run yet. The steps below follow [`gpu-run.md` §Hosted execution](runbooks/gpu-run.md#hosted-execution-prover-h100-hosted-prover-h200-hosted) and [`level-1.md`](runbooks/level-1.md). They were not run for this page.
 
-- the counted sessions (`iproofs run`, RFC-0010; the GPU runbooks are in [`docs/runbooks/`](runbooks/));
-- the P1 control (commit W, prove with W′), which proves;
-- the fidelity runs of the reference and the controls (`iproofs fidelity run`);
-- the serving baseline (vLLM, RFC-0015).
+What each row needs, from [`reference/v1.0.yaml`](../reference/v1.0.yaml):
 
-A rerun by a runner with no tie to a listed system can raise a figure's evidence tier to `reproduced` (RFC-0007). Nobody else has rerun any Level 1 run yet.
+- SASH on Llama 3.1 8B (`l1-l31-8b-p512-o512`): `prover-h200-hosted`, one H200 SXM with at least 140,000 MiB, 15 logical CPUs on the GPU's NUMA node and 23 in all, 200 GiB of host memory, 500 GiB of free disk, Ubuntu 24.04, kernel 5.19 or later, cgroup v2.
+- FlashProve on Llama 4 Maverick (`l1-maverick-p512-o512`): the same profile on a larger host, with 330 GB available to `commit`, a CPU with the SHA extensions and a sandbox that lets `madvise(MADV_WIPEONFORK)` through ([`systems/flashprove/README.md`](../systems/flashprove/README.md) §Machine needs).
+- The serving baselines (vLLM, RFC-0015): `serving-h200x1-hosted` (8B) and `serving-h200x4-hosted` (Maverick, four H200).
+- The Maverick fidelity reference (RFC-0018 FI-1): `fidelity-h200x8-hosted`, eight H200.
+- Verify again with no GPU: `verifier-cpu-hosted`, 16 CPUs and 115 GiB.
+
+One session, in a container started from the image of `systems/<name>/system.yaml` (`<repository>@<digest>`, the `system.image.ref` of the run's `manifest.json`), with at least 500 GiB of disk. A gated model needs `HF_TOKEN` from your own account in the environment ([`gpu-run.md`](runbooks/gpu-run.md)).
+
+```bash
+git clone https://github.com/ai-verification-observatory/inference-proofs && cd inference-proofs
+git checkout <harness.git_commit in the run's manifest.json>
+uv sync --frozen --extra gpu --extra fetch --extra prompts
+export IPROOFS_CACHE=<a directory on the container disk>
+python3 docs/runbooks/host-probe.py --profile prover-h200-hosted
+uv run iproofs machine-record --hosted --gpu <index> --provider <name> --selftest
+uv run iproofs fetch-model l1-l31-8b-p512-o512
+uv run iproofs run --system sash --workload l1-l31-8b-p512-o512 --profile prover-h200-hosted \
+  --hosted --gpu <index> --provider <name> --level L1 --session <K> --keep-io
+```
+
+`--keep-io` keeps the proofs, so `iproofs reverify <run_dir> --hosted --provider <name>` can verify them again in a container of the same image with no GPU, on a host that never fetched the weights (RFC-0018 CH-4a). Compare the run's figures by hand with its slot's entry in `releases/v1.0/board.json` (`rungs[].rows[].sessions[]`, matched by `slot`).
+
+A rung's other runs follow the same setup: the P1 control (`iproofs run ... --session <K> --control-run --control-suite`, RFC-0018 CH-1b), the fidelity runs (`iproofs fidelity run`) and the serving baseline.
+
+What the record will show:
+
+- Every v1.0 GPU profile records the driver as `unpinned` (RFC-0006 Q5), so every run on them fails PC-DRIVER and records `harness.nonconforming: true`. The published runs record it too. No conformance check refuses a run (RFC-0006).
+- A different GPU model is its own configuration, never pooled or compared with the H200 rows (RFC-0006 R5). v1.0 declares no profile for another GPU model.
+- Every counted v1.0 run ran on Hugging Face Jobs (`provider` in each manifest). Another provider is untested: gVisor refused FlashProve's `madvise` call (#68), and the verify-without-weights check needs `strace` to trace the verify call's file opens inside the provider's container (RFC-0018 CH-4). A provider with another driver needs its own pin (RFC-0006 Q5).

@@ -19,6 +19,7 @@ from iproofs.teacher_forced import (
     percent_interval,
     position_kl,
     prompt_kl,
+    proved_tokens,
     read_topk,
     row_tests,
     score_pass,
@@ -55,6 +56,30 @@ def test_fidelity_interval_over_the_prompts() -> None:
     low, high = percent_interval("sash", scores, 512) or [0.0, 0.0]
     assert low < sum(scores) / 15 / 512 * 100 < high
     assert percent_interval("sash", scores, 512) == [low, high]
+
+
+def test_proved_tokens_counts_the_positions_a_proof_covers() -> None:
+    # FI-16, by hand. Reference replies of 4 tokens.
+    # Prompt 0: the proved reply leaves the reference at position 2 (L = 2): positions 0, 1 and
+    #   the split 2 are covered. The pass gives the proved token at 0 and 1 and, at the split,
+    #   the proved token 9 (not the reference's 3): 3 of 3, split 1 of 1.
+    # Prompt 1: the proved reply is the reference (L = 4): 4 positions, no split. The pass
+    #   misses the proved token at position 3: 3 of 4.
+    # Prompt 2: the proved reply leaves at once (L = 0): the split alone, and the pass gives
+    #   the reference's token there, not the proved one: 0 of 1, split 0 of 1.
+    # Prompt 3: no top tokens (the system's code gave none): left out.
+    reference = [[1, 2, 3, 4], [5, 6, 7, 8], [1, 1, 1, 1], [2, 2, 2, 2]]
+    proved = [[1, 2, 9, 9], [5, 6, 7, 8], [4, 1, 1, 1], [2, 2, 2, 2]]
+    tops = [[1, 2, 9, 0], [5, 6, 7, 0], [1, 1, 1, 1], None]
+    assert proved_tokens(proved, reference, tops) == {
+        "prompts": 3,
+        "positions": 8,
+        "agreeing": 6,
+        "split_positions": 2,
+        "split_agreeing": 1,
+    }
+    with pytest.raises(ValueError, match="top tokens"):
+        proved_tokens([[1, 2]], [[1, 2]], [[1]])
 
 
 def test_kl_of_a_full_small_vocabulary() -> None:
@@ -152,6 +177,14 @@ def test_kl_figure_is_the_mean_over_prompts_with_a_value() -> None:
 def test_a_listed_token_of_probability_zero_adds_nothing() -> None:
     kl, _ = position_kl([0, 1], [log(1.0), float("-inf")], [0, 1], [log(0.5), log(0.5)])
     assert kl == pytest.approx(log(2))
+
+
+def test_a_token_the_engine_gives_probability_zero_joins_the_rest() -> None:
+    # common {0}: 0.5 ln(0.5/0.75); rest: m_p = 0.5 (token 1), m_q = 0.25 (token 2), 0.5 ln 2
+    kl, rest = position_kl([0, 1], [log(0.5), log(0.5)], [0, 1, 2],
+                           [log(0.75), float("-inf"), log(0.25)])  # fmt: skip
+    assert kl == pytest.approx(0.5 * log(4 / 3))
+    assert rest == pytest.approx(0.5)
 
 
 def test_document_holds_scores_tests_and_kl(tmp_path: Path) -> None:

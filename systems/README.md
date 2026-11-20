@@ -8,6 +8,36 @@ This page is for anyone who wants a system measured. An adapter is a thin wrappe
 
 Open an issue naming the upstream repository, the full commit hash and the workloads the system supports. The adapter, `system.yaml` and `claim.yaml` land by pull request.
 
+## 1a. From an adapter to a row on Level 1
+
+A merged adapter is not yet a row. The rules are in [RFC-0018](../rfcs/0018-level-1-ladder.md) and [`levels/L1.yaml`](../levels/L1.yaml), and the pointers below restate none of them.
+
+- Rungs. The level chooses each rung, never an entrant ([LV-2](../rfcs/0018-level-1-ladder.md#levels)). Level 1's rungs are under `rungs` in [`L1.yaml`](../levels/L1.yaml#L51-L126), largest first.
+- The request. One request holds on every rung ([`request`](../levels/L1.yaml#L9-L14), [§Terms](../rfcs/0018-level-1-ladder.md#terms)), and each rung sets how many requests one session proves (`requests_per_session`).
+- Who runs. The operator runs the counted sessions. Level 1 takes no lab-run submissions and no outside reruns ([§Non-Goals](../rfcs/0018-level-1-ladder.md#non-goals)), so a run you make yourself can go in the issue as evidence, but it is not a counted session.
+- Adapter duties. Level 1 adds AD-1 to AD-7 to the contract ([§Adapter contract amendment](../rfcs/0018-level-1-ladder.md#adapter-contract-amendment-rfc-0005)):
+
+  ```
+  - [ ] AD-1. verify passes upstream the range that checks every reply token
+  - [ ] AD-2. optional `logprobs`: full next-token distributions for the KL figure (FI-7)
+  - [ ] AD-3. under exact match, each reply is the committed model's own greedy reply, made with what upstream ships at the pin
+  - [ ] AD-4. a separate generation phase writes /io/marks/generation.start and generation.end
+  - [ ] AD-5. optional `perturb`: writes W′, the Model check's weight change (CH-2), on CPU
+  - [ ] AD-6. `mutate_reply`, needed for REPLY when the verifier reads the reply from the proof
+  - [ ] AD-7. optional `score`: the system's own top token at each reply position (FI-10 to FI-13)
+  ```
+
+- Files a row needs:
+  - `systems/<name>/claim.yaml`, the claim card ([RFC-0002](../rfcs/0002-claim-card.md)).
+  - `systems/<name>/properties.yaml`, schema `properties/2`: the publisher's statement facts read at the pin ([GL-1](../rfcs/0018-level-1-ladder.md#the-glyph), [SI-4a](../rfcs/0018-level-1-ladder.md#site)).
+  - In `levels/L1.yaml`, the system's workload under its rung's `workloads` ([L59](../levels/L1.yaml#L59), [L85](../levels/L1.yaml#L85), [L109](../levels/L1.yaml#L109)) and a `systems.<name>` entry with `security`, `model_change` and any `limits` ([L130-L148](../levels/L1.yaml#L130-L148), [§The level file](../rfcs/0018-level-1-ladder.md#the-level-file), CH-2, CH-5).
+  - The workload file in `workloads/`, whose `systems` list names the system ([example](../workloads/l1-l31-8b-p512-o512.yaml#L47)). `uv run iproofs level check` reports a rung workload whose prompts, shape or decoding differ from the level's, or whose `systems` list does not name the system.
+- Sessions and checks. Each rung has three slots, with at most five runs per slot ([`sessions`](../levels/L1.yaml#L23-L26), [SE-3](../rfcs/0018-level-1-ladder.md#sessions-and-what-is-recorded)). The six checks are computed from stored records only ([§The six checks](../rfcs/0018-level-1-ladder.md#the-six-checks), CH-6).
+- Order. Only passed rows are ranked, and only inside a rung ([OR-1](../rfcs/0018-level-1-ladder.md#order)). A passed row takes a position only when `systems.<name>.security.stated` is true in `L1.yaml`, with words and source (OR-2), and when `properties.yaml` records `level_statement.accept_is_model_reply` as true, with quotes at the pin ([SI-4a](../rfcs/0018-level-1-ladder.md#site)). Otherwise it is listed as passed, unranked, with the reason.
+- Before a run. A system not run is listed after the ladder with one reason from `web/_data/facts.json`, `not yet run` among them, chosen by the order of [SI-4b](../rfcs/0018-level-1-ladder.md#site).
+
+The Level 1 roster (`rungs[].workloads` and `systems`) lives inside `levels/L1.yaml`. Every counted run names that file's digest, a hash of its bytes, and `iproofs release freeze` refuses a release whose runs name another digest ([§The level file](../rfcs/0018-level-1-ladder.md#the-level-file)). Level 1 is frozen ([L8](../levels/L1.yaml#L8)), and a frozen level does not change ([LV-1](../rfcs/0018-level-1-ladder.md#levels)). So in the current layout, adding a system to Level 1 is a change to the level file. Open an issue before you edit it.
+
 ## 2. Directory layout
 
 The files are listed in [RFC-0005 §Layout](../rfcs/0005-adapter-contract.md#layout): `Dockerfile`, `entrypoint`, `system.yaml`, `claim.yaml`, optional `external.yaml` and `controls.yaml`, and `README.md` and `tests/`. The system name matches `^[a-z][a-z0-9-]{1,31}$`.

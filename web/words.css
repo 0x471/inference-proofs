@@ -1438,6 +1438,9 @@ a.pvd:hover { text-decoration: underline 2px; text-underline-offset: 4px; }
   .syspage #cost .tiles.drawn:has(> #parts) > #parts { grid-column: auto; }
 }
 @media (min-width: 561px) and (max-width: 760px) { #fidelity .tiles.drawn > div:last-child:nth-child(odd) { grid-column: 1 / -1; } }
+/* Fidelity's four tiles (with the count against the proofs, FI-16): two by two up to 1200 px, then four in a line */
+@media (min-width: 761px) { .syspage #fidelity .tiles.drawn:has(> div:nth-child(4)) { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1201px) { .syspage #fidelity .tiles.drawn:has(> div:nth-child(4)) { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 /* the multiple's two parts end to end, from zero to their sum (plots.hbar), a mark of each part's ink before its
    word; the serving ladder's rates as bars from zero on one scale, full load in paper */
 .tiles .pbar { height: 14px; margin-top: 18px; }
@@ -2118,7 +2121,7 @@ ol.ls > li:before { counter-increment: n; content: counter(n); position: absolut
   /* two quotes one under the other share the gap between them */
   .ckt td a.qt + a.qt:after { top: -4px; }
   .ckt td a.qt:has(+ a.qt):after { bottom: -4px; }
-  .rid, .facts dd a, :is(.lad, .scl) .st a, :is(.lad, .scl) :is(thead, .lbl) a.df, .lad .ck .fw { position: relative; }
+  .rid, .facts dd a, :is(.lad, .scl) .st a, :is(.lad, .scl) :is(thead, .lbl) a.df, .lad .ck :is(.fw, a.fig.fp) { position: relative; }
   .facts dd a:after { content: ""; position: absolute; inset: -14px 0; }
   .rid:after { content: ""; position: absolute; inset: -15px 0; }
   /* a row's standing: its band (40 px) reaches down and aside, little up toward the name (which leads to the page) */
@@ -2130,6 +2133,7 @@ ol.ls > li:before { counter-increment: n; content: counter(n); position: absolut
   /* the fidelity word: its own band, so a near miss does not open the row; it and its label 6 px over it share
      that gap, each band 40 px */
   .lad .ck .fw:after { content: ""; position: absolute; inset: -3px -8px -18px; }
+  .lad .ck a.fig.fp:after { content: ""; position: absolute; inset: -3px -8px -6px; }
   .lad .ck .lbl a.df:after { inset: -25px -4px -3px; }
   .ps a { min-width: 44px; justify-content: center; }
   .top .repo { min-width: 44px; height: 44px; justify-content: center; }
@@ -2140,7 +2144,7 @@ ol.ls > li:before { counter-increment: n; content: counter(n); position: absolut
    no further, so two names one over the other keep their own bands */
 @media (hover: none) and (max-width: 560px) {
   .lad .lbl a.df:after, .lad .ck .lbl a.df:after { inset: -10px -4px -9px; }
-  .lad .ck .fw:after { inset: -9px -8px -8px; }
+  .lad .ck :is(.fw, a.fig.fp):after { inset: -9px -8px -8px; }
 }
 /* a footer's cells on a touch screen, in a line or one under another: lines 44 px apart, so two links one over the
    other keep their own bands */

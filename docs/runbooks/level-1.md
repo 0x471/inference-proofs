@@ -1,6 +1,6 @@
 # Level 1 runs
 
-How the owner makes the runs of Level 1 ([RFC-0018](../../rfcs/0018-level-1-ladder.md), [`levels/L1.yaml`](../../levels/L1.yaml)) on Hugging Face Jobs, in order: probes first, then the frozen level, then the counted runs, then the release. Every job goes through [`hf-job.sh`](hf-job.sh) as in [`hf-jobs.md`](hf-jobs.md), which covers the account, the bucket, the images and the upload; this page covers only what Level 1 adds. Costs are estimates from stored v0.1 job durations and the provider's list prices (read 2026-11-08); nothing has run at the Level 1 request yet.
+How the owner makes the runs of Level 1 ([RFC-0018](../../rfcs/0018-level-1-ladder.md), [`levels/L1.yaml`](../../levels/L1.yaml)) on Hugging Face Jobs, in order: probes first, then the frozen level, then the counted runs, then the release. Every job goes through [`hf-job.sh`](hf-job.sh) as in [`hf-jobs.md`](hf-jobs.md), which covers the account, the bucket, the images and the upload; this page covers only what Level 1 adds. Costs are estimates from stored v0.1 job durations and the provider's list prices (read 2026-11-08), made before the first Level 1 run. The runs of release v1.0 (SASH on Llama 3.1 8B, FlashProve on Llama 4 Maverick, both serving baselines, fidelity and teacher-forced) are in [`results/v1.0/`](../../results/v1.0/), and its board is [`releases/v1.0/board.json`](../../releases/v1.0/board.json).
 
 ## What runs where
 

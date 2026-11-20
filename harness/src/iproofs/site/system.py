@@ -192,6 +192,12 @@ def machine(root: Path, release: str | None, row: dict[str, Any],
         "gpus_bound": values(lambda m: _bound(machine_of(m).get("gpu") or {})),
         "verify_gpu_visible": sorted({v for v in (gpu_seen(d) for d, _ in found)
                                       if v is not None}),
+        # where the sessions ran and what with (RFC-0014): the provider, the image and the
+        # harness and adapter commits, as each manifest records them
+        "provider": values(lambda m: m.get("provider")),
+        "image": values(lambda m: ((m.get("system") or {}).get("image") or {}).get("ref")),
+        "harness_commit": values(lambda m: (m.get("harness") or {}).get("git_commit")),
+        "adapter_commit": values(lambda m: (m.get("system") or {}).get("adapter_commit")),
     }  # fmt: skip
 
 

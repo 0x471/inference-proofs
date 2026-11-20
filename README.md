@@ -124,11 +124,11 @@ Three vocabularies label it. Each is normative in the RFC named beside it.
 
 | Tier | Meaning |
 |---|---|
-| `reported` | our runs only, not rerun by anyone else |
-| `peer-reviewed` | checked by someone from another organisation |
-| `reproduced` | rerun by an unaffiliated runner within tolerance |
+| `reported` | produced by one runner and not yet checked |
+| `peer-reviewed` | reserved |
+| `reproduced` | reserved |
 
-Only `reproduced` numbers are called *measured* in prose.
+Every tier the harness records is `reported` ([RFC-0007](rfcs/0007-evidence-tiers-and-reproduction.md)). In prose, a `reported` number is called "reported", never "measured" alone without its labels.
 
 </td><td>
 
@@ -253,6 +253,7 @@ Level 1 ([RFC-0018](rfcs/0018-level-1-ladder.md), [`levels/L1.yaml`](levels/L1.y
 |---|---|---|---|
 | FlashProve | [`anthropics/FlashProve@9e2bdd8`](https://github.com/anthropics/FlashProve/tree/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c) (v0.16.0) | Llama 4 Maverick (`l1-maverick-p512-o512`) | [`exact-match-cp-verify`](systems/flashprove/claim.yaml) |
 | SASH zk-inference-prover | commit [`4f41667`](https://github.com/sg-ai-safety-hub/zk-inference-prover/pull/36/commits/4f41667297430a598165c4a8604258fe37d952ae) of [pull request #36](https://github.com/sg-ai-safety-hub/zk-inference-prover/pull/36), written by this project's owner and not merged upstream; upstream `eb95bfa` refuses one of the level's prompts | Llama 3.1 8B, W8A8 (`l1-l31-8b-p512-o512`) | [`sound-defaults`](systems/sash/claim.yaml) |
+| DeepProve | [`Lagrange-Labs/deep-prove@9d1a53e`](https://github.com/Lagrange-Labs/deep-prove/tree/9d1a53e2ef49ffa2c902b8689cd3c58057a4e662). `prove` is wired, `verify` refuses: the upstream verifier takes its verifier key only from inside the proof file, and no documented step makes that key from the weights alone, so no session can complete ([systems/deepprove/README.md](systems/deepprove/README.md#weights-binding)) | GPT-2 (`l1-gpt2-p512-o512`) | none |
 | Production serving (reference) | vLLM | each rung's model at the publisher's release precision | not a proof |
 
 No two systems share a rung, so nothing on the board is ranked against another system yet. The figures, with their scopes, sample sizes and ranges, are on **[inferenceproofs.ai](https://www.inferenceproofs.ai)** and in the board file; this README quotes none, so it cannot drift from them.
@@ -299,7 +300,7 @@ uv run iproofs site build            # writes web/
 uv run iproofs site build --out DIR  # a complete site in any other directory
 ```
 
-Optional extras install only where they are needed: `--extra gpu` (NVML sampling on a GPU host), `--extra fetch` (model download), `--extra prompts` (tokenizers). Runs on GPU hosts follow the runbooks in [`docs/runbooks/`](docs/runbooks/).
+Optional extras install only where they are needed: `--extra gpu` (NVML sampling on a GPU host), `--extra fetch` (model download), `--extra prompts` (tokenizers). For a rerun on a GPU host, see [docs/REPRODUCE.md, Tier 3](docs/REPRODUCE.md#tier-3-rerun-gpu) and [docs/runbooks/gpu-run.md, Hosted execution](docs/runbooks/gpu-run.md#hosted-execution-prover-h100-hosted-prover-h200-hosted).
 
 <details>
 <summary><b>Every command</b></summary>
@@ -308,16 +309,19 @@ Optional extras install only where they are needed: `--extra gpu` (NVML sampling
 |---|---|---|
 | `iproofs validate` | run every CI check on the given paths | [0013](rfcs/0013-validation-and-ci.md) |
 | `iproofs run` | run jobs of one system on one workload | [0010](rfcs/0010-harness-runner.md) |
+| `iproofs reverify` | verify a kept run again on a verifier host with no GPU | [0018](rfcs/0018-level-1-ladder.md) |
 | `iproofs derive` | compute derived metrics of a run directory | [0004](rfcs/0004-metrics-timing-grades.md) |
 | `iproofs controls` | run the negative-control suite against a run | [0008](rfcs/0008-negative-controls.md) |
 | `iproofs machine-record` | print the machine record as JSON | [0006](rfcs/0006-reference-hardware-and-cost.md) |
 | `iproofs fetch-model` | fetch a workload's weights and check every hash | [0014](rfcs/0014-provenance-and-integrity.md) |
-| `iproofs prompts` | build and check prompt sets | [0003](rfcs/0003-workloads.md) |
+| `iproofs prompts` | prompt sets | [0003](rfcs/0003-workloads.md) |
 | `iproofs serving` | production-serving records | [0015](rfcs/0015-reference-rows.md) |
-| `iproofs reproduce` | reproduction records | [0007](rfcs/0007-evidence-tiers-and-reproduction.md) |
-| `iproofs release` | freeze a benchmark release | [0009](rfcs/0009-results-and-publication.md) |
+| `iproofs release` | benchmark releases | [0009](rfcs/0009-results-and-publication.md) |
 | `iproofs site` | build the static site | [0009](rfcs/0009-results-and-publication.md) |
-| `iproofs archive` | upload and pin proof archives | [0014](rfcs/0014-provenance-and-integrity.md) |
+| `iproofs level` | level files, beacon rounds and rung prompts | [0018](rfcs/0018-level-1-ladder.md) |
+| `iproofs fidelity` | the fidelity gate of a rung | [0018](rfcs/0018-level-1-ladder.md) |
+| `iproofs results` | copy a hosted job's run into `results/` | [0010](rfcs/0010-harness-runner.md) |
+| `iproofs proof-build` | proof-build records | [0018](rfcs/0018-level-1-ladder.md) |
 
 </details>
 
@@ -356,7 +360,7 @@ inference-proofs/
 
 ## Contributing
 
-Open an issue or a pull request ([CONTRIBUTING.md](CONTRIBUTING.md)). To add a system, follow the adapter guide, [systems/README.md](systems/README.md).
+Open an issue or a pull request ([CONTRIBUTING.md](CONTRIBUTING.md)). To add a system, follow the adapter guide, [systems/README.md](systems/README.md). A row on Level 1 also needs the Level 1 entries that guide describes in [From an adapter to a row on Level 1](systems/README.md#from-an-adapter-to-a-row-on-level-1).
 
 ## Licence
 

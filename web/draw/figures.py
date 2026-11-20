@@ -616,9 +616,9 @@ def request_figure():
     p, o, how = r["prompt_tokens"], r["output_tokens"], r["decoding"]
     said = (f"The request: a prompt of {p:,} tokens, then a reply of {o:,} tokens, {how}. "
             "The prompts are cut from public books with a seed from a public randomness beacon. "
-            "The same request for every system, on every model.")  # fmt: skip
+            "Every system gets the same request, on every model.")  # fmt: skip
     prompt_words = ("cut from public books with a seed", "from a public randomness beacon")
-    reply_words = (f"{how}: the model's top token at", "each step; an end token does not stop it")
+    reply_words = (f"{how}: the model's top token at", "each step, and no end token stops it")
     same = "the same request for every system, on every model"
     wide = hc_svg(
         "hreq", 980, 150, said,
@@ -643,10 +643,11 @@ def request_figure():
 
 
 FLOW_SAID = (
-    "Three steps. One: the prover commits to the weights, and the commitment is sent once, before "
-    "any prompt. Two: the prover runs the model on the prompt and proves the reply. Three: the "
-    "verifier checks the proof against the commitment, the prompt and the reply, and accepts or "
-    "refuses it, with no weights and no GPU. The prover holds the weights; the verifier never does."
+    "It takes three steps. First, the prover commits to the weights and sends the commitment "
+    "once, before any prompt. Then the prover runs the model on the prompt and proves the reply. "
+    "Finally, the verifier checks the proof against the commitment, the prompt and the reply, and "
+    "accepts or refuses it, with no weights and no GPU. The prover holds the weights, but the "
+    "verifier never does."
 )
 FLOW_STEPS = ("1  Commit to the weights", "2  Generate and prove", "3  Verify")
 
@@ -747,9 +748,9 @@ def check_pictures():
             + verdict("a verdict", "reached"),
         ),
         "fidelity": (
-            "The original's reply and the proved reply, token by token: the leading tokens that "
-            "match, up to the first difference, are counted; the proved replies must match more "
-            "than the bar",
+            "The original's reply and the proved reply, token by token: we count the leading "
+            "tokens that match, up to the first difference, and the proved replies must match "
+            "more than the bar",
             '<path class="k" d="M72 22v-6H140v6"/>'
             + tx(72, 10, "matched leading tokens")
             + tx(0, 40, "original")
@@ -769,8 +770,8 @@ CHECK_DOES = {
             "each of the {slots} slots has a complete session: every reply gets an accepted "
             "proof"),
     "model": ("We change", "one weight, after the prover committed to the original weights",
-              "no proof is accepted against the original commitment; an honest proof is refused "
-              "against the changed weights' commitment too"),
+              "no proof is accepted against the original commitment, and an honest proof is "
+              "refused against the changed weights' commitment too"),
     "prompt": ("We change", "one prompt token, at a position a seed sets",
                "the verifier refuses the proof"),
     "reply": ("We change", "the first, the last or one inside reply token, one at a time",
@@ -780,7 +781,7 @@ CHECK_DOES = {
     "fidelity": ("We compare", "each proved reply with the original model's reply to the same "
                  "prompt, token by token from the start",
                  "the proved replies match more of the original's leading tokens than the bar "
-                 "does, a deliberately damaged copy, by a paired statistical test"),
+                 "(a deliberately damaged copy) does, by a paired statistical test"),
 }  # fmt: skip
 
 

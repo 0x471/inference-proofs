@@ -61,6 +61,8 @@ The model is Ethproofs, which made zkVM provers for Ethereum blocks comparable b
 
 ## 6. Scope of v0.1
 
+> **Status, 2026-11-20.** Level 1 ([RFC-0018](../rfcs/0018-level-1-ladder.md), [`levels/L1.yaml`](../levels/L1.yaml)) and release v1.0 replaced this scope and the roadmap in Section 10. Level 1 has three rungs, one system on each: FlashProve on Llama 4 Maverick 17B-128E Instruct (`l1-maverick-p512-o512`), SASH on Llama 3.1 8B Instruct (`l1-l31-8b-p512-o512`) and DeepProve on GPT-2 (`l1-gpt2-p512-o512`). DeepProve's `prove` is wired and its `verify` refuses: the upstream verifier takes its verifier key only from inside the proof file, and no documented step makes that key from the weights alone ([`systems/deepprove/README.md`](../systems/deepprove/README.md#weights-binding)). Only passed rows are ranked, and only inside a rung (RFC-0018 OR-1), so a system is ranked against another only once two systems share a model. This section records v0.1.
+
 Two systems, run unchanged at pinned commits on one reference machine type (v0.1; Level 1 v1.0 runs SASH at a pull request, G6):
 
 1. **SASH zk-inference-prover**, on its native workload: Llama-3.1-8B W8A8, the headline shape (4,096 prompt positions plus 512 continuation positions) and one shorter shape.
@@ -74,6 +76,8 @@ Plus two reference rows per workload, so every proof cost reads against somethin
 What v0.1 does not do: compare SASH and FlashProve on one model. Neither supports the other's model at these pins. v0.1 publishes both on their native workloads, side by side, with normalised metrics (cost per proved token at the reference price, overhead against plain serving, prover time per bit of active weights) and the claim cards that explain why the headline numbers differ.
 
 v0.1 also defines one closed workload, `l31-8b-c1024`: Llama-3.1-8B W8A8 at SASH's shorter shape, with one fixed claim class, where rows compare directly. Its rows publish once a second system with that class runs it through an adapter with no upstream change (RFC-0003 Q7; the release freeze enforces it). Of the systems read, SASH alone runs it today; the sources of TOPLOC, Verde, the Private ML SDK and zkPyTorch name the model, and none of them has a claim card ([RFC-0003 §Closed workloads](../rfcs/0003-workloads.md#closed-workloads), [`workloads/README.md`](../workloads/README.md#closed-workloads)). More common workloads come in v0.2 (RFC-0003).
+
+Historical: Level 1 does not run `l31-8b-c1024`. Its Llama 3.1 8B rung runs `l1-l31-8b-p512-o512` ([`levels/L1.yaml`](../levels/L1.yaml)).
 
 ## 7. Requirements
 
@@ -111,6 +115,8 @@ v0.1 also defines one closed workload, `l31-8b-c1024`: Llama-3.1-8B W8A8 at SASH
 The benchmark does not decide what is good enough. It invites relying parties (policy researchers, auditors, labs, standards bodies) to publish targets in their own words, for example a maximum cost per proved token, a maximum verification time on a laptop, a minimum security level, or zero knowledge for the weights. Each row then shows "meets this target" or "does not", per target and per author, next to the claim card. Targets are versioned and attributed.
 
 ## 10. Roadmap
+
+> **Status, 2026-11-20.** Historical. Level 1 and release v1.0 replaced this roadmap (Section 6 has the current rungs and systems). DeepProve, a zkML prover of the kind the v0.3 row names, is already Level 1's GPT-2 system.
 
 | Release | Content |
 |---|---|

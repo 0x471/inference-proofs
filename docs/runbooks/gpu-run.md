@@ -16,7 +16,7 @@ The minimum versions come from the release's reference file, for example [`refer
 | NVIDIA Confidential Computing | off on the bound GPU (H200 profiles, RFC-0006 Q4) | `nvidia-smi conf-compute -f` prints `CC status: OFF` |
 | Harness | a checkout at the release's harness commit, `uv sync --frozen --extra gpu --extra fetch --extra prompts` | `uv run iproofs --version` |
 
-`iproofs run` checks the same items (conformance, exit 3) before any timed step; the table is for setting a host up, not a substitute for that check. Gated model licences are accepted with the runner's own account, and `HF_TOKEN` comes from the environment only (see below).
+`iproofs run` checks the same items (conformance) before any timed step. It records every failure (`harness.nonconforming` in the manifest, a warning in `run.json`) and refuses none, so the table is for setting a host up, not a substitute for that check. Gated model licences are accepted with the runner's own account, and `HF_TOKEN` comes from the environment only (see below).
 
 ### NVML (RFC-0011 §GPU sampler)
 
