@@ -46,7 +46,7 @@ CHECK_PLAIN = {
 }
 # Each check's rule, RFC-0018's table ("Held when", "Failed when") in short, as a condition in the
 # present tense. {slots}, {attempts}, {reply_tokens} and {reference} are the level file's
-# constants (`overview.filled`); 3 of 3 and 0.05 (fidelity.alpha) are typed as the level's.
+# constants (`ladder.filled`); 3 of 3 and 0.05 (fidelity.alpha) are typed as the level's.
 CHECK_HELD = {
     # Terms (Slot, Session: complete), SE-1
     "run": "The model's prompts are split into {slots} slots. Each slot has a complete session: a "
@@ -745,7 +745,7 @@ HOW_MULTIPLE = {
 HOW_ON = {True: "both on {gpu} GPUs", False: "proved on {gpu}, served on {serving}"}
 SERVING_GPU = "H200"  # CO-4: the serving baseline runs on the fewest H200 that hold the model
 # CO-8 (adopted 2026-11-16): reply tokens per GPU-second under Cost (depth 3); amended 2026-11-16:
-# the proved and the served rate also print as one line under the multiple (`overview.rate_html`)
+# the proved and the served rate also print as one line under the multiple (`ladder.rate_html`)
 REPLY_TOKENS_HEAD = "Tokens per second"
 # that line (Q41): the proved rate's word after its number ("2.027 proved"), then its unit and
 # GPU ("tokens/s per H200"); a model's head prints its served rate in the same unit
@@ -971,7 +971,7 @@ SCALE_SERVING = "Serving"  # a lane's foot: serving's line and its stored figure
 # a model no system has run on (the ladder, the overview page); its serving line keeps "not run yet"
 SCALE_NOT_RUN = "no system run yet"
 # the start of the overview page's description and search line, before its figures' names
-OVERVIEW_LEAD = "Every system on one drawing, each on its model's rung by size"
+OVERVIEW_LEAD = "Every system run, each on its model's rung by size"
 # the head of the size axis, down the drawing's right side
 SIZE_AXIS = "parameters, log scale"
 # beside the size tab of the frontier's rung on the ladder (OR-6: the largest with a passed row)

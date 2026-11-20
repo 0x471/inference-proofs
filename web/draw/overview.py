@@ -56,6 +56,7 @@ from .ladder import (
     not_run_html,
     pct,
     position_html,
+    proved_words,
     scope_note,
     served_html,
     standing_html,
@@ -92,17 +93,26 @@ READING = {"B/request": 1e-6}
 # measured in the served face by the browser (11 px tick labels: 7.15 px a character)
 ADV, TICK_PX = 0.65, 11
 # the narrowest plot each set of tick labels is drawn for (words.css): beside the models' heads
-# from 1181 px (720 px) and from 901 px (480 px), under them from 601 px (537 px), and a phone of
+# from 1181 px (699 px) and from 901 px (435 px), under them from 601 px (537 px), and a phone of
 # 320 px (272 px)
-PLOT_FULL, PLOT_WIDE, PLOT_NARROW = 720, 480, 272
+PLOT_FULL, PLOT_WIDE, PLOT_NARROW = 696, 432, 272
 AXIS_H = 32  # the figure's axis over the drawing
 RULE_H = 28  # the drawing on a rung's rule: its height in px (the rule runs through its middle)
-# The size axis (`layout`), in px: a decade's height at least and at most; the room a rung's head
-# takes under its rule (the size tab, a name on two lines, the model's facts and one line of a
-# figure); what a flag takes with its glyph and without; the room from a rule to its first flag
-# and from a rung's last line to the next rule
-DECADE, DECADE_MOST = 130, 280
-HEAD_H, FLAG_H, FLAG_SHORT_H, FLAG_TOP, RUNG_GAP = 136, 112, 84, 14, 28
+# The size axis (`layout`), in px: a decade's height at least; at most with whole flags, and at
+# most with flags on one line (four decades then stand about 1,000 and 1,300 px tall)
+DECADE, DECADE_WHOLE, DECADE_LINES = 130, 250, 320
+# What words.css gives a rung's parts, in px, measured in the browser (`needs` adds them up, a
+# little over what is drawn). A head: its size tab, the frontier's line, the room over its name, a
+# line of its name (two lines from NAME_WRAP characters), a line of its facts (its architecture,
+# its serving rate), the room over the copies' lines and one of them, the room under the head
+TAB_H, FRONT_H, NAME_TOP, NAME_H, NAME_WRAP, FACT_H, COPY_TOP, COPY_H, HEAD_FOOT = (
+    26, 22, 12, 26, 21, 28, 8, 20, 16)  # fmt: skip
+# a flag: its padding, then its words (name, figure, standing; its glyph is no taller); one more
+# line of a long name (from FLAG_WRAP characters), of the checks not passed, of what it proves
+FLAG_PAD, FLAG_WORDS, FLAG_WRAP, FLAG_LINE, PROVED_WRAP = 28, 88, 17, 20, 28
+# a flag on one line (`layout`): its height, and the line under it of what it proves
+LINE_FLAG, LINE_SUB = 46, 22
+RUNG_GAP = 28  # from a rung's last line to the next rule
 EMPTY_H = 56  # a model no system has run on: its one line
 SIZE_TOP = 28  # the room over the size axis's first decade, under the figure's axis
 
@@ -139,12 +149,14 @@ def figure_of(row, dim):
 
 def value_of(row, dim, unit):
     """Where the row's mark sits, in the axis's unit: the figure the ladder prints, or None
-    where it prints none (a null figure; a Fidelity that reads as the check's state)."""
+    where it prints none (a null figure; a Fidelity that reads as the check's state) and where a
+    decade axis has no place for it (a stored value of zero or less: the flag still prints it)."""
     if dim == "fidelity":
         mine = fidelity_row(row)
         return mine["percent"] if mine else None
     f = figure_of(row, dim)
-    return read(f["value"], unit) if has(f) else None
+    v = read(f["value"], unit) if has(f) else None
+    return v if v is not None and v > 0 else None
 
 
 def ticks_of(row, dim, rung):
@@ -162,14 +174,18 @@ def ticks_of(row, dim, rung):
 
 def marks_of(row, dim, rung, unit):
     """(mean, ticks, range) in the axis's unit: the figure, its sessions, and the stretch they
-    cover (or the figure's stored minimum and maximum where no session value is stored)."""
+    cover (or the figure's stored minimum and maximum where no session value is stored). A row
+    with no mark has no ticks and no range; a value a decade axis cannot place is left out."""
     mean = value_of(row, dim, unit)
-    ticks = ticks_of(row, dim, rung)
+    if mean is None:
+        return None, [], None
+    ticks = [t for t in ticks_of(row, dim, rung) if t > 0]
     stats = (figure_of(row, dim) or {}).get("stats") or {}
     if len(ticks) > 1:
         span = (min(ticks), max(ticks))
     elif not ticks and stats.get("min") is not None and stats.get("max") is not None:
         span = (read(stats["min"], unit), read(stats["max"], unit))
+        span = span if span[0] > 0 else None
     else:
         span = None
     return mean, ticks, span
@@ -177,12 +193,16 @@ def marks_of(row, dim, rung, unit):
 
 def against_of(rung, dim):
     """What a rung's figures are read against on this axis, as (value, words, title): serving at
-    1× on the multiple's (serving over itself), the model's 8-bit and 4-bit copies on Fidelity's
-    (SI-9); nothing where the rung has none, or for a figure with no such counterpart."""
+    1× on the multiple's (serving over itself; only where the rung's head prints its serving
+    rate, so the mark and the head read one record), the model's 8-bit and 4-bit copies on
+    Fidelity's (SI-9); nothing for a rung with no row (nothing is read against it), where the
+    rung has none, or for a figure with no such counterpart."""
+    if not rung["rows"]:
+        return []
     if dim == "multiple":
-        if not baseline_value(rung, "gpu_seconds_per_reply"):
-            return []
-        return [(1.0, SCALE_SERVING, f"{SCALE_SERVING}: 1×")]
+        served = all(baseline_value(rung, k)
+                     for k in ("gpu_seconds_per_reply", "reply_tokens_per_gpu_second"))  # fmt: skip
+        return [(1.0, SCALE_SERVING, f"{SCALE_SERVING}: 1×")] if served else []
     if dim == "fidelity":
         return [(v, COPY_WORD[i].removesuffix(" copy"), f"{COPY_WORD[i]} ({i.upper()})")
                 for i, v in copies_of(rung)]  # fmt: skip
@@ -191,14 +211,14 @@ def against_of(rung, dim):
 
 def values(dim, unit, rungs):
     """Every value the dimension draws on these rungs: figures, sessions, ranges, and what they
-    are read against."""
+    are read against. A decade axis holds values above zero only; Fidelity's holds zero too."""
     out = []
     for rung in rungs:
         out += [v for v, _, _ in against_of(rung, dim)]
         for row in rung["rows"]:
             mean, ticks, span = marks_of(row, dim, rung, unit)
             out += [mean, *ticks, *(span or ())]
-    return [v for v in out if v is not None and v > 0]
+    return [v for v in out if v is not None and (v > 0 or dim == "fidelity")]
 
 
 # ------------------------------------------------------------------ the figure's axis
@@ -292,38 +312,75 @@ def size_words(k):
     return f"{10**k:,}"
 
 
-def needs(rung, glyph):
-    """The room a rung takes under its rule, in px: its head, or its flags one under the other."""
-    flags = len(rung["rows"]) * (FLAG_H if glyph else FLAG_SHORT_H)
-    return max(HEAD_H, FLAG_TOP + flags if rung["rows"] else EMPTY_H)
+def head_needs(rung, dim):
+    """The height of a rung's head on this figure's drawing, in px."""
+    front = S.V["frontier"]
+    lines = 2 if len(rung["model"]) >= NAME_WRAP else 1
+    h = TAB_H + NAME_TOP + lines * NAME_H + FACT_H + HEAD_FOOT
+    if front and front["rung"] == rung["id"]:
+        h += FRONT_H
+    if dim == "multiple":
+        h += FACT_H
+    elif dim == "fidelity" and (copies := copies_of(rung)):
+        h += COPY_TOP + COPY_H * len(copies)
+    return h
+
+
+def flag_needs(row, dim, lines):
+    """The height of a system's flag on this figure's drawing, in px; `lines`: set on one line."""
+    proved = proved_words(row) if dim == "fidelity" else ""
+    if lines:
+        h = LINE_FLAG + (LINE_SUB if proved else 0)
+        # the checks not passed, or why the row is not ranked, may take a second line
+        return h if row["passed"] and row["ranked"] else h + FLAG_LINE
+    h = FLAG_PAD + FLAG_WORDS
+    if len(name_of(row)) >= FLAG_WRAP:
+        h += NAME_H
+    if not (row["passed"] and row["ranked"]):
+        h += FLAG_LINE
+    if proved:
+        h += 4 + FLAG_LINE * math.ceil(len(proved) / PROVED_WRAP)
+    return h
+
+
+def needs(rung, lines=False):
+    """The room a rung takes under its rule, in px, on the figure where it takes the most: its
+    head, or its flags one under the other. One figure for all, so a rung stands at one height
+    on every drawing and a mark moves across only when the figure changes."""
+
+    def on(dim):
+        rows = rung["rows"]
+        flags = sum(flag_needs(row, dim, lines) for row in rows) if rows else EMPTY_H
+        return max(head_needs(rung, dim), flags)
+
+    return max(on(dim) for dim, _ in DIMS)
 
 
 def layout(rungs):
-    """Where each rung stands: `scaled`, whether the rungs are set by size; `glyph`, whether a
-    flag carries its glyph; then, when scaled, the size axis's decades (`lo`, `hi`), a decade's
-    height in px (`px`), each rung's distance from the drawing's top in px (`ys`: the rule's
-    middle, at its parameter count on the decade axis, the largest decade at the top) and the
-    drawing's `height`.
+    """Where each rung stands: `scaled`, whether the rungs are set by size; `lines`, whether a
+    flag is set on one line; then, when scaled, the size axis's decades (`lo`, `hi`), a
+    decade's height in px (`px`), each rung's distance from the drawing's top in px (`ys`: the
+    rule's middle, at its parameter count on the decade axis, the largest decade at the top) and
+    the drawing's `height`.
 
     A decade is DECADE px tall, or as tall as the tightest pair of rungs needs to hold the upper
-    one's head and flags, DECADE_MOST at most; where that is not enough the flags leave their
-    glyphs, and where that is not enough either (or two models are the same size) the rungs are
-    not set by size."""
+    one's head and flags. Where that makes a decade taller than DECADE_WHOLE the flags are set
+    on one line, without their glyphs; where a decade is then taller than DECADE_LINES, or two
+    models are the same size, the rungs are not set by size and the flags stay whole."""
     sizes = [math.log10(r["parameters_total"]) for r in rungs]
     gaps = [a - b for a, b in itertools.pairwise(sizes)]
     if not rungs or any(g <= 0 for g in gaps):
-        return {"scaled": False, "glyph": True}
+        return {"scaled": False, "lines": False}
     lo, hi = math.floor(min(sizes)), math.floor(max(sizes)) + 1
-    for glyph in (True, False):
-        tight = max(((needs(r, glyph) + RUNG_GAP) / g for r, g in zip(rungs, gaps, strict=False)),
-                    default=0)  # fmt: skip
-        if tight <= DECADE_MOST:
-            px = max(DECADE, tight)
+    for lines, most in ((False, DECADE_WHOLE), (True, DECADE_LINES)):
+        room = [needs(r, lines) for r in rungs]
+        px = max([DECADE, *((n + RUNG_GAP) / g for n, g in zip(room, gaps, strict=False))])
+        if px <= most:
             ys = [round(SIZE_TOP + (hi - s) * px, 1) for s in sizes]
-            foot = max(SIZE_TOP + (hi - lo) * px, ys[-1] + needs(rungs[-1], glyph)) + RUNG_GAP
-            return {"scaled": True, "glyph": glyph, "lo": lo, "hi": hi, "px": px, "ys": ys,
-                    "height": math.ceil(foot)}  # fmt: skip
-    return {"scaled": False, "glyph": False}
+            height = max(SIZE_TOP + (hi - lo) * px, ys[-1] + room[-1]) + RUNG_GAP
+            return {"scaled": True, "lines": lines, "lo": lo, "hi": hi, "px": px, "ys": ys,
+                    "height": math.ceil(height)}  # fmt: skip
+    return {"scaled": False, "lines": False}
 
 
 def size_svg(lay):
@@ -344,8 +401,9 @@ def size_svg(lay):
 # ------------------------------------------------------------------ a rung
 def rule_svg(axis, rung, dim, unit):
     """What is drawn on a rung's rule beside its marks: each row's sessions as ticks and the
-    stretch they cover, and what the rung's figures are read against, an outlined mark each with
-    its word over the rule (two words that would meet stand on two lines)."""
+    stretch they cover, and what the rung's figures are read against, each an outlined diamond
+    with its word over the rule (two words that would meet stand on two lines). An outlined
+    square is a row not passed, never one of these."""
     mid = RULE_H / 2
     out = []
     for row in rung["rows"]:
@@ -366,7 +424,7 @@ def rule_svg(axis, rung, dim, unit):
         y = -15 if near and i % 2 else -3
         out.append(f'<svg class="rfm" x="{pc(x)}" y="{mid:g}" overflow="visible">'
                    f"<title>{e(title)}</title>"
-                   '<rect x="-6" y="-6" width="12" height="12"/>'
+                   '<rect x="-5" y="-5" width="10" height="10" transform="rotate(45)"/>'
                    f'<text y="{y - mid + 4:g}" text-anchor="{anchor}">{e(words)}</text></svg>')  # fmt: skip
     return (f'<svg class="ork" width="100%" height="{RULE_H}" aria-hidden="true" '
             f'focusable="false">{"".join(out)}</svg>') if out else ""  # fmt: skip
@@ -384,7 +442,7 @@ def figure_html(row, dim):
     return fig_html(f, counted(row), sub=BARE, note=scope_note(row, f))
 
 
-def flags_html(rung, dim, unit, axis, glyph, css):
+def flags_html(rung, dim, unit, axis, css):
     """A rung's systems: each a mark on the rule at its figure and its flag under it, one box
     inside the next in the board's order (OR-5), so each flag hangs under those before it and
     its pole runs from the rule to its foot. A flag stands right of its pole in the plot's left
@@ -398,16 +456,14 @@ def flags_html(rung, dim, unit, axis, glyph, css):
         bid = f"ob-{dim}-{row['page']}"
         css.append(place_css(bid, x=pc(x if x is not None else 0)))
         at, name = e(href(row)), e(name_of(row))
-        drawn = ""
-        if glyph:
-            arms = glyph_svg(ROW_GLYPH, states(row),
-                             names=[PETAL_NAME[p["id"]] for p in row["glyph"]])  # fmt: skip
-            drawn = (f'<span class="sr pw">{states_words(row)}</span>'
-                     f'<a class="glyph" href="{at}" tabindex="-1" aria-hidden="true">{arms}</a>')  # fmt: skip
+        arms = glyph_svg(ROW_GLYPH, states(row), names=[PETAL_NAME[p["id"]] for p in row["glyph"]])
+        # the petals in words for a screen reader, after the name they belong to
         flag = (
             f'<div class="ofl row{" r" if x is not None and x > 50 else ""}" data-s="{e(row["page"])}">'
-            f'{drawn}<div class="ofw"><p class="ofn">{position_html(row, rung)}'
+            f'<a class="glyph" href="{at}" tabindex="-1" aria-hidden="true">{arms}</a>'
+            f'<div class="ofw"><p class="ofn">{position_html(row, rung)}'
             f'<a class="sname" href="{at}">{name}</a></p>'
+            f'<span class="sr pw">{states_words(row)}</span>'
             f'<p class="off">{figure_html(row, dim)}</p>'
             f'<p class="st">{standing_html(row)}</p></div></div>'
         )
@@ -443,7 +499,7 @@ def head_html(rung, dim, hid):
             f"{against}</header>")  # fmt: skip
 
 
-def rung_html(rung, dim, unit, axis, glyph, css):
+def rung_html(rung, dim, unit, axis, css):
     """One model: its rule, its head under the rule's left end and, on the rule, its systems
     (`flags_html`) and what they are read against (`rule_svg`); each rung also carries the
     figure's axis, which a drawing with no size axis prints over every rung. A model not run is
@@ -456,7 +512,7 @@ def rung_html(rung, dim, unit, axis, glyph, css):
         ticks = ""
     else:
         drawn = rule_svg(axis, rung, dim, unit) if axis is not None else ""
-        body = drawn + flags_html(rung, dim, unit, axis, glyph, css)
+        body = drawn + flags_html(rung, dim, unit, axis, css)
         ticks = axis_svg(axis, "ax orx") if axis is not None else ""
     return (f'<section class="org" id="{rid}" aria-labelledby="{hid}">{head}{ticks}'
             f'<div class="ort">{body}</div></section>')  # fmt: skip
@@ -471,7 +527,7 @@ def panel_html(dim, unit, css):
     name = FIGURE_HEAD[dim]
     axis = axis_of(dim, unit, rungs)
     lay = layout(rungs)
-    scaled, glyph = lay["scaled"], lay["glyph"]
+    scaled = lay["scaled"]
     anchor = FIGURE_ANCHOR.get(dim, dim)
     named = (f'<a class="df" href="{CHECKS_PAGE}#{anchor}">{e(name)}</a>' if dim in FIGURE_RULE
              or dim in FIGURE_ANCHOR else e(name))  # fmt: skip
@@ -489,11 +545,11 @@ def panel_html(dim, unit, css):
         css += [place_css(f"ov-{dim}-{r['id']}", y=f"{y}px")
                 for r, y in zip(rungs, lay["ys"], strict=True)]  # fmt: skip
     size = (f'<p class="ovz">{e(SIZE_AXIS)}</p>', size_svg(lay)) if scaled else ("", "")
-    body = "".join(rung_html(r, dim, unit, axis, glyph, css) for r in rungs)
+    body = "".join(rung_html(r, dim, unit, axis, css) for r in rungs)
     grid = grid_svg(axis) if axis is not None else ""
     return (
         f'<section class="blk ovp" id="{dim}" aria-labelledby="h-{dim}">'
-        f'<div class="ov {"sc" if scaled else "ev"}" id="ov-{dim}" data-lo="{lo}" data-hi="{hi}">'
+        f'<div class="ov {"osc" if scaled else "oev"}{" oln" if lay["lines"] else ""}" id="ov-{dim}" data-lo="{lo}" data-hi="{hi}">'
         f'<div class="ovh"><h2 class="ovt" id="h-{dim}">{named}</h2>'
         f'<div class="ova"><span class="al">{words}</span>{top}</div>{size[0]}</div>'
         f'<div class="ovb">{grid}{size[1]}{body}</div></div></section>'

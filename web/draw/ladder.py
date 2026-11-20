@@ -165,7 +165,7 @@ def nobreak(text):
 
 def lead_fig(row, bare=False):
     """A row's one figure, labelled for what it is (CO-5, `chrome.lead_figure`). Returns (label,
-    figure html); `bare` (the overview's band): the figure's plain name and the figure alone,
+    figure html); `bare` (the ladder's band): the figure's plain name and the figure alone,
     what it is in its title."""
     label, f, _ = lead_figure(row)
     if bare:
@@ -221,7 +221,7 @@ def multiple_html(row, bare=False, to=None, rates=None):
     """CO-5: the multiple; with no steady state, the session cost over serving, labelled as whole
     sessions. Its two parts (CO-7) are not printed with it: since 2026-11-17 they print only in
     the system page's Cost block (`pages.parts_tile`). `bare` (the ladder, the
-    Scale page): the figures alone, no line of scope and n under any; `to` (the ladder): the
+    Overview page): the figures alone, no line of scope and n under any; `to` (the ladder): the
     figure linked there. `rates` (the ladder, amended 2026-11-16): under it, the line of the
     proved rate (`rate_html`), linked to that address, in one block (`cmx`) that a narrow row
     sets beside the glyph."""
@@ -448,7 +448,7 @@ def defined(words, anchor):
 
 
 def standing_html(row, page=None):
-    """`standing` on the overview (§2.3, amended 2026-11-16): Passed and not ranked link to their
+    """`standing` on the ladder and the Overview page (§2.3, amended 2026-11-16): Passed and not ranked link to their
     definitions, each check not passed to its row on the system page (its cause and evidence).
     `page` is the address of that page from where the words are printed ("" on the page
     itself)."""
@@ -633,7 +633,7 @@ def rung_html(rung):
             f"{head}{body}</section>")  # fmt: skip
 
 
-# the overview's lead (SI-1, amended 2026-11-16): one sentence, what a proof of inference is, for a
+# the ladder's lead (SI-1, amended 2026-11-16): one sentence, what a proof of inference is, for a
 # reader with no context; the ladder under it says the rest
 PROOF_WORDS = ("A proof of inference lets anyone check that a reply is the one a committed model "
                "returns for a prompt.")  # fmt: skip

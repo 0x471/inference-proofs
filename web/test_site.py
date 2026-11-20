@@ -218,7 +218,7 @@ def test_every_rung_not_run_without_a_board(empty_site: Path) -> None:
 
 
 OVERVIEW_PANEL = re.compile(
-    r'<div class="ov (sc|ev)" id="ov-([a-z-]+)" data-lo="(-?\d+)" data-hi="(-?\d+)">(.*?)'
+    r'<div class="ov (osc|oev)(?: oln)?" id="ov-([a-z-]+)" data-lo="(-?\d+)" data-hi="(-?\d+)">(.*?)'
     r'(?=<section class="blk ovp"|<section class="notrun"|</main>)',
     re.S,
 )
@@ -308,7 +308,7 @@ def test_overview_positions_are_the_boards(board_site: Any) -> None:
 
     for dim in ("multiple", "proof-size", "check-time"):
         mode, lo, hi, body = panels[dim]
-        assert mode == "sc"  # the example's three models leave room: the rungs are set by size
+        assert mode == "osc"  # the example's three models leave room: the rungs are set by size
         rungs = overview_rungs(dim, body)
         assert [rid for rid, _ in rungs] == [r["id"] for r in board["rungs"]]
         for rung, (rid, section) in zip(board["rungs"], rungs, strict=True):
@@ -334,7 +334,8 @@ def test_overview_positions_are_the_boards(board_site: Any) -> None:
                     b = rung["baseline"]["gpu_seconds_per_reply"]["value"]
                     ticks += [at(lo, hi, r / b) for r in runs if r is not None]
             assert re.findall(r'<line class="ss (?:ok|np)" x1="([^"]+)"', section) == ticks
-            serving = dim == "multiple" and rung["rows"] and rung["baseline"]
+            served = (rung["baseline"] or {}).get("reply_tokens_per_gpu_second") or {}
+            serving = dim == "multiple" and rung["rows"] and served.get("value")
             assert re.findall(r'<svg class="rfm" x="([^"]+)"', section) == (
                 [at(lo, hi, 1.0)] if serving else []
             ), (dim, rid)
@@ -352,6 +353,46 @@ def test_overview_positions_are_the_boards(board_site: Any) -> None:
     boxes = overview_boxes("fidelity", panels["fidelity"][3])
     assert boxes
     assert all(nov for _, nov, _ in boxes)
+
+
+def test_overview_fidelity_positions_are_the_boards(release_site: Any, board_site: Any) -> None:
+    """RFC-0018 SI-7 (amended 2026-11-20): on the Overview page's Fidelity drawing each mark stands
+    at its row's `percent`, and each of its model's 8-bit and 4-bit copies at its own, on one
+    axis from the ten under the lowest drawn value to 100 %. The axis's rule is hand-computed:
+    over 86.4, 85.5 and 96.2 % it runs from 80, where 86.4 % stands at (86.4 - 80) / 20 = 32 %
+    of the way; a value of 0 % is drawn, at the axis's start."""
+    build = board_site.build
+    assert build.share_extent([86.4, 85.5, 96.2]) == (80, 100)
+    assert build.pc(build.lin_x(86.4, 80, 100)) == "32.00%"
+    assert build.share_extent([0.0, 96.2]) == (0, 100)
+    assert build.share_extent([97.0, 99.0]) == (90, 100)  # never a narrower stretch than 10 %
+    board = release_site.board
+    text = pages(release_site.out)["overview.html"]
+    panels = {
+        dim: (int(lo), int(hi), body) for _, dim, lo, hi, body in OVERVIEW_PANEL.findall(text)
+    }
+    lo, hi, body = panels["fidelity"]
+    drawn: list[float] = []
+    for rung, (_, section) in zip(board["rungs"], overview_rungs("fidelity", body), strict=True):
+        tf = rung.get("teacher_forced") or {}
+        rows = [(r["system"], (tf.get("rows") or {}).get(r["system"], {}).get("percent"))
+                for r in rung["rows"]]  # fmt: skip
+        copies = {c["id"]: c["percent"] for c in tf.get("controls") or []
+                  if c["id"] in ("q8_0", "q4_k_m") and c["status"] == "ok"}  # fmt: skip
+        want = sorted(copies.values()) if rung["rows"] else []
+        assert re.findall(r'<svg class="rfm" x="([^"]+)"', section) == [
+            f"{100 * (v - lo) / (hi - lo):.2f}%" for v in want
+        ], rung["id"]
+        drawn += want
+        for system, percent in rows:
+            if percent is None:
+                continue
+            found = re.search(rf"#ob-fidelity-{re.escape(system)}\{{--x:([^;}}]+)", text)
+            assert found, system
+            assert found[1] == f"{100 * (percent - lo) / (hi - lo):.2f}%", system
+            drawn.append(percent)
+    assert drawn, "the release draws no Fidelity figure"
+    assert (lo, hi) == (min(90, 10 * math.floor(min(drawn) / 10)), 100)
 
 
 def test_session_parts_print_on_the_system_page_only(board_site: Any) -> None:
