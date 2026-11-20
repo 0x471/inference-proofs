@@ -2645,6 +2645,13 @@
               85.94455295138889,
               86.88151041666666
             ],
+            "proved_tokens": {
+              "agreeing": 11034,
+              "positions": 11034,
+              "prompts": 360,
+              "split_agreeing": 357,
+              "split_positions": 357
+            },
             "run": "results/v1.0/teacher-forced/llama-4-maverick/run-flashprove.json",
             "status": "ok",
             "tests": [
@@ -4833,6 +4840,13 @@
               89.46614583333333,
               94.46614583333334
             ],
+            "proved_tokens": {
+              "agreeing": 480,
+              "positions": 480,
+              "prompts": 15,
+              "split_agreeing": 15,
+              "split_positions": 15
+            },
             "run": "results/v1.0/teacher-forced/llama-3.1-8b/run-sash.json",
             "status": "ok",
             "tests": [

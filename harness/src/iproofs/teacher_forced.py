@@ -30,6 +30,9 @@ log-probabilities.
   scores, with replacement, drawn by `random.Random(seed).choices`, seed the first 8 bytes,
   big-endian, of sha256("fidelity-interval" || 0x00 || utf8(id)); the interval runs from the
   251st to the 9,750th of the sorted resample means, as percentages of the positions.
+- FI-16: `proved_tokens` counts, for a row, the reply positions at which a proof states the
+  committed model's top token on the reference's own text, and those at which the row's pass
+  gave that token. The board computes it from the stored top tokens and the proved replies.
 """
 
 import hashlib
@@ -44,7 +47,7 @@ from math import exp, fsum, log
 from pathlib import Path
 from typing import Any, Literal
 
-from iproofs.fidelity import PairTest, SignFlipRule, pair_seed, sign_flip_p
+from iproofs.fidelity import PairTest, SignFlipRule, matched_prefix, pair_seed, sign_flip_p
 from iproofs.quantity import Unit
 
 SCHEMA = "teacher-forced/1"
@@ -124,6 +127,39 @@ def fidelity_percent(mean: float | None, positions: int) -> float | None:
     if positions < 1:
         raise ValueError(f"{positions} positions")
     return mean / positions * 100
+
+
+def proved_tokens(
+    proved: Sequence[Sequence[int]],
+    reference: Sequence[Sequence[int]],
+    tops: Sequence[Sequence[int] | None],
+) -> dict[str, int]:
+    """FI-16: the tie between a row's pass and its proofs. For one prompt, with L the leading
+    tokens of the row's proved reply equal to the reference reply (FI-3): at positions 0 to
+    L - 1, and at position L where L is short of the reply, the proved model wrote its token
+    after the prompt and reference[:t], the very text row t of the pass is computed after
+    (FI-10). The proved token there is what a proof states the committed model's top token
+    is, so the pass's top token there must be it. `positions`: those positions over the
+    prompts that have top tokens (`prompts`); `agreeing`: those where the pass gave the
+    proved token; `split_positions` and `split_agreeing`: the same at the positions L alone,
+    where the proved token is not the reference's."""
+    prompts = positions = agreeing = splits = split_agreeing = 0
+    for own, ref, top in zip(proved, reference, tops, strict=True):
+        if top is None:
+            continue
+        if not len(own) == len(ref) == len(top):
+            raise ValueError(f"{len(own)} proved tokens and {len(top)} top tokens for a reply "
+                             f"of {len(ref)}")  # fmt: skip
+        shared = matched_prefix(own, ref)
+        prompts += 1
+        positions += shared
+        agreeing += sum(1 for t in range(shared) if top[t] == own[t])
+        if shared < len(ref):
+            splits += 1
+            split_agreeing += int(top[shared] == own[shared])
+    return {"prompts": prompts, "positions": positions + splits,
+            "agreeing": agreeing + split_agreeing, "split_positions": splits,
+            "split_agreeing": split_agreeing}  # fmt: skip
 
 
 @dataclass(frozen=True, slots=True)
@@ -467,11 +503,22 @@ def build(
 
 def board_block(doc: Mapping[str, Any], path: str, tops: Mapping[str, Path],
                 reference: Sequence[Sequence[int]],
-                kl_values: Mapping[str, Any] | None = None) -> dict[str, object]:  # fmt: skip
+                kl_values: Mapping[str, Any] | None = None,
+                proved: Mapping[str, Sequence[Sequence[int]] | None] | None = None,
+                ) -> dict[str, object]:  # fmt: skip
     """What the board prints of `teacher-forced.json`, after recomputing every score it holds
     from the stored top tokens (`tops`: id to its `top/<id>.jsonl`) and the reference replies,
     every mean and median from the scores, and every KL figure from the stored per-prompt
-    values (`kl_values`, kl.json); a difference stops the board (AGENTS.md rule 3)."""
+    values (`kl_values`, kl.json); a difference stops the board (AGENTS.md rule 3). `proved`:
+    each row's proved replies in prompt order (None without a reply for every prompt), from
+    which each row's `proved_tokens` is counted (FI-16; null without them or without a pass)."""
+
+    def tie(system: str, entry: Mapping[str, Any]) -> dict[str, int] | None:
+        own = (proved or {}).get(system)
+        if own is None or entry["status"] != "ok":
+            return None
+        lines = [json.loads(x) for x in tops[system].read_text().splitlines() if x.strip()]
+        return proved_tokens(own, reference, [None if isinstance(t, dict) else t for t in lines])
 
     def checked(ident: str, entry: Mapping[str, Any], system: bool) -> None:
         scores = [int(x) for x in entry["scores"]]
@@ -517,7 +564,8 @@ def board_block(doc: Mapping[str, Any], path: str, tops: Mapping[str, Path],
     for system, r in doc["rows"].items():
         checked(system, r, True)
         rows[system] = {**figure(system, r), "computed_by": r["computed_by"], "label": r["label"],
-                        "tests": [dict(t) for t in r["tests"]]}  # fmt: skip
+                        "tests": [dict(t) for t in r["tests"]],
+                        "proved_tokens": tie(system, r)}  # fmt: skip
     own = doc.get("reference_pass")
     if own is not None:
         checked("reference", {**own, "kl": None}, False)

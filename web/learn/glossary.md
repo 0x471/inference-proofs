@@ -100,7 +100,7 @@ For the Fidelity check, one of the six [checks](/checks#fidelity), the proved re
 
 ### Fidelity figure
 
-The Fidelity figure is the share of reply positions where the system, fed the prompt and the original's reply, picks the original's next token. This is called top-token agreement. It sets no state, and its label reads "computed by the system's own code on the reference reply, not by the proved computation".
+The Fidelity figure is the share of reply positions where the system, fed the prompt and the original's reply, picks the original's next token. This is called top-token agreement. It sets no state, and its label reads "computed by the system's own code on the reference reply, not by the proved computation". One thing ties it to the proofs. Where a proved reply starts like the original's, both models have read the same text, so a proof tells us which token the proved model picks there. We count those positions and require the system's code to pick the same token at each; the count is on the system's page.
 
 ### Field
 

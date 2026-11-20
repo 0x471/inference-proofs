@@ -784,6 +784,10 @@ WHY_TOP_TOKEN = (
     "positions, not only up to the first difference."
 )
 FIDELITY_CHECK_TITLE = "Fidelity check: {state}"
+# FI-16: the row's pass against its proofs, in the Fidelity figure's title
+FIDELITY_PROVED_TITLE = (
+    "against the proofs: the proved token at {agreeing:,} of {positions:,} positions a proof covers"
+)
 
 
 def beside_unit(name):
@@ -853,6 +857,12 @@ FIGURE_RULE = {
         ("", "Computed by the system's own code on the reference reply, not by the proved "
          "computation. It sets no state."),
         ("", WHY_TOP_TOKEN.replace("{tokens:,}", "{reply_tokens}")),
+        # FI-16 (adopted 2026-11-14): the figure tied to the proofs
+        ("", "Where a proved reply starts like the original's, both models have read the same "
+         "text, so a proof states which token the proved model picks there, up to and including "
+         "the first token that differs. The system's code must pick that token at every such "
+         "position; the system's page prints the count. A row whose code picks another token "
+         "there prints the Fidelity check's state in the figure's place."),
     ),
     "kl": (
         # FI-7 over the KL texts (PR-3; 64 and 512 are the level file's kl.texts and kl.tokens)
@@ -1260,6 +1270,12 @@ TF_KL_TITLE = (
 TF_SUB = "median {median}"
 TF_FAILED = "{k:,} of {n:,} prompts failed, counted as 0"
 TF_TEST = "{name} above it: {above} · below it: {below}"  # each p as `p_said` reads it
+# FI-16 (adopted 2026-11-14): the row's pass against its proofs, a cell of the Fidelity block
+PROOFS_HEAD = "Against the proofs"
+TF_PROVED = "{agreeing:,} of {positions:,} positions"
+TF_PROVED_SPLIT = "{agreeing:,} of {positions:,} where the two replies part"
+TF_PROVED_MEAN = "where a proof states the model's token, {name}'s code picked it"
+TF_NOT_PROVED = "the row has no proved reply for every prompt"
 TF_KL_SUB = "n\u00a0=\u00a0{n:,}"  # under a KL figure whose n is not the block's
 
 

@@ -156,6 +156,7 @@ from .words import (
     PETAL_STEPS_FOOT,
     PETAL_TERM,
     PREFIX,
+    PROOFS_HEAD,
     PROVED_HEAD,
     PROVED_LINK,
     RATE_PER,
@@ -192,6 +193,10 @@ from .words import (
     TF_KL,
     TF_KL_SUB,
     TF_KL_TITLE,
+    TF_NOT_PROVED,
+    TF_PROVED,
+    TF_PROVED_MEAN,
+    TF_PROVED_SPLIT,
     TF_SUB,
     TF_TEST,
     TF_TESTS_ON,
@@ -1237,9 +1242,18 @@ def agree_html(entry, tf, sub):
     if entry.get("percent_interval"):
         low, high = entry["percent_interval"]
         said += f"; interval: 95\u00a0%, {pct(low)} to {pct(high)}\u202f%"
-    return (f'<span class="fig" title="{e(said)}; record: {e(tf["path"])}">'
+    return (f'<span class="fig" title="{e(said)}; record: {e(tf_record(tf, entry))}">'
             f'<span class="n">{e(pct(entry["percent"]))}</span><span class="u">%</span></span>'
             + "".join(f'<span class="sub">{e(line)}</span>' for line in sub if line))  # fmt: skip
+
+
+def tf_record(tf, entry):
+    """Where the board holds a teacher-forced entry's percentage (`tf["record"]`, the block's
+    pointer; a printed percentage names its value there), found by the entry itself."""
+    at = next((f"rows/{k}" for k, v in tf["rows"].items() if v is entry), None)
+    if at is None:
+        at = next(f"controls/{i}" for i, c in enumerate(tf["controls"]) if c is entry)
+    return f"{tf['record']}/{at}/percent"
 
 
 def interval_words(entry):
@@ -1874,12 +1888,28 @@ def fidelity_plot(row, fid, tf, mine):
     return dot_plot(head, e(caption), axis_svg(ticks, wide=PLOT_BESIDE), grid, rows)
 
 
+def proofs_html(row, mine):
+    """FI-16: the row's pass against its proofs, from the board's count: the positions where a
+    proved reply starts like the original's (up to and including the first token that differs)
+    and how many of them the row's code gave the proved token at, then the same at the
+    positions where the two replies part; "not compared" where the row has no proved reply for
+    every prompt. It gates nothing."""
+    tie = mine.get("proved_tokens")
+    if tie is None:
+        return f'<span class="na">not compared</span>{mean(TF_NOT_PROVED)}'
+    split = TF_PROVED_SPLIT.format(agreeing=tie["split_agreeing"], positions=tie["split_positions"])
+    return (f'<span class="pw">{e(TF_PROVED.format(**tie))}</span>'
+            f'<span class="sub">{e(split)}</span>'
+            f"{mean(TF_PROVED_MEAN.format(name=name_of(row)))}")  # fmt: skip
+
+
 def fidelity_block(row):
     """The Fidelity block (SI-9): the Fidelity figure with its n among the quantized copies, drawn
     on one axis (`fidelity_plot`; as tiles, with the 8-bit and 4-bit copies, where none ran), what
-    the row proves, the Fidelity check's state with the matched leading tokens and the bar,
-    and KL to the original or "not measured" (law 2). Every copy, the tests, the publisher's words
-    on the number format and the run's sources one click down (`fidelity_html`)."""
+    the row proves, its count against the proofs (FI-16, `proofs_html`), the Fidelity check's
+    state with the matched leading tokens and the bar, and KL to the original or "not measured"
+    (law 2). Every copy, the tests, the publisher's words on the number format and the run's
+    sources one click down (`fidelity_html`)."""
     rung = rung_of(row)
     fid, tf = rung["fidelity"], rung.get("teacher_forced")
     mine = (tf or {}).get("rows", {}).get(row["system"]) if tf else None
@@ -1899,6 +1929,8 @@ def fidelity_block(row):
         copies = [(e(COPY_WORD[i]), agree_html(by[i], tf, [])) for i in FIDELITY_AGAINST if i in by]
         if copies:
             cells.append((term("Copies", "Q8_0 and Q4_K_M"), lines_html(copies), ""))
+    if mine is not None and mine["status"] == "ok":
+        cells.append((defined(PROOFS_HEAD, FIGURE_ANCHOR["fidelity"]), proofs_html(row, mine), ""))
     check = next(c for c in row["checks"] if c["id"] == "fidelity")
     said = state_word(check["state"], STATE_WORD[check["state"]])
     own, bar = row["fidelity"], (fid or {}).get("bar")

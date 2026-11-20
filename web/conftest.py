@@ -33,6 +33,18 @@ def board_site(tmp_path_factory: pytest.TempPathFactory) -> SimpleNamespace:
 
 
 @pytest.fixture(scope="session")
+def release_site(tmp_path_factory: pytest.TempPathFactory) -> SimpleNamespace:
+    """out: the site built from the newest Level 1 release's board, as the committed site is;
+    board: that file. Skipped while no release has one."""
+    boards = sorted(ROOT.glob("releases/v1.*/board.json"))
+    if not boards:
+        pytest.skip("no Level 1 release has a board file yet")
+    out = tmp_path_factory.mktemp("release-site")
+    build(ROOT, out, boards[-1])
+    return SimpleNamespace(out=out, board=json.loads(boards[-1].read_text()))
+
+
+@pytest.fixture(scope="session")
 def empty_site(tmp_path_factory: pytest.TempPathFactory) -> Path:
     """The site with no board: every rung of the level file not run yet."""
     out = tmp_path_factory.mktemp("empty-site")

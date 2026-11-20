@@ -33,6 +33,7 @@ from .words import (
     FIDELITY_AGAINST,
     FIDELITY_CHECK_TITLE,
     FIDELITY_FIG_TITLE,
+    FIDELITY_PROVED_TITLE,
     FIDELITY_TITLE,
     FIGURE_ANCHOR,
     FIGURE_HEAD,
@@ -353,12 +354,16 @@ def fidelity_word(row, page=None, against=True, long=False):
     system's page, then what the row proves (`proved_words`, `long` on the Figures row), then
     the rung's 8-bit and 4-bit copies (`against`). Its title says what it is, why top-token
     agreement, whose computation, the proved copy, n and the record, and the Fidelity check's
-    state, which it does not set. A row with no teacher-forced pass prints the check's state in a
-    word, as before."""
+    state, which it does not set, and the row's count against the proofs (FI-16). A row with no
+    teacher-forced pass prints the check's state in a word, as before, and so does a row whose
+    pass gave another token than a proof states at a position one covers."""
     tf = rung_of(row).get("teacher_forced") or {}
     mine = (tf.get("rows") or {}).get(row["system"])
     if mine is None or mine["status"] != "ok" or mine.get("percent") is None:
         return check_word(row, page)
+    tie = mine.get("proved_tokens")
+    if tie is not None and tie["agreeing"] != tie["positions"]:
+        return check_word(row, page)  # FI-16: its code is not shown to be the proved model's
     check = next(c for c in row["checks"] if c["id"] == "fidelity")
     low_high = mine.get("percent_interval")
     spread = ([TF_INTERVAL.format(low=pct(low_high[0]), high=pct(low_high[1]))]
@@ -371,8 +376,9 @@ def fidelity_word(row, page=None, against=True, long=False):
              *(f"interval: 95\u00a0%, {pct(low_high[0])} to {pct(low_high[1])}\u202f%"
                for _ in spread),
              *([proved_title(row)] if proved_title(row) else []), copies,
+             *([FIDELITY_PROVED_TITLE.format(**tie)] if tie is not None else []),
              FIDELITY_CHECK_TITLE.format(state=STATE_WORD[check["state"]]),
-             f"record: {tf['path']}"]  # fmt: skip
+             f"record: {tf['record']}/rows/{row['system']}/percent"]  # fmt: skip
     at = href(row) if page is None else page
     proved = proved_words(row, long)
     line = fidelity_against(rung_of(row)) if against else ""
