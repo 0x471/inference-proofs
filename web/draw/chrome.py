@@ -298,9 +298,10 @@ def new_tab(html):
     )
 
 
-def page(title, desc, body, cls, path, card):
+def page(title, desc, body, cls, path, card, css=""):
     """One page. path: its address under the site ("" for the home); card: its preview card's name,
-    or None for a page that is never shared (the 404)."""
+    or None for a page that is never shared (the 404); css: rules of this page's own, written by
+    its renderer after the site's (where its marks stand, the Overview page: `overview.py`)."""
     title, desc = SEARCH_COPY.get(path, (title, desc))
     meta = (
         share_meta(title, desc, path, card, body)
@@ -311,7 +312,7 @@ def page(title, desc, body, cls, path, card):
         f'<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">'
         # the styles before the inline script: the @view-transition rule is then known when the
         # page is revealed, so a transition into it is not skipped
-        f"{preloads()}<style>{page_styles(cls)}</style>"
+        f"{preloads()}<style>{page_styles(cls)}{css}</style>"
         f"<script>{HEAD_SCRIPT}</script>"
         f'<title>{e(full_title(title))}</title><meta name="description" content="{e(desc)}">'
         f'<meta name="color-scheme" content="dark"><meta name="theme-color" content="{GROUND}">'

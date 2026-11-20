@@ -290,11 +290,31 @@ def pct(v):
 def fidelity_against(rung):
     """The rung's 8-bit and 4-bit copies' Fidelity in one line ("8-bit copy 98.4 % · 4-bit copy
     90.6 %"), each that ran; "" where none did. Their ids stand in the figure's title."""
+    return SEP.join(f"{COPY_WORD[i]} {pct(v)}\u202f%" for i, v in copies_of(rung))
+
+
+def copies_of(rung):
+    """The rung's 8-bit and 4-bit copies that ran, as (id, Fidelity in percent), in
+    FIDELITY_AGAINST's order."""
     tf = rung.get("teacher_forced") or {}
     by = {c["id"]: c for c in tf.get("controls") or []}
-    out = [f"{COPY_WORD[i]} {pct(by[i]['percent'])}\u202f%" for i in FIDELITY_AGAINST
-           if i in by and by[i]["status"] == "ok" and by[i].get("percent") is not None]  # fmt: skip
-    return SEP.join(out)
+    return [(i, by[i]["percent"]) for i in FIDELITY_AGAINST
+            if i in by and by[i]["status"] == "ok" and by[i].get("percent") is not None]  # fmt: skip
+
+
+def fidelity_row(row):
+    """The record a row's Fidelity figure is printed from (its rung's teacher-forced pass), or
+    None where the surface prints the check's state instead: no pass, a pass that failed, or one
+    that gave another token than a proof states at a position one covers (FI-16: its code is not
+    shown to be the proved model's)."""
+    tf = rung_of(row).get("teacher_forced") or {}
+    mine = (tf.get("rows") or {}).get(row["system"])
+    if mine is None or mine["status"] != "ok" or mine.get("percent") is None:
+        return None
+    tie = mine.get("proved_tokens")
+    if tie is not None and tie["agreeing"] != tie["positions"]:
+        return None
+    return mine
 
 
 def bits_words(bits):
@@ -358,12 +378,10 @@ def fidelity_word(row, page=None, against=True, long=False):
     teacher-forced pass prints the check's state in a word, as before, and so does a row whose
     pass gave another token than a proof states at a position one covers."""
     tf = rung_of(row).get("teacher_forced") or {}
-    mine = (tf.get("rows") or {}).get(row["system"])
-    if mine is None or mine["status"] != "ok" or mine.get("percent") is None:
+    mine = fidelity_row(row)
+    if mine is None:
         return check_word(row, page)
     tie = mine.get("proved_tokens")
-    if tie is not None and tie["agreeing"] != tie["positions"]:
-        return check_word(row, page)  # FI-16: its code is not shown to be the proved model's
     check = next(c for c in row["checks"] if c["id"] == "fidelity")
     low_high = mine.get("percent_interval")
     spread = ([TF_INTERVAL.format(low=pct(low_high[0]), high=pct(low_high[1]))]

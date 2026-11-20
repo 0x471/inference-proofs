@@ -287,7 +287,7 @@
 
   // ------------------------------------------------------------ the ladder's rows: the whole row leads to its page, but
   // a tap on one of its figures shows that figure's labels
-  const rows = $$('.lad .row, .scl .row');
+  const rows = $$('.lad .row, .ov .row');
   rows.forEach((tr) => {
     const a = $('.sname', tr);
     if (!a) return;
@@ -462,9 +462,24 @@
   // the address keeps it (no history entry, no scroll); an address naming none draws the first. With no script every
   // figure is drawn
   const panels = body.classList.contains('overviewpage') ? secs.filter(Boolean) : [];
+  // where each system's mark, pole and flag stand in a panel, by system and part
+  const stands = (panel) => new Map($$('[data-s]', panel).map((el) => [el.dataset.s + ' ' + el.classList[0], [el, el.getBoundingClientRect()]]));
   const pick = (id, keep) => {
     const k = Math.max(0, panels.findIndex((s) => s.id === id));
+    const from = panels.find((s) => !s.hidden);
+    // a figure picked by hand moves each system from where it stood to where it stands (200 ms, no number waits)
+    const was = keep && smooth() && from && from !== panels[k] && panels.filter((s) => !s.hidden).length === 1 ? stands(from) : null;
+    const top = was ? from.getBoundingClientRect().top : 0;
     panels.forEach((s, i) => { s.hidden = i !== k; });
+    if (was && panels[k].animate) {
+      const dy = panels[k].getBoundingClientRect().top - top;
+      stands(panels[k]).forEach(([el, r], key) => {
+        const old = was.get(key);
+        if (!old) return;
+        const x = old[1].left - r.left; const y = old[1].top - r.top - dy;
+        if (Math.abs(x) > .5 || Math.abs(y) > .5) el.animate([{ transform: 'translate(' + x + 'px, ' + y + 'px)' }, { transform: 'none' }], { duration: 200, easing: 'cubic-bezier(.2, .7, .2, 1)' });
+      });
+    }
     links.forEach((a, i) => { a.classList.toggle('on', i === k); if (i === k) a.setAttribute('aria-current', 'true'); else a.removeAttribute('aria-current'); snug(a); });
     if (links[k]) whole(links[k], 'auto');
     if (!keep) return;

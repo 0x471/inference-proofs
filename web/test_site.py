@@ -217,13 +217,26 @@ def test_every_rung_not_run_without_a_board(empty_site: Path) -> None:
     assert all("not run yet" in body and "<table" not in body for _, body in sections)
 
 
-SCALE_LANE = re.compile(
-    r'<table class="scl" data-lo="(-?\d+)" data-hi="(-?\d+)">(.*?)</table>', re.S
-)
-SCALE_ROW = re.compile(
-    r'<tr class="row (ok|np)" id="scale-(multiple|check-time|proof-size)-([^"]+)">(.*?)</tr>',
+OVERVIEW_PANEL = re.compile(
+    r'<div class="ov (sc|ev)" id="ov-([a-z-]+)" data-lo="(-?\d+)" data-hi="(-?\d+)">(.*?)'
+    r'(?=<section class="blk ovp"|<section class="notrun"|</main>)',
     re.S,
 )
+
+
+def overview_rungs(dim: str, body: str) -> list[tuple[str, str]]:
+    """A panel's rungs as (model id, markup), in the page's order."""
+    return re.findall(
+        rf'<section class="org" id="ov-{dim}-([^"]+)"[^>]*>(.*?)</section>', body, re.S
+    )
+
+
+def overview_boxes(dim: str, body: str) -> list[tuple[str, str, str]]:
+    """A panel's systems as (ok or np, " nov" where no mark is drawn, page)."""
+    return re.findall(rf'<div class="obx (ok|np)( nov)?" id="ob-{dim}-([^"]+)">', body)
+
+
+OVERVIEW_FLAG = re.compile(r'<div class="ofl row[^"]*" data-s="([^"]+)">(.*?)<p class="st">', re.S)
 
 
 def at(lo: int, hi: int, v: float) -> str:
@@ -276,53 +289,69 @@ def test_system_page_drawings_sit_where_the_figures_say(board_site: Any) -> None
             assert me == [f"{100 * (mine['percent'] - low) / (100 - low):.2f}%"], system
 
 
-def test_scale_positions_are_the_boards(board_site: Any) -> None:
-    """RFC-0018 SI-7: on the overview page, each mark sits where its row's printed figure falls on
-    the figure's one decade grid, its session ticks where the board's sessions fall, serving's
-    line where the rung's baseline falls; a row not passed is an outline; lanes and rows keep the
-    board's order. The extents and two positions are hand-computed for the example board."""
+def test_overview_positions_are_the_boards(board_site: Any) -> None:
+    """RFC-0018 SI-7: on the Overview page, each mark stands where its row's printed figure falls
+    on the figure's one axis, its session ticks where the board's sessions fall, serving's mark at
+    1x where the rung has a baseline; a row not passed is an outline; rungs and rows keep the
+    board's order, and a rung stands at its parameter count on the size axis. The extents, two
+    places across and one down are hand-computed for the example board."""
     board = board_site.board
     text = pages(board_site.out)["overview.html"]
-    lanes = SCALE_LANE.findall(text)
-    assert len(lanes) == 3  # one table per figure, every lane under its one axis
-    seen: dict[str, list[str]] = {}
-    for lo_s, hi_s, body in lanes:
-        lo, hi = int(lo_s), int(hi_s)
-        for state, dim, _, tr in SCALE_ROW.findall(body):
-            title = FIG.search(tr)
-            assert title, (dim, tr[:80])
-            pointer = re.search(r"record: [^#]+#(/[^;\"]+)", html.unescape(title[1]))
-            assert pointer
-            stored = resolve(board, pointer[1])
-            at_row = pointer[1].rsplit("/", 1)[0]
-            row = resolve(board, at_row)
-            base = resolve(board, at_row.rsplit("/", 2)[0])["baseline"]
-            seen.setdefault(dim, []).append(row["system"])
-            assert state == ("ok" if row["passed"] else "np"), (dim, row["system"])
-            v = stored["value"] * (1e-6 if stored["unit"] == "B/request" else 1)
-            assert re.findall(r'<svg class="mk" x="([^"]+)"', tr) == [at(lo, hi, v)], (
-                dim,
-                row["system"],
-            )
-            # CO-5 (amended 2026-11-15): the whole sessions' scope wherever the row has it
-            steady = row["session_multiple"]["value"] is None
-            runs = [s["m" if steady else "session"] for s in row["sessions"]]
-            if dim == "multiple":
-                b = base["gpu_seconds_per_reply"]["value"]
-                ticks, serve = [r / b for r in runs if r is not None], 1.0
-            else:
-                ticks, serve = [], None
-            got = re.findall(r'<line class="ss" x1="([^"]+)"', tr)
-            assert got == [at(lo, hi, t) for t in ticks], (dim, row["system"])
-            sv = re.findall(r'<line class="sv" x1="([^"]+)"', tr)
-            assert sv == ([at(lo, hi, serve)] if serve else []), (dim, row["system"])
+    panels = {dim: (mode, int(lo), int(hi), body) for mode, dim, lo, hi, body
+              in OVERVIEW_PANEL.findall(text)}  # fmt: skip
+    assert list(panels) == ["multiple", "proof-size", "check-time", "fidelity"]
+
+    def place(name: str, key: str) -> str:
+        found = re.search(rf"#{re.escape(name)}\{{--{key}:([^;}}]+)", text.replace("\\", ""))
+        assert found, name
+        return found[1]
+
     for dim in ("multiple", "proof-size", "check-time"):
-        assert seen[dim] == [r["system"] for r in rows(board)], dim
-    # hand-computed: the multiple from 1× to 1,000× (sessions up to 612 / 1.408 = 434.6×);
-    # FlashProve at its whole sessions' scope, 49.83 / 0.6024 = 82.72× (log10 / 3 = 63.92 %), not
-    # its steady 68.31×
-    assert [(lo, hi) for lo, hi, _ in lanes] == [("0", "3"), ("0", "2"), ("0", "2")]
-    assert re.search(r'id="scale-multiple-flashprove">.*?class="mk" x="63.92%"', text, re.S)
+        mode, lo, hi, body = panels[dim]
+        assert mode == "sc"  # the example's three models leave room: the rungs are set by size
+        rungs = overview_rungs(dim, body)
+        assert [rid for rid, _ in rungs] == [r["id"] for r in board["rungs"]]
+        for rung, (rid, section) in zip(board["rungs"], rungs, strict=True):
+            states = {page: (state, bool(nov)) for state, nov, page in overview_boxes(dim, section)}
+            flags = OVERVIEW_FLAG.findall(section)
+            # a box holds the boxes before it, so the flags read in the board's order
+            assert [page for page, _ in flags] == [r["system"] for r in rung["rows"]], (dim, rid)
+            ticks: list[str] = []
+            for row, (page, flag) in zip(rung["rows"], flags, strict=True):
+                title = FIG.search(flag)
+                assert title, (dim, page)
+                pointer = re.search(r"record: [^#]+#(/[^;\"]+)", html.unescape(title[1]))
+                assert pointer
+                stored = resolve(board, pointer[1])
+                assert resolve(board, pointer[1].rsplit("/", 1)[0])["system"] == row["system"]
+                assert states[page] == ("ok" if row["passed"] else "np", False), (dim, page)
+                v = stored["value"] * (1e-6 if stored["unit"] == "B/request" else 1)
+                assert place(f"ob-{dim}-{page}", "x") == at(lo, hi, v), (dim, page)
+                # CO-5 (amended 2026-11-15): the whole sessions' scope wherever the row has it
+                steady = row["session_multiple"]["value"] is None
+                runs = [s["m" if steady else "session"] for s in row["sessions"]]
+                if dim == "multiple":
+                    b = rung["baseline"]["gpu_seconds_per_reply"]["value"]
+                    ticks += [at(lo, hi, r / b) for r in runs if r is not None]
+            assert re.findall(r'<line class="ss (?:ok|np)" x1="([^"]+)"', section) == ticks
+            serving = dim == "multiple" and rung["rows"] and rung["baseline"]
+            assert re.findall(r'<svg class="rfm" x="([^"]+)"', section) == (
+                [at(lo, hi, 1.0)] if serving else []
+            ), (dim, rid)
+    # hand-computed: the multiple from 1x to 1,000x (sessions up to 612 / 1.408 = 434.6x);
+    # FlashProve at its whole sessions' scope, 49.83 / 0.6024 = 82.72x (log10 / 3 = 63.92 %), not
+    # its steady 68.31x; its proof, 18.79 MB between 1 and 100 MB (log10 / 2 = 63.70 %)
+    assert [panels[d][1:3] for d in ("multiple", "proof-size", "check-time")] == [
+        (0, 3), (0, 2), (0, 2)]  # fmt: skip
+    assert place("ob-multiple-flashprove", "x") == "63.92%"
+    assert place("ob-proof-size-flashprove", "x") == "63.70%"
+    # and down: 400B parameters under the 1T decade, 130 px a decade below 28 px of room:
+    # 28 + (12 - log10(4e11)) x 130 = 28 + 0.39794 x 130 = 79.7 px
+    assert place("ov-multiple-llama-4-maverick", "y") == "79.7px"
+    # a board with no Fidelity figure draws no Fidelity axis and no mark: each flag says the check's state
+    boxes = overview_boxes("fidelity", panels["fidelity"][3])
+    assert boxes
+    assert all(nov for _, nov, _ in boxes)
 
 
 def test_session_parts_print_on_the_system_page_only(board_site: Any) -> None:
