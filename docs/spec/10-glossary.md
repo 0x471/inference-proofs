@@ -34,7 +34,7 @@ The site's Learn glossary ([`web/learn/glossary.md`](../../web/learn/glossary.md
 
 <a id="control"></a>**Control (negative control).** A deliberate tampering of a request, claimed output, commitment, proof or prover input, applied by the harness, whose expected outcome is rejection (or, for system-specific unbinding switches, a documented acceptance). Identified C1 to C8 (verifier side) and P1, P2 (prover side). [RFC-0008](../../rfcs/0008-negative-controls.md).
 
-<a id="control-job"></a>**Control job.** A job run with `control: true`. Only control jobs may use a configuration that weakens a system's statement. A control job never produces a measured row.
+<a id="control-job"></a>**Control job.** A job run with `control: true`, or a verifier-side control verification, which the harness records as a control but issues with `control: false` ([RFC-0008](../../rfcs/0008-negative-controls.md) INV-CTRL-9). Only control jobs may use a configuration that weakens a system's statement. A control job never produces a measured row.
 
 <a id="control-outcome"></a>**Control outcome.** One of `rejected`, `accepted`, `no_verdict`, `invalid_call`, `void`, `not_applicable`, `prover_failed` (prover-side controls P1 and P2 only), `error`. A control passes when its outcome is in its expected set. [RFC-0008](../../rfcs/0008-negative-controls.md).
 

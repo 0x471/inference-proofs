@@ -1171,6 +1171,7 @@ class Runner:
         io: Path | None = None,
         *,
         control: bool | Mapping[str, object] = False,
+        hide_control: bool = False,
         ro_mounts: Sequence[tuple[Path, str]] = (),
         trace_dir: Path | None = None,
     ) -> tuple[AdapterOut, StepResult]:
@@ -1193,7 +1194,13 @@ class Runner:
                     "batches_per_session": shape.batches_per_session,
                     "context_window": shape.context_window,
                 },
-                "control": control if isinstance(control, bool) else dict(control),
+                # `hide_control` writes `control: false` for a verifier-side control trial, so the
+                # job file does not tell a verifier it is being tested (RFC-0008 INV-CTRL-9). The
+                # call is still a control to the harness: `control` below keeps it out of
+                # measurement and timing.
+                "control": False
+                if hide_control
+                else (control if isinstance(control, bool) else dict(control)),
                 **extra,
             },
         )
@@ -2050,6 +2057,7 @@ class Runner:
                     },
                     io=io,
                     control=True,
+                    hide_control=True,  # INV-CTRL-9: the job file does not say it is a control
                     ro_mounts=[(io / "verifier", "/io/verifier")] if files else [],
                 )
             finally:  # one copy at a time: the stored H100 SASH run's proof is 44.6 GB
