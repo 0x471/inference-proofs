@@ -868,3 +868,67 @@ def measured_fraction():
             f'<div class="hct">{low}</div></div>'
             f'<p class="hce" aria-hidden="true">=</p>'
             f'<div class="hcr"><p class="hck">{e(FIGURE_HEAD["multiple"])}</p>{whole}</div></div>')  # fmt: skip
+
+
+# ------------------------------------------------------------------ the Autoresearch page
+# A mock-up of the track's screen: a task, its theorem, and a loop's variants with the Lean
+# verifier's verdict. Nothing has run, so no figure is printed: each figure cell is a blank
+# block, read out as "no figure". The variants are made up, and the frame says so.
+LEAN_SKETCH = """theorem sound (P : Prover) (v : Fin N → F)
+    (h : ∃ i, v i ∉ T) :
+    Pr[verify T v (P v) = true] ≤ ε"""
+LOOP = (  # (variant, the verifier's verdict, kept)
+    ("the starting prover", "accepted", False),
+    ("drop one check", "refused", False),
+    ("sort before the lookup", "accepted", True),
+    ("a GPU kernel for the counts", "accepted", False),
+    ("reuse a challenge", "refused", False),
+)
+LOOP_HEADS = ("Variant", "Lean verifier", "Prover time", "Proof size", "Verify time")
+
+
+@drawn(FIGURES, "autoresearch")
+def autoresearch():
+    nil = '<span class="nil"><span class="sr">no figure</span></span>'
+
+    def row(k, variant, said, kept):
+        figs = "".join(f'<td data-h="{e(h)}">{nil if said == "accepted" else ""}</td>'
+                       for h in LOOP_HEADS[2:])  # fmt: skip
+        mark = '<span class="kept">kept</span>' if kept else ""
+        return (f'<tr class="{said}"><td class="arn">{k:02d}</td>'
+                f'<th scope="row">{e(variant)}</th><td class="arv">{e(said)}</td>{figs}'
+                f"<td class=\"ark\">{mark}</td></tr>")  # fmt: skip
+
+    rows = "".join(row(k, *r) for k, r in enumerate(LOOP, start=1))
+    running = (f'<tr class="running"><td class="arn">{len(LOOP) + 1:02d}</td>'
+               '<th scope="row">next variant</th><td class="arv">running</td>'
+               + "".join(f'<td data-h="{e(h)}"></td>' for h in LOOP_HEADS[2:])
+               + '<td class="ark"></td></tr>')  # fmt: skip
+    heads = "".join(f'<th scope="col">{e(h)}</th>' for h in LOOP_HEADS)
+    fixed = "".join(f"<div><dt>{e(k)}</dt><dd>{e(v)}</dd></div>" for k, v in (
+        ("Sizes", "a small one, on a CPU in minutes"),
+        ("Field", "not decided"),
+        ("Security level", "not decided"),
+        ("Assumptions", "random oracle"),
+    ))  # fmt: skip
+    return (
+        '<div class="arx">'
+        '<p class="arx-bar"><span class="arx-mock">Mock-up</span>'
+        '<span class="arx-path">Task: lookup into a table of 2<sup>16</sup></span></p>'
+        '<div class="arx-in">'
+        '<section class="arx-task" aria-label="Task">'
+        '<p class="arx-h">Statement</p>'
+        '<p class="arx-st">Every one of N values is in a public table T of 2<sup>16</sup> '
+        "entries.</p>"
+        '<p class="arx-h">Theorem, in Lean</p>'
+        f'<pre class="arx-code">{e(LEAN_SKETCH)}</pre>'
+        f'<dl class="arx-fx">{fixed}</dl>'
+        "</section>"
+        '<section class="arx-loop" aria-label="Loop">'
+        '<p class="arx-h">Loop</p>'
+        f'<table class="arx-t"><thead><tr><th scope="col"><span class="sr">Number</span></th>'
+        f'{heads}<th scope="col"><span class="sr">Kept</span></th></tr></thead>'
+        f"<tbody>{rows}{running}</tbody></table>"
+        "</section>"
+        "</div></div>"
+    )
