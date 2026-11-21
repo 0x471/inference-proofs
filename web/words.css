@@ -776,7 +776,7 @@ a.fig.fp:hover .n { text-decoration: underline; text-decoration-thickness: 1px; 
 .gl line.goal { stroke: var(--cobalt); stroke-width: 1px; stroke-dasharray: 4 4; }
 /* the better corner: a bracket in the frame's ink just off the plot, and over it what that end is, in words, on the
    line of the unit up */
-.ovb::after { content: ""; position: absolute; z-index: -1; top: -8px; right: -8px; width: 32px; height: 32px; box-shadow: inset -2px 2px 0 var(--cobalt); pointer-events: none; }
+.ovb:after { content: ""; position: absolute; z-index: -1; top: -8px; right: -8px; width: 32px; height: 32px; box-shadow: inset -2px 2px 0 var(--cobalt); pointer-events: none; }
 .obt { position: absolute; bottom: calc(100% + var(--s4)); right: -8px; margin: 0; max-width: 70%; text-align: right; font: 600 11px/14px var(--mono); color: var(--cobalt); text-transform: uppercase; letter-spacing: var(--track); pointer-events: none; }
 .obt .oar { margin-right: 6px; font-size: 13px; line-height: 14px; }
 .obt [class^="b-"] { display: none; }
@@ -859,7 +859,7 @@ a.fig.fp:hover .n { text-decoration: underline; text-decoration-thickness: 1px; 
   .opc span { padding: 6px 9px 7px; font-size: 11px; }
   .onm { font-size: 17px; line-height: 19px; }
   .obt { position: static; grid-area: 1 / 2 / 2 / -1; justify-self: end; max-width: none; margin: 0 0 var(--s3); text-align: right; font-size: 10px; line-height: 14px; }
-  .ovb::after { top: -6px; right: -6px; width: 24px; height: 24px; }
+  .ovb:after { top: -6px; right: -6px; width: 24px; height: 24px; }
   .opv { font-size: 11px; }
   .opvy { padding: 3px 5px; translate: calc(-100% - 4px) calc((var(--fy) - 1) * 100%); }
   .otp { padding: 8px; }
