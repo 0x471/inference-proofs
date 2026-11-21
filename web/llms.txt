@@ -84,11 +84,7 @@ The deployment article discusses hypothetical agreements, not an enacted treaty.
   - [Order and the glyph](https://www.inferenceproofs.ai/method#order-and-the-glyph)
   - [Judgement and changes](https://www.inferenceproofs.ai/method#judgement-and-changes)
   - [Getting a row](https://www.inferenceproofs.ai/method#getting-a-row)
-- [Overview · Inference proofs](https://www.inferenceproofs.ai/overview): Every system run, on one plot: cost vs serving against verify time, proof size, fidelity.
-  - [Verify time against cost vs serving](https://www.inferenceproofs.ai/overview#h-check-time)
-  - [Proof size against cost vs serving](https://www.inferenceproofs.ai/overview#h-proof-size)
-  - [Fidelity against cost vs serving](https://www.inferenceproofs.ai/overview#h-fidelity)
-  - [Models](https://www.inferenceproofs.ai/overview#h-models)
+- [Overview · Inference proofs](https://www.inferenceproofs.ai/overview): Every system run, on one plot: cost vs serving against verify time, proof size, fidelity, model size.
   - [Systems not run](https://www.inferenceproofs.ai/overview#h-notrun)
 - [What a proof shows · Inference proofs](https://www.inferenceproofs.ai/proof-of-inference): A proof shows a reply is the committed model's greedy reply to its prompt, not whose model it is or that the reply was served.
   - [Outside the proof](https://www.inferenceproofs.ai/proof-of-inference#outside-the-proof)

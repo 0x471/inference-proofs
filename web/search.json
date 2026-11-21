@@ -233,10 +233,10 @@
     {
       "group": "Pages",
       "kind": "page",
-      "meta": "Every system run, on one plot: cost vs serving against verify time, proof size, fidelity.",
+      "meta": "Every system run, on one plot: cost vs serving against verify time, proof size, fidelity, model size.",
       "name": "Overview",
       "pie": "<svg class=\"pie-svg lm\" viewBox=\"0 0 26 18\" width=\"26\" height=\"18\" shape-rendering=\"crispEdges\" aria-hidden=\"true\" focusable=\"false\"><path fill=\"currentColor\" d=\"M0 0h4v18h-4zM4 6h6v6h-6zM12 6h6v6h-6zM20 6h6v6h-6z\"/></svg>",
-      "terms": "overview every system run, on one plot: cost vs serving against verify time, proof size, fidelity. overview scale chart graph log decade axis",
+      "terms": "overview every system run, on one plot: cost vs serving against verify time, proof size, fidelity, model size. overview scale chart graph log decade axis",
       "tier": 4,
       "url": "/overview"
     },

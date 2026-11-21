@@ -967,6 +967,7 @@ REASON_LINK = {
 }
 # ------------------------------------------------------------------ the overview page (RFC-0018 SI-7)
 SCALE_LOG = "log scale"  # beside an axis's unit
+SCALE_LINEAR = "linear scale"  # beside a linear axis's unit (Fidelity's on the overview)
 SCALE_SERVING = "Serving"  # a lane's foot: serving's line and its stored figure
 # a model no system has run on (the ladder, the overview page); its serving line keeps "not run yet"
 SCALE_NOT_RUN = "no system run yet"
@@ -974,6 +975,18 @@ SCALE_NOT_RUN = "no system run yet"
 OVERVIEW_LEAD = "Every system run, on one plot"
 # over the rows a plot of the overview page could not place: one of their two figures is missing
 OVERVIEW_OFF = "Not on the plot, a figure missing"
+# the overview plot's axes: the name of the one figure FIGURE_HEAD does not hold, the pickers'
+# names, and which way each figure is better, in words (the plot sets that end up and right)
+OVERVIEW_MODEL = "Model size"
+OVERVIEW_UP, OVERVIEW_ACROSS = "Up", "Across"
+OVERVIEW_BETTER = {"multiple": "cheaper to prove", "check-time": "faster to verify",
+                   "proof-size": "smaller proof", "fidelity": "closer to the model",
+                   "model": "larger model"}  # fmt: skip
+# beside a row the plot leaves out on the axes picked (a figure missing there)
+OVERVIEW_OFF_SHORT = "not on the plot"
+# the counts under the page's title
+OVERVIEW_COUNTS = (("run", "systems run"), ("passed", "passed"), ("models", "models"),
+                   ("not_run", "systems not run"))  # fmt: skip
 # beside the size tab of the frontier's rung on the ladder (OR-6: the largest with a passed row)
 FRONTIER_WORD = "Largest model with a passed row"
 # ------------------------------------------------------------------ the autoresearch page

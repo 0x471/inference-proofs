@@ -372,8 +372,6 @@
     pnav.classList.toggle('stuck', !!mast && mast.getBoundingClientRect().bottom < pnav.getBoundingClientRect().top - 1);
     // the title slides into the strip or out of it: the marked label is made whole again once it has (below)
     if (wasStuck !== pnav.classList.contains('stuck')) requestAnimationFrame(rewhole);
-    // the overview page's strip marks the figure drawn, not the section in view (below)
-    if (panels.length) { petalSpy(); return; }
     let k = -1;
     // a section is in view once its top has passed a third of the window under the strip (48 px at least); of two
     // that have, the earlier while its own top is still under the strip (a short section is not passed over)
@@ -458,45 +456,47 @@
   const stripTitle = strip && $('.ps-t', strip);
   if (stripTitle) stripTitle.addEventListener('transitionend', (ev) => { if (ev.propertyName === 'max-width') rewhole(); });
 
-  // ------------------------------------------------------------ the overview page: its strip picks the one figure drawn, and
-  // the address keeps it (no history entry, no scroll); an address naming none draws the first. With no script every
-  // figure is drawn
-  const panels = body.classList.contains('overviewpage') ? secs.filter(Boolean) : [];
-  // where each system stands in a panel (its box holds its mark and its flag)
-  const stands = (panel) => new Map($$('[data-s]', panel).map((el) => [el.dataset.s + ' ' + el.classList[0], [el, el.getBoundingClientRect()]]));
-  const pick = (id, keep) => {
-    const k = Math.max(0, panels.findIndex((s) => s.id === id));
-    const from = panels.find((s) => !s.hidden);
-    // a figure picked by hand moves each system from where it stood to where it stands (200 ms, no number waits)
-    const was = keep && smooth() && from && from !== panels[k] && panels.filter((s) => !s.hidden).length === 1 ? stands(from) : null;
-    const top = was ? from.getBoundingClientRect().top : 0;
-    panels.forEach((s, i) => { s.hidden = i !== k; });
-    if (was && panels[k].animate) {
-      const dy = panels[k].getBoundingClientRect().top - top;
-      stands(panels[k]).forEach(([el, r], key) => {
-        const old = was.get(key);
-        if (!old) return;
-        const x = old[1].left - r.left; const y = old[1].top - r.top + dy;
-        if (Math.abs(x) > .5 || Math.abs(y) > .5) el.animate([{ transform: 'translate(' + x + 'px, ' + y + 'px)' }, { transform: 'none' }], { duration: 200, easing: 'cubic-bezier(.2, .7, .2, 1)' });
-      });
-    }
-    links.forEach((a, i) => { a.classList.toggle('on', i === k); if (i === k) a.setAttribute('aria-current', 'true'); else a.removeAttribute('aria-current'); snug(a); });
-    if (links[k]) whole(links[k], 'auto');
-    if (!keep) return;
-    if (was && links[k]) say(links[k].textContent);
-    history.replaceState(null, '', `#${panels[k].id}`);
-    // a figure picked further down the page starts at its top, under the strip
-    if (panels[k].getBoundingClientRect().top < pnav.getBoundingClientRect().bottom) panels[k].scrollIntoView({ block: 'start' });
-  };
-  if (panels.length) {
-    pick(decodeURIComponent(location.hash.slice(1)));
-    links.forEach((a) => a.addEventListener('click', (ev) => {
-      if (ev.button !== 0 || ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey) return;
-      ev.preventDefault();
-      pick(decodeURIComponent(a.hash.slice(1)), true);
+  // ------------------------------------------------------------ the overview page: two pickers set the plot's axes (the
+  // page's own rules move every system), the address keeps the pair (no history entry); the same figure is never on
+  // both axes: the other axis takes the figure this one left. A system in hand, on the plot or in the list, is
+  // marked in both: under a mouse while it points there, by keyboard focus, and on a touch screen by a first tap on
+  // its dot (a second opens its page, a tap on empty ground lets it go)
+  const ovw = $('.ovw');
+  if (ovw) {
+    const val = (n) => { const r = $(`input[name="${n}"]:checked`, ovw); return r ? r.value : null; };
+    const set = (n, v) => { const r = $(`input[name="${n}"][value="${CSS.escape(v)}"]`, ovw); if (r) r.checked = true; return !!r; };
+    const asked = new URLSearchParams(location.hash.slice(1));
+    if (asked.get('x') && asked.get('y') && asked.get('x') !== asked.get('y')) { set('ox', asked.get('x')); set('oy', asked.get('y')); }
+    let last = { ox: val('ox'), oy: val('oy') };
+    $$('input[name="ox"], input[name="oy"]', ovw).forEach((r) => r.addEventListener('change', () => {
+      const other = r.name === 'ox' ? 'oy' : 'ox';
+      if (val(other) === r.value) set(other, last[r.name]);
+      last = { ox: val('ox'), oy: val('oy') };
+      history.replaceState(null, '', `#x=${last.ox}&y=${last.oy}`);
     }));
-    // an address that names no figure (the skip link's #main) leaves the figure drawn as it is
-    addEventListener('hashchange', () => { const id = decodeURIComponent(location.hash.slice(1)); if (panels.some((s) => s.id === id)) pick(id); });
+    let hand = null;
+    const mark = (s) => {
+      if (s === hand) return;
+      $$('.hand', ovw).forEach((el) => el.classList.remove('hand'));
+      hand = s;
+      if (s) $$(`[data-s="${CSS.escape(s)}"]`, ovw).forEach((el) => el.classList.add('hand'));
+      ovw.classList.toggle('handed', !!s);
+    };
+    const held = (ev) => { const el = ev.target.closest && ev.target.closest('[data-s]'); return el ? el.dataset.s : null; };
+    let touch = false;
+    ovw.addEventListener('pointerdown', (ev) => { touch = ev.pointerType !== 'mouse'; }, true);
+    ovw.addEventListener('pointerover', (ev) => { if (ev.pointerType === 'mouse') mark(held(ev)); });
+    ovw.addEventListener('pointerleave', (ev) => { if (ev.pointerType === 'mouse') mark(null); });
+    ovw.addEventListener('focusin', (ev) => { if (ev.target.matches(':focus-visible')) mark(held(ev)); });
+    ovw.addEventListener('focusout', (ev) => { if (!ovw.contains(ev.relatedTarget)) mark(null); });
+    ovw.addEventListener('click', (ev) => {
+      if (!touch) return;
+      const mk = ev.target.closest && ev.target.closest('.mk');
+      if (mk) {
+        const s = mk.closest('[data-s]').dataset.s;
+        if (hand !== s) { ev.preventDefault(); mark(s); }
+      } else if (ev.target.closest && ev.target.closest('.ovb')) mark(null);
+    });
   }
   if (strip) strip.addEventListener('focusin', (ev) => { const a = ev.target.closest('a'); if (a && a.matches(':focus-visible')) whole(a, 'auto'); });
   // on a phone, a jump within the page first sets the bar as the scroll will leave it (away on the way down, back on

@@ -217,25 +217,26 @@ def test_every_rung_not_run_without_a_board(empty_site: Path) -> None:
     assert all("not run yet" in body and "<table" not in body for _, body in sections)
 
 
-OVERVIEW_PANEL = re.compile(
-    r'<div class="ov" id="ov-([a-z-]+)"(?: data-xlo="(-?\d+)" data-xhi="(-?\d+)" '
-    r'data-ylo="(-?\d+)" data-yhi="(-?\d+)")?>(.*?)(?=<section class="blk ovp"|<section class="omd")',
-    re.S,
-)
-
-
-def overview_panels(text: str) -> dict[str, tuple[tuple[int, ...] | None, str]]:
-    """The Overview page's sections by figure: the two axes' ends (xlo, xhi, ylo, yhi), or None
-    where the section draws no plot, and the section's markup."""
-    return {dim: (tuple(int(v) for v in ends) if ends[0] else None, body)
-            for dim, *ends, body in OVERVIEW_PANEL.findall(text)}  # fmt: skip
+def overview_ends(text: str) -> dict[str, tuple[float, float]]:
+    """The Overview plot's axes by figure: the stored value at each end, (lo, hi)."""
+    found = re.findall(r'<svg class="ax ox x-([a-z-]+)" data-lo="([^"]+)" data-hi="([^"]+)"', text)
+    return {dim: (float(lo), float(hi)) for dim, lo, hi in found}
 
 
 def overview_place(text: str, name: str, key: str) -> str:
     """A custom property the page's own rules set on the element with that id."""
     found = re.search(rf"#{re.escape(name)}\{{[^}}]*--{key}:([^;}}]+)", text.replace("\\", ""))
-    assert found, name
+    assert found, (name, key)
     return found[1]
+
+
+def share(lo: float, hi: float, v: float, low_better: bool) -> str:
+    """Where a value stands on an axis, from its worse end to its better end."""
+    if lo >= 1 and hi <= 100 and not low_better:  # Fidelity: a linear axis in percent
+        f = (v - lo) / (hi - lo)
+    else:
+        f = (math.log10(v) - math.log10(lo)) / (math.log10(hi) - math.log10(lo))
+    return f"{1 - f if low_better else f:.4f}"
 
 
 def at(lo: int, hi: int, v: float) -> str:
@@ -289,82 +290,63 @@ def test_system_page_drawings_sit_where_the_figures_say(board_site: Any) -> None
 
 
 def test_overview_positions_are_the_boards(board_site: Any) -> None:
-    """RFC-0018 SI-7: on the Overview page a system's mark stands where its two printed figures
-    meet, cost vs serving across and the section's figure up, each on its one axis over the
-    whole board; a row not passed is marked so and says so; the systems keep the board's
-    order. The extents and two places are hand-computed for the example board."""
+    """RFC-0018 SI-7: on the Overview page a system stands where its printed figures fall, on one
+    axis per figure over the whole board, the better end up and right (a cost, a time and a size
+    run from their largest to their smallest value); a row not passed is marked so and says so;
+    the systems keep the board's order. One place is hand-computed for the example board."""
     board = board_site.board
     text = pages(board_site.out)["overview.html"]
-    panels = overview_panels(text)
-    assert list(panels) == ["check-time", "proof-size", "fidelity"]
+    ends = overview_ends(text)
+    assert {"multiple", "check-time", "proof-size", "model"} <= set(ends)
+    assert ends["multiple"][0] == 1  # cost vs serving always reaches serving itself
+    boxes = re.findall(r'<div class="obx (ok|np)[^"]*" id="ob-([^"]+)"', text)
+    assert [page for _, page in boxes] == [r["system"] for r in rows(board)]
     figure = {"check-time": "verify_seconds_per_reply", "proof-size": "proof_bytes_per_reply"}
-    for dim, key in figure.items():
-        ends, body = panels[dim]
-        assert ends is not None, dim
-        xlo, xhi, ylo, yhi = ends
-        boxes = re.findall(rf'<div class="obx (ok|np)[^"]*" id="ob-{dim}-([^"]+)"', body)
-        assert [page for _, page in boxes] == [r["system"] for r in rows(board)], dim
-        for (state, page), rung in zip(boxes, [g for g in board["rungs"] for _ in g["rows"]],
-                                       strict=True):  # fmt: skip
-            row = next(r for r in rung["rows"] if r["system"] == page)
-            assert state == ("ok" if row["passed"] else "np"), (dim, page)
-            mark = re.search(rf'id="ob-{dim}-{re.escape(page)}".*?</div>', body, re.S)
-            assert mark
-            assert ("Not passed" in mark[0]) == (not row["passed"]), (dim, page)
-            # CO-5 (amended 2026-11-15): the whole sessions' scope wherever the row has it
-            steady = row["session_multiple"]["value"] is None
-            x = row["multiple" if steady else "session_multiple"]["value"]
-            y = row[key]["value"] * (1e-6 if row[key]["unit"] == "B/request" else 1)
-            assert overview_place(text, f"ob-{dim}-{page}", "x") == at(xlo, xhi, x), (dim, page)
-            assert overview_place(text, f"ob-{dim}-{page}", "y") == at(ylo, yhi, y), (dim, page)
-    # hand-computed: the multiple from 1x to 1,000x (sessions up to 612 / 1.408 = 434.6x);
-    # FlashProve at its whole sessions' scope, 49.83 / 0.6024 = 82.72x (log10 / 3 = 63.92 %), not
-    # its steady 68.31x; its proof, 18.79 MB between 1 and 100 MB (log10 / 2 = 63.70 %)
-    assert panels["check-time"][0] == (0, 3, 0, 2)
-    assert panels["proof-size"][0] == (0, 3, 0, 2)
-    assert overview_place(text, "ob-proof-size-flashprove", "x") == "63.92%"
-    assert overview_place(text, "ob-proof-size-flashprove", "y") == "63.70%"
-    # a board with no Fidelity figure draws no Fidelity plot: every row is listed under its head
-    ends, body = panels["fidelity"]
-    assert ends is None
-    listed = re.search(r'<div class="oof">(.*)', body, re.S)
-    assert listed
-    assert re.findall(r'<a class="sname" href="/([^"]+)"', listed[1]) == [
-        r["system"] for r in rows(board)
-    ]
+    for (state, page), rung in zip(boxes, [g for g in board["rungs"] for _ in g["rows"]],
+                                   strict=True):  # fmt: skip
+        row = next(r for r in rung["rows"] if r["system"] == page)
+        assert state == ("ok" if row["passed"] else "np"), page
+        mark = re.search(rf'id="ob-{re.escape(page)}".*?</a></div>', text, re.S)
+        assert mark
+        assert ("Not passed" in mark[0]) == (not row["passed"]), page
+        # CO-5 (amended 2026-11-15): the whole sessions' scope wherever the row has it
+        steady = row["session_multiple"]["value"] is None
+        # a model's size as the site reads it (the level's count, with its erratum applied)
+        size = next(r for r in board_site.build.S.V["rungs"] if r["id"] == rung["id"])
+        values = {"multiple": row["multiple" if steady else "session_multiple"]["value"],
+                  "model": size["parameters_total"]}  # fmt: skip
+        for dim, key in figure.items():
+            values[dim] = row[key]["value"] * (1e-6 if row[key]["unit"] == "B/request" else 1)
+        for dim, v in values.items():
+            lo, hi = ends[dim]
+            want = share(lo, hi, v, dim != "model")
+            assert overview_place(text, f"ob-{page}", f"f-{dim}") == want, (dim, page)
+    # hand-computed: the multiple from 1x to 1,000x and the proof from 1 to 100 MB; FlashProve at
+    # its whole sessions' scope, 82.72x: log10(82.72) / 3 = 0.6392 of the way from 1x, so 0.3608
+    # from the costly end; its proof, 18.79 MB: log10(18.79) / 2 = 0.6370, so 0.3630
+    assert (ends["multiple"], ends["proof-size"]) == ((1, 1000), (1, 100))
+    assert overview_place(text, "ob-flashprove", "f-multiple") == "0.3608"
+    assert overview_place(text, "ob-flashprove", "f-proof-size") == "0.3630"
 
 
-def test_overview_fidelity_positions_are_the_boards(release_site: Any, board_site: Any) -> None:
-    """RFC-0018 SI-7 (amended 2026-11-20): on the Overview page's Fidelity plot a mark stands at
-    its row's `percent` up, on an axis from the ten under the lowest drawn value to 100 %, and at
-    its multiple across. The axis's rule is hand-computed: over 86.4 and 92.0 % it runs from 80,
-    where 86.4 % stands at (86.4 - 80) / 20 = 32 % of the way; a value of 0 % is drawn, at the
-    axis's start."""
-    build = board_site.build
-    assert build.share_extent([86.4, 92.0]) == (80, 100)
-    assert build.pc(build.lin_x(86.4, 80, 100)) == "32.00%"
-    assert build.share_extent([0.0, 96.2]) == (0, 100)
-    assert build.share_extent([97.0, 99.0]) == (90, 100)  # never a narrower stretch than 10 %
+def test_overview_fidelity_positions_are_the_boards(release_site: Any) -> None:
+    """RFC-0018 SI-7 (amended 2026-11-20): on the Overview page's Fidelity axis a system stands
+    at its row's `percent`, on an axis from a step of five under the lowest value to 100 %. Over
+    86.4 and 92.0 % it runs from 85: 86.4 % stands at (86.4 - 85) / 15 = 0.0933 of the way."""
     board = release_site.board
     text = pages(release_site.out)["overview.html"]
-    ends, _ = overview_panels(text)["fidelity"]
-    assert ends is not None, "the release draws no Fidelity figure"
-    xlo, xhi, lo, hi = ends
-    drawn: list[float] = []
+    ends = overview_ends(text)
+    assert "fidelity" in ends, "the release draws no Fidelity figure"
+    lo, hi = ends["fidelity"]
+    assert hi == 100
     for rung in board["rungs"]:
         tf = rung.get("teacher_forced") or {}
         for row in rung["rows"]:
             percent = (tf.get("rows") or {}).get(row["system"], {}).get("percent")
             if percent is None:
                 continue
-            name = f"ob-fidelity-{row['system']}"
-            assert overview_place(text, name, "y") == f"{100 * (percent - lo) / (hi - lo):.2f}%"
-            steady = row["session_multiple"]["value"] is None
-            x = row["multiple" if steady else "session_multiple"]["value"]
-            assert overview_place(text, name, "x") == at(xlo, xhi, x), name
-            drawn.append(percent)
-    assert drawn
-    assert (lo, hi) == (min(90, 10 * math.floor(min(drawn) / 10)), 100)
+            want = f"{(percent - lo) / (hi - lo):.4f}"
+            assert overview_place(text, f"ob-{row['system']}", "f-fidelity") == want
 
 
 def test_session_parts_print_on_the_system_page_only(board_site: Any) -> None:
