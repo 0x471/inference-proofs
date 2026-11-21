@@ -35,10 +35,13 @@ from .words import (
 # Pages are files <name>.html served at clean, root-relative addresses (vercel.json cleanUrls;
 # serve.py does the same locally), so every link works at any depth, the 404 page included.
 LEVEL_ANCHOR = "level"  # the mandate's line on the level, where the footer's level cell leads
-MANDATE_PAGE = "/mandate"  # what the site is for, what it does and does not do, who runs it
+MANDATE_PAGE = (
+    "/mandate"  # what the site is for, what it does and does not do, who runs it (under Learn)
+)
 CHECKS_PAGE = "/checks"  # what each of the six checks tests, the order rule, what is not tested
 LEARN_PAGE = "/learn"  # the hub of the Learn pages (learn.py), when the tree holds their words
-SCALE_PAGE = "/scale"  # every row on a decade axis, one figure at a time (scale.py)
+OVERVIEW_PAGE = "/overview"  # every system on one drawing (overview.py); "/scale" until 2026-11-20
+AUTORESEARCH_PAGE = "/autoresearch"  # announced, not open yet: its title and "Coming soon"
 
 
 def file_of(path):
@@ -102,8 +105,8 @@ def page_styles(cls):
     excluded = set()
     if "learnpage" not in cls.split():
         excluded.add("learn")
-    if "scalepage" not in cls.split():
-        excluded.add("scale")
+    if "overviewpage" not in cls.split():
+        excluded.add("overview")
     if cls == "home":
         excluded.add("details")
     return "".join(part["css"] for part in styles["sections"] if part["scope"] not in excluded)
@@ -140,15 +143,17 @@ GITHUB_MARK = (
 )
 
 
-TABS = (("/", "Ladder", "home"), (SCALE_PAGE, "Scale", "scale"), (LEARN_PAGE, "Learn", "learn"),
-        (CHECKS_PAGE, "Checks", "checks"), (MANDATE_PAGE, "Mandate", "mandate"))  # fmt: skip
+TABS = (("/", "Ladder", "home"), (OVERVIEW_PAGE, "Overview", "overview"),
+        (LEARN_PAGE, "Learn", "learn"), (CHECKS_PAGE, "Checks", "checks"),
+        (AUTORESEARCH_PAGE, "Autoresearch", "autoresearch"))  # fmt: skip
 
 
 def header(here, under=False):
     """The top bar: the lockup, the pages as tabs, search and GitHub. here: the page's tab
-    ("home", "scale", "learn", "checks", "mandate"), "system" for a system page (under the ladder's tab)
-    or None; `under` when the page in view is under that tab's page and not the page itself (a
-    Learn article). Learn is a tab only when the tree holds the Learn words. Systems are reached
+    ("home", "overview", "learn", "checks", "autoresearch"), "system" for a system page (under the
+    ladder's tab) or None; `under` when the page in view is under that tab's page and not the page
+    itself (a Learn article, the glossary, the mandate). Learn is a tab only when the tree holds
+    the Learn words. Systems are reached
     from the ladder or by search (one link each would not scale)."""
     home = here == "home" and not under
     if here == "system":
@@ -293,9 +298,10 @@ def new_tab(html):
     )
 
 
-def page(title, desc, body, cls, path, card):
+def page(title, desc, body, cls, path, card, css=""):
     """One page. path: its address under the site ("" for the home); card: its preview card's name,
-    or None for a page that is never shared (the 404)."""
+    or None for a page that is never shared (the 404); css: rules of this page's own, written by
+    its renderer after the site's (where its marks stand, the Overview page: `overview.py`)."""
     title, desc = SEARCH_COPY.get(path, (title, desc))
     meta = (
         share_meta(title, desc, path, card, body)
@@ -306,7 +312,7 @@ def page(title, desc, body, cls, path, card):
         f'<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">'
         # the styles before the inline script: the @view-transition rule is then known when the
         # page is revealed, so a transition into it is not skipped
-        f"{preloads()}<style>{page_styles(cls)}</style>"
+        f"{preloads()}<style>{page_styles(cls)}{css}</style>"
         f"<script>{HEAD_SCRIPT}</script>"
         f'<title>{e(full_title(title))}</title><meta name="description" content="{e(desc)}">'
         f'<meta name="color-scheme" content="dark"><meta name="theme-color" content="{GROUND}">'
@@ -375,7 +381,7 @@ def rung_of(row):
 
 
 # ------------------------------------------------------------------ a row's figures and standing
-# Here, not in overview.py, so the share tags (`card_alt`) say what the pages and the card print.
+# Here, not in ladder.py, so the share tags (`card_alt`) say what the pages and the card print.
 def has(f):
     return f is not None and f["value"] is not None
 
@@ -529,7 +535,7 @@ SEARCH_COPY = {
 # Topics are local to pages that discuss them, not claims about a system's guarantees.
 PAGE_TOPICS = {
     "": ("Proof of inference", "Verifiable inference", "LLM inference benchmarks", "NVIDIA H200"),
-    "scale": ("Proving cost", "Proof size", "Verification time", "NVIDIA H200"),
+    "overview": ("Proving cost", "Proof size", "Verification time", "NVIDIA H200"),
     "checks": ("Inference verification", "Negative controls", "Model fidelity", "NVIDIA H200"),
     "mandate": ("Benchmark methodology", "Reproducible research"),
     "learn": ("Proof of inference", "AI verification"),
@@ -615,7 +621,7 @@ def share_meta(title, desc, path, card, body):
     }
     if path:
         crumbs = [("Inference proofs", f"{SITE_URL}/")]
-        if learn_page(path) or path == "glossary":
+        if learn_page(path) or path in {"glossary", MANDATE_PAGE.strip("/")}:
             crumbs.append(("Learn", f"{SITE_URL}/learn"))
         crumbs.append((title, url))
         data["breadcrumb"] = {

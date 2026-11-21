@@ -16,7 +16,7 @@
         },
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'sha256-BvfZjEgH5q5tQ8fzRtC/NtSi5j+O9wxUdXmwLgOx10w=' 'sha256-/uW0YL9QX0kTikYF/cGpP8RjA++ASIBQJaMvYdXjzI4=' 'sha256-0lYLNdZPkTerouJMWGryemI0VZ3l2RWalcGhaaN/PMc=' 'sha256-4TyIrlIqgFISa+OgRS96VIbwW5XaLYebZ/e3VIdPO5M=' 'sha256-F6XDfcY8H1CBCKs1q1ekYL7l622ZD1nuigkDM1G1LIQ=' 'sha256-IhDmdBIZ7CvRxnwoLnxVWxEQtBottJJeC60WFWMVC0M=' 'sha256-KpHtusjZZTKfvJcKrASLAsopLPFJJY9+fjZK0Gp4JRg=' 'sha256-XBBTTbwXH8s+ptb08H56z+4pdyHIJFpJ89Wa92Y3FnE=' 'sha256-YFkQLVK0GxcK19wT89iaer2WHWzJxKfLKrphXLhTLio=' 'sha256-jRVRLcYBAacNH8gmdRvLfRaUuqQf9UAjTsdw+GnIQjY=' 'sha256-oC5XMmmLm7D3aBzlhozc7t7fxIJ+BzKB1JZ1nagkvYs=' 'sha256-oJWDU2FSm/EQs25IPRvlZKdSYnSFpDKCSdyRNgzvmAI=' 'sha256-uE6LmxwKhC/TLi3Wpt8q79xKJqz2Yy8Dce82vvaY1Zg=' 'sha256-uHsfNe5NeI1Q3aYT8aIL2y6tmKPgAXUTdUehKFNLyCs=' 'sha256-vu0gTG1dmvGX06u9uA2SSaOrGRCEuO9jaAGdXgaX2hw=' https://cdn.vercel-insights.com; style-src 'self' 'sha256-7moTzwsqOxBtq8bhhA7trM/jj1xaMWAtPKJ9wwoCcmo=' 'sha256-KRxcsYKMwLGKN/7g6esKBPb7QHgNqKplxo2v5tTJrzY=' 'sha256-MqWV34nCGqFp1eodle/HT0aWlmqN6LuIaKbfY7dOqxM=' 'sha256-NLKQDfdw1PIf4AIOXxID9CUOqkBUTdjUXIx0un71dXs='; img-src 'self'; font-src 'self'; connect-src 'self' https://*.vercel-insights.com; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
+          "value": "default-src 'self'; script-src 'self' 'sha256-BvfZjEgH5q5tQ8fzRtC/NtSi5j+O9wxUdXmwLgOx10w=' 'sha256-0lYLNdZPkTerouJMWGryemI0VZ3l2RWalcGhaaN/PMc=' 'sha256-4TyIrlIqgFISa+OgRS96VIbwW5XaLYebZ/e3VIdPO5M=' 'sha256-F6XDfcY8H1CBCKs1q1ekYL7l622ZD1nuigkDM1G1LIQ=' 'sha256-Fsh+Zw0sB5z0auW2GgPmWtuSV/7ffBvk9aI+Zwfbb4Q=' 'sha256-IhDmdBIZ7CvRxnwoLnxVWxEQtBottJJeC60WFWMVC0M=' 'sha256-KJ/h6j2nxLhL8yxYK4qfiL5MID+WUlS1ondhQks3/cg=' 'sha256-KpHtusjZZTKfvJcKrASLAsopLPFJJY9+fjZK0Gp4JRg=' 'sha256-QDsu3XOJunR0tSxqYkZaRBDH6vvVAqPkpFwolFEI5/o=' 'sha256-XBBTTbwXH8s+ptb08H56z+4pdyHIJFpJ89Wa92Y3FnE=' 'sha256-YFkQLVK0GxcK19wT89iaer2WHWzJxKfLKrphXLhTLio=' 'sha256-jRVRLcYBAacNH8gmdRvLfRaUuqQf9UAjTsdw+GnIQjY=' 'sha256-oC5XMmmLm7D3aBzlhozc7t7fxIJ+BzKB1JZ1nagkvYs=' 'sha256-oJWDU2FSm/EQs25IPRvlZKdSYnSFpDKCSdyRNgzvmAI=' 'sha256-uHsfNe5NeI1Q3aYT8aIL2y6tmKPgAXUTdUehKFNLyCs=' https://cdn.vercel-insights.com; style-src 'self' 'sha256-/Mqa2SY+GjyU3JaO5K2rWyWHH8tPV9w7zY8jt77Us7w=' 'sha256-EhkKEHYd31jXeq1g7wwvh78Ti9RdLyURvyB0Qlecfk8=' 'sha256-XnNwvlbypGByYBZ4yw6ZozzWdHlqwAvdF1TgZZvRXYE=' 'sha256-YtdA63IbZuagY/2OqgQqjvzHZL+KyS34QyHOx+Nn63U='; img-src 'self'; font-src 'self'; connect-src 'self' https://*.vercel-insights.com; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
         },
         {
           "key": "X-Frame-Options",
@@ -74,6 +74,16 @@
       "destination": "/statement",
       "permanent": true,
       "source": "/architectures/"
+    },
+    {
+      "destination": "/autoresearch",
+      "permanent": true,
+      "source": "/autoresearch.html"
+    },
+    {
+      "destination": "/autoresearch",
+      "permanent": true,
+      "source": "/autoresearch/"
     },
     {
       "destination": "/proof-of-inference",
@@ -241,6 +251,16 @@
       "source": "/method/"
     },
     {
+      "destination": "/overview",
+      "permanent": true,
+      "source": "/overview.html"
+    },
+    {
+      "destination": "/overview",
+      "permanent": true,
+      "source": "/overview/"
+    },
+    {
       "destination": "/proof-of-inference",
       "permanent": true,
       "source": "/proof-of-inference.html"
@@ -306,12 +326,17 @@
       "source": "/sash/"
     },
     {
-      "destination": "/scale",
+      "destination": "/overview",
+      "permanent": true,
+      "source": "/scale"
+    },
+    {
+      "destination": "/overview",
       "permanent": true,
       "source": "/scale.html"
     },
     {
-      "destination": "/scale",
+      "destination": "/overview",
       "permanent": true,
       "source": "/scale/"
     },
@@ -423,6 +448,10 @@
   ],
   "rewrites": [
     {
+      "destination": "/autoresearch.html",
+      "source": "/autoresearch"
+    },
+    {
       "destination": "/checks.html",
       "source": "/checks"
     },
@@ -459,16 +488,16 @@
       "source": "/method"
     },
     {
+      "destination": "/overview.html",
+      "source": "/overview"
+    },
+    {
       "destination": "/proof-of-inference.html",
       "source": "/proof-of-inference"
     },
     {
       "destination": "/sash.html",
       "source": "/sash"
-    },
-    {
-      "destination": "/scale.html",
-      "source": "/scale"
     },
     {
       "destination": "/statement.html",
