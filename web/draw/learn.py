@@ -23,12 +23,12 @@ import html
 import re
 
 from . import state as S
-from .chrome import LEARN_PAGE, MANDATE_PAGE, footer, header, link, page
+from .chrome import AUTORESEARCH_PAGE, LEARN_PAGE, MANDATE_PAGE, footer, header, link, page
 from .figures import EXPLORERS, FIGURES, MEASURED, STAGE_WORD
 from .glossary import Halt, defs, glossary, glossary_entries, plain, slug, squeeze, term  # noqa: F401
 from .ladder import nobreak
-from .pages import mandate_parts
-from .words import MANDATE_BELIEF, curly, e, quoted
+from .pages import mandate_parts, title_band
+from .words import AUTORESEARCH_SOON, AUTORESEARCH_TITLE, MANDATE_BELIEF, curly, e, quoted
 
 # ------------------------------------------------------------------ inline
 TOKEN = re.compile(
@@ -501,6 +501,35 @@ def build_hub():
 </main>
 {footer()}"""
     return page(lv["title"], lv["lead"], body, "system learnpage hub", "learn", "home")
+
+
+def build_autoresearch():
+    """Autoresearch, announced and not open yet: "Coming soon" over its title, then the band's
+    summary, the strip of its sections and its text (`autoresearch` in web/learn/index.yaml).
+    Under its own tab, not on the hub; not indexed, shared or searched while it is not open. A
+    tree without its words prints the title and the two words."""
+    entry = (S.V.get("learn") or {}).get("autoresearch")
+    soon = f'<span class="soon">{e(AUTORESEARCH_SOON)}</span>'
+    if entry is None:
+        main = f"{title_band(AUTORESEARCH_TITLE, kicker=soon)}"
+        desc = f"{AUTORESEARCH_SOON}."
+    else:
+        ctx = context(entry, terms(), defs())
+        text = markdown(text_of(entry), ctx)
+        main = f"""{band(soon, entry["title"], entry["summary"])}
+  {strip(entry["title"], ctx.get("heads", []))}
+  <div class="wrap lwrap">
+    <article class="prose lpr">{text}</article>
+  </div>"""
+        desc = entry["summary"]
+    body = f"""
+{header("autoresearch")}
+<main id="main" class="sys">
+  {main}
+</main>
+{footer()}"""
+    return page(AUTORESEARCH_TITLE, desc, body, "system learnpage soonpage",
+                AUTORESEARCH_PAGE.strip("/"), None)  # fmt: skip
 
 
 def build_all():

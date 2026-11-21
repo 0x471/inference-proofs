@@ -37,7 +37,7 @@
       "scope": "overview"
     },
     {
-      "css": ".soon{margin:var(--s7) 0 0;padding-bottom:var(--s4);border-bottom:1px solid var(--line);font:800 22px/1 var(--disp);color:var(--muted)}",
+      "css": ".soon{display:inline-block;padding:7px 10px 6px;background:var(--ground);color:var(--paper);font:var(--f-label);letter-spacing:var(--track);text-transform:uppercase}",
       "scope": "shared"
     },
     {
@@ -69,5 +69,5 @@
       "scope": "shared"
     }
   ],
-  "source": "8b02bd79740cc1d3e57eec589857361a16408afa9ed9ffb5ed4eeff859e9800e"
+  "source": "371d7d8b980a614355d4d4e6b6fcce186e73e6a652cea472f52bd259b40ddbee"
 }

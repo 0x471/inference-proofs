@@ -879,8 +879,8 @@ a.fig.fp:hover .n { text-decoration: underline; text-decoration-thickness: 1px; 
   .obx:is(.hand, :has(.mk:is(:hover, :focus-visible))) .gm { outline: 2px solid Highlight; outline-offset: 2px; }
   .opv { box-shadow: none; }
 }
-/* ---------------------------------------------------------------- a page announced and not open yet (autoresearch): two words under its band */
-.soon { margin: var(--s7) 0 0; padding-bottom: var(--s4); border-bottom: 1px solid var(--line); font: 800 22px/1 var(--disp); color: var(--muted); }
+/* ---------------------------------------------------------------- a page announced and not open yet (autoresearch): "Coming soon" over its title, a block of ground ink on the band */
+.soon { display: inline-block; padding: 7px 10px 6px; background: var(--ground); color: var(--paper); font: var(--f-label); letter-spacing: var(--track); text-transform: uppercase; }
 /* ---------------------------------------------------------------- a section label: small capitals over a rule */
 .sect { font: var(--f-label); color: var(--muted); text-transform: uppercase; letter-spacing: var(--track); margin: 0; padding-bottom: 12px; border-bottom: 1px solid var(--rule); }
 /* a section's heading (the system, checks, mandate and 404 pages, the systems not run): a modest

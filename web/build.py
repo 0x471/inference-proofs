@@ -149,7 +149,7 @@ def render(view, out, *, write_json, write_text):
     pages[file_of(draw.chrome.CHECKS_PAGE)] = draw.pages.build_checks()
     pages[file_of(draw.chrome.MANDATE_PAGE)] = draw.pages.build_mandate()
     pages[file_of(draw.chrome.OVERVIEW_PAGE)] = draw.overview.build_overview()
-    pages[file_of(draw.chrome.AUTORESEARCH_PAGE)] = draw.pages.build_autoresearch()
+    pages[file_of(draw.chrome.AUTORESEARCH_PAGE)] = draw.learn.build_autoresearch()
     for address, text in draw.learn.build_all().items():
         pages[file_of(address)] = text
     pages[S.HERE / "404.html"] = draw.pages.build_404()

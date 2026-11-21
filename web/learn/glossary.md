@@ -302,6 +302,10 @@ Quantization stores a model's numbers in fewer bits, which is cheaper to prove a
 
 A random oracle is an ideal hash function that gives every new input a fresh, uniformly random output. [[Fiat-Shamir]] proofs are usually proved sound with the hash taken as one.
 
+### Range check
+
+A range check is a proof that every value in a list fits in a fixed number of bits, for example that each one is below 2^16. Provers often prove it with a [[lookup argument]] into a table of every allowed value.
+
 ### Read as
 
 A system's page prints what a grade comes from at the head of an opened petal's evidence, with "our reading" beside the grade wherever a reading of ours sets it. **The publisher's words** means the publisher's own sentence. **Our reading** means that no single sentence of the publisher's states a point, so we read it from several passages and link them, and the page prints the number of points our reading covers. **Our test** means our own runs, and **our rebuild** means our run of the publisher's proof through its proof-checking program. A grade that uses our reading is Mostly met at most, for every system alike. We never read the name of a construction, such as STARK, as a claim. Until 2026-11-17 the page printed this as "stated", "read as" or "tested by us". It now says "from" and "our reading", here and in a system's Statement block.

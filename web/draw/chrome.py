@@ -41,7 +41,7 @@ MANDATE_PAGE = (
 CHECKS_PAGE = "/checks"  # what each of the six checks tests, the order rule, what is not tested
 LEARN_PAGE = "/learn"  # the hub of the Learn pages (learn.py), when the tree holds their words
 OVERVIEW_PAGE = "/overview"  # every system on one drawing (overview.py); "/scale" until 2026-11-20
-AUTORESEARCH_PAGE = "/autoresearch"  # announced, not open yet: its title and "Coming soon"
+AUTORESEARCH_PAGE = "/autoresearch"  # announced, not open yet: "Coming soon", then what it plans
 
 
 def file_of(path):
