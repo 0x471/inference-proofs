@@ -11,7 +11,6 @@ import re
 
 from . import state as S
 from .chrome import (
-    AUTORESEARCH_PAGE,
     CHECKS_PAGE,
     LEARN_PAGE,
     LEVEL_ANCHOR,
@@ -75,8 +74,6 @@ from .plots import (
     log_x,
 )
 from .words import (
-    AUTORESEARCH_SOON,
-    AUTORESEARCH_TITLE,
     BASIS_BITS,
     BASIS_READING,
     CARD_ERRATUM,
@@ -2466,20 +2463,6 @@ def mandate_parts():
     """The mandate's sections as (anchor, title), in its order: its own strip, and the Learn
     hub's block on it."""
     return [(title.lower().replace(" ", "-"), title) for title, _ in MANDATE]
-
-
-def build_autoresearch():
-    """Autoresearch: announced, not open yet. The page holds its title and the two words; it is
-    not indexed, shared or searched until it has something to read."""
-    body = f"""
-{header("autoresearch")}
-<main id="main" class="sys">
-  {title_band(AUTORESEARCH_TITLE)}
-  <div class="wrap"><p class="soon">{e(AUTORESEARCH_SOON)}</p></div>
-</main>
-{footer()}"""
-    return page(AUTORESEARCH_TITLE, f"{AUTORESEARCH_SOON}.", body, "system soonpage",
-                AUTORESEARCH_PAGE.strip("/"), None)  # fmt: skip
 
 
 def build_404():

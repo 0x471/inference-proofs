@@ -1093,6 +1093,16 @@
     {
       "group": "Glossary",
       "kind": "term",
+      "meta": "A range check is a proof that every value in a list fits in a fixed number of bits, for example that each one is below 2^16.",
+      "name": "Range check",
+      "pie": "",
+      "terms": "range check a range check is a proof that every value in a list fits in a fixed number of bits, for example that each one is below 2^16.",
+      "tier": 4.2,
+      "url": "/glossary#range-check"
+    },
+    {
+      "group": "Glossary",
+      "kind": "term",
       "meta": "A system's page prints what a grade comes from at the head of an opened petal's evidence, with \"our reading\" beside the grade wherever a reading of ours sets it.",
       "name": "Read as",
       "pie": "",

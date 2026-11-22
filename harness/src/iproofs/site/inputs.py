@@ -93,9 +93,9 @@ def _learn_page(root: Path, entry: dict[str, Any], seen: set[str]) -> dict[str, 
 
 def learn(root: Path) -> dict[str, Any] | None:
     """The Learn pages' words: `web/learn/index.yaml` (the hub's words, the tracks and their
-    pages in reading order, the glossary) with each listed page's Markdown text beside it, or
-    None in a tree that holds none. Words only: the renderer draws them, and every figure a page
-    prints still comes from the board file."""
+    pages in reading order, the glossary, the Autoresearch page) with each listed page's Markdown
+    text beside it, or None in a tree that holds none. Words only: the renderer draws them, and
+    every figure a page prints still comes from the board file."""
     index = root / LEARN / "index.yaml"
     if not index.is_file():
         return None
@@ -116,6 +116,10 @@ def learn(root: Path) -> dict[str, Any] | None:
                 for t in doc["tracks"]
             ],
             "glossary": _learn_page(root, doc["glossary"], seen),
+            # the Autoresearch page's words: under its own tab, not on the hub
+            "autoresearch": (
+                _learn_page(root, doc["autoresearch"], seen) if "autoresearch" in doc else None
+            ),
         }
     except (KeyError, TypeError) as e:
         raise config(f"{LEARN}/index.yaml: a field is missing or of the wrong type ({e})") from e

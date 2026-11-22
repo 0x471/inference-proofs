@@ -879,8 +879,6 @@ a.fig.fp:hover .n { text-decoration: underline; text-decoration-thickness: 1px; 
   .obx:is(.hand, :has(.mk:is(:hover, :focus-visible))) .gm { outline: 2px solid Highlight; outline-offset: 2px; }
   .opv { box-shadow: none; }
 }
-/* ---------------------------------------------------------------- a page announced and not open yet (autoresearch): two words under its band */
-.soon { margin: var(--s7) 0 0; padding-bottom: var(--s4); border-bottom: 1px solid var(--line); font: 800 22px/1 var(--disp); color: var(--muted); }
 /* ---------------------------------------------------------------- a section label: small capitals over a rule */
 .sect { font: var(--f-label); color: var(--muted); text-transform: uppercase; letter-spacing: var(--track); margin: 0; padding-bottom: 12px; border-bottom: 1px solid var(--rule); }
 /* a section's heading (the system, checks, mandate and 404 pages, the systems not run): a modest
@@ -1723,6 +1721,101 @@ ol.ls > li:before { counter-increment: n; content: counter(n); position: absolut
 .fg figcaption { margin-top: 12px; font: 400 12px/19px var(--mono); color: var(--muted); max-width: 72ch; text-wrap: pretty; }
 .fg .tw { margin: 0; }
 .fg .tw + .tw { margin-top: 28px; }
+/* the Autoresearch page (learn.py, `build_autoresearch`): a hero band. The parts the track is
+   for, set huge in a darker cobalt behind the title (type as texture, aria-hidden); then the
+   mock-up of the track's screen (figures.py, `autoresearch`) in ground ink, standing on the
+   band's lower edge so it runs on into the page. A figure cell is a blank hatched block, since
+   nothing has run */
+.arband { position: relative; overflow: hidden; isolation: isolate; }
+.arband.mast-sys .mast-in { position: relative; padding-bottom: 0; }
+.arw { position: absolute; inset: -12px 0 auto; z-index: -1; display: flex; flex-direction: column; font: 900 clamp(96px, 13vw, 210px)/.8 var(--disp); text-transform: uppercase; letter-spacing: -.01em; color: color-mix(in srgb, var(--ground) 13%, var(--cobalt)); white-space: nowrap; pointer-events: none; user-select: none; }
+.arw span:nth-child(odd) { transform: translateX(-18%); }
+.arw span:nth-child(even) { transform: translateX(-46%); }
+.arband .kick { justify-content: flex-start; }
+.arband .lt-s { max-width: 56ch; }
+.soon { display: inline-flex; align-items: center; gap: 10px; padding: 7px 12px 6px; background: var(--ground); color: var(--paper); font: var(--f-label); letter-spacing: var(--track); text-transform: uppercase; }
+.soon::before { content: ""; width: 7px; height: 7px; background: var(--cobalt); }
+.anim .soon::before { animation: arblink 1.2s steps(1) infinite; }
+
+.arx { margin-top: 48px; background: var(--ground); color: var(--paper); font: 400 12px/18px var(--mono); }
+.arx-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; margin: 0; padding: 0 0 0 16px; min-height: 40px; box-shadow: inset 0 -1px 0 var(--line); font: var(--f-label); letter-spacing: var(--track); text-transform: uppercase; color: var(--muted); }
+.arx-app { display: inline-flex; align-items: center; gap: 8px; color: var(--paper); }
+/* the turnstile's arm, small: a stem and three cells */
+.arx-tk { fill: var(--cobalt); }
+.arx-path { flex: 1; }
+.arx-mock { margin-left: auto; align-self: stretch; display: inline-flex; align-items: center; padding: 0 14px; background: var(--paper); color: var(--ground); }
+.arx-in { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 8fr); }
+.arx-task, .arx-loop { padding: 20px 20px 28px; min-width: 0; }
+.arx-loop { box-shadow: inset 1px 0 0 var(--line); }
+.arx-h { margin: 0 0 10px; font: var(--f-label); letter-spacing: var(--track); text-transform: uppercase; color: var(--muted); }
+.arx-st { margin: 0 0 22px; font: 800 26px/1.02 var(--disp); color: var(--paper); text-wrap: balance; }
+.arx-code { margin: 0 0 22px; padding: 12px 14px; box-shadow: inset 2px 0 0 var(--cobalt); background: var(--lift); font: 400 11.5px/19px var(--mono); white-space: pre; overflow-x: auto; color: var(--paper); }
+.arx-fx { margin: 0; display: grid; }
+.arx-fx div { display: grid; grid-template-columns: 15ch minmax(0, 1fr); gap: 8px; padding: 6px 0; border-top: 1px solid var(--line); }
+.arx-fx dt { color: var(--muted); }
+.arx-fx dd { margin: 0; }
+/* the loop's variants as cells, oldest first: accepted cobalt, refused an outline, the one kept
+   paper, the one running blinking */
+.arx-cells { display: flex; flex-wrap: wrap; gap: 3px; margin: 0 0 16px; }
+.arx-cells i { width: 14px; height: 14px; background: var(--cobalt); }
+.arx-cells .cr { background: none; box-shadow: inset 0 0 0 1px var(--rule); }
+.arx-cells .ck { background: var(--paper); }
+.arx-cells .crun { background: none; box-shadow: inset 0 0 0 1px var(--cobalt); }
+.anim .arx-cells .crun { animation: arblink 1.2s steps(1) infinite; }
+.arx-t { width: 100%; border-collapse: collapse; }
+.arx-t th, .arx-t td { padding: 8px 8px 8px 0; text-align: left; vertical-align: middle; border-bottom: 1px solid var(--line); font-weight: 400; }
+.arx-t thead th { font: var(--f-label); letter-spacing: var(--track); text-transform: uppercase; color: var(--muted); border-bottom-color: var(--rule); }
+.arx-t .arn { color: var(--muted); font-variant-numeric: tabular-nums; width: 3ch; }
+.arx-t tbody th { color: var(--paper); }
+.arx-t .arv { white-space: nowrap; }
+.arx-t .arv::before { content: ""; display: inline-block; width: 8px; height: 8px; margin-right: 8px; vertical-align: 1px; background: var(--cobalt); }
+.arx-t .refused .arv::before { background: none; box-shadow: inset 0 0 0 1px var(--rule); }
+.arx-t .running .arv::before { background: none; box-shadow: inset 0 0 0 1px var(--cobalt); }
+.arx-t .refused :is(th, .arv) { color: var(--muted); }
+.arx-t .refused th { text-decoration: line-through; text-decoration-color: var(--rule); }
+.arx-t .running :is(th, .arv) { color: var(--muted); }
+.anim .arx-t .running .arv::after { content: "_"; margin-left: 2px; color: var(--cobalt); animation: arblink 1.2s steps(1) infinite; }
+.arx-t .accepted:has(.kept) { background: var(--lift); }
+.nil { display: inline-block; width: 6ch; height: 10px; vertical-align: middle; background: repeating-linear-gradient(135deg, var(--rule) 0 1px, transparent 1px 4px); }
+.kept { padding: 3px 7px 2px; background: var(--paper); color: var(--ground); font: var(--f-label); letter-spacing: var(--track); text-transform: uppercase; }
+/* on arrival, once: the cells fill left to right and the rows come in one after another */
+.anim .arx-cells { animation: arfill 1.1s steps(20, jump-none) both; }
+.anim .arx-t tbody tr { animation: arrow .32s cubic-bezier(.2, .7, .2, 1) both; }
+.anim .arx-t tbody tr:nth-child(2) { animation-delay: .08s; }
+.anim .arx-t tbody tr:nth-child(3) { animation-delay: .16s; }
+.anim .arx-t tbody tr:nth-child(4) { animation-delay: .24s; }
+.anim .arx-t tbody tr:nth-child(5) { animation-delay: .32s; }
+.anim .arx-t tbody tr:nth-child(6) { animation-delay: .4s; }
+
+/* How it works: numbered cells side by side, ruled like the band's lower edge */
+.lpr > .lcells { grid-column: 2 / -1; max-width: 1000px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; background: var(--line); box-shadow: 0 0 0 1px var(--line); }
+.lcell { background: var(--ground); padding: 18px 20px 22px; }
+.lcn { margin: 0; font: 900 44px/1 var(--disp); color: var(--cobalt); }
+.lch { margin: 14px 0 10px; font: 800 22px/1.05 var(--disp); color: var(--paper); }
+.lcell p:not(.lcn) { font-size: 13px; line-height: 21px; }
+/* Not decided yet: each open choice an outlined chip */
+.soonpage .lpr > .ls { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+.soonpage .lpr > .ls > li { margin: 0; padding: 6px 12px 5px; box-shadow: inset 0 0 0 1px var(--rule); font: var(--f-label); letter-spacing: var(--track); text-transform: uppercase; color: var(--paper); }
+.soonpage .lpr > .ls > li::before { display: none; }
+@media (max-width: 900px) {
+  .arx-in { grid-template-columns: minmax(0, 1fr); }
+  .arx-loop { box-shadow: inset 0 1px 0 var(--line); }
+  .lpr > .lcells { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 560px) {
+  .arx { margin-inline: calc(-1 * var(--gut)); }
+  .arx-path { display: none; }
+  .arx-st { font-size: 22px; }
+  /* each variant a block: its number and name, then the verdict, then the figures by name */
+  .arx-t thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .arx-t tr { display: grid; grid-template-columns: 3ch minmax(0, 1fr) auto; column-gap: 8px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .arx-t th, .arx-t td { padding: 0; border: 0; }
+  .arx-t .arv { grid-column: 2; }
+  .arx-t .ark { grid-column: 3; grid-row: 1; }
+  .arx-t td[data-h] { grid-column: 2 / -1; display: flex; justify-content: space-between; color: var(--muted); }
+  .arx-t td[data-h]:empty { display: none; }
+  .arx-t td[data-h]::before { content: attr(data-h); }
+}
 .fl { font: var(--f-label); color: var(--muted); text-transform: uppercase; letter-spacing: var(--track); margin-bottom: 10px; }
 .ms-s { font: 600 13px/20px var(--mono); margin-bottom: 12px; max-width: 72ch; }
 /* who holds what: boxes, and on the arrows between them what passes; a thing pointed at lights
@@ -2031,6 +2124,10 @@ ol.ls > li:before { counter-increment: n; content: counter(n); position: absolut
 }
 
 /* ---------------------------------------------------------------- motion: one page into the next */
+/* the Autoresearch page (words.css, the Learn section): a cell that blinks, the loop's cells filling, its rows coming in */
+@keyframes arblink { 50% { opacity: 0; } }
+@keyframes arfill { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+@keyframes arrow { from { opacity: 0; transform: translateY(6px); } }
 /* only what is named morphs (the top bar, which stays; the tab's bar; a row's name into its system
    page's title and back): the rest of the page swaps at once, with no crossfade (the root takes no snapshot) */
 @view-transition { navigation: auto; }

@@ -993,6 +993,8 @@ FRONTIER_WORD = "Largest model with a passed row"
 # announced, not open yet: the tab's word, the page's title, and what the page says
 AUTORESEARCH_TITLE = "Autoresearch"
 AUTORESEARCH_SOON = "Coming soon"
+# the parts the track is for, set huge behind the title as a texture (read by no one: aria-hidden)
+AUTORESEARCH_PARTS = ("Lookup", "Range check", "Softmax", "SiLU", "RMSNorm", "GPU kernel")
 # ------------------------------------------------------------------ the mandate page
 # The headline, then who runs it, its ties, what we do, what we do not do, how to check us and how
 # a row is changed, with the dated corrections: each line
