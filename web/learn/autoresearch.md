@@ -1,30 +1,30 @@
-## Why parts
+## Why benchmark components
 
-The [ladder](/) ranks whole provers, and a whole prover now takes a very large engineering effort, so few teams can enter it. Progress is more likely to come one part at a time: [[lookup argument|lookup arguments]], [[range check|range checks]], the nonlinear steps of a model (softmax, SiLU, RMSNorm) and the GPU kernels under them. So this track benchmarks those parts, and it is built for a program, or an AI agent, that tries many variants of a prover and keeps the one that scores better.
+The [ladder](/) ranks end-to-end inference provers. Building a complete prover takes a major engineering effort, which limits how many teams can enter. In practice, progress often happens one building block at a time: [[lookup argument|lookup arguments]], [[range check|range checks]], nonlinear model layers (softmax, SiLU, RMSNorm), and the GPU kernels underneath them. This track benchmarks those components directly, and is designed so a script or AI agent can iterate through prover variants and keep whichever ones score better.
 
 ## How it works
 
 :::cells
-### A statement, not a method
+### Specify the statement, not the method
 
-Each task is a statement to prove, such as "every value is in this table". We fix the sizes, the [[field|fields]] allowed and the [[security level]], and how you prove it is up to you.
+Each task defines a statement to prove, such as "every value appears in this table." We fix the input sizes, allowed [[field|fields]], and required [[security level]]; how you construct the proof is up to you.
 
-### A verifier proved in Lean
+### Verifier proved in Lean
 
-We publish each task's theorem in [[Lean]], with a [[soundness]] error bound. An entry counts only if its verifier is proved to meet it, and we run that Lean code, compiled. The prover is free, because a wrong prover can only make proofs that are refused.
+We publish each task's theorem in [[Lean]] with an explicit [[soundness]] error bound. An entry counts only when its verifier is proved to satisfy that theorem, and we compile and run that exact Lean verifier. The prover itself is unconstrained, since a buggy prover can only produce proofs that the verifier rejects.
 
-### A size for loops
+### Sized for automated loops
 
-Every task has a small size that runs on a CPU in minutes, so a loop can run against it many times. The Lean kernel decides what counts, and the assumptions allowed, such as the [[random oracle]] model, are printed beside the result.
+Every task includes a small problem size that runs on a CPU in minutes, letting an automated loop test many candidates in sequence. The Lean kernel checks validity, and any cryptographic assumptions the proof relies on (such as the [[random oracle]] model) are shown alongside the result.
 :::
 
-## Not decided yet
+## Open questions
 
-- The tasks after lookups and range checks
-- The sizes and the hardware
-- How figures are combined
+- Tasks beyond lookups and range checks
+- Input sizes and hardware
+- How metrics are combined
 - Whether entries are ranked
-- The track's name
-- Any date
+- Track name
+- Launch date
 
-We are writing the rules in the [repository](https://github.com/ai-verification-observatory/inference-proofs), where you can follow them.
+We are drafting the rules in the [repository](https://github.com/ai-verification-observatory/inference-proofs), where you can follow along.

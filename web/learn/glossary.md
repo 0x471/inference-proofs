@@ -304,7 +304,7 @@ An idealized hash function that returns a fresh, uniformly random output for eve
 
 ### Range check
 
-A range check is a proof that every value in a list fits in a fixed number of bits, for example that each one is below 2^16. Provers often prove it with a [[lookup argument]] into a table of every allowed value.
+A proof that every value in a list fits within a fixed bit width, such as proving each value is below 2^16. Provers commonly implement range checks using a [[lookup argument]] against a table of all allowed values.
 
 ### Read as
 
