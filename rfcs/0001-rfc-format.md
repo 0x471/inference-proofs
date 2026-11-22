@@ -6,20 +6,20 @@
 
 ## Summary
 
-This RFC fixes how decisions are written down: the RFC format, its numbering, the roles named elsewhere in the corpus, and the repository files.
+This RFC establishes how project decisions are documented, covering the RFC format, numbering rules, the roles referenced across the specification, and the standard repository files.
 
 ## Motivation
 
-Methodology and load-bearing technical decisions need one place where they are stated, so code and readers can point at them.
+Methodology choices and core technical decisions need a single canonical location so that both code and documentation can cite them reliably.
 
 ## Goals
 
-- Every methodology decision is written in an RFC.
-- Every RFC has a stable number.
+- Document every methodology decision in an RFC.
+- Assign every RFC a permanent, stable number.
 
 ## Non-Goals
 
-- Certification of any system ([PRD §5](../docs/PRD.md#5-non-goals)).
+- Certifying any system ([PRD §5](../docs/PRD.md#5-non-goals)).
 
 ## Proposed Design
 
@@ -27,24 +27,24 @@ Methodology and load-bearing technical decisions need one place where they are s
 
 | Role | Definition |
 |---|---|
-| Relying party | Publishes targets under their own name (RFC-0009) |
-| Runner | Anyone who executes jobs and submits run directories, declared in the run manifest |
+| Relying party | Publishes performance or verification targets under their own name (RFC-0009) |
+| Runner | Anyone who executes benchmark jobs and submits run directories, as declared in the run manifest |
 
 ### RFC format
 
-1. An RFC copies [0000-template.md](0000-template.md) and fills the sections that apply.
-2. An RFC number is the next free number when its pull request opens. Numbers are never reused.
-3. Past results are never edited (RFC-0009 append-only rule). A methodology change relabels or reruns; it does not rewrite stored records.
+1. Start each new RFC by copying [0000-template.md](0000-template.md) and completing the sections that apply.
+2. Assign the next available RFC number when the pull request is opened. RFC numbers are never reused.
+3. Never edit past results (following the append-only rule in RFC-0009). When methodology changes, relabel or rerun jobs rather than modifying stored records.
 
 ### Repository files
 
 | File | Content |
 |---|---|
-| `CONTRIBUTING.md` | how to open an issue and a pull request, test and CI expectations |
-| `SECURITY.md` | private reporting channel for harness vulnerabilities, and the private report of accepted controls (RFC-0008) |
-| `CODE_OF_CONDUCT.md` | Contributor Covenant 2.1, with the enforcement contact |
-| `LICENSE` | Apache-2.0, for code |
-| `LICENSES/CC-BY-4.0.txt` and a note in `README.md` | CC BY 4.0, for specifications, data, results and reports |
+| `CONTRIBUTING.md` | Guidelines for opening issues and pull requests, along with test and CI requirements |
+| `SECURITY.md` | The private reporting channel for harness vulnerabilities and for privately reporting accepted negative controls (RFC-0008) |
+| `CODE_OF_CONDUCT.md` | Contributor Covenant 2.1, including the enforcement contact |
+| `LICENSE` | Apache-2.0 licence for code |
+| `LICENSES/CC-BY-4.0.txt` and a note in `README.md` | CC BY 4.0 licence for specifications, data, results, and reports |
 
 ## Alternatives Considered
 
@@ -64,8 +64,8 @@ None.
 
 ## Decisions
 
-- Q1. The working name is "Inference Proofs", in the current repository. Schema `$id` hosts do not resolve and do not change validation.
-- Q3. The private reporting channel named in `SECURITY.md` is the hosting platform's private vulnerability reporting feature.
+- Q1. The working name of the project is "Inference Proofs", hosted in the current repository. Schema `$id` hostnames do not resolve over the network and do not affect validation.
+- Q3. The private reporting channel referenced in `SECURITY.md` is the hosting platform's private vulnerability reporting feature.
 
 ## References
 

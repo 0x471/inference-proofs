@@ -38,7 +38,7 @@
       "reason": "no public verifier",
       "reason_source": {
         "url": "https://attestable.com/blog/proving-llms-scale",
-        "words": "No public code: its blog post describes \"a standalone CPU verifier\" and links no repository (read 2026-11-15)."
+        "words": "No public repository: the blog post describes \"a standalone CPU verifier\" without linking to source code (checked 2026-11-15)."
       },
       "status": {
         "state": "no_repository"
@@ -55,7 +55,7 @@
       "reason": "no public verifier",
       "reason_source": {
         "url": "https://github.com/Lagrange-Labs/deep-prove/blob/9d1a53e2ef49ffa2c902b8689cd3c58057a4e662/deep-prove/src/bin/cli/main.rs#L221-L235",
-        "words": "Its verifier, deep-prove-cli verify, takes one argument, the proof file, and checks the proof against the verifier key inside that file; no documented step makes the key from the weights alone (read at 9d1a53e2)."
+        "words": "deep-prove-cli verify takes only the proof file and verifies against a verifier key embedded inside that file, with no documented way to derive the key from model weights alone (checked at 9d1a53e2)."
       },
       "status": {
         "state": "active"
@@ -108,7 +108,7 @@
       "reason": "no public verifier",
       "reason_source": {
         "url": "https://github.com/ICME-Lab/jolt-atlas/blob/329b21efa6f6a74355e6096cf27c3e0cc7dfc226/README.md?plain=1#L19-L20",
-        "words": "Its one program, the prove example, \"proves and verifies any model in the zoo\"; no program at 329b21ef verifies a stored proof on its own."
+        "words": "Its single binary (the prove example) \"proves and verifies any model in the zoo\", with no standalone verifier at 329b21ef for checking a stored proof."
       },
       "status": {
         "state": "active"
@@ -140,7 +140,7 @@
       "reason": "no configuration at the request",
       "reason_source": {
         "url": "https://github.com/gizatechxyz/LuminAIR/blob/9026bd3d0934a35479e6b3b76353a6ac5facd9e8/README.md",
-        "words": "Its README proves a graph run and names no language model (read at 9026bd3d)."
+        "words": "The README demonstrates general computational graph proofs and lists no language-model configuration (checked at 9026bd3d)."
       },
       "status": {
         "state": "active"
@@ -156,7 +156,7 @@
       "reason": "no public verifier",
       "reason_source": {
         "url": "https://arxiv.org/abs/2603.18046",
-        "words": "No public code: its paper names no repository (read 2026-11-15)."
+        "words": "No public code: the paper does not link to a repository (checked 2026-11-15)."
       },
       "status": {
         "state": "no_repository"
@@ -171,7 +171,7 @@
       "reason": "another kind of check",
       "reason_source": {
         "url": "https://github.com/ora-io/opml/blob/2fa43311a4a95bcd96f5092d0a3b34e84da49eb0/README.md?plain=1#L20",
-        "words": "A fault proof: \"the challenge game and single step verification\"."
+        "words": "Uses optimistic fault proofs: \"the challenge game and single step verification\"."
       },
       "status": {
         "state": "unmaintained"
@@ -186,14 +186,14 @@
       "reason": "another kind of check",
       "reason_source": {
         "url": "https://github.com/nearai/private-ml-sdk/blob/25c25025c556ab2f797eeda3bab433f38a8ffb7a/e2e/README.md?plain=1#L71",
-        "words": "Its check is a signature over the sha256 of the HTTP request body and of the HTTP response body; it makes no proof."
+        "words": "Verifies via a hardware signature over the SHA-256 hashes of the HTTP request and response bodies rather than generating a cryptographic proof."
       },
       "status": {
         "state": "archived"
       }
     },
     "ref-recompute": {
-      "kind_words": "Someone reruns the work: a referee settles a dispute between providers, or a checker holding the weights recomputes.",
+      "kind_words": "Re-execution by someone holding the weights, either to arbitrate a dispute or to audit inference directly.",
       "name": "Rerun by a weights holder"
     },
     "ref-serve": {
@@ -209,7 +209,7 @@
       "reason": "no configuration at the request",
       "reason_source": {
         "url": "https://github.com/worldcoin/Remainder_CE/blob/5687fe7f3a077c75c374422ef79f22e3860de9c1/README.md",
-        "words": "A general GKR prover; its README names no model or language-model circuit (read at 5687fe7f)."
+        "words": "A general-purpose GKR prover; its README lists no language-model circuit or configuration (checked at 5687fe7f)."
       },
       "status": {
         "state": "active"
@@ -249,7 +249,7 @@
       "reason": "another kind of check",
       "reason_source": {
         "url": "https://docs.tinfoil.sh/verification/attestation-architecture",
-        "words": "Its check is a hardware attestation, as its attestation architecture page describes; it makes no proof (read 2026-11-08)."
+        "words": "Relies on hardware enclave attestation as described in its architecture docs rather than generating a cryptographic proof (checked 2026-11-08)."
       },
       "status": {
         "state": "active"
@@ -264,7 +264,7 @@
       "reason": "another kind of check",
       "reason_source": {
         "url": "https://github.com/PrimeIntellect-ai/toploc-experiments/blob/1d8323203dbec04873a0b1a0530c6bcaa80233bf/README.md?plain=1#L23",
-        "words": "A fingerprint of the activations, not a proof: its validation \"Validates against predefined error thresholds\"."
+        "words": "Uses activation fingerprints rather than a proof: its validator \"Validates against predefined error thresholds\"."
       },
       "status": {
         "state": "active"
@@ -279,7 +279,7 @@
       "reason": "another kind of check",
       "reason_source": {
         "url": "https://arxiv.org/abs/2502.19405",
-        "words": "A re-execution: \"we design Verde, a dispute arbitration protocol\"."
+        "words": "Uses refereed re-execution: \"we design Verde, a dispute arbitration protocol\"."
       },
       "status": {
         "state": "no_repository"
@@ -311,7 +311,7 @@
       "reason": "a different statement",
       "reason_source": {
         "url": "https://web.archive.org/web/20250902071715/https://eprint.iacr.org/2025/1184.pdf",
-        "words": "Its paper leaves the reply out of the proof, Appendix A: \"we omit proving the final linear projection and the token generation procedure\" (read in the archived copy of 2025-09-02)."
+        "words": "Omits token generation from the proof (Appendix A): \"we omit proving the final linear projection and the token generation procedure\" (archived copy from 2025-09-02)."
       },
       "status": {
         "state": "active"
@@ -326,7 +326,7 @@
       "reason": "no public verifier",
       "reason_source": {
         "url": "https://github.com/jvhs0706/zkllm-ccs2024/blob/993311ea8e2346b90efacb35337b2e3cfe0d6f8d/README.md?plain=1#L9",
-        "words": "An interactive proof: \"the prover and verifier works are implemented side-by-side for each component\"."
+        "words": "Interactive prototype without a standalone verifier: \"the prover and verifier works are implemented side-by-side for each component\"."
       },
       "status": {
         "state": "archived"
@@ -341,7 +341,7 @@
       "reason": "no configuration at the request",
       "reason_source": {
         "url": "https://github.com/ddkang/zkml/blob/43789582671f16148dd02cbac5654f462d4fe3e4/README.md",
-        "words": "Its README proves a model run and names no output tokens; the language model it names is a distilled GPT-2 (read at 43789582)."
+        "words": "Demonstrates single forward-pass proofs without autoregressive reply generation; its only language-model example is a distilled GPT-2 (checked at 43789582)."
       },
       "status": {
         "state": "unmaintained"
@@ -358,7 +358,7 @@
       "reason": "no public verifier",
       "reason_source": {
         "url": "https://eprint.iacr.org/2025/535",
-        "words": "No public code: its paper and its page at polyhedra.network name no repository (read 2026-11-08)."
+        "words": "No public code: neither the paper nor polyhedra.network links to a repository (checked 2026-11-08)."
       },
       "status": {
         "state": "no_repository"
@@ -373,7 +373,7 @@
       "reason": "no configuration at the request",
       "reason_source": {
         "url": "https://github.com/uiuc-kang-lab/zk-torch/blob/63b9c68960f3ca84026d89428dd6d8129e930d53/README.md",
-        "words": "Its README proves a model run and names no output tokens (read at 63b9c689)."
+        "words": "Proves model execution without specifying autoregressive token generation or a Level 1 model configuration (checked at 63b9c689)."
       },
       "status": {
         "state": "active"

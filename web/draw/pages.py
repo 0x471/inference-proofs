@@ -2300,18 +2300,19 @@ def build_checks():
     )
     # the request's one home on the site (SI-8), and what passed means
     gate = (
-        f"Every system we can run at a public pin gets one request: {request_words()}. An end token does "
-        "not stop the reply. A system has passed on a model when all six checks passed there."
+        f"Every runnable system pinned to a public commit receives the exact same request: "
+        f"{request_words()}. Generation never stops early on an end-of-sequence token. A system "
+        "passes on a model when all six checks pass."
     )
     # what the glyph is and what its petals rest on, at the head of their rules (§The glyph, GL-1,
     # GL-2, GL-8, FM-2, MC-5, §Reading the tables)
     summary = (
-        "The glyph shows how close a row is to a perfect prover, one petal per property, and the "
-        "petals are never added up. We grade four of them on the publisher's documents at the "
-        "pinned commit. We grade the fifth, Fidelity, on our fidelity run, and it is not decided "
-        "whenever the Fidelity check is. A failed check sets Failed on the petals whose claim it "
-        "contradicts, a check not decided lowers none, and a passed check raises none. On any "
-        "doubt, the lower step wins."
+        "The glyph shows how close a system comes to an ideal prover across five separate "
+        "properties, never summed into a single score. Four petals are graded from the "
+        "publisher's documentation at the pinned commit, while Fidelity comes from our own "
+        "fidelity run (and stays undecided whenever the Fidelity check does). A failed check "
+        "flips any contradicted petal to Failed, an undecided check lowers nothing, and a passed "
+        "check raises none. Whenever a rule is ambiguous, the lower grade applies."
     )
     # the step words once, each on its chip (the inks are drawn, never named: SI-6)
     legend = ('<p class="rd slg">' + " ".join(step_chip(k) for k in STEP_WORD) + "</p>"

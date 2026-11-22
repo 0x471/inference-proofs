@@ -1,17 +1,17 @@
 # Benchmark release v<release>: report
 
-Copy this file to `reports/<release>.md` ([RFC-0009 §Reports](../rfcs/0009-results-and-publication.md#reports)). Keep the sections below, in this order.
+Copy this template to `reports/<release>.md` ([RFC-0009 §Reports](../rfcs/0009-results-and-publication.md#reports)), keeping the sections below in the same order.
 
-Every number is copied from `index.json`, carries its unit, timing scope, grade and evidence tier, and links to its row. The report computes no new number: a ratio it needs is added to the derivation code first (AGENTS.md rule 3). Use neutral language (AGENTS.md rule 10).
+Copy every number directly from `index.json`, include its unit, timing scope, grade, and evidence tier, and link back to its row. Do not compute new numbers in the report: if you need an additional ratio, add it to the derivation code first (AGENTS.md rule 3). Write in neutral language throughout (AGENTS.md rule 10).
 
 ## What changed since the last release
 
-Methodology changes with their RFC numbers, systems and pins added or removed, workloads, reference file and price.
+Summarize methodology changes along with their RFC numbers, any systems or pins added or removed, and updates to workloads, the reference file, or pricing.
 
 ## What failed
 
-Failed runs (exit code and last lines) and unexpected control outcomes, each linked to its record.
+List failed runs (including exit codes and last output lines) and any unexpected control outcomes, linking each item to its underlying record.
 
 ## What the numbers do not show
 
-Limits of the measurements, including every RISK still open in the RFCs.
+Document the limitations of these measurements, including every RISK that remains open in the RFCs.

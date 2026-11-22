@@ -74,17 +74,17 @@ from .words import (
 
 # what the checks do not test (the checks page, #not-tested; RFC-0018 Non-Goals)
 NOT_TESTED = (
-    "No check attempts a forged proof. Soundness and weight secrecy are not tested, so the glyph "
-    "reports what the publisher's documents state about them."
+    "None of our checks try to forge a proof. Soundness and weight secrecy are not tested by "
+    "our harness; instead, the glyph grades what each publisher states and proves."
 )
 # the binding-only gap (RFC-0018 SI-4, SI-4a), on the checks page beside NOT_TESTED
 BINDING_GAP = (
-    "In three of the checks we change one thing the verifier must refuse, and in the other three "
-    "we test an honest run. A system whose proof is just a hash of the commitment, prompt and "
-    "reply, computed from the weights the prover loads, would pass all six, and Level 1 would "
-    "still keep it on the ladder, reading passed. But it would get no position, and what decides "
-    "that is not a test but its publisher's recorded statement that an accept is the committed "
-    "model's own greedy reply, or our reading of one."
+    "Three checks alter one input that the verifier must reject, and the other three test "
+    "honest runs. A trivial system whose proof is just a keyed hash of the commitment, prompt, "
+    "and reply computed from the weights would pass all six checks and appear on the ladder as "
+    "Passed. However, it would receive no ranking position: ranking requires a recorded "
+    "publisher statement (or our reading of one) that an accepted proof guarantees the "
+    "committed model's own greedy reply."
 )
 ROW_GLYPH = 3  # the row glyph's unit in px: its arms carry their names (159 by 87 px)
 
@@ -617,8 +617,8 @@ def rung_html(rung):
 
 # the overview's lead (SI-1, amended 2026-11-16): one sentence, what a proof of inference is, for a
 # reader with no context; the ladder under it says the rest
-PROOF_WORDS = ("A proof of inference lets anyone check that a reply is the one a committed model "
-               "returns for a prompt.")  # fmt: skip
+PROOF_WORDS = ("A proof of inference lets anyone verify that a reply came from a committed model "
+               "running on a specific prompt, without seeing the weights.")  # fmt: skip
 
 
 def band_html():

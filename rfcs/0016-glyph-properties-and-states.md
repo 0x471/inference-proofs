@@ -3,195 +3,198 @@
 - Authors: 0xchqrles
 - Created: 2026-11-07
 - Requires: RFC-0002, RFC-0008, RFC-0009, RFC-0012, RFC-0013, RFC-0015
-- Superseded for Level 1 by RFC-0018 (2026-11-10): this RFC's properties and states no longer drive the site, and `web/_data/criteria.json` is kept as the v0.1 record (amended 2026-11-15: deleted 2026-11-15: it held RFC-0016's vocabulary (Formally verified "yes" from documents), which no page reads; the v0.1 record is in git history at b9dfa3e). The Level 1 glyph is RFC-0018's five petals, computed from facts copied into `systems/<name>/properties.yaml` and lowered by the failed checks RFC-0018 GL-2 names; the six checks are the entry gate, not the glyph; RFC-0018 brings back ST-5 (one fact, one petal) and INV-GLYPH-1 (nothing to add up) as GL-6 and GL-8 (amendment of 2026-11-13).
+- Superseded for Level 1 by RFC-0018 (2026-11-10): this RFC's properties and states no longer drive the site, and `web/_data/criteria.json` was initially retained as the v0.1 record (amended 2026-11-15: deleted on 2026-11-15 because it carried RFC-0016's vocabulary, such as Formally verified "yes" from documents, which no page reads; the v0.1 record remains in git history at `b9dfa3e`). The Level 1 glyph uses RFC-0018's five petals computed from facts copied into `systems/<name>/properties.yaml` and lowered by failed checks under RFC-0018 GL-2, while the six checks act as the entry gate rather than the glyph. RFC-0018 brings back ST-5 (one fact, one petal) and INV-GLYPH-1 (nothing to add up) as GL-6 and GL-8 (amendment of 2026-11-13).
 
 ## Summary
 
-The public site draws every row as a glyph: six properties (Weights hidden, Model bound, Whole output checked, Formally verified, Security level, No trusted party), each in one of four states, printed Yes, Partly, No and Not stated. This RFC fixes the rules behind those states, which `web/_data/criteria.json` records. The benchmark validates claims; it does not audit them. A state on a claim card row means three things at once: the property is stated by the system at its pin, it is read for the configuration the benchmark runs (verifier included), and the benchmark's own negative controls (RFC-0008) do not contradict it; a reference row's state describes the benchmark's own method (SRC-5), and a public-source row's state is stated by its authors and not run (INV-GLYPH-5). A state is not an audit of cryptographic soundness or zero knowledge, not a probability that the property holds and not a security level of the benchmark's own. This RFC fixes each property's question, what it does not cover, the rule for each state and which controls can contradict it; one state vocabulary; that there is no total, score, count or order over states and no number on a property; the source of a state for each row class (claim card rows, reference rows, public-source rows); that a card row is read for its card's configuration and quotes only the card's pin; the override rule, by which a control the configuration's verifier accepted where RFC-0008 expects rejection sets No on a property stated Yes or Partly, whatever the documentation says; what a web quote carries in place of a commit, and that it comes from the system's own authors; and the contract of the criteria file (`schema: "criteria/1"` and its schema). The schema is the check on that file.
+The v0.1 public site represents every row as a six-part glyph covering six properties (Weights hidden, Model bound, Whole output checked, Formally verified, Security level, and No trusted party), each taking one of four states printed as Yes, Partly, No, or Not stated. This RFC defines the rules behind those states recorded in `web/_data/criteria.json`.
+
+The benchmark validates claims rather than auditing them. On a claim-card row, a state means three things at once: the system states the property at its pinned commit, the claim applies to the exact configuration the benchmark runs (including its verifier), and the benchmark's negative controls (RFC-0008) do not contradict it. On a reference row, a state describes the benchmark's own method (SRC-5); on a public-source row, it reflects what the authors publicly state without any benchmark run behind it (INV-GLYPH-5). No state is an audit of cryptographic soundness or zero knowledge, a probability that a property holds, or a benchmark-assigned security level.
+
+This RFC specifies each property's exact question, scope limits, state rules, and applicable controls; establishes a single unordered four-state vocabulary with no scores, sums, counts, or property numbers; defines allowed sources for each row class (claim-card, reference, and public-source rows); requires card rows to match their card configuration and cite only the pinned commit; defines the mechanical override rule by which an unexpectedly accepted RFC-0008 control forces a stated Yes or Partly cell to No regardless of documentation; specifies archival requirements for web quotes from a system's own authors; and defines the JSON Schema contract (`schema: "criteria/1"`) that validates the criteria file.
 
 ## Motivation
 
-Evidence, all at this repository's commit `356949a5ee8afe328ee2cb0d68b18be1b1d82453` unless stated:
+At repository commit `356949a5ee8afe328ee2cb0d68b18be1b1d82453`, the prototype criteria pipeline had several concrete gaps:
 
-- No RFC and no section of `docs/spec/` names the six properties.
-- The states are set by hand. A pipeline outside this repository wrote the data (the snapshot's `generated_by: prototypes/v7/_data/make_site_data.py`). `web/build.py` reads no claim card; it only asserts that the snapshot's `glyph.rows[*].states` equals `criteria.json` `test_mapping` (L41 to L44). Nothing checks a state against `systems/flashprove/claim.yaml` or `systems/sash/claim.yaml`. `criteria.json` has no `schema` field, and no RFC-0013 §G2 input glob covers it.
-- The data holds rules that contradict AGENTS.md rule 9 ("Do not infer security properties"): `states.red.meaning` reads "The system's documentation says it does not hold, or the design rules it out", Weights hidden No reads "or the design gives the checker the weights", and No trusted party No reads "The check is a hardware attestation verified against a chip maker's keys", which names a kind of check rather than a statement.
-- The data reads FlashProve's Formally verified and Security level from statements its documentation makes for the Lean verifier `verify`, while FlashProve's card is the configuration that runs the C++ verifier `cp_verify`, and the card says that neither the formal statement nor the level is stated for it (`systems/flashprove/claim.yaml` L22 and L26 to L37).
-- The data leaves owner decisions open "for the RFC": `risks` R1 (cap public-source rows), R2 (a system's own publication outside the pin) and R6 (fixed public parameters as a trusted input).
-- The data uses two vocabularies for one thing: state keys `green`, `amber`, `red`, `grey` with labels "holds", "partly", "does not hold", "not stated" in `criteria.json`, and the words Yes, Partly, No, Not stated in the snapshot's `glyph.inks.ladder`.
-- Sourcing gaps (counted in [Migration / Rollout](#migration--rollout)): 13 Yes, Partly or No cells on public-source rows rest only on web quotes with no commit, no retrieval date and no stored copy; 65 Not stated cells carry no list of sources read, 53 of them reading "Not copied yet.". SASH's Whole output proved is Yes from a quote in `sg-ai-safety-hub/zk-inference-results`, a repository the SASH card does not accept as a source (`systems/sash/claim.yaml` L5 to L6, INV-CLAIM-3).
-- Derived values are typed, not computed: `quote_check` holds a count (77 quotes) that no rule recomputes. It matches the file today (71 in cells, 4 in `aside`, 2 in `outside_pin`), but nothing would catch it drifting.
-- Nothing ties the glyph to the benchmark's own tests. RFC-0008 runs the same tampering controls on every system's verifier and records each outcome in `controls.json`, but no rule lets an accepted control reach a glyph cell, so a row could print Yes on Whole output checked while its verifier accepted a changed output token (C1).
+- Neither an RFC nor `docs/spec/` formally defined the six glyph properties.
+- States were entered manually via an external script (`generated_by: prototypes/v7/_data/make_site_data.py`). `web/build.py` never read claim cards, checking only that `glyph.rows[*].states` matched `criteria.json`'s `test_mapping` (L41 to L44). Nothing checked states against `systems/flashprove/claim.yaml` or `systems/sash/claim.yaml`, and `criteria.json` had no `schema` field or RFC-0013 §G2 validation glob.
+- Several prototype rules violated AGENTS.md rule 9 ("Do not infer security properties"): `states.red.meaning` included "or the design rules it out", Weights hidden No included "or the design gives the checker the weights", and No trusted party No read "The check is a hardware attestation verified against a chip maker's keys", inferring from check type rather than documentation.
+- FlashProve's Formally verified and Security level cells were copied from statements made for its Lean verifier `verify`, even though FlashProve's claim card targets the C++ verifier `cp_verify` and explicitly states neither property is claimed for it (`systems/flashprove/claim.yaml` L22 and L26 to L37).
+- Owner decisions remained unresolved in `risks`: R1 (capping public-source rows), R2 (publications outside the pin), and R6 (fixed public parameters as trusted inputs).
+- Two conflicting vocabularies coexisted: `green`, `amber`, `red`, `grey` with labels "holds", "partly", "does not hold", and "not stated" in `criteria.json`, versus Yes, Partly, No, and Not stated in `glyph.inks.ladder`.
+- Sourcing had large gaps (counted in [Migration / Rollout](#migration--rollout)): 13 non-grey cells on public-source rows relied solely on unarchived web links without retrieval dates or stored copies, and 65 Not stated cells listed no sources read (53 simply saying "Not copied yet."). SASH's Whole output proved was set to Yes using `sg-ai-safety-hub/zk-inference-results`, a repository excluded by SASH's own claim card (`systems/sash/claim.yaml` L5 to L6, INV-CLAIM-3).
+- Derived values were hand-typed rather than computed: `quote_check` stored a hardcoded count (77 quotes: 71 in cells, 4 in `aside`, 2 in `outside_pin`) with no automated check against drift.
+- Nothing connected the glyph to benchmark test outcomes. Even though RFC-0008 runs tampering controls against every system's verifier and logs outcomes in `controls.json`, a row could still display Yes on Whole output checked after its verifier accepted a mutated output token (C1).
 
-The benchmark's role for these properties is the one L2BEAT plays for rollups: it validates what a system claims, it does not certify it. Three layers make a state: the claim is documented (the claim card quotes the system at its pin, Not stated where it is silent; RFC-0002), the claim is read for what the benchmark actually runs (the card's configuration, verifier included; SRC-1), and the benchmark's own negative controls find no obvious breach ([Negative control override](#negative-control-override)). Each layer is checkable by a reader from stored files. None needs the benchmark to judge a proof, a protocol or code, which it is not placed to do ([PRD §5](../docs/PRD.md#5-non-goals): "it does not audit soundness proofs or code").
+For these properties, the benchmark plays a role similar to L2BEAT for rollups: it validates documented claims rather than certifying systems. Each state rests on three verifiable layers: documentation at the pinned commit (Not stated where silent, RFC-0002), alignment with the exact configuration executed (including the verifier, SRC-1), and absence of contradictions from negative controls ([Negative control override](#negative-control-override)). Readers can check every layer directly from stored files without asking the benchmark to audit cryptographic proofs or code, which is explicitly out of scope ([PRD §5](../docs/PRD.md#5-non-goals): "it does not audit soundness proofs or code").
 
-Scenarios:
+Concrete scenarios this RFC addresses:
 
-1. A reader sees SASH Not stated on Weights hidden and FlashProve Partly. They need to know that Not stated means the pinned sources are silent, not that SASH hides more.
-2. A reviewer sets a public-source row to Yes from a post on the system's own blog. A later reader needs to find the text that was read, as it read on the day, without trusting that the page has not changed.
-3. A claim card changes `zero_knowledge.claimed` to `false`. The glyph must not keep saying Yes.
-4. A reader adds the six states of two rows and compares the sums. The site must give them nothing to add.
-5. A card says Whole output checked Yes, and in a release the configuration's verifier accepts C1 (a changed output token). The glyph must not keep saying Yes, and the system page must show the quote, the control and the run side by side.
+1. A reader seeing Not stated for SASH and Partly for FlashProve on Weights hidden must understand that Not stated means the pinned documentation is silent, not that SASH hides more.
+2. When a reviewer sets a public-source cell to Yes from an author's blog post, future readers need to inspect the exact text as it appeared on the retrieval date even if the live page later changes.
+3. If a claim card updates `zero_knowledge.claimed` to `false`, the glyph cannot continue showing Yes.
+4. Readers must not be given numbers or fill areas that invite summing six properties across rows.
+5. If a card claims Whole output checked Yes but the release's verifier accepts C1 (a modified output token), the glyph must flip to No and the system page must show the quote, control, and run side by side.
 
 ## Goals
 
-- A state on a claim card row means: stated by the system at its pin, for the configuration the benchmark runs, and not contradicted by the benchmark's own tests; a reference row's state describes the benchmark's own method (SRC-5), and a public-source row's state is stated by its authors and not run (INV-GLYPH-5). The benchmark validates claims and does not audit them.
-- Each of the six properties has a question, a not-covered note, a written rule for each of the four states and the list of controls that can contradict it, or a statement that none can ([Properties](#properties)).
-- A state on a system's row is set only from a quote of that system's own documentation, never from the benchmark's reading of a design (AGENTS.md rule 9), with one exception: a recorded negative control outcome that contradicts a stated Yes or Partly sets No (OVR-4). A reference row's states are set by RFC-0015 and this RFC, which document the benchmark's own methods.
-- The override is mechanical: every overridden cell follows from the stored `controls.json` files of the release, and no reviewer judgement sets or clears it.
-- One state vocabulary: one id and one printed word per state. The four states are unordered.
-- No total, score, count, average or order over states; no number on a property.
-- For each row class, a named source of states; for card rows, the claim card fields each property reads and the states those fields allow.
-- A criteria file that validates under G2 against its schema (`criteria/1`).
+- Define clearly what a state means per row class: for claim-card rows, stated at the pin for the benchmarked configuration and uncontradicted by negative controls; for reference rows, describing the benchmark's own method (SRC-5); for public-source rows, stated by the authors without benchmark runs (INV-GLYPH-5).
+- Give every property a clear question, explicit exclusions, written rules for all four states, and the exact list of RFC-0008 controls that can contradict it (or note that none can) ([Properties](#properties)).
+- Require every system-row state to come strictly from verbatim quotes of the system's own documentation rather than design inferences (AGENTS.md rule 9), with a single exception: a contradicting negative control outcome overrides a stated Yes or Partly to No (OVR-4). Reference-row states come from RFC-0015 and this RFC.
+- Make overrides purely mechanical, derived directly from stored `controls.json` files without reviewer discretion.
+- Standardize on one unordered four-state vocabulary with one ID and one display label per state.
+- Forbid totals, scores, counts, averages, orderings over states, and numeric labels on properties.
+- Specify allowed sources per row class and map claim-card fields to allowed states for card rows.
+- Validate the criteria file under gate G2 using the `criteria/1` JSON Schema.
 
 ## Non-Goals
 
-- How the glyph is drawn: shapes, inks, contrast, slice geometry, motion. That is the site's (RFC-0009, amended by #319), within INV-GLYPH-1. This RFC fixes only the printed word of each state and how silence is shown (ST-2).
-- The family vocabulary (`proved`, `re_executed`, `attested`, `fingerprinted`, `unchecked`) and which tab a row sits in.
-- The site data generator and the split of the site build (#320, #321).
-- Claim cards for the 19 systems not benchmarked yet.
-
-- Judging whether a system's documentation is correct. The glyph reports what the documentation states, like the claim card it reads (RFC-0002 §Non-Goals), and whether the benchmark's own controls contradict it.
-- An audit. No state, page or file of this RFC is an audit result of cryptographic soundness, of zero knowledge, of a formal proof or of code; a probability that a property holds; or a security level assigned by the benchmark (INV-GLYPH-3, [PRD §5](../docs/PRD.md#5-non-goals)). A control that rejects shows that one mutation was rejected, nothing more (RFC-0008 §Non-Goals), so it never raises a state.
-- New controls, or changes to a control's algorithm or expected set. Those are RFC-0008's; this RFC only maps its controls to properties.
+- Visual glyph styling (shapes, colours, contrast, slice geometry, or animation). Those belong to the site design (RFC-0009, amended by #319) within INV-GLYPH-1; this RFC fixes only state display words and how silence is presented (ST-2).
+- The family taxonomy (`proved`, `re_executed`, `attested`, `fingerprinted`, `unchecked`) and tab assignments.
+- Site data generation and build pipeline refactoring (#320, #321).
+- Writing claim cards for the 19 systems not yet benchmarked.
+- Verifying whether a system's documentation is truthful. Like the claim card (RFC-0002 §Non-Goals), the glyph reports what documentation states and whether negative controls contradict it.
+- Auditing cryptographic soundness, zero knowledge, formal proofs, or code, estimating failure probabilities, or assigning security levels (INV-GLYPH-3, [PRD §5](../docs/PRD.md#5-non-goals)). A passing control only proves that one specific mutation was rejected (RFC-0008 §Non-Goals) and therefore never raises a state.
+- Defining new controls or altering control algorithms and expected outcome sets, which remain owned by RFC-0008.
 
 ## Proposed Design
 
 ### Terms
 
-- **Glyph**: the six-part figure the site draws for one row.
-- **Property**: one of the six questions below, identified by its id.
-- **Cell**: one property of one row: a state, our short reason, and quotes or a list of sources read.
-- **Deciding quote**: the quote that sets a cell's state. Further quotes support it and set nothing.
-- **Row class**: `claim_card_at_pin` (a system with a claim card), `reference_rfc_0015` (a reference row) or `public_sources` (a system not benchmarked yet).
-- **Own source**: a repository, a domain or a published paper of the system's own authors, listed on a public-source row ([SRC-8](#public-source-rows-public_sources)).
-- **Stated state**: the state a cell's quotes give under ST-1 to ST-8, before the override. On a cell that is not overridden it is the cell's state.
-- **Contradicting outcome**: a control, mapped to a property by the [control map](#negative-control-override), that a stored `controls.json` records as `accepted` where its expected set does not hold `accepted` (OVR-3).
-- **Overridden cell**: a card-row cell whose stated state is `yes` or `partly` and which has at least one contradicting outcome; its state is `no` (OVR-4).
+- **Glyph**: the six-part figure drawn for each row on the site.
+- **Property**: one of the six questions defined below, identified by its ID.
+- **Cell**: a single property of one row, containing a state, a short reason, and either supporting quotes or a list of sources consulted.
+- **Deciding quote**: the verbatim quote that determines a cell's state; additional quotes provide supporting context only.
+- **Row class**: `claim_card_at_pin` (a system with a claim card), `reference_rfc_0015` (a benchmark reference row), or `public_sources` (a system not yet benchmarked).
+- **Own source**: a repository, domain, or published paper belonging to the system's own authors, listed on a public-source row ([SRC-8](#public-source-rows-public_sources)).
+- **Stated state**: the state determined by a cell's quotes under ST-1 through ST-8 prior to any negative-control override. When no override applies, it equals the cell's final state.
+- **Contradicting outcome**: a control mapped to a property by the [control map](#negative-control-override) whose stored `controls.json` record shows `accepted` even though `accepted` is not in its expected outcome set (OVR-3).
+- **Overridden cell**: a card-row cell whose stated state is `yes` or `partly` and that has at least one contradicting outcome, forcing its final state to `no` (OVR-4).
 
 ### What the glyph is not
 
-- INV-GLYPH-1. There is no total, score, rank, count, sum or average over states, across properties or across rows. No page, file or report computes one. The criteria file holds no key named `total`, `score`, `rank`, `count`, `sum`, `average`, `mean` or `weight`. No drawing encodes a state by an amount of fill or area that adds up across properties; each state is told apart by ink or pattern. The shapes themselves are the site's (#319).
-- INV-GLYPH-2. Properties carry no numbers. The order of `order` is the clockwise display order and nothing else; it is not a priority or a weight. The criteria file holds no number-typed value at all. The site generator (#320) prints none: the view it renders (`iproofs.site.view`) holds no property number, and the data snapshot that held `glyph.properties[].n`, `glyph.key.numbers` and numbered `aria` strings (`web/_data/` at `39662bf6`) is gone.
-- INV-GLYPH-3. Security level shows only whether a level is stated and whether the documentation says it is proven. It never shows, compares or computes a level of its own; the level itself is a quote in the claim card (RFC-0002 `security.level`), and benchmark-assigned levels are rejected (RFC-0002 §Alternatives Considered).
-- INV-GLYPH-4. Rows are never ordered by their states. Row order is set by the site (RFC-0009).
-- INV-GLYPH-5. A state is a validated claim, not a certificate. On a card row it reads: stated by the system at its pin (SRC-2), for the configuration the benchmark runs (SRC-1, OVR-5), and not contradicted by the benchmark's negative controls (OVR-4). Before the first release a card row's states are stated at the pin for the card's configuration, with no run yet (OVR-5). On a public-source row it reads: stated by the system's own authors (SRC-8), not run by the benchmark. On a reference row it describes the benchmark's own method (SRC-5). No state is an audit result, a probability of correctness or a benchmark-assigned level (§Non-Goals). The overview draws the state and nothing else; the quotes, sources and control outcomes behind it are printed on the system page (OVR-7).
+- INV-GLYPH-1. There is no total, score, rank, count, sum, or average over states, across properties, or across rows. No page, file, or report may compute one. The criteria file contains no key named `total`, `score`, `rank`, `count`, `sum`, `average`, `mean`, or `weight`. Visual designs must distinguish states by ink or pattern rather than additive fill areas; specific shapes belong to the site (#319).
+- INV-GLYPH-2. Properties carry no numbers. The `order` array defines clockwise display order only, never priority or weight. The criteria file contains no number-typed values anywhere, and the site generator (#320) prints none: `iproofs.site.view` omits property numbers, and the prototype snapshot containing `glyph.properties[].n`, `glyph.key.numbers`, and numbered `aria` labels (`web/_data/` at `39662bf6`) is retired.
+- INV-GLYPH-3. Security level records only whether a numeric bound is stated and whether documentation calls it proven. It never computes, compares, or assigns its own level; the level itself stays a verbatim quote in the claim card (RFC-0002 `security.level`, rejecting benchmark-assigned levels in RFC-0002 §Alternatives Considered).
+- INV-GLYPH-4. Rows are never sorted by glyph states. Row ordering is governed by site rules (RFC-0009).
+- INV-GLYPH-5. Every state is a validated claim rather than a certificate. On a card row, it means stated at the pin (SRC-2) for the benchmarked configuration (SRC-1, OVR-5) and uncontradicted by negative controls (OVR-4); before the first release, card rows reflect pinned statements with no runs yet (OVR-5). On a public-source row, it means stated by the authors (SRC-8) without benchmark runs. On a reference row, it describes the benchmark's own method (SRC-5). No state represents an audit, probability of correctness, or benchmark-assigned security level (§Non-Goals). The overview renders states alone, while quotes, sources, and control outcomes live on each system page (OVR-7).
 
 ### States
 
-One vocabulary, used in the criteria file and on every page. The criteria file uses these ids. The four states are unordered: none counts as more or less than another, and no rule in this RFC compares two states except ST-8, inside one cell. The override adds no state: an overridden cell is `no` (OVR-4).
+One shared four-state vocabulary is used across both the criteria file and every web page. The four states are unordered: none is ranked above another, and no rule compares states except ST-8 within a single conflicting cell. Overrides introduce no extra state; overridden cells take `no` (OVR-4).
 
 | Id | Printed word | Meaning | Replaces |
 |---|---|---|---|
-| `yes` | Yes | The documentation says the property holds, by the property's Yes rule, and no control contradicts it. | `green`, "holds" |
-| `partly` | Partly | The documentation says it holds with a limit it states, by the property's Partly rule, and no control contradicts it. | `amber`, "partly" |
-| `no` | No | The documentation says it does not hold, by the property's No rule; or the documentation says it holds, fully or partly, and a negative control of the benchmark contradicts it (OVR-4). | `red`, "does not hold" |
-| `not_stated` | Not stated | The sources read say nothing that meets any of the three rules above, or they have not been read yet ([Q2](#decisions)). | `grey`, "not stated" |
+| `yes` | Yes | The documentation says the property holds under the property's Yes rule, and no control contradicts it. | `green`, "holds" |
+| `partly` | Partly | The documentation says the property holds with a stated limit under the property's Partly rule, and no control contradicts it. | `amber`, "partly" |
+| `no` | No | The documentation says the property does not hold under the property's No rule, or a negative control contradicts a stated Yes or Partly (OVR-4). | `red`, "does not hold" |
+| `not_stated` | Not stated | The sources read say nothing matching the three rules above, or they have not yet been read ([Q2](#decisions)). | `grey`, "not stated" |
 
-State rules, for every property:
+Universal state rules:
 
-- ST-1. A cell's stated state is `yes`, `partly` or `no` only when a deciding quote, copied verbatim from a source the row class allows ([Sources by row class](#sources-by-row-class)), meets that state's rule for the property. Reference rows follow SRC-5 instead. The cell's state is its stated state, except on an overridden card-row cell, where it is `no` (OVR-4).
-- ST-2. Silence is recorded as `not_stated`, never `no`: if the sources read say nothing that meets a rule, the cell is `not_stated` and lists what was read. A contradicting outcome does not change a `not_stated` cell (OVR-4, [Q5](#decisions)). The site draws and prints a `not_stated` cell as No, its reason saying it is not stated: a guarantee nobody states is one nobody can rely on, so it must never look better than a stated No (owner decision, 2026-11-10; a grey or half-red slot read as gentler than No). The record keeps `not_stated`, so a state a system later states replaces it.
-- ST-3. A stated `no` requires a statement that the property does not hold. A reviewer's reading of a design, a product category ("runs in an enclave") or an absent feature is not such a statement. Every "or the design rules it out" clause of the prototype is removed (AGENTS.md rule 9). The only other source of `no` on a card row is a contradicting outcome recorded by the harness (OVR-4), which is a measurement of the configuration's verifier, not a reading of its design.
-- ST-4. On a reference row only, a method that proves nothing and checks nothing (plain serving) is `no` on every property, and a method that proves nothing but checks (recompute) is `no` on Formally verified and Security level (SRC-7). On a card or public-source row, a statement that the system proves nothing sets `no` only on a property whose own No rule the quote meets.
-- ST-5. Each stated limit is counted in one cell only. A limit counted in another cell is printed beside this one as an `aside` and does not change its state (for FlashProve, the clipped-gap policy is counted in Model bound and the one leaked bit in Weights hidden).
-- ST-6. Trust and caveats every row shares do not change a state: the checker's own computer, compiler and build; which real, named model a commitment is. They are printed as text. A cell is judged for the configuration the row reads (SRC-1), not for another configuration of the same system.
-- ST-7. Public parameters fixed before the hash are shared by every non-interactive proof. They set `partly` on No trusted party only where the documentation says its proved statement excludes a provider who tuned them ([Q1](#decisions)).
-- ST-8. Where two quotes in the allowed sources meet the rules of different states, the reviewer quotes both, the cell carries `conflict: true`, its reason says that the sources conflict, and its stated state is fixed by this table ([Q4](#decisions)): `yes` with `partly` gives `partly`; `yes` with `no`, or `partly` with `no`, gives `no`. The quote of that state is the deciding quote. The table resolves one cell and is never applied across cells or rows. The override (OVR-4) then applies to the stated state the table gives.
+- ST-1. A cell's stated state is `yes`, `partly`, or `no` only when a verbatim deciding quote from an allowed source ([Sources by row class](#sources-by-row-class)) satisfies that state's rule for the property (reference rows follow SRC-5 instead). The cell's final state equals its stated state unless overridden to `no` on a card row (OVR-4).
+- ST-2. Silence is recorded as `not_stated`, never `no`, alongside a list of the sources consulted. Contradicting controls do not alter a `not_stated` cell (OVR-4, [Q5](#decisions)). On the site, `not_stated` renders visually and textually as No while its reason notes that the property is not stated: an unstated guarantee cannot be relied upon and must not appear gentler than a stated No (owner decision, 2026-11-10, after grey and half-red treatments read as softer than No). The underlying record preserves `not_stated` so future publisher statements cleanly replace it.
+- ST-3. A stated `no` requires an explicit statement that the property does not hold. Design inferences, product categories ("runs in an enclave"), or absent features do not qualify; every prototype "or the design rules it out" clause is removed (AGENTS.md rule 9). The sole non-documentation path to `no` on a card row is a contradicting control recorded by the harness (OVR-4), which reflects an observed verifier outcome rather than a design inference.
+- ST-4. On reference rows only, a method that neither proves nor checks outputs (plain serving) takes `no` across all six properties, while a method that checks without proving (recompute) takes `no` on Formally verified and Security level (SRC-7). On card and public-source rows, stating that a system does not prove outputs sets `no` only on properties whose own No rule the quote satisfies.
+- ST-5. Each stated limitation counts in exactly one cell. If a limitation counted in one cell is relevant context for another, it is shown beside the second cell as an `aside` without affecting its state (for example, FlashProve's clipped-gap policy counts under Model bound, and its single leaked bit counts under Weights hidden).
+- ST-6. Trust assumptions and caveats shared by every row (the verifier's own computer, compiler, and build, as well as which real-world model a commitment corresponds to) do not alter any state and are documented in prose. Every cell is evaluated strictly for the row's own configuration (SRC-1), never another configuration of the same system.
+- ST-7. Fixed public parameters chosen before hashing are common to all non-interactive proofs; they set `partly` on No trusted party only when the documentation explicitly excludes a provider who tuned them from its proved statement ([Q1](#decisions)).
+- ST-8. When two quotes from allowed sources satisfy rules for different states, both quotes are recorded, the cell sets `conflict: true` with a reason noting the conflict, and its stated state follows this precedence table ([Q4](#decisions)): `yes` + `partly` yields `partly`; `yes` + `no` or `partly` + `no` yields `no`. The quote corresponding to the resulting state becomes the deciding quote. This table resolves conflicts strictly inside a single cell and is never applied across cells or rows; OVR-4 then runs on the resulting stated state.
 
 ### Properties
 
-The six ids, in display order: `weights_hidden`, `model_bound`, `whole_output`, `formally_verified`, `security_level`, `no_trusted_party`. Each rule below is met only by what the documentation says (ST-1, ST-3). The "Controls" line of each property names the RFC-0008 controls that can contradict it ([control map](#negative-control-override)); a property no control can contradict is documentation only, and its state on a card row means stated at the pin for the configuration run, with no test behind it.
+The six properties in clockwise display order are `weights_hidden`, `model_bound`, `whole_output`, `formally_verified`, `security_level`, and `no_trusted_party`. Every rule below is satisfied solely by explicit documentation statements (ST-1, ST-3). Each property's "Controls" line identifies which RFC-0008 controls can contradict it ([control map](#negative-control-override)); properties with no mapped controls are documentation-only, meaning their card-row states reflect pinned claims for the run configuration without experimental testing.
 
 #### Weights hidden (`weights_hidden`)
 
 - Question: does the checker learn nothing about the weights?
-- Not covered: hiding the weights from the host operator (an enclave) is not this property.
-- Yes: the documentation says the weights stay hidden from the checker in the default use, naming no leak beyond public settings.
-- Partly: the documentation says they are hidden with a stated limit: a named leak, hiding shown for one policy or setting only, hiding optional per circuit, or hiding behind a commitment without the formal zero knowledge property.
-- No: the documentation says the checker sees the weights, or that hiding is off or not provided. The prototype clause "or the design gives the checker the weights" is removed; recompute's No rests on RFC-0015's statement that its verifier holds the weights.
-- Not stated: no statement about hiding the weights from the checker in the sources read.
-- Controls: none; documentation only. Every RFC-0008 control observes a verdict or a prover failure, and none observes what the checker learns about the weights.
+- Not covered: hiding weights from the host operator (for example via an enclave) is outside this property.
+- Yes: the documentation states that weights stay hidden from the checker under default use, naming no leakage beyond public settings.
+- Partly: the documentation states that weights are hidden subject to an explicit limit: a named leak, hiding established only for one policy or setting, optional per-circuit hiding, or commitment-based hiding without formal zero knowledge.
+- No: the documentation states that the checker sees the weights, or that hiding is disabled or unsupported. The prototype phrase "or the design gives the checker the weights" is removed; recompute's No rests on RFC-0015's explicit statement that its verifier holds the weights.
+- Not stated: the sources read make no statement about hiding weights from the checker.
+- Controls: none (documentation only). RFC-0008 controls only inspect verifier verdicts and prover failures, never information leaked about weights.
 
 #### Model bound (`model_bound`)
 
 - Question: is each checked token tied to the committed weights?
-- Not covered: which real, named model the commitment is. FlashProve and SASH both say that stays outside their proof; it is printed as text.
-- Yes: the documentation says a passing check ties each checked token to the committed weights exactly, in the configuration the row reads (the card's configuration for card rows; the default or expected use for public-source rows).
-- Partly: tied with a stated limit: under one of several policies only, within a tolerance or bound, or shown only in empirical tests.
-- No: the documentation says outputs are not tied to any weights, or that nothing is checked.
+- Not covered: identifying which real-world named model a commitment represents. Both FlashProve and SASH place this outside their proofs; it is explained in prose.
+- Yes: the documentation states that a passing check binds every checked token exactly to the committed weights under the row's configuration (the card configuration for card rows, or default/expected use for public-source rows).
+- Partly: bound with an explicit limit, such as under only one of several policies, within a numeric tolerance or error bound, or demonstrated solely via empirical tests.
+- No: the documentation states that outputs are not bound to any weights, or that nothing is checked.
 - Not stated: silent.
-- Controls: C3, P1 and P2 (OVR-2). Each changes the weights, their commitment or their precision, the input this property's Yes rule names, and an accepted one is read as a passing check not tied to the committed weights. This is an assignment made by the control map, not something the outcome shows alone ([Q9](#decisions)).
+- Controls: C3, P1, and P2 (OVR-2). Each mutates the weights, weight commitment, or precision named in this property's Yes rule; accepting such a mutation contradicts binding to the committed weights under the control map, though this mapping is a rule of this RFC rather than something an outcome uniquely proves ([Q9](#decisions)).
 
 #### Whole output checked (`whole_output`)
 
 - Question: does one check cover every output token of a request?
-- Name: the prototype's "Whole output proved" is renamed, because the question asks what a check covers and a reference row's check proves nothing (AGENTS.md rule 10). The id stays `whole_output`.
-- Not covered: which requests get a check (sampling, proving after the fact) is a deployment choice. The text before tokenizing and after detokenizing, which FlashProve and SASH both put outside their proof, is printed as text.
-- Yes: the documentation says one check, or one joined set of checks, covers the prompt and every output token of a request.
-- Partly: one check covers a stated part: the positions the client names, one segment, or one disputed step.
-- No: the documentation says no output token is checked, or that nothing is checked.
-- Not stated: silent, including a proved run whose output tokens the documentation does not name.
-- Controls: C1, C2, C4 and C7 (OVR-2). Each changes the request, the prompt or the claimed output, the inputs this property's Yes rule names, and an accepted one is read as a check that does not cover the prompt and output it was verified for. This is an assignment made by the control map, not something the outcome shows alone ([Q9](#decisions)).
+- Name: renamed from the prototype's "Whole output proved" because the question covers what a check verifies and reference rows prove nothing (AGENTS.md rule 10). The ID remains `whole_output`.
+- Not covered: deployment choices about which requests are checked (such as sampling or post-hoc proving), as well as text before tokenization and after detokenization (placed outside both FlashProve's and SASH's proofs and noted in prose).
+- Yes: the documentation states that one check, or one joined set of checks, covers the prompt and every output token of a request.
+- Partly: a check covers only a stated subset, such as client-selected positions, a single segment, or one disputed step.
+- No: the documentation states that no output tokens are checked, or that nothing is checked.
+- Not stated: silent, including proved runs whose covered output tokens are left unnamed.
+- Controls: C1, C2, C4, and C7 (OVR-2). Each alters the request, prompt, or claimed output named in this property's Yes rule; accepting such a mutation contradicts full request coverage under the control map ([Q9](#decisions)).
 
 #### Formally verified (`formally_verified`)
 
 - Question: is the security argument for the row's configuration checked by a proof assistant?
-- Not covered: a proof that the code itself is correct, which no row claims; it is printed as text. A statement the documentation makes only for another configuration of the same system (for example another verifier, RFC-0002 §Configuration identity 5) is printed as an `aside` and sets nothing (ST-6, SRC-1).
-- Yes: the documentation says the soundness of the configuration the row reads is proved in a proof assistant (Lean, Coq, Isabelle or similar).
-- Partly: machine-checked for a stated part only: one component, or a weaker statement than the one the system makes.
-- No: the documentation says the argument is not machine-checked, that a machine check is planned only, or that its soundness evidence is review or tests and nothing else. On a reference row, ST-4.
+- Not covered: formal verification of the implementation code itself, which no row claims (stated in prose). Claims applying only to a different configuration of the same system (such as a different verifier, RFC-0002 §Configuration identity 5) appear as an `aside` and set nothing (ST-6, SRC-1).
+- Yes: the documentation states that the soundness of the row's configuration is proved in a proof assistant (Lean, Coq, Isabelle, or similar).
+- Partly: machine-checked only for a stated subset, such as a single component or a weaker statement than the system's full claim.
+- No: the documentation states that the argument is not machine-checked, that formalization is merely planned, or that soundness relies solely on code review or testing. Reference rows follow ST-4.
 - Not stated: silent.
-- Controls: none; documentation only. The property is about the security argument, and a verdict cannot show whether an argument is machine-checked. An accepted control does not show whether the argument is machine-checked; it is printed on the system page and contradicts Model bound or Whole output checked where the control map says so.
+- Controls: none (documentation only). Verifier verdicts cannot tell whether a security argument is machine-checked; any accepted control is printed on the system page and contradicts Model bound or Whole output checked per the control map.
 
 #### Security level (`security_level`)
 
 - Question: is a soundness level stated for the row's configuration, and proven?
-- Not covered: the number itself, which is a quote in the claim card (INV-GLYPH-3). A level the documentation states only for another configuration of the same system is printed as an `aside` and sets nothing (ST-6, SRC-1).
-- Yes: the documentation states a numeric soundness bound for the configuration the row reads and says it is proven, by hand or by machine, under named assumptions.
-- Partly: a numeric level is stated but called conjectured, or stated only in code or configuration, or for part of the system. A level stated without saying it is proven or conjectured is Partly ([Q10](#decisions)).
-- No: the documentation says the settings give no meaningful soundness (for example a test-only setting). On a reference row, ST-4.
-- Not stated: no level stated for the configuration.
-- Controls: none; documentation only. A level bounds the probability that a false statement is accepted; RFC-0008 runs a fixed few trials per control (five for C6, RFC-0008 §Alternatives Considered 3) and measures no probability, and this RFC computes none (INV-GLYPH-3).
+- Not covered: the numeric value itself, which lives as a verbatim quote in the claim card (INV-GLYPH-3). Levels stated solely for another configuration of the same system appear as an `aside` and set nothing (ST-6, SRC-1).
+- Yes: the documentation states a numeric soundness bound for the row's configuration and states that it is proven (by hand or machine) under named assumptions.
+- Partly: a numeric level is stated as conjectured, appears only in code or config files, covers only part of the system, or is stated without specifying whether it is proven or conjectured ([Q10](#decisions)).
+- No: the documentation states that the parameters yield no meaningful soundness (for example, test-only settings). Reference rows follow ST-4.
+- Not stated: no level is stated for the row's configuration.
+- Controls: none (documentation only). Security levels bound forgery probability, whereas RFC-0008 runs a handful of fixed trials (five for C6, RFC-0008 §Alternatives Considered 3) without estimating probabilities (INV-GLYPH-3).
 
 #### No trusted party (`no_trusted_party`)
 
-- Question: does a check hold without trusting a chip maker, a setup ceremony or an honest party?
-- Not covered: trust every row shares (ST-6), and where the commitment or the weights come from (see Model bound).
-- Yes: the documentation says the check rests on cryptography alone or needs no trusted setup, and names no chip maker, setup or other party to trust.
-- Partly: the documentation states a trusted input or condition that its proved statement does not cover: a setup file, public files the user must grant were fixed before the hash (ST-7), or one honest party among several.
-- No: the documentation says the check verifies a hardware attestation against a chip maker's keys or certificate chain, or that the provider is trusted. The quote MUST state the dependency; "runs in a trusted execution environment" alone does not (ST-3). This replaces the prototype rule, which named a kind of check.
+- Question: does a check hold without trusting a chip maker, a setup ceremony, or an honest party?
+- Not covered: trust assumptions shared across all rows (ST-6), and provenance of the weights or commitment (see Model bound).
+- Yes: the documentation states that verification relies solely on cryptography or requires no trusted setup, naming no chip maker, setup ceremony, or trusted party.
+- Partly: the documentation states a trusted input or condition outside its proved statement: a setup file, public parameters the user must assume were fixed prior to hashing (ST-7), or an honest-party assumption among a group.
+- No: the documentation states that verification checks hardware attestation against a chip maker's keys or certificate chain, or trusts the provider. The quote MUST state this dependency explicitly; merely writing "runs in a trusted execution environment" does not suffice (ST-3), replacing the prototype's check-type rule.
 - Not stated: silent.
-- Controls: none; documentation only. No RFC-0008 control changes a setup file, an attestation or another party's input: C3, P1 and P2 change the weights or their precision, and every other control changes the request, the claimed output or the proof.
+- Controls: none (documentation only). No RFC-0008 control mutates setup files, attestations, or third-party inputs: C3, P1, and P2 perturb weights or precision, while all remaining controls perturb requests, claimed outputs, or proofs.
 
 ### Sources by row class
 
 #### Card rows (`claim_card_at_pin`)
 
-- SRC-1. A card row names exactly one claim card by `card: {system, configuration, card_version}` (RFC-0002 §File and identity). Its states are for that card's configuration, the verifier included: a statement the documentation makes only for another configuration of the system (another acceptance policy or another verifier, RFC-0002 §Configuration identity 2 and 5) is printed as an `aside` and sets nothing. A system with several cards in a release has one row per card. This settles R3: FlashProve's card is `exact-match-cp-verify` (issue #69 is closed), so its cells are read for exact match under the C++ verifier `cp_verify`, and its Lean verifier statements set nothing on this row.
-- SRC-2. Every quote of a card row, deciding, supporting or `aside`, is copied from the card's `upstream.repo` at the card's `upstream.commit`. This is AGENTS.md rule 9 ("copy what the system states at the pinned commit") and the rule INV-CLAIM-3 sets for the card. Its `sources_read` include that repository at that commit. This settles the SASH companion repository: `sg-ai-safety-hub/zk-inference-results` is not a source of a SASH card-row state, since the SASH card does not accept it (`systems/sash/claim.yaml` L5 to L6). It may appear in `sources_read` and in `outside_pin`. Should RFC-0002 be amended to let a card name companion repositories at full commits, SRC-2 follows it.
-- SRC-3. A statement by the system outside the pin MAY be shown beside the cell as `outside_pin`, with a reason and quotes and no state. It never sets the cell's state, and it is never drawn in the glyph or in a state's ink. This settles R2 under AGENTS.md rule 9: the glyph and the card it reads say the same thing. SASH can be asked to state it in the repository (#42).
-- SRC-4. A reviewer sets each card-row stated state from quotes. The card fields in the table below limit the stated states a cell may hold; where the allowed set has one state, the cell's stated state MUST be it ([Q3](#decisions)). The override (OVR-4) then applies; the card does not limit it.
+- SRC-1. Every card row references exactly one claim card via `card: {system, configuration, card_version}` (RFC-0002 §File and identity). All states apply strictly to that configuration, including its verifier: statements covering only another acceptance policy or verifier (RFC-0002 §Configuration identity 2 and 5) appear as an `aside` and set nothing. A system with multiple cards in a release gets one row per card. This resolves R3: because FlashProve's card targets `exact-match-cp-verify` (issue #69 closed), its cells reflect exact match under the C++ verifier `cp_verify`, and statements about its Lean verifier set no states on this row.
+- SRC-2. Every quote on a card row (deciding, supporting, or `aside`) must come verbatim from the card's `upstream.repo` at `upstream.commit`, enforcing AGENTS.md rule 9 ("copy what the system states at the pinned commit") and INV-CLAIM-3. Its `sources_read` list includes that repository at that commit. This settles SASH's companion repository: `sg-ai-safety-hub/zk-inference-results` cannot set any SASH card-row state because SASH's claim card excludes it (`systems/sash/claim.yaml` L5 to L6), though it may be listed in `sources_read` and `outside_pin`. If RFC-0002 is later amended to allow pinned companion repositories on claim cards, SRC-2 automatically adopts that amendment.
+- SRC-3. Statements published by a system's team outside the pinned commit MAY be displayed beside a cell as `outside_pin` (with a reason and quotes, but no state). They never determine a cell's state and are never rendered in the glyph or in state inks. This resolves R2 under AGENTS.md rule 9 so the glyph and its claim card always agree; SASH can be invited to document such claims inside its main repository (#42).
+- SRC-4. A reviewer determines each card row's stated states from verbatim quotes, constrained by the claim-card fields listed below. Whenever the card narrows the allowed set to a single state, the cell's stated state MUST match it ([Q3](#decisions)). OVR-4 runs afterward and is not constrained by the claim card.
 
-Claim card fields each property reads (RFC-0002 §Fields). A card value not named in the last column allows all four states.
+Claim-card fields consulted per property (RFC-0002 §Fields). Card values not listed in the third column permit all four states.
 
 | Property | Card fields read | States the card allows | Derivable from the card alone |
 |---|---|---|---|
-| Weights hidden | `zero_knowledge.claimed`, `.hidden`, `.not_hidden`, `.status`; `sources.zero_knowledge*` | `claimed: "not stated"` allows {`not_stated`}; `claimed: false` allows {`partly`, `no`} | Partly: Not stated is; `partly` against `no` needs the quote under the property rules, and `yes` against `partly` a reading of `not_hidden` |
+| Weights hidden | `zero_knowledge.claimed`, `.hidden`, `.not_hidden`, `.status`; `sources.zero_knowledge*` | `claimed: "not stated"` allows {`not_stated`}; `claimed: false` allows {`partly`, `no`} | Partly: Not stated is; choosing between `partly` and `no` requires reading the quote under property rules, and choosing between `yes` and `partly` requires reading `not_hidden` |
 | Model bound | `relation`, `coverage.policy.kind`, `coverage.policy.detail`, `binding`, `claim_class` | `policy.kind: tolerance` allows {`partly`, `no`}; `policy.kind: not_stated` with `binding: "not stated"` allows {`not_stated`} | Partly |
-| Whole output checked | `coverage.unit`, `coverage.tokens_covered`, `coverage.phase`, `relation` | none: `tokens_covered` is free text | No |
-| Formally verified | `relation_formal`, `security.notion.kind`, `security.notion.verifier`; `sources.security.notion*` | `relation_formal: "not stated"` allows {`partly`, `no`, `not_stated`} | No: only `yes` is excluded |
-| Security level | `security.level`, `security.notion.kind`, `security.notion.verifier`, `security.model` | `level: "not stated"` allows {`not_stated`} | Partly: Not stated is; proven against conjectured, and whether the level is stated for this configuration, need the `level` text |
+| Whole output checked | `coverage.unit`, `coverage.tokens_covered`, `coverage.phase`, `relation` | none (`tokens_covered` is free text) | No |
+| Formally verified | `relation_formal`, `security.notion.kind`, `security.notion.verifier`; `sources.security.notion*` | `relation_formal: "not stated"` allows {`partly`, `no`, `not_stated`} | No: only `yes` is ruled out |
+| Security level | `security.level`, `security.notion.kind`, `security.notion.verifier`, `security.model` | `level: "not stated"` allows {`not_stated`} | Partly: Not stated is; distinguishing proven from conjectured and confirming configuration applicability requires reading `level` text |
 | No trusted party | `security.setup`, `assumptions`, `assumptions_not_stated`, `security.model.assumption` | `setup: trusted` allows {`partly`, `no`}; `setup: not_stated` with `assumptions_not_stated: true` allows {`not_stated`} | Partly |
 
-The fields that set FlashProve's No trusted party are `assumptions` (its third item, `systems/flashprove/claim.yaml` L72 to L75, "Configuration files fixed before the hash function is drawn"), not `security.setup`, which reads `not_stated` (L43). A reviewer reads every field in the row, not only the obvious one. Where a free-text field says a statement is not made for the card's configuration (FlashProve `security.level`: "Not claimed for `cp_verify`"), SRC-1 excludes `yes` by review.
+Reviewers must inspect every listed field, not just the most obvious one: for FlashProve, No trusted party is governed by the third entry in `assumptions` (`systems/flashprove/claim.yaml` L72 to L75, "Configuration files fixed before the hash function is drawn") even though `security.setup` reads `not_stated` (L43). Likewise, whenever a free-text field notes that a claim does not cover the card's configuration (such as FlashProve's `security.level`: "Not claimed for `cp_verify`"), SRC-1 rules out `yes` during review.
 
-RISK: Whole output checked cannot be limited from the card, and Formally verified only by `relation_formal`, so a card change can leave them stale. Plan: every card-row quote names the card's commit and version, so a new pin (a new card, RFC-0002 §Configuration identity 1) needs every cell re-read. A later RFC-0002 amendment MAY add a card field for machine-checked soundness.
+RISK: Whole output checked cannot be mechanically constrained from claim-card fields, and Formally verified is constrained only by `relation_formal`, creating a risk of stale cells after card edits. Mitigation: every card-row quote pins the card's commit and version, so updating to a new pin (creating a new card under RFC-0002 §Configuration identity 1) requires re-reading all cells. A future RFC-0002 amendment MAY add an explicit structured field for machine-checked soundness.
 
 #### Reference rows (`reference_rfc_0015`)
 
-- SRC-5. Reference rows are the benchmark's own methods, not systems, and have no claim card (RFC-0015 §Reference systems: "they prove nothing"). Their documentation is RFC-0015 together with the table below, which is normative: it sets each state by definition of the method, and the text of RFC-0015 it rests on. Where RFC-0015 has no sentence that meets a state's rule word for word (plain serving checks nothing; a rerun by the checker trusts no other party), the row's reason begins "By definition:" and names the RFC-0015 text. Every quote is from `rfcs/0015-reference-rows.md` in this repository at a full commit. A change to RFC-0015 that changes one of these states, or moves a quoted sentence, MUST amend this table and the quotes in the same pull request.
-- SRC-6. A reference row names the workloads whose configuration it reads (`workloads`). These states describe the method as RFC-0015 documents it, not a measurement. The table gives the states of a configuration with no declared precision substitution. A recompute row whose workloads declare a substitution (RFC-0015 PM-2, PM-4) is `partly` on Model bound, because the rerun uses another precision than the workload's; one row reads workloads that agree on whether a substitution is declared. Today `systems/ref-recompute/system.yaml` declares one on both SASH workloads (FP8 W8A8 for the workload's INT8 W8A8, RFC-0015 Q1 and PM-4) and none on the two Maverick workloads. The criteria file's single recompute row reads the two Maverick workloads, which are the ones the site shows, and keeps Yes. A SASH-workload recompute row needs its own row, with `partly` on Model bound, before any page shows it. A configuration marked `not_measurable_on_profile` (RFC-0015 NM-1) keeps its states, and the row prints the NM-1 reason (settles R8).
+- SRC-5. Reference rows document the benchmark's own baselines rather than proving systems and have no claim cards (RFC-0015 §Reference systems: "they prove nothing"). Their states are defined normatively by RFC-0015 together with the table below. Where RFC-0015 has no verbatim sentence matching a state rule word-for-word (for instance, plain serving checks nothing, and a local rerun trusts no outside party), the cell's reason begins with "By definition:" and cites the supporting RFC-0015 text. Every quote comes from `rfcs/0015-reference-rows.md` at a full commit hash. Any edit to RFC-0015 that alters a reference state or moves a quoted sentence MUST update this table and its quotes in the same pull request.
+- SRC-6. Each reference row names the `workloads` whose configuration it reflects, describing the method documented in RFC-0015 rather than an empirical measurement. The table below assumes no precision substitution; a recompute row whose workloads declare a precision substitution (RFC-0015 PM-2, PM-4) takes `partly` on Model bound because the rerun uses a different precision from the workload, and all workloads grouped into a single row must agree on whether a substitution is declared. Currently, `systems/ref-recompute/system.yaml` declares a substitution for both SASH workloads (FP8 W8A8 for INT8 W8A8, RFC-0015 Q1 and PM-4) and none for the two Maverick workloads, so the single recompute row in `criteria.json` covers the Maverick workloads displayed on the site and keeps Yes. Displaying a SASH recompute row will require its own row with `partly` on Model bound. Configurations flagged `not_measurable_on_profile` (RFC-0015 NM-1) retain their method states while displaying the NM-1 reason (settling R8).
 
 | Property | Plain serving (`ref-serve`) | Recompute (`ref-recompute`) | Deciding RFC-0015 text (supporting text) |
 |---|---|---|---|
@@ -202,20 +205,20 @@ RISK: Whole output checked cannot be limited from the card, and Formally verifie
 | Security level | No (ST-4) | No (ST-4) | §Reference systems L45 "they prove nothing" (plain serving: §Summary L13) |
 | No trusted party | No (ST-4) | Yes, by definition | plain serving: §Reference systems L45 (§Summary L13); recompute: §Recompute L82, the checker reruns the model itself and trusts no other party beyond ST-6 |
 
-- SRC-7. A reference row's `no` on Formally verified and Security level means "no security argument, by definition" and its reason says so. A plain serving row's `no` on every property means "by definition: nothing is checked" (RFC-0015 §Summary, SRV-4). No fifth state ("does not apply") is added (settles R14; one vocabulary of four states).
+- SRC-7. On reference rows, `no` on Formally verified and Security level means "no security argument, by definition" (stated in the cell's reason), and `no` across all properties for plain serving means "by definition: nothing is checked" (RFC-0015 §Summary, SRV-4). No fifth "does not apply" state is introduced (settling R14 in favour of one four-state vocabulary).
 
 #### Public-source rows (`public_sources`)
 
-- SRC-8. States come from public quotes by the system's own authors: its repository at a full commit, its paper, or its documentation or blog on a domain its team controls. Each row lists these as `own_sources` (repositories, domains, and URLs of papers or pages its authors published), with how each was identified. A deciding quote comes from an own source; a third-party page (press, survey, another team's blog) may appear only in `sources_read` or `aside`, and sets nothing (AGENTS.md rule 9). These rows are drawn apart from card and reference rows and are never in the benchmarked tab. How the site marks them (the prototype's "pencil") is the site's (#319).
-- SRC-9. A web quote carries, in place of a commit: the `url`, a `retrieved` date (`"YYYY-MM-DD"`, RFC-0012 dates), and either an `archive_url` (a snapshot in a public web archive taken on or after the retrieved date) or a `copy` (a path in this repository holding the retrieved text, with its sha256). A web quote without these sets no state.
-- SRC-10. A public-source row is not capped below Yes. This settles R1 under AGENTS.md rule 9: a cap would print Partly where the documentation states no limit, a state that comes from the benchmark rather than the source. The thoroughness gap is met instead by drawing public-source rows apart (SRC-8) and by web quotes that carry what was read (SRC-9).
+- SRC-8. Public-source states must rest on quotes published by the system's own authors: a repository at a full commit hash, a published paper, or documentation/blog pages on a domain controlled by the team. Each row declares these in `own_sources` (repositories, domains, or author-published URLs) with a note explaining how each was verified. Only own sources may provide deciding quotes; third-party coverage (press, surveys, or outside blogs) may appear only in `sources_read` or `aside` and never sets a state (AGENTS.md rule 9). Public-source rows are visually separated from card and reference rows and never appear in the benchmarked tab; exact visual markers (such as the prototype's pencil icon) belong to the site (#319).
+- SRC-9. Instead of a commit hash, every web quote MUST include its `url`, a `retrieved` date (`"YYYY-MM-DD"`, RFC-0012), and either an `archive_url` (a public web archive snapshot captured on or after the retrieval date) or a `copy` (a repository file path holding the archived text along with its SHA-256). Web quotes lacking these fields cannot set a state.
+- SRC-10. Public-source rows are not capped below Yes. This settles R1 under AGENTS.md rule 9: capping them would display Partly even when documentation states no limitation, injecting a benchmark opinion instead of reporting the source. The difference in depth of review is communicated instead by separating public-source rows (SRC-8) and archiving quoted web pages (SRC-9).
 
 ### Negative control override
 
-The third layer of a card-row state (INV-GLYPH-5). RFC-0008 runs the shared controls C1 to C8 and P1, P2, and the system-specific controls a system registers, against the verifier of each benchmarked configuration, and stores every outcome in the run's `controls.json`. These rules let a recorded outcome reach the glyph, and only in one direction: an outcome can contradict a stated property, and no outcome can confirm one.
+This mechanism provides the third verification layer for card-row states (INV-GLYPH-5). RFC-0008 runs shared controls C1 through C8, P1, P2, and any registered system-specific controls against each benchmarked configuration's verifier and logs outcomes in `controls.json`. Overrides flow strictly in one direction: a recorded control failure can contradict a stated property, whereas passing controls never confirm or upgrade one.
 
-- OVR-1. The override applies to card rows only. Reference systems run no controls (RFC-0015 §Reference systems: they have "no controls"), and public-source rows have no runs.
-- OVR-2. Each control can contradict only the properties the control map below gives. The map is normative; a change to it, or a new RFC-0008 control, amends this table in the same pull request, and the validator's copy is tested against it (`test_control_map_matches_rfc`). Each control is assigned to the property whose Yes rule names the input the mutation changes: the request, the prompt or the claimed output (C1, C2, C4, C7) to Whole output checked; the weights, their commitment or their precision (C3, P1, P2) to Model bound. A control whose mutation changes only proof bytes (C5, C6, C8) names no such input. The assignment is this RFC's rule, not something an accepted outcome shows by itself: an accepted C1, for example, also fits a covered token that is not tied to the committed weights. One property per control keeps the rule mechanical ([Q9](#decisions)).
+- OVR-1. Overrides apply exclusively to card rows. Reference systems run no controls (RFC-0015 §Reference systems: "no controls"), and public-source rows have no benchmark runs.
+- OVR-2. Each control can contradict only the property assigned in the normative control map below. Any addition or change to RFC-0008 controls updates this table in the same pull request, enforced by `test_control_map_matches_rfc`. Each control maps to the property whose Yes rule governs the mutated input: mutations to the request, prompt, or claimed output (C1, C2, C4, C7) map to Whole output checked; mutations to weights, weight commitments, or precision (C3, P1, P2) map to Model bound; and raw proof-byte corruptions (C5, C6, C8) map to none. This mapping is a deterministic rule of this RFC rather than an inference about root cause (for instance, an accepted C1 could also stem from unbound weights); keeping a single property per control keeps the override purely mechanical ([Q9](#decisions)).
 
 | Control (RFC-0008) | Mutation | Property it can contradict | Why |
 |---|---|---|---|
@@ -231,39 +234,38 @@ The third layer of a card-row state (INV-GLYPH-5). RFC-0008 runs the shared cont
 | P2 | prove with a precision other than the committed one | Model bound | the check accepted a proof made at a precision other than the committed one; the changed input is the precision |
 | system-specific (`fixture_proof`, `weakened_prover`) | registered in `systems/<name>/controls.yaml` | none ([Q7](#decisions)) | `system-controls/1` names no property, and a `weakened_prover` control expects `accepted` |
 
-C5, C6 and C8 corrupt proof bytes and change no input a Yes rule names. An accepted corrupted proof shows that the verifier accepted bytes other than the honest proof; it does not show which statement fails (a flipped bit may sit in bytes the statement does not depend on), and reading one property onto it would be an inference (AGENTS.md rule 9). Their outcomes, like every outcome, are printed on the system page (OVR-7) and an accepted one goes to disclosure (RFC-0008 §Disclosure). Weights hidden, Formally verified, Security level and No trusted party have no mapped control and stay documentation only, for the reasons each property's "Controls" line gives.
+C5, C6, and C8 corrupt raw proof bytes rather than changing any input named in a property's Yes rule. If a verifier accepts a corrupted proof, we know it accepted altered bytes, but not which semantic property failed (for instance, a flipped bit might lie in unused padding); assigning it to a specific property would be an inference violating AGENTS.md rule 9. Their outcomes still appear on the system page (OVR-7), and any unexpected acceptance triggers disclosure (RFC-0008 §Disclosure). Weights hidden, Formally verified, Security level, and No trusted party have no mapped controls and remain documentation-only for the reasons stated in their property definitions.
 
-- OVR-3. A control contradicts when its stored record holds the outcome `accepted` (the control's `outcome`, or the `outcome` of any of its `trials`) and its `expected` set does not hold `accepted`. No other record contradicts, and no record raises a state:
-  - `rejected`, and `invalid_call` or `prover_failed` where the expected set holds them: the control passed. A pass shows that one mutation was rejected (RFC-0008 §Non-Goals); it never raises a state, so a `not_stated` cell stays `not_stated`.
-  - `no_verdict`, and `invalid_call` outside the expected set (for example on C1): the control failed, but nothing was accepted. Inconclusive; it never lowers a state.
-  - `void` (the honest twin was not accepted, INV-CTRL-2), `not_applicable` and `error`: the control tested nothing. Never raises or lowers a state.
-  - not run: a control absent from a run's `controls.json`, a run with no `controls.json`, and a control the system documents but the harness does not run (for example an upstream rejected-proof example listed in the adapter README and not registered, RFC-0008 Q4; a registered `fixture_proof` control is recorded `not_applicable`, RFC-0008 Q5). Never raises or lowers a state.
-  Each of these is printed on the system page as recorded (OVR-7).
-- OVR-4. A card-row cell whose stated state is `yes` or `partly`, with at least one contradicting outcome of a control mapped to its property, takes the state `no`, whatever the documentation says. The cell keeps its quotes, which still decide the stated state under ST-1 and ST-8 and are still bound by the card fields table; it records the stated state in `stated` and the deciding evidence of `no` in `contradicted_by`, one entry per contradicting control and run. A cell whose stated state is `no` or `not_stated` is not changed: `no` already says the property does not hold, and `not_stated` states nothing to contradict ([Q5](#decisions)). This RFC chooses `no` over a printed note beside the stated state, and over a new state, because: the overview draws the state and nothing else, so a note would leave Yes or Partly drawn on a configuration whose verifier accepted an input the property says it rejects, against INV-GLYPH-5; `no` is what was measured, an input the stated property excludes was accepted by the configuration as run; and a fifth state was rejected for the same reason as in SRC-7 (one vocabulary of four states). The stated state is not lost: the system page prints it with its quotes beside the control that contradicts it.
-- OVR-5. The override is computed per configuration and per release. The criteria file names the release it is built for (`release`). The runs read for a card row are the runs listed in `releases/<r>/release.yaml` `runs` for that release and for every earlier release (ordered by release id), whose `run.json` `claim.system` and `claim.configuration` equal the row's `card`, less every run in a read release's `superseded_runs` and every run named in the `replaces` of a read run (RFC-0009 §Append-only rule and corrections). Where a run's `run.json` `claim` is null (runs written before the runner copied the card there, all of v0.1), its `manifest.json` `claim` is read instead, the record release eligibility checks against the release's `claim_cards` and their digests (RFC-0014). Consequences:
-  - With `release` set, every card row is a configuration the benchmark runs: its `card` system and configuration appear in the `claim_cards` of a read `release.yaml`, and at least one run is read for it. A card row lacking either is not benchmarked; the pull request removes the row or the release adds the run (INV-GLYPH-5).
-  - A contradiction carries into later releases of the same configuration. A later run that rejects the same control does not clear it, since the accepted mutation is reproducible from its recorded seed (INV-CTRL-3).
-  - A card edit at the same pin (a new `card_version`) does not clear it. A new pin, or any other change listed in RFC-0002 §Configuration identity, is a new configuration and a new card row, which starts with no contradiction and reads only its own runs.
-  - A correction run that replaces the contradicting run clears it, for example when RFC-0008 §Disclosure finds a fault in the adapter's verdict mapping.
-  - A release never reads runs of a later release, and a published release is not edited (RFC-0009).
-  - A file with no `release` reads no runs, and none of its cells is overridden.
-- OVR-6. Only a run under OVR-5 changes a cell: a correction run, or a run of a new configuration.
-- OVR-7. The overview draws each cell's state only. The system page prints, for each cell: the stated state, its quotes and its sources read; for an overridden cell, each `contradicted_by` entry with its control id and run id, linked to the control's record in `controls.json`; and, for each control the map gives the property, its outcome in every run read, including passed, inconclusive, void, not applicable, error and not run, with "not run" printed for a mapped control no read run recorded. For a property with no mapped control, the page says that no RFC-0008 control tests it. The site computes these lists from the control map and the stored `controls.json` files; the criteria file holds only `stated` and `contradicted_by`, which follow from the stored files (AGENTS.md rule 3).
-
+- OVR-3. A control contradicts a property only when its stored record logs `accepted` (either as the control's top-level `outcome` or inside any of its `trials`) while `accepted` is absent from its `expected` set. No other outcome contradicts or raises a state:
+  - `rejected` (plus `invalid_call` or `prover_failed` when listed in `expected`): control passed. Passing confirms only that one mutation was rejected (RFC-0008 §Non-Goals) and never raises a state, so `not_stated` remains `not_stated`.
+  - `no_verdict`, or an unexpected `invalid_call` (such as on C1): the control failed inconclusively without accepting anything, so it never lowers a state.
+  - `void` (honest twin not accepted, INV-CTRL-2), `not_applicable`, and `error`: nothing was tested, so no state changes.
+  - not run: a control missing from `controls.json`, a run lacking `controls.json`, or an upstream example documented in an adapter README but not registered (RFC-0008 Q4; registered `fixture_proof` controls record `not_applicable`, RFC-0008 Q5). Never raises or lowers a state.
+  All outcomes are printed verbatim on the system page (OVR-7).
+- OVR-4. Any card-row cell whose stated state is `yes` or `partly` and that has at least one contradicting outcome from a mapped control takes the state `no`, regardless of documentation. The cell retains its deciding quotes (still validated against ST-1, ST-8, and the card-fields table), stores the original stated state in `stated`, and lists each contradicting `(control, run_id)` pair in `contradicted_by`. Cells whose stated state is already `no` or `not_stated` stay unchanged: `no` already reflects absence, and `not_stated` makes no claim to contradict ([Q5](#decisions)). Overriding to `no` is chosen over showing a side note or adding a fifth state because the overview draws states alone (leaving Yes or Partly visible after an accepted tampering check would violate INV-GLYPH-5), `no` directly reflects the measured breach, and a fifth state was already rejected in SRC-7. No information is lost because the system page prints the stated state and its quotes right beside the contradicting control.
+- OVR-5. Overrides are computed per configuration and per release. The criteria file specifies its target `release`. For each card row, the read runs include all runs listed in `releases/<r>/release.yaml` `runs` for that release and every earlier release (ordered by release ID) whose `run.json` `claim.system` and `claim.configuration` match the row's `card`, excluding runs listed in any read release's `superseded_runs` or replaced via `replaces` by a read run (RFC-0009 §Append-only rule and corrections). When `run.json` has a null `claim` (as in v0.1 runs written before the runner copied claims into `run.json`), `manifest.json` `claim` is read instead (the field checked against release `claim_cards` digests under RFC-0014). This yields six consequences:
+  - When `release` is set, every card row represents a benchmarked configuration whose `card` system and configuration appear in a read `release.yaml`'s `claim_cards` with at least one read run; otherwise the pull request removes the row or adds the run (INV-GLYPH-5).
+  - Contradictions persist across later releases of the same configuration. A later passing run does not erase a contradiction because the accepted mutation is reproducible from its seed (INV-CTRL-3).
+  - Editing a claim card at the same pin (bumping `card_version`) does not clear a contradiction. Moving to a new pin or changing any other attribute in RFC-0002 §Configuration identity creates a new configuration and card row that starts clean with its own runs.
+  - A correction run that replaces the contradicting run clears the override (for example, if RFC-0008 §Disclosure uncovers an adapter verdict-mapping bug).
+  - Releases never read runs from future releases, and published releases are never edited retroactively (RFC-0009).
+  - A criteria file without `release` reads no runs and applies no overrides.
+- OVR-6. Only a qualifying run under OVR-5 (a correction run or a run of a new configuration) can change an overridden cell.
+- OVR-7. The overview renders each cell's final state alone. For every cell, the system page prints the stated state, its quotes, and its `sources_read`; for overridden cells, every `contradicted_by` entry (control ID and run ID) linked to `controls.json`; and for every mapped control, its recorded outcome across every read run (including passed, inconclusive, void, not applicable, error, and "not run" when absent). For properties with no mapped controls, the page explicitly notes that no RFC-0008 control tests them. The site derives these lists at build time from the control map and stored `controls.json` files so `criteria.json` stores only `stated` and `contradicted_by` derived directly from stored records (AGENTS.md rule 3).
 
 ### Criteria file contract
 
-The file stays at `web/_data/criteria.json`, authored JSON in the RFC-0012 canonical form (G3 `FMT-1`). Its schema is `schema/criteria/1.schema.json`, `$id` `https://inference-proofs.org/schema/criteria/1.schema.json`, Draft 2020-12, with `"schema": {"const": "criteria/1"}`.
+`web/_data/criteria.json` is authored JSON formatted in RFC-0012 canonical style (G3 `FMT-1`), validated against `schema/criteria/1.schema.json` (`$id`: `https://inference-proofs.org/schema/criteria/1.schema.json`, Draft 2020-12, requiring `"schema": {"const": "criteria/1"}`).
 
-RFC-0012 §Schema catalogue row, added by the implementing pull request:
+RFC-0012 §Schema catalogue entry added by the implementing pull request:
 
 | Name | File | Kind | Path of instances | Owner RFC |
 |---|---|---|---|---|
 | `criteria` | `schema/criteria/1.schema.json` | authored JSON | `web/_data/criteria.json` | RFC-0016 |
 
-RFC-0013 §G2 inputs gain `web/_data/criteria.json` (and `G2_GLOBS` in `harness/src/iproofs/validate/tree.py`).
+`web/_data/criteria.json` is added to RFC-0013 §G2 inputs (and `G2_GLOBS` in `harness/src/iproofs/validate/tree.py`).
 
-Shape only (every object `additionalProperties: false`; `Text` is a non-empty string; `{}` stands for the same fields as `yes`; `Quote` is defined below):
+Document shape (all objects set `additionalProperties: false`; `Text` is a non-empty string; `{}` mirrors `yes`; `Quote` is described below):
 
 ```json
 {
@@ -300,177 +302,169 @@ Shape only (every object `additionalProperties: false`; `Text` is a non-empty st
 }
 ```
 
-- `card_version` is a string of digits here, because the file holds no number-typed value (INV-GLYPH-2); it equals the card's integer.
+- `card_version` is encoded as a numeric string because `criteria.json` forbids number-typed values (INV-GLYPH-2); its value matches the card's integer version.
 - `rfc` names this RFC.
-- Quote, one of three kinds. All carry `kind`, `text` (verbatim), `label`, `decides` (boolean) and `checked: true` with `checked_how` (Text). `repository` and `this_repository` add `repo`, `commit` (40-hex), `path`, `lines` (`^L[0-9]+(-L[0-9]+)?$`) and `url` (containing `commit`). `web` adds `url`, `retrieved`, and `archive_url` or `copy: {path, sha256}`, and carries no `repo`, `commit`, `path` or `lines` key. The prototype kind `ours` becomes `this_repository`. Quotes in `aside` and `outside_pin` carry `decides: false`.
-- `aside`: `{words, quotes}`, text printed beside a cell for a limit counted in another cell (ST-5) or a statement made for another configuration (SRC-1). It sets nothing. The prototype's `aside.quote` and `aside.also` become the entries of `aside.quotes`.
-- `outside_pin`: `{reason, quotes}`, card rows only, no `state` (SRC-3).
-- `release` (optional): the release id the file is built for (OVR-5), equal to a directory `releases/<release>/` holding a `release.yaml`. Absent until the first release is frozen; without it no run is read and no cell is overridden.
-- `stated` and `contradicted_by` (card rows only, both or neither, OVR-4): `stated` is `yes` or `partly`, the stated state the quotes decide; the cell's `state` is then `no`. `contradicted_by` is a non-empty list of `{control, run_id}`, sorted by `control` then `run_id`, with no duplicate pair. `control` is a control id of the [control map](#negative-control-override) mapped to the cell's property; `run_id` is an RFC-0012 run id. The entries follow from the stored `controls.json` files and are never edited by hand to differ.
-
-- `conflict`: `true` only on a cell under ST-8; absent otherwise.
-- `sources_read` entry: `{repo, commit, paths}` for a repository (paths or globs read) or `{url, retrieved}` for a web page.
-- `not_copied: true` MAY replace `sources_read` on a `not_stated` cell of a public-source row where nothing was read yet ([Q2](#decisions)).
-- `workloads` (reference rows, required): workload ids present in the reference system's `system.yaml` (SRC-6). `own_sources` (public-source rows, required, non-empty): each entry one of `repo`, `domain` or `url`, with `how` (SRC-8).
-- Removed from the prototype, each for a reason: `test_mapping`, `rows[].states` and `rows[].pencil` (derived from the cells and `source_class`; derived values are computed, not typed); `quote_check` (a typed count that no rule recomputes); `contrast` and `states.*.fill`, `.ink`, `.mark` (drawing, the site's; `web/words.css` holds the inks it uses); `status`; `this_repository_commit` (moves into `pins`); `rules` and `risks` (now this RFC's normative text and dispositions); `outside_pin.state` (SRC-3); the `null` `repo`, `commit`, `path` and `lines` keys of web quotes.
+- Quotes come in three kinds (`repository`, `this_repository`, and `web`). All carry `kind`, verbatim `text`, `label`, `decides` (boolean), `checked: true`, and `checked_how` (`Text`). `repository` and `this_repository` (replacing prototype `ours`) add `repo`, 40-hex `commit`, `path`, `lines` (`^L[0-9]+(-L[0-9]+)?$`), and `url` (containing `commit`). `web` adds `url`, `retrieved`, and either `archive_url` or `copy: {path, sha256}`, omitting `repo`, `commit`, `path`, and `lines`. Quotes inside `aside` and `outside_pin` set `decides: false`.
+- `aside` (`{words, quotes}`) holds notes printed beside a cell for limits counted elsewhere (ST-5) or claims about other configurations (SRC-1) without affecting state, merging the prototype's `aside.quote` and `aside.also` into `aside.quotes`.
+- `outside_pin` (`{reason, quotes}`) appears on card rows only and carries no `state` (SRC-3).
+- `release` (optional) names the target release directory `releases/<release>/` containing a `release.yaml` (OVR-5). Omitted before the first frozen release, in which case no runs are read and no cells are overridden.
+- `stated` and `contradicted_by` appear together (or not at all) on card rows only (OVR-4). `stated` is `yes` or `partly`, forcing `state` to `no`. `contradicted_by` is a non-empty, duplicate-free array of `{control, run_id}` sorted by `control` then `run_id`, where `control` maps to the property in the [control map](#negative-control-override) and `run_id` is an RFC-0012 run ID. Values are derived strictly from stored `controls.json` files and never hand-edited to disagree.
+- `conflict` is `true` only on cells resolved under ST-8 and omitted otherwise.
+- `sources_read` entries take `{repo, commit, paths}` (paths or globs consulted) for repositories or `{url, retrieved}` for web pages.
+- `not_copied: true` MAY stand in for `sources_read` on a `not_stated` public-source cell that has not yet been reviewed ([Q2](#decisions)).
+- `workloads` (required on reference rows) lists workload IDs from the reference system's `system.yaml` (SRC-6). `own_sources` (required and non-empty on public-source rows) lists entries with `how` plus one of `repo`, `domain`, or `url` (SRC-8).
+- Keys dropped from the prototype: `test_mapping`, `rows[].states`, and `rows[].pencil` (all derived from cells and `source_class`); `quote_check` (unverified hand-typed count); `contrast` and `states.*.fill`/`.ink`/`.mark` (presentation styling owned by `web/words.css`); `status`; `this_repository_commit` (moved into `pins`); `rules` and `risks` (now normative text and dispositions in this RFC); `outside_pin.state` (SRC-3); and null repository keys on web quotes.
 
 ### Data flow and lifecycle
 
-1. A reviewer edits `web/_data/criteria.json` by pull request, quoting sources at the commits the row class allows.
-2. `iproofs validate` runs G2 (the schema) and G3 on it.
-3. A claim card change (a new `card_version`) needs a re-read of its row, which then names the new version. An RFC-0015 change that moves a quoted sentence needs the quotes and the reference table amended.
-4. When a release is frozen (RFC-0009 §Freeze algorithm), the pull request that builds its site sets `release` and adds every `stated` and `contradicted_by` entry OVR-3 to OVR-5 require. A later run that changes an override (a correction, OVR-5) changes the file in the next release's pull request.
-5. `web/build.py` reads the states from the cells; the footer pins the file's sha256 as it does today.
+1. Reviewers edit `web/_data/criteria.json` via pull request, citing sources at the commits permitted by each row class.
+2. `iproofs validate` enforces schema gate G2 and formatting gate G3.
+3. Any claim-card update (new `card_version`) triggers a re-read of that row to match the new version; any RFC-0015 edit moving a quoted sentence updates the reference table and quotes in tandem.
+4. When freezing a release (RFC-0009 §Freeze algorithm), the site-build pull request sets `release` and populates every `stated` and `contradicted_by` entry mandated by OVR-3 through OVR-5. Later corrections (OVR-5) update the file in the subsequent release's pull request.
+5. `web/build.py` reads cell states directly and pins the file's SHA-256 in the site footer.
 
-Determinism: the override reads only the file, the `release.yaml`, `run.json` and `controls.json` files of the releases it names. No clock and no network; the release order comes from the release ids.
+Determinism: override resolution reads exclusively from `criteria.json` plus `release.yaml`, `run.json`, and `controls.json` for the named releases, using release IDs for ordering with no clock or network access.
 
 ### Failure modes
 
 | Failure | Response |
 |---|---|
-| A coloured cell without a deciding quote | review catches it |
-| A quote at a short or unpinned commit | the schema rejects a short commit; review catches an unpinned one |
-| A web page changed or removed after it was quoted | the `archive_url` or `copy` still holds the text read; the cell stands until a reviewer re-reads it |
-| A web quote with no archive and no copy | review catches it; the cell becomes `not_stated` with the url in `sources_read`, or gains an archive |
-| A deciding quote from a third-party page | review catches it; the quote moves to `sources_read` or `aside` |
-| A Not stated cell with nothing recorded | review catches it |
-| A card-row quote from another repository or commit | review catches it; the quote moves to `outside_pin` or is replaced from the pin |
-| A card-row state read from another configuration of the system | review catches it (SRC-1), against the card fields table |
-| A card change contradicts a cell (for example `zero_knowledge.claimed` becomes `false` while the cell is `yes`) | review catches it, against the card fields table |
-| RFC-0015 edited so a reference quote no longer reads in the current file | the quote, its commit and, if a state changes, this RFC's table are amended (SRC-5) |
-| A reviewer's inference used as a deciding quote | review catches it (ST-3); the quote's text must be the system's own words |
-| A score, count or number added to the file | the schema rejects it (`additionalProperties`) |
-| A stated Yes kept while a mapped control was accepted in a read run | the pull request is fixed until the cell is `no` with `stated` and `contradicted_by` |
-| An override added, kept or dropped by hand (no matching record, a superseded or replaced run, a run of another configuration, a later release's run) | review catches it |
-| A Not stated cell given `no` from an accepted control | review catches it (OVR-4, Q5); the outcome is printed on the system page |
-| An override on Weights hidden, Formally verified, Security level or No trusted party, or from C5, C6, C8 or a system-specific control | review catches it (OVR-2) |
-
-| A card row with no run of its configuration in the release | review catches it (OVR-5); the row is removed or the run added |
-| A system team objects to an overridden cell | the cell changes only with a correction run or a new configuration |
-| A release run directory or `controls.json` missing from the tree | review catches it |
+| A coloured cell lacks a deciding quote | caught in review |
+| A quote uses a short or unpinned commit | schema rejects short commits; review catches unpinned commits |
+| A quoted web page changes or disappears later | `archive_url` or `copy` preserves the quoted text until a reviewer re-reads the page |
+| A web quote lacks both archive and copy | caught in review; cell reverts to `not_stated` with URL in `sources_read`, or adds an archive |
+| A deciding quote comes from a third-party page | caught in review; quote moves to `sources_read` or `aside` |
+| A Not stated cell records nothing | caught in review |
+| A card-row quote cites a different repository or commit | caught in review; quote moves to `outside_pin` or is replaced from the pin |
+| A card-row state cites another configuration of the system | caught in review (SRC-1) against the card-fields table |
+| A claim-card change contradicts a cell (e.g., `zero_knowledge.claimed` becomes `false` while cell stays `yes`) | caught in review against the card-fields table |
+| RFC-0015 edits invalidate a reference quote | quote, commit, and (if needed) the reference table are updated together (SRC-5) |
+| A reviewer's inference is used as a deciding quote | caught in review (ST-3); quotes must be the system's own words |
+| A score, count, or number is added to `criteria.json` | schema rejects it (`additionalProperties`) |
+| A stated Yes remains after a mapped control was accepted in a read run | pull request is blocked until cell flips to `no` with `stated` and `contradicted_by` |
+| An override is manually added, kept, or dropped in conflict with stored runs (missing record, superseded/replaced run, wrong configuration, or future release) | caught in review |
+| A Not stated cell is flipped to `no` by an accepted control | caught in review (OVR-4, Q5); outcome prints on the system page instead |
+| An override is applied to Weights hidden, Formally verified, Security level, or No trusted party, or triggered by C5, C6, C8, or a system-specific control | caught in review (OVR-2) |
+| A card row has no run for its configuration in the release | caught in review (OVR-5); row is removed or the run is added |
+| A system team disputes an overridden cell | cell changes only via a correction run or a new configuration |
+| A release run directory or `controls.json` is missing from the tree | caught in review |
 
 ## Alternatives Considered
 
-- **Keep the design clauses ("or the design rules it out").** Considered because some designs make a property impossible on their face (a recompute verifier must hold the weights). Rejected: it lets the benchmark state a security property the system does not state, against AGENTS.md rule 9, and every case in the data today has a documented statement that serves instead (recompute's rests on RFC-0015).
-- **Judge Formally verified and Security level for the protocol, whatever verifier the card runs.** Considered because the prototype does, and the protocol is what the system's theorem is about. Rejected: RFC-0002 §Configuration identity 5 makes the verifier part of the configuration when the verifiers carry different security statements, and the FlashProve card says its statements hold for the Lean verifier only. Reading the Lean statement onto the `cp_verify` row would print a state the card says is not stated for it (SRC-1).
-- **Derive every card-row state from card fields.** Considered because CI could then recompute the glyph and no reviewer judgement would remain. Rejected as the default ([Q3](#decisions)): Whole output checked has no field to derive from, Formally verified has only one that excludes a state, and Yes against Partly on three other properties depends on free text. The allowed sets keep the part that can be derived.
-- **Cap public-source rows at Partly (R1).** Rejected by AGENTS.md rule 9 (SRC-10).
-- **Let a system's own publication outside the pin, or its companion repository, set a card-row state (R2, SASH).** Rejected by AGENTS.md rule 9 and INV-CLAIM-3 (SRC-2, SRC-3). An RFC-0002 amendment that lets a card name companion repositories remains open to anyone.
-- **Keep the name "Whole output proved".** Rejected: a reference row proves nothing, and an attested row's check is not a proof; "proved: Yes" on those rows would misuse the word (AGENTS.md rule 10). "Checked" is true of every row the question asks about.
-- **A fifth state, "does not apply", for reference rows.** Considered in R14. Rejected: one vocabulary of four states, and a `no` with the reason "no security argument, by definition" says the same thing.
-- **A score per row, or a count of Yes.** Rejected: the benchmark measures and does not rank ([PRD §5](../docs/PRD.md#5-non-goals)); a count would weigh six unlike properties as equal.
-- **Benchmark-assigned security levels on the glyph.** Rejected by RFC-0002 §Alternatives Considered: it is certification, a non-goal, and it rounds away the exact form.
-- **Accept web quotes with a URL only, from any page.** Considered because the prototype does. Rejected: pages change, and a state must be checkable against the text read; a third party's page is not the system's documentation.
-- **Audit the properties: an agent or a human reviewer certifies that a property holds.** Considered because an audit could judge statements the documentation leaves vague and catch a flaw the documentation does not mention. Rejected: it is certification, a non-goal ([PRD §5](../docs/PRD.md#5-non-goals)); it makes the benchmark the source of a security property, against AGENTS.md rule 9; a reader cannot recompute its result from stored files; and the benchmark's reviewers, human or agent, are not placed to audit a proof system's cryptography or code. The benchmark instead does what L2BEAT does for rollups: it checks that a claim is documented, that it is read for what actually runs, and that its own tests do not break it, and it prints each layer's evidence.
-- **Show only measured quantities and drop the glyph.** Considered because a measurement needs no reading of documentation and no state vocabulary. Rejected: a proof that proves less is not comparable to one that proves more. "Inference proofs make different statements, so the claim has to travel with every number" ([PRD §2](../docs/PRD.md#2-vision)), and a reader who divides one headline by another learns nothing ([PRD §1](../docs/PRD.md#1-problem)). The glyph is the short form of the claim card on every row; the measured quantities sit beside it.
-- **Print a contradiction as a note beside the stated state.** Considered because the documentation's own state stays in view. Rejected (OVR-4): the overview draws the state and nothing else, so Yes would stay drawn on a configuration whose verifier accepted an input the property excludes. The stated state is printed on the system page instead.
-- **A fifth state, "Contradicted".** Rejected: one vocabulary of four states (SRC-7), and `no` with `contradicted_by` says what was measured.
-- **Let a passed control raise a state, or confirm Yes.** Rejected: a passed control shows that one mutation was rejected (RFC-0008 §Non-Goals); reading more into it would turn a test into a certificate. A pass never raises a state (OVR-3).
-- **Map C5, C6 and C8 to Model bound and Whole output checked.** Considered because an accepted corrupted proof is a defect. Rejected: it does not show which statement fails, so the mapping would be an inference (OVR-2). The outcome is printed.
-- **Clear a contradiction when a later run of the same configuration rejects the control.** Rejected: the accepted mutation is reproducible from its seed (INV-CTRL-3), so a later rejection does not undo it, and the rule would let a release keep the passing run and drop the other (OVR-5). A correction run that replaces the contradicting run, with its reason, clears it.
-- **Move the criteria file out of `web/` (for example to `methodology/criteria.json`).** Considered because the file is methodology, not presentation. Rejected for now: `web/build.py` and the footer read it at its path, and moving it is churn with no change in meaning; #320 MAY move it with the generator.
+- **Retain design-inference clauses ("or the design rules it out").** Tempting when a design obviously precludes a property (such as recompute holding weights), but rejected because it makes the benchmark assert properties the system did not state, violating AGENTS.md rule 9. Every real case in the dataset already has an explicit document quote (recompute's rests on RFC-0015).
+- **Evaluate Formally verified and Security level at the protocol level regardless of the verifier run.** Rejected because RFC-0002 §Configuration identity 5 makes the verifier part of configuration identity whenever verifiers carry different security claims. Applying FlashProve's Lean-verifier claims to its `cp_verify` card row would contradict the card itself (SRC-1).
+- **Derive all card-row states automatically from claim-card fields.** Attractive because CI could recompute the entire glyph without reviewer judgment, but rejected as the default ([Q3](#decisions)) because Whole output checked has no structured field to derive from, Formally verified can only rule out `yes`, and distinguishing Yes from Partly on three properties requires reading free text. Allowed-state sets automate what can be derived safely.
+- **Cap public-source rows at Partly (R1).** Rejected under AGENTS.md rule 9 (SRC-10).
+- **Allow outside-pin publications or companion repositories to set card-row states (R2, SASH).** Rejected under AGENTS.md rule 9 and INV-CLAIM-3 (SRC-2, SRC-3), leaving open a future RFC-0002 amendment for pinned companion repositories.
+- **Keep the label "Whole output proved".** Rejected because reference rows prove nothing and attested checks are not proofs; calling them "proved: Yes" misuses terminology (AGENTS.md rule 10). "Checked" applies accurately across every row.
+- **Add a fifth "does not apply" state for reference rows (R14).** Rejected to preserve a single four-state vocabulary; `no` paired with "no security argument, by definition" conveys the same meaning.
+- **Compute a per-row score or count of Yes cells.** Rejected because the benchmark measures rather than ranking across unlike properties ([PRD §5](../docs/PRD.md#5-non-goals)), and a count would treat six distinct properties as equal.
+- **Display benchmark-assigned security levels on the glyph.** Rejected per RFC-0002 §Alternatives Considered as out-of-scope certification that hides exact assumptions.
+- **Accept unarchived web URLs from any site.** Rejected because web pages change and third-party commentary is not system documentation.
+- **Audit properties directly via human or AI reviewers.** Rejected because certification is a non-goal ([PRD §5](../docs/PRD.md#5-non-goals)), violates AGENTS.md rule 9, cannot be recomputed from stored files, and exceeds the benchmark team's mandate. Instead, the benchmark checks documentation, configuration match, and negative controls, publishing all underlying evidence.
+- **Drop the glyph and show measured numbers only.** Rejected because systems prove vastly different statements ("Inference proofs make different statements, so the claim has to travel with every number", [PRD §2](../docs/PRD.md#2-vision)), and comparing raw headlines without claim context misleads readers ([PRD §1](../docs/PRD.md#1-problem)).
+- **Display contradictions as a note beside the stated state.** Rejected under OVR-4 because the overview displays states alone, which would leave Yes visible on a configuration whose verifier accepted a mutated input.
+- **Add a fifth "Contradicted" state.** Rejected to keep one four-state vocabulary (SRC-7); `no` with `contradicted_by` accurately reflects the measured outcome.
+- **Allow passing controls to raise states or confirm Yes.** Rejected because a passing control only proves one mutation was rejected (RFC-0008 §Non-Goals), never certifying the property (OVR-3).
+- **Map C5, C6, and C8 to Model bound and Whole output checked.** Rejected because an accepted corrupted proof does not identify which semantic property failed, making any mapping an inference (OVR-2).
+- **Clear contradictions when a later run rejects the control.** Rejected because the accepted mutation remains reproducible from its seed (INV-CTRL-3), and clearing on a later pass would invite cherry-picking (OVR-5). Only a documented correction run replacing the contradicting run clears it.
+- **Relocate `criteria.json` out of `web/` (e.g. to `methodology/criteria.json`).** Deferred to avoid churn while `web/build.py` and the footer depend on its current path; #320 MAY relocate it alongside the generator refactor.
 
 ## Drawbacks
 
-- Re-reading is costly: every card change and every web quote needs a reviewer.
-- A thorough system collects Partly while a silent one shows Not stated (R1, R11). This RFC keeps that, because it is what the documentation says; the site has to explain that Not stated is not No.
-- A rule that a No needs a statement, and that a card row reads only its own configuration, will move some cells to Not stated (candidates in [Migration / Rollout](#migration--rollout)), so the glyph shows less than a reader of the design might expect.
-- Reference rows' states are set by definition in this RFC where RFC-0015 has no sentence to quote; a reader must trust the project's own description of its baselines.
-- Card-row states are reviewer-set, with no mechanical check beyond the schema.
-- Controls reach two properties only. Weights hidden, Formally verified, Security level and No trusted party stay documentation only, so their Yes has no test behind it; the system page says so (OVR-7).
-- The override is one way and coarse. Passing controls show little (a few seeded mutations per control, RFC-0008 §Drawbacks), and an accepted control sets No even where the documentation states a limit that may cover the mutation (Q6).
-
+- Re-reading documentation whenever claim cards or web sources update requires ongoing reviewer effort.
+- Detailed systems often collect Partly cells while silent systems show Not stated (R1, R11). This RFC preserves that fidelity to source text, placing the burden on the site to clarify that Not stated does not mean better than Partly.
+- Requiring explicit statements for No and scoping card rows strictly to their run configuration moves several cells to Not stated (see [Migration / Rollout](#migration--rollout)), showing fewer filled states than a design-based reading would.
+- Reference-row states defined "by definition" where RFC-0015 lacks a literal sentence require readers to trust the project's specification of its own baselines.
+- Card-row states remain reviewer-authored with no automated semantic check beyond the schema and card-fields table.
+- Negative controls cover only two of the six properties; Weights hidden, Formally verified, Security level, and No trusted party remain purely documentation-based, as disclosed on every system page (OVR-7).
+- Overrides are one-directional and coarse: passing controls check only a few seeded mutations (RFC-0008 §Drawbacks), while an accepted control forces No even when documentation describes a tolerance or subset policy that might cover the mutation (Q6).
 
 ## Conflicts of Interest
 
-This text was drafted with an AI agent, Claude, made by Anthropic. Anthropic publishes FlashProve (`anthropics/FlashProve`), one of the two systems with a card row. Reviewers should weigh the decisions that move FlashProve cells with that in mind: SRC-1 on R3, which reads FlashProve for its `exact-match-cp-verify` configuration and so takes its Formally verified and Security level off Yes (the prototype read both from the Lean verifier's statements); and ST-7 and Q1 on R6. The control map (OVR-2) and Q5 to Q9 apply to every card row alike; FlashProve's Model bound and Whole output checked, and SASH's, are the cells a control can contradict, and SASH's registered controls are the ones Q7 leaves unmapped.
+This RFC was drafted with Claude, an AI assistant built by Anthropic, which publishes FlashProve (`anthropics/FlashProve`), one of the two systems with a claim-card row. Reviewers should scrutinize decisions affecting FlashProve with that context in mind, especially SRC-1 on R3 (evaluating FlashProve strictly under `exact-match-cp-verify`, which removes Yes from Formally verified and Security level where the prototype cited the Lean verifier) and ST-7/Q1 on R6. The control map (OVR-2) and Q5 through Q9 apply uniformly to all card rows; Model bound and Whole output checked are testable for both FlashProve and SASH, and SASH's registered controls are the ones left unmapped by Q7.
 
 ## Migration / Rollout
 
-Two pull requests (issue #318) brought this in. The first added the RFC and its index rows only. The second added the schema and examples, the validator's copy of the control map, `harness/tests/unit/test_criteria.py`, the RFC-0012 catalogue row and the RFC-0013 G2 input, rewrote `web/_data/criteria.json` to `criteria/1`, and updated `web/README.md` and `docs/spec/10-glossary.md` (the six properties and four states). Its description lists every state that changed, by row, and every cell edited.
+This specification shipped across two pull requests (issue #318). The first added the RFC and index entries. The second added the `criteria/1` schema and examples, the validator's control map, `harness/tests/unit/test_criteria.py`, the RFC-0012 catalogue entry, and the RFC-0013 G2 input; migrated `web/_data/criteria.json` to `criteria/1` (updating keys, quote types, `sources_read`, `workloads`, and `own_sources`); updated `web/README.md` and `docs/spec/10-glossary.md` (the six properties and four states); rebuilt the site; and listed every changed state and edited cell in its pull-request description.
 
-Counts in the committed file (sha256 starting `4ced468b`, at `356949a5ee8afe328ee2cb0d68b18be1b1d82453`), recomputed by:
+Counts in the original committed file (SHA-256 prefix `4ced468b` at `356949a5ee8afe328ee2cb0d68b18be1b1d82453`) were verified with:
 
 ```sh
 python3 -I -c 'import json;d=json.load(open("web/_data/criteria.json"));c=[(r,c) for r in d["rows"] for c in r["cells"].values()];print(sum(1 for r,x in c if x["state"]!="grey" and x["quotes"] and all(q["kind"]=="web" for q in x["quotes"])), sum(1 for r,x in c if x["state"]=="grey" and not x.get("searched")))'
 ```
 
-which prints `13 65`. Of 138 cells (23 rows of 6): card rows 4 Yes, 5 Partly, 3 Not stated; reference rows 3 Yes, 9 No; public-source rows 14 Yes, 7 Partly, 3 No, 90 Not stated.
+That command prints `13 65`. Across 138 total cells (23 rows × 6 properties): card rows held 4 Yes, 5 Partly, and 3 Not stated; reference rows held 3 Yes and 9 No; and public-source rows held 14 Yes, 7 Partly, 3 No, and 90 Not stated.
 
-The second pull request migrated the file to `criteria/1` (keys, quote kinds, `sources_read`, `workloads`, `own_sources`) and rebuilt the site from it.
-
-Dispositions of the prototype's risks:
+Dispositions of the prototype's open risks:
 
 | Risk | Disposition |
 |---|---|
 | R1 cap public-source rows | settled by SRC-10 (AGENTS.md rule 9): no cap |
-| R2 publication outside the pin | settled by SRC-3 (AGENTS.md rule 9, INV-CLAIM-3): shown beside the cell, no state, sets nothing |
-| R3 FlashProve Model bound by policy | settled by SRC-1 (state per card configuration, verifier included) |
-| R4 one Lean fact, two cells | superseded on the FlashProve row by SRC-1 (item 5); the two rules still differ (a hand-proved bound is Yes for Security level and not for Formally verified) |
-| R5 SASH "conjectured" | kept: the word is SASH's own |
+| R2 publication outside the pin | settled by SRC-3 (AGENTS.md rule 9, INV-CLAIM-3): shown beside the cell with no state, sets nothing |
+| R3 FlashProve Model bound by policy | settled by SRC-1 (state evaluated per card configuration, verifier included) |
+| R4 one Lean fact, two cells | superseded on the FlashProve row by SRC-1 (item 5); the two property rules remain distinct (a hand-proved bound earns Yes on Security level without earning Yes on Formally verified) |
+| R5 SASH "conjectured" | kept: uses SASH's own wording |
 | R6 fixed public parameters | Q1, default option (b) (ST-7) |
-| R7 plain serving No on Weights hidden | kept: ST-4 and SRC-7, the reason says "By definition: no checker, so nothing to hide from" |
+| R7 plain serving No on Weights hidden | kept: ST-4 and SRC-7, reason reads "By definition: no checker, so nothing to hide from" |
 | R8 recompute by configuration | settled by SRC-6 (`workloads`, one row per substitution case) |
-| R9 FlashProve short replies | kept: the reason names the limit |
-| R10 zkPyTorch product page | re-read in the second pull request (item 6), and its page checked against `own_sources` (item 2) |
-| R11 mostly Not stated rows | accepted: that is what the sources say |
-| R12 inks | out of scope: drawing (#319), within INV-GLYPH-1 |
+| R9 FlashProve short replies | kept: reason states the limit |
+| R10 zkPyTorch product page | re-read in the second pull request (item 6) and verified against `own_sources` (item 2) |
+| R11 mostly Not stated rows | accepted: reflects what the sources state |
+| R12 inks | out of scope: site drawing (#319), subject to INV-GLYPH-1 |
 | R13 VerInf | re-read in the second pull request (item 6) |
 | R14 recompute has no argument | settled by ST-4 and SRC-7 |
 
-No claim card changes. No schema version changes other than the new `criteria/1`.
+No claim cards changed, and no schemas changed version beyond introducing `criteria/1`.
 
 ## Testing Strategy
 
-Schema examples in `schema/criteria/examples/` (every invalid example with a `.reason` file):
+Schema fixtures in `schema/criteria/examples/` (each invalid fixture paired with a `.reason` file):
 
-- `valid/committed-shape.json`: one card row, one reference row and one public-source row in the committed file's shape, with an `aside` and an `outside_pin`; passes.
+- `valid/committed-shape.json`: one card row, one reference row, and one public-source row matching the committed file shape with `aside` and `outside_pin`; passes.
 - `valid/not-copied.json`: a public-source `not_stated` cell with `not_copied: true`; passes.
-- `valid/web-quote-archived.json`: a Yes cell whose deciding quote is a web quote with `retrieved` and `archive_url`; passes.
-- `invalid/state-outside-four.json`: a cell with `state: "green"`; fails on enum.
-- `invalid/property-number.json`: a property with `"n": 1`; fails on `additionalProperties`.
-- `invalid/total-key.json`: a top-level `total`; fails on `additionalProperties`.
-- `invalid/score-key.json`: a row with `score`; fails on `additionalProperties`.
-- `invalid/web-quote-no-retrieved.json`: a web quote without `retrieved`; fails on `required`.
-- `invalid/short-commit.json`: a repository quote with `commit: "9e2bdd8f"`; fails on pattern.
-- `invalid/missing-rule.json`: a property whose `rules` lacks `not_stated`; fails on `required`.
-- `invalid/outside-pin-state.json`: an `outside_pin` with `state`; fails on `additionalProperties`.
-- `invalid/reference-no-workloads.json`: a reference row without `workloads`; fails on `required`.
-- `valid/overridden-cell.json`: a card row with `release`, a Whole output checked cell with `state: "no"`, `stated: "yes"` and one `contradicted_by` entry; passes the schema.
+- `valid/web-quote-archived.json`: a Yes cell decided by a web quote carrying `retrieved` and `archive_url`; passes.
+- `valid/overridden-cell.json`: a card row with `release` and a Whole output checked cell carrying `state: "no"`, `stated: "yes"`, and one `contradicted_by` entry; passes.
+- `invalid/state-outside-four.json`: `state: "green"`; rejected by enum.
+- `invalid/property-number.json`: `"n": 1` on a property; rejected by `additionalProperties`.
+- `invalid/total-key.json`: top-level `total`; rejected by `additionalProperties`.
+- `invalid/score-key.json`: row-level `score`; rejected by `additionalProperties`.
+- `invalid/web-quote-no-retrieved.json`: web quote missing `retrieved`; rejected by `required`.
+- `invalid/short-commit.json`: repository quote with `commit: "9e2bdd8f"`; rejected by pattern.
+- `invalid/missing-rule.json`: property `rules` missing `not_stated`; rejected by `required`.
+- `invalid/outside-pin-state.json`: `outside_pin` containing `state`; rejected by `additionalProperties`.
+- `invalid/reference-no-workloads.json`: reference row missing `workloads`; rejected by `required`.
+- `invalid/stated-not-stated.json`: `stated: "not_stated"`; rejected by enum.
+- `invalid/contradicted-by-empty.json`: `contradicted_by: []`; rejected by `minItems`.
+- `invalid/contradicted-by-trial-number.json`: `contradicted_by` entry with `"trial": 0`; rejected by `additionalProperties`.
 
-- `invalid/stated-not-stated.json`: a cell with `stated: "not_stated"`; fails on enum.
-- `invalid/contradicted-by-empty.json`: `contradicted_by: []`; fails on `minItems`.
-- `invalid/contradicted-by-trial-number.json`: a `contradicted_by` entry with `"trial": 0`; fails on `additionalProperties`.
-
-
-Repository checks: `uv run iproofs validate --all` (the schema and its examples).
+Repository verification: `uv run iproofs validate --all` validates both the schema and all examples.
 
 ## Decisions
 
-- Q1. Public parameters fixed before the hash set Partly on No trusted party only where the documentation says its proved statement excludes a provider who tuned them (ST-7, R6); they are not a shared caveat printed as text. Reason: it copies a condition the documentation states ("that you grant", FlashProve `guide/what-is-proved.md` L288 to L289 at `9e2bdd8f`); a shared caveat would drop a stated condition. The cost is that a system which states the condition shows Partly while one that does not shows Not stated; the reason text says so, and other teams are invited to state their assumptions.
-- Q2. "Not copied yet" stays the state `not_stated` (four states only) and the cell carries `not_copied: true`, so the data tells "not read yet" from "read and silent"; the printed word stays "Not stated", and whether a page prints the difference is the site's (#319). Reason: printing both the same way would claim sources were read that were not, and a fifth state was rejected (SRC-7).
-- Q3. Card-row states are set by a reviewer from quotes, within the sets of the card fields table (SRC-4), not derived from card fields. Reason: Whole output checked has no card field to derive from, Formally verified has one that only excludes `yes`, and three properties need a reading of free text; derivation would need RFC-0002 fields that do not exist.
-- Q4. When two allowed quotes meet the rules of different states, the cell takes the state of the fixed table of ST-8 (`yes` with `partly` gives `partly`; `yes` with `no`, or `partly` with `no`, gives `no`), with `conflict: true` and both quotes printed. Reason: the state is then met by a quote of the system's own, needs no reviewer judgement, and never says more than the more limited of the two statements; the alternatives (the reviewer picks, or the cell becomes Not stated) either add a judgement or hide two statements the system made.
-- Q5. A contradicting outcome does not change a `not_stated` cell (OVR-4): the cell stays `not_stated` and the outcome is printed beside it on the system page. Reason: the benchmark validates claims, and a silent system states nothing to contradict; printing `no` would let the benchmark set a property the system does not state (AGENTS.md rule 9). The cost: a silent system with an accepted control draws Not stated where a system that states the property draws No. The system page and the Controls page print every accepted control in full (OVR-7, RFC-0009 §Site, RFC-0008 §Reporting), so the outcome is not hidden.
-- Q6. When the documentation states a limit that covers the mutation, for example a tolerance policy that admits the C3 one-unit perturbation, or a check of the positions the client names that leaves out the token C1 changes, the override still applies (OVR-4), and the cell's system page prints the stated limit beside the control. Reason: the expected sets are RFC-0008's and the same for every system; deciding here whether a limit covers a mutation would add a reviewer judgement to a mechanical rule, and RFC-0008 already treats the acceptance as a possible defect.
-- Q7. A system-specific control contradicts no property (OVR-2); its outcome is printed on the system page. Reason: `system-controls/1` names no property, a `weakened_prover` control expects `accepted`, and its failure (accepted while the binding report marks the edge bound) contradicts the card's binding table, not one glyph property. An RFC-0008 amendment MAY add a property field to `system-controls/1`, copied from the upstream description at the pin, and this table then follows it.
-
-- Q9. OVR-2 assigns C1, C2, C4 and C7 to Whole output checked only, and C3, P1 and P2 to Model bound only, by the rule that a control is assigned to the property whose Yes rule names the input the mutation changes. Reason: one property per control keeps the override mechanical and needs no reading of why a verifier accepted. The cost: an accepted C1, C4 or C7 also fits a check that covers the token but does not tie it to the committed weights, and the map does not lower Model bound for it. Mapping one control to two properties would lower a state the outcome does not single out.
-- Q10. When the documentation states a numeric level for the row's configuration but says neither that it is proven nor that it is conjectured, Security level is Partly. Reason: a level is stated, so Not stated would hide a statement the system made, and Yes asks the documentation to say the level is proven, which it does not. The cost: such a level is drawn as a conjectured one is. The case was met reading Attestable's blog post ("uphold 100 bits of security", #336); its cell's note cites this rule.
+- Q1. Fixed public parameters chosen before hashing set Partly on No trusted party only when documentation explicitly states that its proved statement excludes a provider who tuned them (ST-7, R6), rather than treating them as a generic prose caveat. This directly mirrors explicit source text ("that you grant", FlashProve `guide/what-is-proved.md` L288 to L289 at `9e2bdd8f`) instead of erasing a stated caveat. The trade-off is that a system stating this condition receives Partly while a silent system receives Not stated; the reason text explains this, and other teams are encouraged to document their assumptions.
+- Q2. "Not copied yet" remains state `not_stated` within the four-state vocabulary and adds `not_copied: true` so the data distinguishes unread sources from reviewed silent sources. The printed word stays "Not stated", leaving any UI distinction to the site (#319). Treating both identically in data would falsely imply unread sources were checked, while adding a fifth state was rejected under SRC-7.
+- Q3. Card-row states are authored by reviewers from quotes within the allowed sets of the card-fields table (SRC-4) rather than fully derived from claim-card fields, because Whole output checked lacks a structured card field, Formally verified only excludes `yes`, and three properties require interpreting free text.
+- Q4. Conflicting quotes from allowed sources resolve deterministically via the ST-8 precedence table (`yes` + `partly` -> `partly`; `yes` + `no` or `partly` + `no` -> `no`), setting `conflict: true` and quoting both. Every resulting state still matches a verbatim system quote without reviewer discretion and never overstates the more qualified claim, whereas picking manually or collapsing to Not stated would either inject subjectivity or hide conflicting statements.
+- Q5. Contradicting controls leave `not_stated` cells unchanged (OVR-4), displaying the accepted control alongside the cell on the system page. Because a silent system makes no claim to contradict, forcing `no` would let the benchmark assert an unstated property against AGENTS.md rule 9. Although a silent system with an accepted control displays Not stated where an explicit system displays No, every accepted control is published prominently on both the system page and the Controls page (OVR-7, RFC-0009 §Site, RFC-0008 §Reporting).
+- Q6. Overrides still apply even when documentation mentions a limit that might cover the mutation (such as a tolerance policy admitting a one-unit C3 perturbation or a subset check omitting the token C1 alters), with the system page printing the stated limit beside the control (OVR-4). Expected outcome sets belong to RFC-0008 uniformly across systems; letting reviewers decide whether a limit excuses a mutation would break the mechanical nature of overrides when RFC-0008 already flags such acceptances as potential defects.
+- Q7. System-specific controls contradict no glyph properties (OVR-2) and are reported on the system page. `system-controls/1` specifies no property, `weakened_prover` controls expect `accepted`, and failures contradict the claim card's binding table rather than a single glyph property. A future RFC-0008 amendment MAY add a pinned upstream property field to `system-controls/1`, and this table will then follow it.
+- Q9. OVR-2 maps C1, C2, C4, and C7 solely to Whole output checked, and C3, P1, and P2 solely to Model bound, matching each control to the property whose Yes rule names its mutated input. A single property per control keeps overrides mechanical without diagnosing why a verifier accepted. The trade-off is that an accepted C1, C4, or C7 could also reflect unbound weights without lowering Model bound, avoiding penalizing a second property not uniquely identified by the outcome.
+- Q10. A numeric security level stated for the row's configuration without specifying whether it is proven or conjectured maps to Partly. Not stated would hide a published number, while Yes requires documentation stating the level is proven. This case arose when reviewing Attestable's blog post ("uphold 100 bits of security", #336), whose cell note cites this rule.
 
 ## References
 
 - [RFC-0002](0002-claim-card.md) §File and identity, §Fields, §Rules (INV-CLAIM-2, INV-CLAIM-3), §Configuration identity, §Alternatives Considered.
 - [RFC-0008](0008-negative-controls.md) §Shared controls, verifier side, §Shared controls, prover side, §Honest twins, §Outcomes, §controls.json, §System-specific controls, §Disclosure, §Non-Goals, INV-CTRL-2, INV-CTRL-3.
-- [RFC-0009](0009-results-and-publication.md) for the site, §Storage, §Append-only rule and corrections, §Release record; its amendment for the live site is #319.
+- [RFC-0009](0009-results-and-publication.md) for the site, §Storage, §Append-only rule and corrections, §Release record; amended for the live site by #319.
 - [RFC-0010](0010-harness-runner.md) error kinds (`config`, `integrity`, `environment`).
 - [RFC-0012](0012-schemas-and-serialization.md) §Schema catalogue, §The `schema` field, §YAML subset for authored files (dates), §JSON writer.
 - [RFC-0013](0013-validation-and-ci.md) §G2 Schema validation, §G3 JSON format check.
 - [RFC-0015](0015-reference-rows.md) §Reference systems, §Plain serving, §Recompute, §Precision matching, §Feasibility on the profile.
-- AGENTS.md hard rules 3, 9 and 10. [PRD](../docs/PRD.md) §1, §2 and §5.
+- AGENTS.md hard rules 3, 9, and 10. [PRD](../docs/PRD.md) §1, §2, and §5.
 - `systems/sash/controls.yaml` (`system-controls/1`).
-- `web/_data/criteria.json` (prototype criteria, sha256 starting `4ced468b`); at `356949a5`, the `glyph` object of the site's data snapshot under `web/_data/`, `web/build.py` L41 to L44, L505 to L523, L912, L969 and L1516 to L1535, and `web/README.md` §Data; since #320, `iproofs.site.inputs.load_criteria`.
-- `systems/flashprove/claim.yaml` and `systems/sash/claim.yaml`, card version 1 each; `systems/ref-serve/system.yaml` and `systems/ref-recompute/system.yaml`.
+- `web/_data/criteria.json` (prototype criteria, SHA-256 starting `4ced468b`); at `356949a5`, the `glyph` object of the site's data snapshot under `web/_data/`, `web/build.py` L41 to L44, L505 to L523, L912, L969, and L1516 to L1535, and `web/README.md` §Data; since #320, `iproofs.site.inputs.load_criteria`.
+- `systems/flashprove/claim.yaml` and `systems/sash/claim.yaml` (card version 1 each); `systems/ref-serve/system.yaml` and `systems/ref-recompute/system.yaml`.
 - `.github/workflows/ci.yml` (`validate` job, `fetch-depth: 0`).
-- FlashProve at `9e2bdd8ff5bf9c62f18263d7dac189b0400b260c`; SASH zk-inference-prover at `eb95bfa887299d1637550228d42086c27cbb2b3b`; SASH zk-inference-results at `11decec3c0b62c707618aab5deb82750b355d202`.
+- FlashProve at `9e2bdd8ff5bf9c62f18263d7dac189b0400b260c`; SASH `zk-inference-prover` at `eb95bfa887299d1637550228d42086c27cbb2b3b`; SASH `zk-inference-results` at `11decec3c0b62c707618aab5deb82750b355d202`.
 - Issues #318 (this RFC), #319, #320, #321, #42, #69.

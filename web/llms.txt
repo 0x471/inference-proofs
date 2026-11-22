@@ -8,7 +8,7 @@ The deployment article discusses hypothetical agreements, not an enacted treaty.
 
 ## Pages
 
-- [Checks · Inference proofs](https://www.inferenceproofs.ai/checks): The rules behind a row of the ladder: the six checks, each figure, the order and the glyph's five petals.
+- [Checks · Inference proofs](https://www.inferenceproofs.ai/checks): The rules behind every row on the ladder: the six entry checks, cost and fidelity figures, ranking order, and the five glyph petals.
   - [The six checks](https://www.inferenceproofs.ai/checks#h-checks)
   - [Figures](https://www.inferenceproofs.ai/checks#h-figures)
   - [Order](https://www.inferenceproofs.ai/checks#h-order)
@@ -25,7 +25,7 @@ The deployment article discusses hypothetical agreements, not an enacted treaty.
   - [Cost](https://www.inferenceproofs.ai/flashprove#h-cost)
   - [Fidelity](https://www.inferenceproofs.ai/flashprove#h-fidelity)
   - [Sessions](https://www.inferenceproofs.ai/flashprove#h-sessions)
-- [Proving a forward pass · Inference proofs](https://www.inferenceproofs.ai/forward-pass): The verifier tests the prover's committed values at random points. Matrix products with the committed weights are the cheap part to prove.
+- [Proving a forward pass · Inference proofs](https://www.inferenceproofs.ai/forward-pass): How inference provers work: the verifier tests the prover's committed values at random points, and matrix multiplications with the committed weights turn out to be the easy part.
   - [Testing a product at random](https://www.inferenceproofs.ai/forward-pass#testing-a-product-at-random)
   - [Fiat-Shamir](https://www.inferenceproofs.ai/forward-pass#fiat-shamir)
   - [From one product to a layer](https://www.inferenceproofs.ai/forward-pass#from-one-product-to-a-layer)
@@ -55,7 +55,7 @@ The deployment article discusses hypothetical agreements, not an enacted treaty.
   - [V](https://www.inferenceproofs.ai/glossary#h-l-v)
   - [W](https://www.inferenceproofs.ai/glossary#h-l-w)
   - [Z](https://www.inferenceproofs.ai/glossary#h-l-z)
-- [How a check works · Inference proofs](https://www.inferenceproofs.ai/how-a-check-works): One request for every system, a commitment, a proof and a verifier without the weights, six checks drawn one by one, and the fraction behind the headline figure.
+- [How a check works · Inference proofs](https://www.inferenceproofs.ai/how-a-check-works): How the benchmark works: one shared request, a commitment, a proof checked without the weights, six entry checks, and the cost ratio behind the headline number.
   - [The request](https://www.inferenceproofs.ai/how-a-check-works#the-request)
   - [Commit, prove, verify](https://www.inferenceproofs.ai/how-a-check-works#commit-prove-verify)
   - [Six checks](https://www.inferenceproofs.ai/how-a-check-works#six-checks)
@@ -69,21 +69,21 @@ The deployment article discusses hypothetical agreements, not an enacted treaty.
   - [For policy readers](https://www.inferenceproofs.ai/learn#h-policy)
   - [For prover teams and engineers](https://www.inferenceproofs.ai/learn#h-engineering)
   - [Glossary](https://www.inferenceproofs.ai/learn#h-terms)
-- [Mandate · Inference proofs](https://www.inferenceproofs.ai/mandate): Who runs Inference proofs, what it commits to and how to check its figures.
+- [Mandate · Inference proofs](https://www.inferenceproofs.ai/mandate): Who runs Inference proofs, what rules we follow, and how to verify our results.
   - [Who runs it](https://www.inferenceproofs.ai/mandate#h-who-runs-it)
   - [Ties](https://www.inferenceproofs.ai/mandate#h-ties)
   - [What we do](https://www.inferenceproofs.ai/mandate#h-what-we-do)
   - [What we do not do](https://www.inferenceproofs.ai/mandate#h-what-we-do-not-do)
   - [How to check us](https://www.inferenceproofs.ai/mandate#h-how-to-check-us)
   - [Changes and corrections](https://www.inferenceproofs.ai/mandate#h-changes-and-corrections)
-- [How we compare · Inference proofs](https://www.inferenceproofs.ai/method): Every system gets the same request. Those passing the six checks, with a stated security level, are ranked by cost vs serving inside one model.
+- [How we compare · Inference proofs](https://www.inferenceproofs.ai/method): Every system runs the same request. Systems that pass all six checks and state a security level are ranked by proving cost vs serving within each model rung.
   - [Fixed before the runs](https://www.inferenceproofs.ai/method#fixed-before-the-runs)
   - [The checks](https://www.inferenceproofs.ai/method#the-checks)
   - [The figure](https://www.inferenceproofs.ai/method#the-figure)
   - [Order and the glyph](https://www.inferenceproofs.ai/method#order-and-the-glyph)
   - [Judgement and changes](https://www.inferenceproofs.ai/method#judgement-and-changes)
   - [Getting a row](https://www.inferenceproofs.ai/method#getting-a-row)
-- [What a proof shows · Inference proofs](https://www.inferenceproofs.ai/proof-of-inference): A proof shows a reply is the committed model's greedy reply to its prompt, not whose model it is or that the reply was served.
+- [What a proof shows · Inference proofs](https://www.inferenceproofs.ai/proof-of-inference): A proof shows that a reply is the committed model's greedy output for a prompt. It does not say whose model it is, or prove that the reply was served live.
   - [Outside the proof](https://www.inferenceproofs.ai/proof-of-inference#outside-the-proof)
   - [Today's systems](https://www.inferenceproofs.ai/proof-of-inference#today-s-systems)
   - [Passed](https://www.inferenceproofs.ai/proof-of-inference#passed)
@@ -94,11 +94,11 @@ The deployment article discusses hypothetical agreements, not an enacted treaty.
   - [Cost](https://www.inferenceproofs.ai/sash#h-cost)
   - [Fidelity](https://www.inferenceproofs.ai/sash#h-fidelity)
   - [Sessions](https://www.inferenceproofs.ai/sash#h-sessions)
-- [Scale · Inference proofs](https://www.inferenceproofs.ai/scale): Every system run, on a log axis: cost vs serving, proof size, verify time.
+- [Scale · Inference proofs](https://www.inferenceproofs.ai/scale): Every benchmarked system plotted on a logarithmic scale: cost vs serving, proof size, verify time.
   - [Cost vs serving](https://www.inferenceproofs.ai/scale#h-multiple)
   - [Proof size](https://www.inferenceproofs.ai/scale#h-proof-size)
   - [Verify time](https://www.inferenceproofs.ai/scale#h-check-time)
-- [The statement · Inference proofs](https://www.inferenceproofs.ai/statement): The ladder's verifiers check a committed, quantized copy's greedy reply. No row has a proved error bound that covers what it runs.
+- [The statement · Inference proofs](https://www.inferenceproofs.ai/statement): The verifiers on the ladder check the greedy reply of a committed, quantized copy of the model. So far, no system has a proved error bound that covers the exact setup we run.
   - [Each system's statement](https://www.inferenceproofs.ai/statement#each-system-s-statement)
   - [The committed weights](https://www.inferenceproofs.ai/statement#the-committed-weights)
   - [Integer arithmetic](https://www.inferenceproofs.ai/statement#integer-arithmetic)

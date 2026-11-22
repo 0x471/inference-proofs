@@ -6,67 +6,67 @@
 
 ## Summary
 
-Defines the `iproofs` command line, the job (one system, one workload, one shape, one repetition, one machine), the job state machine and what is written at each state, the concurrency model, step timeouts, the retry policy, the error taxonomy, and how failures are recorded so that no run is ever dropped or silently resumed. It is the operational core that turns the adapter contract ([RFC-0005](0005-adapter-contract.md)) and the measurement rules ([RFC-0011](0011-measurement-and-sampling.md)) into run directories ([RFC-0009](0009-results-and-publication.md)).
+This RFC specifies the `iproofs` command-line interface, the structure of a job (one system, one workload, one shape, one repetition, and one machine), and the state machine that governs a job from start to finish. It also defines what is written to disk at each stage, the concurrency model, step timeouts, the retry policy, the error taxonomy, and how failures are recorded so that no run is ever dropped or silently resumed. Together, these rules form the operational layer that turns the adapter contract ([RFC-0005](0005-adapter-contract.md)) and measurement rules ([RFC-0011](0011-measurement-and-sampling.md)) into published run directories ([RFC-0009](0009-results-and-publication.md)).
 
 ## Motivation
 
-PRD requirement F9 asks for "a harness that runs a job end to end, measures externally, collects the adapter's internal timings and writes a result file valid against the schema". Non-functional requirement N3 asks that failed runs be "recorded, not dropped" ([PRD Section 7](../docs/PRD.md#7-requirements)). [AGENTS.md hard rule 5](../AGENTS.md#hard-rules) forbids rounding away results. A runner that retries a failed proving step until it succeeds, or resumes a half-finished job after a crash, would publish a number that never happened as measured. The runner's semantics therefore need to be fixed before any adapter exists.
+PRD requirement F9 calls for "a harness that runs a job end to end, measures externally, collects the adapter's internal timings and writes a result file valid against the schema", while non-functional requirement N3 specifies that failed runs must be "recorded, not dropped" ([PRD Section 7](../docs/PRD.md#7-requirements)). [AGENTS.md hard rule 5](../AGENTS.md#hard-rules) also prohibits rounding away or omitting results. If a runner silently retried a failed proving step until it succeeded, or resumed a half-finished job after a crash, it would publish figures that did not happen as measured. For that reason, the runner's lifecycle and failure semantics need to be fixed before any adapter is implemented.
 
-Scenarios:
+Consider three concrete scenarios:
 
-1. A runner on an H100 host runs three repetitions of `fp-maverick-w1024-b24`; the second repetition is OOM killed during `prove`. The run directory for repetition 2 is written with a `resource` failure; repetitions 1 and 3 are written normally; statistics report n = 2 and n_failed = 1.
-2. The host loses power during `commit`. On restart, the runner finds an incomplete job directory, records it as a failed job of kind `internal` at step `commit`, and starts the next repetition from `pending`.
-3. A CI job runs `iproofs run --system fake --workload fake-tiny-ci --profile ci-cpu --control-suite` on a hosted CPU runner in a few minutes, with no GPU.
+1. A runner on an H100 host executes three repetitions of `fp-maverick-w1024-b24`, and the second repetition is OOM-killed during `prove`. The runner writes a run directory for repetition 2 recording a `resource` failure, completes repetitions 1 and 3 normally, and computes statistics showing n = 2 and n_failed = 1.
+2. The host loses power during `commit`. When the runner restarts, it detects the incomplete staging directory, records it as an `internal` failure at step `commit`, and begins the next repetition cleanly from `pending`.
+3. A CI job runs `iproofs run --system fake --workload fake-tiny-ci --profile ci-cpu --control-suite` on a hosted CPU runner in a few minutes without a GPU.
 
 ## Goals
 
-- One deterministic state machine per job, with every transition logged and every terminal job written.
-- No timed step is ever retried; only network fetches outside timed scopes retry.
-- A stable CLI with documented exit codes, usable from CI and by hand.
-- Atomic writes: a run directory is either absent or complete and schema-valid; partial work lives in a staging directory.
-- A crash never produces a measured row.
-- A typed internal API that tests can drive without containers.
+- Maintain a single deterministic state machine per job, logging every transition and writing a record for every terminal outcome.
+- Never retry any timed step; restrict retries strictly to network fetches that happen outside timed scopes.
+- Provide a stable CLI with documented exit codes that works cleanly both in CI and interactively.
+- Write run directories atomically by keeping partial work in a staging directory, so any directory under `results/` is either absent or complete and schema-valid.
+- Guarantee that a crash never produces a measured row.
+- Expose a typed internal API so unit and integration tests can drive the runner without Docker containers.
 
 ## Non-Goals
 
-- Scheduling across hosts, queueing, or a service. One runner process drives one host.
-- Running several jobs on one GPU concurrently.
-- Resuming a job mid-step.
-- Uploading results anywhere. Publication is a pull request ([RFC-0009](0009-results-and-publication.md)).
+- Multi-host scheduling, job queues, or a background daemon service. A single runner process manages one host.
+- Running multiple jobs concurrently on the same GPU.
+- Resuming a job mid-step after an interruption.
+- Uploading results automatically to any remote store. Publication happens exclusively through pull requests ([RFC-0009](0009-results-and-publication.md)).
 
 ## Proposed Design
 
 ### Command line
 
-`iproofs` uses stdlib `argparse`. Subcommands, arguments and behaviour:
+`iproofs` is built on Python's standard-library `argparse`. Its subcommands, arguments, and behaviour are listed below:
 
 | Command | Arguments | Behaviour |
 |---|---|---|
-| `iproofs validate [PATH ...] [--all] [--changed-since REF] [--format {text,json}]` | paths to files or directories; default and flags as [RFC-0013](0013-validation-and-ci.md#local-use) defines them | runs every CI check of [RFC-0013](0013-validation-and-ci.md) on the paths |
-| `iproofs derive RUN_DIR [--check]` | one run directory | computes derived metrics and statistics ([RFC-0004](0004-metrics-timing-grades.md)); without `--check` writes them into a new `run.json` only for a run being written; with `--check` recomputes and compares bit for bit |
-| `iproofs run --system S --workload W --profile P [--repetitions N] [--results DIR] [--control-suite] [--provider NAME] [--prompts-from RUN_DIR] [--load matched|high] [--gpus LIST] [--allow-nonconforming]` | `N` default 3, minimum 1 (values below 3 are allowed for tests and marked `repetitions_below_minimum: true`); `DIR` default `results/`; `--provider` records the hosting provider in the machine record ([RFC-0006](0006-reference-hardware-and-cost.md#machine-record)); `--prompts-from` replays the prompt seeds of an earlier run (reference rows and reruns, [RFC-0015](0015-reference-rows.md#steps-per-job)); `--load` picks the load point of a production-serving job (serve role only; default `matched`, [RFC-0015](0015-reference-rows.md) SRV-1); `--gpus` binds a serving profile's GPUs by index (hosted; `--gpu` stays for prover profiles); `--allow-nonconforming` is accepted and changes nothing: profile conformance is recorded in the manifest (`harness.nonconforming`) and never refuses a run | runs N jobs sequentially, then derives statistics across them |
-| `iproofs controls RUN_DIR [--prepare-perturbed WORKLOAD]` | completed run directory | runs the control suite ([RFC-0008](0008-negative-controls.md)) and writes `controls.json`; with `--draw-seed`, the seed record of a split suite; with `--only`, one part of it, with that seed; and with `--merge`, `controls.json` from the parts ([RFC-0008 §Split suites](0008-negative-controls.md#split-suites)) |
-| `iproofs machine-record [--selftest]` | none | prints the machine record ([RFC-0006](0006-reference-hardware-and-cost.md)) as JSON on stdout; `--selftest` also runs the calibration checks of [RFC-0011](0011-measurement-and-sampling.md#calibration-self-test) and exits 3 if any fails |
-| `iproofs fetch-model WORKLOAD [--headers-only] [--serving RECORD]` | workload id | fetches weights by source and revision, checks every file hash ([RFC-0014](0014-provenance-and-integrity.md)), then recomputes a `computed` weight width from the verified files ([RFC-0003](0003-workloads.md#weight-bits) WB-5); `--headers-only` fetches no weights and recomputes that width from HTTP range reads of the file headers at the pinned revision, printing the result as JSON; `--serving` fetches a production-serving record's files instead (RFC-0014 SM-2) |
-| `iproofs prompts build WORKLOAD --seed SEED` | workload id, 64-bit seed | materialises the prompt set, prints its digest ([RFC-0003](0003-workloads.md)) |
-| `iproofs release freeze RELEASE` | release id | writes `releases/<release>/index.json` |
-| `iproofs release plan RELEASE` | release id | projects the run-campaign compute budget from external figures with the derivation code ([08](../docs/spec/08-performance-budget.md#run-campaign-compute-budget)); output is `projected`, never a result |
-| `iproofs site build [--out DIR]` | default the repository's `web/` | generates the public site from the newest frozen release (RFC-0009 §Site) |
+| `iproofs validate [PATH ...] [--all] [--changed-since REF] [--format {text,json}]` | Paths to files or directories; defaults and flags are defined in [RFC-0013](0013-validation-and-ci.md#local-use) | Runs every CI check from [RFC-0013](0013-validation-and-ci.md) across the selected paths |
+| `iproofs derive RUN_DIR [--check]` | One run directory | Computes derived metrics and statistics ([RFC-0004](0004-metrics-timing-grades.md)); without `--check` it writes them into a new `run.json` only during run creation; with `--check` it recomputes them and checks for bit-for-bit equality |
+| `iproofs run --system S --workload W --profile P [--repetitions N] [--results DIR] [--control-suite] [--provider NAME] [--prompts-from RUN_DIR] [--load matched|high] [--gpus LIST] [--allow-nonconforming]` | `N` defaults to 3 with a minimum of 1 (values below 3 are allowed for tests and set `repetitions_below_minimum: true`); `DIR` defaults to `results/`; `--provider` records the hosting provider in the machine record ([RFC-0006](0006-reference-hardware-and-cost.md#machine-record)); `--prompts-from` replays the prompt seeds of an earlier run for reference rows and reruns ([RFC-0015](0015-reference-rows.md#steps-per-job)); `--load` selects the load point for a production-serving job (serve role only, defaulting to `matched`, [RFC-0015](0015-reference-rows.md) SRV-1); `--gpus` binds a serving profile's GPUs by index in hosted runs (`--gpu` remains for prover profiles); `--allow-nonconforming` is accepted as a no-op because profile conformance is recorded in the manifest (`harness.nonconforming`) and never blocks a run | Runs N jobs sequentially, then derives statistics across them |
+| `iproofs controls RUN_DIR [--prepare-perturbed WORKLOAD]` | Completed run directory | Executes the negative control suite ([RFC-0008](0008-negative-controls.md)) and writes `controls.json`; `--draw-seed` writes the seed record for a split suite, `--only` runs one subset using that seed, and `--merge` assembles `controls.json` from the completed parts ([RFC-0008 §Split suites](0008-negative-controls.md#split-suites)) |
+| `iproofs machine-record [--selftest]` | None | Writes the machine record ([RFC-0006](0006-reference-hardware-and-cost.md)) to stdout as JSON; `--selftest` also runs the calibration checks from [RFC-0011](0011-measurement-and-sampling.md#calibration-self-test) and exits 3 if any check fails |
+| `iproofs fetch-model WORKLOAD [--headers-only] [--serving RECORD]` | Workload id | Downloads model weights by source and revision, verifies every file hash ([RFC-0014](0014-provenance-and-integrity.md)), and recomputes a `computed` weight width from the verified files ([RFC-0003](0003-workloads.md#weight-bits) WB-5); `--headers-only` skips downloading weights and recomputes the width via HTTP range reads of file headers at the pinned revision, outputting JSON; `--serving` fetches a production-serving record's files instead (RFC-0014 SM-2) |
+| `iproofs prompts build WORKLOAD --seed SEED` | Workload id and 64-bit seed | Materialises the prompt set and outputs its digest ([RFC-0003](0003-workloads.md)) |
+| `iproofs release freeze RELEASE` | Release id | Writes `releases/<release>/index.json` |
+| `iproofs release plan RELEASE` | Release id | Projects the run-campaign compute budget from external figures using the derivation code ([08](../docs/spec/08-performance-budget.md#run-campaign-compute-budget)); the output is `projected` and is never treated as a result |
+| `iproofs site build [--out DIR]` | Defaults to the repository's `web/` directory | Generates the static public site from the newest frozen release (RFC-0009 §Site) |
 
-Global options: `--log-level {debug,info,warning}` (default `info`), `--quiet` (no progress on stderr). No option changes what is measured; anything that would is part of the workload or system file and goes through review.
+Global options are `--log-level {debug,info,warning}` (default `info`) and `--quiet` (which suppresses progress output on stderr). None of the CLI options alter what is measured; any parameter that affects measurement belongs in the workload or system file and goes through code review.
 
-Exit codes (all commands):
+All commands share a single exit code table:
 
 | Code | Meaning |
 |---|---|
-| 0 | success |
-| 1 | a check failed: validation error, `derive --check` mismatch |
-| 2 | usage error (argparse) |
-| 3 | environment does not meet the profile or a prerequisite (no cgroup v2, other GPU processes, missing Docker) |
-| 4 | at least one job ran and was recorded as failed |
-| 5 | internal error (harness bug); a run directory, if any, records it |
+| 0 | Success |
+| 1 | A check failed (such as a validation error or a `derive --check` mismatch) |
+| 2 | Usage error reported by `argparse` |
+| 3 | The host environment does not meet the profile or a prerequisite (for example, no cgroup v2, another process using the GPU, or Docker missing) |
+| 4 | At least one job ran and finished with a recorded failure |
+| 5 | Internal harness error; if a run directory was created, it records the failure |
 
-For `iproofs run`, a run directory is written for every job when the exit code is 0 or 4. Exit 3 is raised before any job starts, so nothing is written.
+For `iproofs run`, a run directory is written for every job whenever the command exits 0 or 4. Exit code 3 is raised before any job starts, so nothing is written to disk.
 
 ### Job specification
 
@@ -86,7 +86,7 @@ class JobSpec:
     release: str           # e.g. "v0.1", from reference/<release>.yaml in force
 ```
 
-The run id is `<YYYY-MM-DD>-<system>-<workload>-<profile>-<n>` where the date is the UTC date at job start and `n` is the smallest positive integer not already used under `results/<release>/<system>/` for that prefix (INV-RUN-6).
+Each run receives an id of the form `<YYYY-MM-DD>-<system>-<workload>-<profile>-<n>`, where the date is the UTC date when the job starts and `n` is the smallest positive integer not yet used under `results/<release>/<system>/` for that prefix (INV-RUN-6).
 
 ### State machine
 
@@ -95,52 +95,52 @@ pending -> resolved -> image_ready -> machine_recorded -> info -> setup -> commi
    any non-terminal state --(failure)--> failed(step) -> written
 ```
 
-- `controls` is skipped (transition `verify -> written`) when `control_suite` is false.
-- `written` is the only terminal state. A failed job reaches `written` with `status: "failed"` and its failure record.
+- When `control_suite` is false, the runner skips `controls` and transitions directly from `verify` to `written`.
+- `written` is the sole terminal state. Even when a job fails, it still reaches `written` with `status: "failed"` and a populated failure record.
 
 | State | Action on entry | Writes to staging |
 |---|---|---|
-| `pending` | create staging dir `results/<release>/<system>/.staging-<run-id>/`, write `job.lock` with pid and start time | `job.lock`, `logs/harness.jsonl` |
-| `resolved` | load and validate system, workload, reference files; resolve model dir by digest; draw the job seed; materialise prompts and their digest | `manifest.partial.json` (inputs) |
-| `image_ready` | check the local image digest equals `system.yaml` `image.digest` (pull by digest if absent, retried as `fetch`) | image record |
-| `machine_recorded` | record the machine; check the profile; check no other compute process on the bound GPU; choose the cpuset | machine record |
-| `info` | run `info`; check `upstream_commit` equals `system.yaml` | `io/info/out.json` |
-| `setup` | run `setup` | `io/setup/` |
-| `commit` | run `commit` with sampling | commit record (commitment id, files, sizes, times) |
-| `prove` | run `prove` with sampling and the release watcher | proof release times, proof digests, out.json |
-| `verify` | for each proof, run `verify` on the verifier profile (8 CPUs), then once on 1 CPU for the first proof | `verifier/<proof_id>.json` |
-| `controls` | run the control suite | `controls.json` |
-| `written` | compute raw metrics; assemble `run.json` and `manifest.json`; validate both; rename staging to the run dir | final run dir |
+| `pending` | Create staging directory `results/<release>/<system>/.staging-<run-id>/` and write `job.lock` with the process id and start time | `job.lock`, `logs/harness.jsonl` |
+| `resolved` | Load and validate the system, workload, and reference files; resolve the model directory by digest; draw the job seed; materialise prompts and compute their digest | `manifest.partial.json` (inputs) |
+| `image_ready` | Verify that the local image digest matches `system.yaml` `image.digest` (pulling by digest if absent, using `fetch` retries) | Image record |
+| `machine_recorded` | Capture the machine record, check the profile, confirm no other compute process is active on the bound GPU, and select the cpuset | Machine record |
+| `info` | Run `info` and verify that `upstream_commit` matches `system.yaml` | `io/info/out.json` |
+| `setup` | Run `setup` | `io/setup/` |
+| `commit` | Run `commit` with resource sampling enabled | Commit record (commitment id, files, sizes, timings) |
+| `prove` | Run `prove` with resource sampling and the proof release watcher | Proof release times, proof digests, `out.json` |
+| `verify` | Run `verify` on the verifier profile (8 CPUs) for each proof, then run it once on 1 CPU for the first proof | `verifier/<proof_id>.json` |
+| `controls` | Run the negative control suite | `controls.json` |
+| `written` | Compute raw metrics, assemble `run.json` and `manifest.json`, validate both, and rename staging into the final run directory | Final run directory |
 
-Each transition emits a `job.state` event ([05-observability](../docs/spec/05-observability.md#events-catalogue)). The verify step runs `verify` for every proof; single-thread verify runs for the first proof only, to bound CPU time.
+Every state transition emits a `job.state` event ([05-observability](../docs/spec/05-observability.md#events-catalogue)). During `verify`, the runner checks every proof on the standard verifier profile, but runs the single-threaded verification check on only the first proof to bound CPU time.
 
 ### Writing the run directory
 
-- All files are written into the staging dir. Each file is written to `<name>.tmp`, flushed, `fsync`ed, then renamed. JSON uses the single writer of [RFC-0012](0012-schemas-and-serialization.md).
-- On `written`, the runner validates `run.json`, `manifest.json` and `controls.json` (if present) against their schemas. If validation fails, the job is recorded as failed `internal` (a harness bug), with the invalid document kept under `logs/invalid/`.
-- The staging dir is renamed to `results/<release>/<system>/<run-id>/` and the parent directory is `fsync`ed. A run directory therefore exists only complete (INV-RUN-2).
-- Job io dirs (`io/`) with proofs are not part of the run directory committed to git; proofs are digested into `digests.txt` ([RFC-0014](0014-provenance-and-integrity.md)), and the io dir is deleted after the run unless `--keep-io` is given.
+- All job outputs are written first to the staging directory. Each individual file is written to `<name>.tmp`, flushed, `fsync`ed, and renamed into place. JSON files are always written through the single canonical writer defined in [RFC-0012](0012-schemas-and-serialization.md).
+- Upon entering `written`, the runner validates `run.json`, `manifest.json`, and (when present) `controls.json` against their JSON Schemas. If any document fails validation, the job is recorded as an `internal` failure (indicating a harness bug), and the offending document is preserved under `logs/invalid/`.
+- Once validation succeeds, the staging directory is renamed to `results/<release>/<system>/<run-id>/` and its parent directory is `fsync`ed. Because of this atomic rename, a run directory never appears in a partial state (INV-RUN-2).
+- The `io/` working directories containing proof bytes are not committed to git. Instead, proof files are hashed into `digests.txt` ([RFC-0014](0014-provenance-and-integrity.md)), and the `io/` directory is removed once the job finishes unless `--keep-io` is passed.
 
 ### Crash recovery
 
-On start, `iproofs run` scans `results/<release>/*/.staging-*`. For each staging dir whose `job.lock` pid is not alive, the runner writes a failed run: `status: "failed"`, failure `{kind: "internal", step: <last state reached>, message: "runner terminated before completion"}`, keeping logs and any partial records, then renames it as a normal run dir. It never continues the job (INV-RUN-3). A staging dir whose pid is alive makes the runner exit 3 (another runner is active on this tree).
+Whenever `iproofs run` starts, it scans `results/<release>/*/.staging-*` for leftover staging directories. If a staging directory's `job.lock` refers to a process that is no longer alive, the runner finalises it as a failed run with `status: "failed"` and failure `{kind: "internal", step: <last state reached>, message: "runner terminated before completion"}`, preserving its logs and any partial records before renaming it into a normal run directory. An interrupted job is never resumed (INV-RUN-3). Conversely, if a staging directory's locked process is still alive, the runner exits 3 because another runner is currently active on the same results tree.
 
 ### Concurrency
 
-- One job at a time per GPU; one runner process per host in v0.1. The runner holds an exclusive `flock` on `results/.runner.lock` for the duration of `iproofs run`.
-- Steps within a job are strictly sequential.
-- During `commit`, `prove` and `verify`, the runner starts sampler threads ([RFC-0011](0011-measurement-and-sampling.md)): one NVML sampler, one cgroup sampler, and during `prove` one release watcher. Samplers write to in-memory ring buffers and never block the main thread; the main thread joins them after the container exits.
-- The main thread runs `docker create` (untimed), then blocks on `docker start --attach` with the step timeout ([RFC-0011](0011-measurement-and-sampling.md#timing-a-container-call)).
+- In v0.1, the runner executes one job at a time per GPU and permits only one runner process per host, enforced by holding an exclusive `flock` on `results/.runner.lock` for the lifetime of `iproofs run`.
+- All steps inside a job execute strictly sequentially.
+- During `commit`, `prove`, and `verify`, the runner spawns background sampler threads ([RFC-0011](0011-measurement-and-sampling.md)): an NVML sampler, a cgroup sampler, and (during `prove`) a release watcher. These threads write into in-memory ring buffers so they never block the main thread, which joins them after the container exits.
+- The main thread creates the container with `docker create` (untimed) and then blocks on `docker start --attach` under the step's wall-clock timeout ([RFC-0011](0011-measurement-and-sampling.md#timing-a-container-call)).
 
 ### Timeouts
 
-Each step's wall limit comes from `system.yaml` `timeouts_s` or the defaults in [RFC-0005](0005-adapter-contract.md#systemyaml). When a limit is reached the runner sends `docker kill --signal KILL iproofs-<run-id>-<step>`, waits up to 30 s for the container to exit, and records a `timeout` failure. Model fetch and image pull have their own limit of 6 hours each (a target for fetches of models of about 200 GB, not a measurement).
+Each step's wall-time limit comes from `timeouts_s` in `system.yaml`, falling back to the defaults in [RFC-0005](0005-adapter-contract.md#systemyaml). If a step exceeds its limit, the runner invokes `docker kill --signal KILL iproofs-<run-id>-<step>`, waits up to 30 s for the container to exit, and records a `timeout` failure. Model fetches and image pulls each carry a separate 6-hour limit, sized for downloads of roughly 200 GB models (this is an operational timeout, not a measured quantity).
 
 ### Retry policy
 
-- Only `fetch` operations retry: model weights, prompt corpus downloads, image pulls by digest. Up to 3 attempts, with backoff of 2 s, 8 s and 32 s. All run before `machine_recorded`, outside every timed scope.
-- No timed step (`setup`, `commit`, `prove`, `verify`, controls) is ever retried within a job (INV-RUN-1). A failed repetition is recorded and counts in `n_failed` ([RFC-0004](0004-metrics-timing-grades.md)). The runner then continues with the next repetition.
-- A runner MAY start a new invocation with more repetitions later; those are new jobs with new run ids, and all jobs, failed ones included, enter the statistics of the configuration.
+- Only `fetch` operations (downloading model weights, fetching prompt corpora, and pulling container images by digest) may be retried. They allow up to 3 attempts with backoff intervals of 2 s, 8 s, and 32 s, and they always finish before `machine_recorded`, outside every timed scope.
+- Timed steps (`setup`, `commit`, `prove`, `verify`, and controls) are never retried within a job (INV-RUN-1). A failed repetition is recorded, counted in `n_failed` ([RFC-0004](0004-metrics-timing-grades.md)), and followed normally by the next repetition.
+- A runner MAY start a separate invocation later to collect additional repetitions. Those runs are distinct jobs with new run ids, and every job (failed runs included) enters the configuration's aggregate statistics.
 
 ### Error taxonomy
 
@@ -166,17 +166,17 @@ class IProofsError(Exception):
 
 | Kind | Triggers | CLI exit |
 |---|---|---|
-| `config` | input file fails its schema; unknown system or workload; workload not in `system.yaml` `workloads` | 1 (validate) or 2 (run, before jobs) |
-| `environment` | cgroup v1; kernel below 5.19; Docker below 25.0; profile not met; other compute process on the GPU | 3 |
-| `integrity` | model file hash mismatch; image digest mismatch; `info` upstream commit mismatch; unpinned reference | 4 (inside a job) or 1 (validate) |
-| `fetch` | network failure after 3 attempts | 4 |
-| `adapter` | non-zero exit; invalid out.json; INV-ADAPTER-6, 7 or 8 violated | 4 |
-| `timeout` | step wall limit reached | 4 |
-| `resource` | container OOM killed; disk full (`ENOSPC`) | 4 |
-| `policy` | forbidden flag outside a control job; control job submitted as measured row | 4 (run) or 1 (validate) |
-| `internal` | unexpected exception; own output fails its schema; crash recovery | 5 |
+| `config` | Input file fails schema validation; unknown system or workload; workload missing from `system.yaml` `workloads` | 1 (validate) or 2 (run, before jobs) |
+| `environment` | cgroup v1; kernel older than 5.19; Docker older than 25.0; profile requirements not met; another compute process active on the GPU | 3 |
+| `integrity` | Model file hash mismatch; image digest mismatch; `info` upstream commit mismatch; unpinned reference | 4 (inside a job) or 1 (validate) |
+| `fetch` | Network failure persisting after 3 attempts | 4 |
+| `adapter` | Non-zero exit code; invalid `out.json`; violation of INV-ADAPTER-6, 7, or 8 | 4 |
+| `timeout` | Step wall-time limit exceeded | 4 |
+| `resource` | Container OOM-killed; disk full (`ENOSPC`) | 4 |
+| `policy` | Forbidden flag passed outside a control job; control job submitted as a measured row | 4 (run) or 1 (validate) |
+| `internal` | Unexpected exception; harness output fails its own schema; crash recovery | 5 |
 
-Verdicts (`accept`, `reject`, `no_verdict`, `invalid_call`) are results, not errors.
+Verifier verdicts (`accept`, `reject`, `no_verdict`, `invalid_call`) are benchmark results rather than errors.
 
 ### Failure record
 
@@ -191,7 +191,7 @@ class Failure:
     at: str                        # RFC 3339 UTC timestamp
 ```
 
-Serialised into `run.json` as `failure` (null for successful jobs). Redaction follows [05-observability](../docs/spec/05-observability.md#redaction).
+This record is serialised into `run.json` under the `failure` key (which is `null` for successful jobs). Redaction follows the rules in [05-observability](../docs/spec/05-observability.md#redaction).
 
 ### Internal API
 
@@ -226,71 +226,70 @@ class Runner:
     def recover(self, results_root: Path) -> list[Path]: ...          # crash recovery
 ```
 
-`ContainerRunner` has two implementations: `DockerRunner` (real) and `InProcessRunner` (tests, calls the fake adapter's Python entrypoint directly with the same file contract). The clock is injectable so state-machine tests are deterministic.
+`ContainerRunner` has two implementations: `DockerRunner` for real execution and `InProcessRunner` for tests, which invokes the fake adapter's Python entrypoint directly while honouring the same file contract. Injecting the clock keeps state-machine tests deterministic.
 
 ### Interaction with measurement and controls
 
-- The runner owns the timed window: it reads the clock immediately before spawning `docker start --attach` and immediately after it returns ([RFC-0011](0011-measurement-and-sampling.md)). Sampler threads are started before and stopped after that window.
-- Raw metrics (wall times, samples, release times, sizes) are written into `run.json` as quantities with `grade: "measured"`, `source.kind: "harness"`. Adapter phases become quantities with `source.kind: "adapter"`. Derived metrics are computed by `iproofs.derive` from the stored raw values, never from in-memory values (INV-RUN-5).
-- The control suite reuses the runner's verify path and container runner with `control: true`; its outputs go only to `controls.json` (INV-CTRL-4).
+- The runner owns the timed window for every container step: it samples the monotonic clock immediately before launching `docker start --attach` and immediately after the process exits ([RFC-0011](0011-measurement-and-sampling.md)). Sampler threads start before that window opens and stop after it closes.
+- Raw metrics (wall durations, resource samples, proof release timestamps, and byte sizes) are stored in `run.json` as quantities with `grade: "measured"` and `source.kind: "harness"`. Adapter-reported phases are stored separately with `source.kind: "adapter"`. Derived metrics are always computed by `iproofs.derive` from the stored raw values, never from transient in-memory state (INV-RUN-5).
+- The negative control suite reuses the same verify path and `ContainerRunner` with `control: true`, writing its outputs exclusively to `controls.json` (INV-CTRL-4).
 
 ### Invariants
 
 - **INV-RUN-1:** No timed step is retried within a job.
-- **INV-RUN-2:** A run directory under `results/` is complete and schema-valid, or does not exist.
-- **INV-RUN-3:** A job interrupted before `written` is recorded as failed and never resumed.
-- **INV-RUN-4:** Every job reaches `written`, including failed ones; the only exception is exit 3 raised before the first job starts.
-- **INV-RUN-5:** Derived values in `run.json` equal what `iproofs derive` computes from the stored raw values.
+- **INV-RUN-2:** A run directory under `results/` is either complete and schema-valid, or it does not exist.
+- **INV-RUN-3:** A job interrupted before reaching `written` is recorded as failed and never resumed.
+- **INV-RUN-4:** Every job reaches `written`, including failed ones; the only exception is exit code 3 raised before the first job begins.
+- **INV-RUN-5:** Derived values stored in `run.json` always equal what `iproofs derive` computes from the stored raw values.
 - **INV-RUN-6:** Run ids are unique within `results/<release>/<system>/`.
-- **INV-RUN-7:** The commitment passed to any `verify` comes from the job's commit record (INV-ADAPTER-5).
+- **INV-RUN-7:** The commitment passed to every `verify` call comes from the job's own commit record (INV-ADAPTER-5).
 
 ## Alternatives Considered
 
-1. **Retry a failed `prove` once.** Considered because transient GPU errors happen and a rerun is cheaper than a new invocation. Rejected: the published distribution would silently exclude failures, which N3 forbids. The runner continues with the next repetition instead, and failures are visible.
-2. **Resume interrupted jobs from the last completed step.** Considered because commits for the Maverick workloads take a long time. Rejected: the resumed job's timings would mix two process lifetimes and two machine states (page cache, GPU clocks), and `whole_wall` would be meaningless.
-3. **A workflow engine (for example a DAG scheduler) or a job queue service.** Considered for multi-host campaigns. Rejected for v0.1: one host, one GPU, sequential jobs; a dependency and a service are not justified. A later RFC can add scheduling around the same `JobSpec`.
-4. **Click or Typer for the CLI.** Considered for ergonomics. Rejected: `argparse` covers the surface, avoids a dependency, and keeps exit codes under direct control.
-5. **Write results directly into the run directory as the job progresses.** Rejected: a crash would leave a directory that looks like a run; the staging-then-rename scheme keeps INV-RUN-2.
+1. **Retry a failed `prove` step once.** Transient GPU errors do occur, and a single retry would be cheaper than launching a fresh invocation. However, retrying silently removes failures from the published distribution, violating N3. The runner instead records the failure and moves on to the next repetition so failure rates remain visible.
+2. **Resume interrupted jobs from the last completed step.** Although commits for Maverick workloads take a long time, resuming a job would blend two separate process lifetimes and machine states (page cache contents, GPU clocks), making `whole_wall` meaningless.
+3. **Use a workflow engine (such as a DAG scheduler) or a job queue service.** While useful for large multi-host campaigns, v0.1 targets one host, one GPU, and sequential execution, which does not justify running an extra service or taking on a heavy dependency. A future RFC can layer distributed scheduling on top of the same `JobSpec`.
+4. **Build the CLI with Click or Typer.** `argparse` handles the command surface cleanly, introduces zero external dependencies, and keeps exit-code handling completely explicit.
+5. **Write files directly into the final run directory during execution.** A crash mid-job would leave a partial directory that looks like a finished run. Staging first and renaming atomically enforces INV-RUN-2 cleanly.
 
 ## Drawbacks
 
-- A transient failure costs a full repetition, which on the SASH 4,096-position shape is long (upstream whole-wall rate 0.840 positions/s over 4,608 positions, grade external, tier reported, source SASH results at `11decec3c0b62c707618aab5deb82750b355d202`).
-- Sequential jobs leave the GPU idle during `verify` and controls, which run on CPU. Pipelining is possible later but would contaminate CPU measurements of the next job.
-- Crash recovery relies on pid liveness; a pid reused after reboot could make a stale staging dir look alive. The lock records boot id (`/proc/sys/kernel/random/boot_id`) as well as pid to rule that out.
-
+- A transient error costs an entire repetition, which can be expensive on large shapes such as the SASH 4,096-position workload (upstream whole-wall rate 0.840 positions/s over 4,608 positions, grade external, tier reported, source SASH results at `11decec3c0b62c707618aab5deb82750b355d202`).
+- Running jobs strictly sequentially leaves the GPU idle during CPU-only `verify` and control steps. Pipelining could be added later, though it would risk contaminating the next job's CPU measurements.
+- Relying on process-id liveness alone for crash recovery can be fooled if a PID is reused after a reboot. To prevent that, `job.lock` records the kernel boot id (`/proc/sys/kernel/random/boot_id`) alongside the PID.
 
 ## Migration / Rollout
 
-- The SPEC's earlier job description (Section 3 of the initial design) is superseded by this RFC.
-- The state machine ships with `InProcessRunner` and `DockerRunner` against `systems/fake`; GPU sampling and the real adapters follow.
-- CLI changes follow the harness SemVer policy ([09-release-and-versioning](../docs/spec/09-release-and-versioning.md)); exit codes are part of the public API and change only with a major version (or a minor version while 0.x, with a CHANGELOG entry).
+- This RFC supersedes the earlier job description in Section 3 of the initial SPEC.
+- The state machine ships first with `InProcessRunner` and `DockerRunner` tested against `systems/fake`, followed by GPU sampling and the real system adapters.
+- CLI evolution follows the harness SemVer policy ([09-release-and-versioning](../docs/spec/09-release-and-versioning.md)). Exit codes are part of the public API and may change only in a major release (or a minor release during 0.x, accompanied by a CHANGELOG entry).
 
-Amendment of 2026-11-09 (RFC-0015 SRV-6 production serving): `iproofs run` gains `--load matched|high` and `--gpus LIST`; `iproofs fetch-model` gains `--serving RECORD`; `iproofs serving check-mirror RECORD` and `iproofs serving pin RECORD` are new (network, RFC-0014 SM-3). The manifest gains `workload.load_point`, `workload.batch_size_run`, `workload.batches_per_session_run`, `workload.prompt_count_run`, `workload.prompt_prefix_digest`, `engine {name, version, image, interface}` and `serving_model {id, version, digest, source {repo, revision}, publisher {repo, revision}}` (the join keys are `serving_model.digest` and `engine.image`; id and version are for display), and run.json `inputs` gains `gpu_count`. Configuration grouping in the release adds `load_point` (absent = `matched`, so stored runs group as before). The runner raises `config` before `info` when the profile's GPU count is missing or 0, when the bound GPU count differs from it, when a serve-role system runs on a non-serving profile or another system on a serving profile, and when a larger-count serving job follows a successful smaller-count run of the workload (RFC-0015 SRV-6).
+Amendment of 2026-11-09 (RFC-0015 SRV-6 production serving): `iproofs run` adds `--load matched|high` and `--gpus LIST`, and `iproofs fetch-model` adds `--serving RECORD`. Two new network commands are introduced: `iproofs serving check-mirror RECORD` and `iproofs serving pin RECORD` (RFC-0014 SM-3). The manifest gains `workload.load_point`, `workload.batch_size_run`, `workload.batches_per_session_run`, `workload.prompt_count_run`, `workload.prompt_prefix_digest`, `engine {name, version, image, interface}`, and `serving_model {id, version, digest, source {repo, revision}, publisher {repo, revision}}` (where `serving_model.digest` and `engine.image` act as join keys, while `id` and `version` are for display), and `run.json` `inputs` gains `gpu_count`. Release configuration grouping adds `load_point` (defaulting to `matched` when absent, so existing runs group as before). Before `info`, the runner raises a `config` error if the profile's GPU count is missing or 0, if the bound GPU count disagrees with it, if a serve-role system runs on a non-serving profile (or vice versa), or if a larger-GPU-count serving job is attempted after a smaller-count run of the same workload has already succeeded (RFC-0015 SRV-6).
 
-Amendment of 2026-11-09 (RFC-0015 SRV-1 sizing): `iproofs serving size-session RUN_DIR` is new. It reads a stored matched serving run (run.json, manifest.json) and the workload record, prints the computed `batches_per_session_run` with its inputs as JSON, and refuses (`config`, exit 2) a failed run, a high-load run or one without a steady scope. CPU only, no network.
+Amendment of 2026-11-09 (RFC-0015 SRV-1 sizing): Adds the CPU-only, offline command `iproofs serving size-session RUN_DIR`. It reads a stored matched serving run (`run.json` and `manifest.json`) together with the workload record, outputs the computed `batches_per_session_run` and its inputs as JSON, and rejects (`config`, exit 2) any failed run, high-load run, or run lacking a steady scope.
 
 ## Testing Strategy
 
-- `test_state_machine_happy_path`: `InProcessRunner` with the fake adapter visits every state in order and emits one `job.state` event per transition.
-- `test_controls_skipped_without_flag`: `verify -> written` when `control_suite` is false.
-- `test_failure_at_each_step`: parametrised over `info`, `setup`, `commit`, `prove`, `verify`; a fake adapter exiting 1 at that step yields a written run dir with `failure.step` equal to the step and exit code 4 from the CLI.
-- `test_no_retry_of_timed_steps`: a fake adapter that fails once then succeeds is called exactly once per job for the failing step.
-- `test_fetch_retries_three_times_with_backoff`: an injected fetcher failing twice then succeeding is called three times; sleeps of 2 s and 8 s are requested from an injected sleeper.
-- `test_timeout_kills_container`: a fake step sleeping beyond a 1 s limit yields `timeout` and a `docker kill` call recorded by a stub.
-- `test_oom_is_resource`: a stubbed `docker inspect` reporting `OOMKilled: true` yields `resource`.
-- `test_crash_recovery_records_internal_failure`: a staging dir with a dead pid becomes a run dir with `failure.kind == "internal"` and the last reached step; no adapter call is made.
-- `test_live_staging_blocks_runner`: a staging dir with a live pid and the current boot id makes `iproofs run` exit 3.
-- `test_run_dir_atomic`: killing the runner between file writes never leaves a directory under `results/` without `run.json`.
-- `test_run_id_increments`: two runs on the same day get suffixes 1 and 2.
-- `test_exit_codes`: each documented exit code is produced by a minimal scenario (bad argument 2, cgroup v1 stub 3, failed job 4, injected exception 5, `derive --check` mismatch 1).
-- `test_derived_from_stored_raw`: altering a raw value in a written `run.json` makes `iproofs derive --check` fail.
-- `test_repetitions_below_minimum_marked`: `--repetitions 1` sets `repetitions_below_minimum: true`.
+- `test_state_machine_happy_path`: runs `InProcessRunner` with the fake adapter and verifies that every state is visited in order with one `job.state` event emitted per transition.
+- `test_controls_skipped_without_flag`: verifies the direct `verify -> written` transition when `control_suite` is false.
+- `test_failure_at_each_step`: parametrised across `info`, `setup`, `commit`, `prove`, and `verify`; confirms that a fake adapter exiting 1 produces a run directory with `failure.step` set to that step and CLI exit code 4.
+- `test_no_retry_of_timed_steps`: confirms that a fake adapter configured to fail once and then succeed is invoked exactly once per job on the failing step.
+- `test_fetch_retries_three_times_with_backoff`: verifies that an injected fetcher failing twice before succeeding is called three times, requesting sleeps of 2 s and 8 s from an injected sleeper.
+- `test_timeout_kills_container`: confirms that a fake step sleeping past a 1 s timeout produces a `timeout` failure and records a stubbed `docker kill` call.
+- `test_oom_is_resource`: verifies that a stubbed `docker inspect` reporting `OOMKilled: true` classifies the failure as `resource`.
+- `test_crash_recovery_records_internal_failure`: confirms that a staging directory with a dead PID becomes a failed run directory with `failure.kind == "internal"` and the last reached step, without invoking any adapter.
+- `test_live_staging_blocks_runner`: verifies that a staging directory with a live PID and matching boot id causes `iproofs run` to exit 3.
+- `test_run_dir_atomic`: simulates killing the runner between file writes and verifies that no directory under `results/` is left without `run.json`.
+- `test_run_id_increments`: verifies that two runs started on the same UTC date receive suffixes 1 and 2.
+- `test_exit_codes`: exercises minimal scenarios for every documented exit code (bad argument -> 2, cgroup v1 stub -> 3, failed job -> 4, injected exception -> 5, `derive --check` mismatch -> 1).
+- `test_derived_from_stored_raw`: confirms that mutating a raw value in a written `run.json` causes `iproofs derive --check` to fail.
+- `test_repetitions_below_minimum_marked`: verifies that `--repetitions 1` records `repetitions_below_minimum: true`.
 
 ## Decisions
 
 - Q1. Controls run once per configuration, on the first successful repetition ([RFC-0008](0008-negative-controls.md#where-controls-run)).
-- Q2. Single-thread verify covers the first proof only.
-- Q3. Io dirs kept with `--keep-io` have no size cap; the runner warns when free disk drops below the profile's 500 GB requirement.
+- Q2. Single-thread verification runs on the first proof only.
+- Q3. `io/` directories kept via `--keep-io` have no hard size cap, though the runner warns if free disk space drops below the profile's 500 GB requirement.
 
 ## References
 

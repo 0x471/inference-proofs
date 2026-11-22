@@ -6,22 +6,22 @@
 
 ## Summary
 
-Every quantity carries a `tier` field saying who stands behind the number. Every tier the harness records is `reported`: produced by one runner and not yet checked. Peer review, reproduction records, the reproduction tolerance and an effective-tier computation at release freeze are not defined.
+Every published quantity includes a `tier` field indicating the level of verification behind the number. Every quantity recorded by the harness uses the `reported` tier, meaning a single runner produced it and no second party has verified it yet. Peer review, reproduction records, reproduction tolerances, and effective-tier computation at release freeze are left undefined for now.
 
 ## Motivation
 
-Published proving numbers are almost always reported by their authors, from scripts and records readers cannot always see ([PRD §11](../docs/PRD.md#11-risks)). FlashProve's performance page says its timed runs were made by measuring scripts that are not in the repository and that "a reader cannot check the figures on this page against" the run records. SASH publishes its run manifests, but its headline manifest records that the producing prover tree was dirty. A reader needs to know that a number is one runner's, until an independent rerun exists.
+Published proving numbers are almost always self-reported by their authors, often from scripts and run records that readers cannot inspect ([PRD §11](../docs/PRD.md#11-risks)). FlashProve's performance page notes that its timed runs came from measurement scripts outside the repository and states that "a reader cannot check the figures on this page against" the run records. SASH publishes its run manifests, but its headline manifest shows that the prover source tree was dirty during the run. Readers need a clear indication that a figure comes from a single runner until another party reruns and confirms it.
 
 ## Goals
 
-- Every quantity carries a tier.
-- Imported upstream figures keep the tier their source gives them.
+- Attach a tier label to every quantity.
+- Preserve the tier given by the original source when importing upstream figures.
 
 ## Non-Goals
 
-- Peer review and reproduction.
-- Auditing a system's security claims; tiers concern numbers, not claims.
-- Ranking runners or providers.
+- Defining peer review or reproduction workflows.
+- Auditing a system's security claims; evidence tiers apply to numerical measurements, not claims.
+- Ranking runners or hardware providers.
 
 ## Proposed Design
 
@@ -29,11 +29,11 @@ Published proving numbers are almost always reported by their authors, from scri
 
 | Tier | Meaning |
 |---|---|
-| `reported` | produced by one runner and not yet checked; the runner may be declared in the manifest |
-| `peer-reviewed` | reserved |
-| `reproduced` | reserved |
+| `reported` | Produced by a single runner and not yet verified by another party; the runner may be declared in the manifest |
+| `peer-reviewed` | Reserved for future use |
+| `reproduced` | Reserved for future use |
 
-`run.json` and `index.json` record `reported` for every quantity the harness produces (LBL-3, RFC-0013). The schema keeps the other two values so a later release can use them without a schema change. In prose, a `reported` number is "reported", never "measured" alone without its labels.
+Both `run.json` and `index.json` record `reported` for every quantity produced by the harness (LBL-3, RFC-0013). The schema retains the other two enum values so a later release can adopt them without a schema change. In prose, describe a `reported` quantity as "reported", never simply as "measured" without its accompanying labels.
 
 ## Alternatives Considered
 
@@ -41,16 +41,15 @@ None.
 
 ## Drawbacks
 
-No number is independently checked.
-
+No published number has been verified by a second party.
 
 ## Migration / Rollout
 
-Stored records already say `reported`; nothing is relabelled.
+Existing stored records already carry `reported`, so no relabelling is required.
 
 ## Testing Strategy
 
-- LBL-3 (RFC-0013): a `run.json` quantity with another tier fails G5.
+- LBL-3 (RFC-0013): verify that a `run.json` quantity with any tier other than `reported` fails gate G5.
 
 ## Decisions
 

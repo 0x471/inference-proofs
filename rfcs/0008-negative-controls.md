@@ -6,71 +6,71 @@
 
 ## Summary
 
-Every system's verifier faces the same set of tampering tests after an honest run, plus tests from the system's own suite. The harness, never the adapter, produces every tampered input. Each control runs next to an honest twin that must be accepted; when the twin is not accepted the control is void, so a broken control or a broken run cannot pass for a strong verifier. Each row reports controls run, rejected, accepted, `no_verdict`, `invalid_call`, void, not applicable and errored. An accepted control where rejection was expected triggers private disclosure to the system maintainers before publication.
+After an honest run, every system's verifier is subjected to a shared suite of tampering tests alongside any system-specific controls registered from upstream. The harness generates all tampered inputs itself rather than delegating mutation to the adapter. Each control runs alongside an unmodified honest twin that must be accepted; if the twin fails verification, the control is recorded as `void` so a broken harness or broken run cannot look like a rejecting verifier. Every published row tracks counts of controls run, rejected, accepted, `no_verdict`, `invalid_call`, void, not applicable, and errored. When a verifier unexpectedly accepts a tampered control, the finding goes through private disclosure to the system maintainers before publication.
 
 ## Motivation
 
-Speed is half of a result. A proof system is useful when its verifier rejects what it should ([PRD G4](../docs/PRD.md#4-goals)). Both first systems ship their own rejection tests: FlashProve's `examples/rejected-proofs`, and SASH's `--unsound-skip-*` switches, which unbind one edge each and show what each binding buys (PRD, Section 1). A shared suite lets readers see the same attacks applied to every system, and it is the benchmark's defence against a faulty or dishonest adapter: an adapter that maps every verify call to `accept` fails every shared control ([06-security](../docs/spec/06-security.md)).
+Proving speed tells only half the story: a proof system is only meaningful when its verifier rejects invalid inputs ([PRD G4](../docs/PRD.md#4-goals)). Both initial systems include rejection tests of their own, such as FlashProve's `examples/rejected-proofs` and SASH's `--unsound-skip-*` switches that disable individual edge bindings to demonstrate what each check enforces (PRD, Section 1). Running a shared tampering suite applies identical checks across every system and guards against a buggy or dishonest adapter, since an adapter that blindly maps every verification to `accept` will fail every shared control ([06-security](../docs/spec/06-security.md)).
 
 ## Goals
 
-- A fixed shared suite (C1 to C8 verifier side, P1 and P2 prover side) with exact, seeded, deterministic mutation algorithms.
-- Mutations applied by the harness to opaque proof bytes and request fields; no adapter cooperation needed beyond the `adapter/1` contract.
-- Every control paired with an honest twin; void controls reported as void.
-- A closed outcome vocabulary and a per-control expected set, so pass and fail are mechanical.
-- A registry for system-specific controls, including controls that expect `accept` (SASH unsound switches).
-- A disclosure rule for accepted controls.
+- Define a fixed shared control suite (verifier-side C1 to C8 and prover-side P1 and P2) with exact, seeded, deterministic mutation algorithms.
+- Apply all mutations in the harness over opaque proof bytes and request fields, requiring nothing from adapters beyond `adapter/1`.
+- Pair every control with an honest twin and record any failed-twin control as `void`.
+- Use a closed outcome vocabulary and per-control expected sets so pass/fail classification is mechanical.
+- Support registering system-specific controls, including weakened-prover controls that expect `accept` (such as SASH's unsound switches).
+- Define a disclosure workflow for unexpectedly accepted controls.
 
 ## Non-Goals
 
-- Structured fuzzing of proof formats. It needs each system's format specification; a later RFC.
-- Certifying soundness. A passed suite shows these attacks were rejected, nothing more ([PRD Section 5](../docs/PRD.md#5-non-goals)).
-- Controls on the binding between a proof and served traffic. No v0.1 system claims that binding.
-- Measuring the cost of controls as benchmark numbers. Control verify times are kept in `controls.json` but never published as rows.
+- Format-aware fuzzing of proof internals, which requires per-system format specifications and belongs in a later RFC.
+- Certifying cryptographic soundness; passing this suite shows only that these specific tamperings were rejected ([PRD Section 5](../docs/PRD.md#5-non-goals)).
+- Testing bindings between a proof and live served traffic, which no v0.1 system claims.
+- Publishing control verification timings as benchmark rows; trial durations are saved in `controls.json` but never published as performance metrics.
 
 ## Proposed Design
 
 ### Where controls run
 
-`iproofs run ... --control-suite` runs the suite once per configuration, after the honest `verify` step of the first successful repetition (controls test the verifier, not run-to-run variance, and each prover-side control costs a proving run), and `iproofs controls RUN_DIR` runs it against a completed run ([RFC-0010](0010-harness-runner.md)), whole or in parts on several hosts (§Split suites). Inputs: the run's honest proofs, requests, claimed outputs and the harness's commit record. Every mutated input is written by the harness into a fresh verify io dir; the adapter's `verify` subcommand runs unchanged (INV-CTRL-1).
+Running `iproofs run ... --control-suite` executes the suite once per configuration right after the honest `verify` step of the first successful repetition (controls check verifier behaviour rather than run-to-run variance, and prover-side controls require full proving runs). Alternatively, `iproofs controls RUN_DIR` runs the suite against an existing completed run ([RFC-0010](0010-harness-runner.md)), either all at once or split across multiple hosts (§Split suites). The suite takes the run's honest proofs, requests, claimed outputs, and the harness's saved commit record. The harness writes each mutated input into a fresh verify I/O directory and calls the adapter's `verify` subcommand unchanged (INV-CTRL-1).
 
 ### Seeds
 
-Every control job derives its randomness from one 64-bit `control_seed`, drawn by the harness from `os.urandom` at the start of the control suite (for a split suite, once before its first part, SPLIT-1) and recorded in `controls.json`. No operator chooses it: `iproofs controls` takes no seed for a whole suite. Per-control randomness uses `random.Random(f"{control_seed}:{control_id}:{k}")` with `.random()` only, the method CPython guarantees stable across versions; an index in `[0, m)` is `floor(r * m)`. Rerunning with the recorded seed reproduces every mutation byte for byte (INV-CTRL-3).
+Every control suite draws a single 64-bit `control_seed` from `os.urandom` at startup (or once before the first part in a split suite, per SPLIT-1) and stores it in `controls.json`. Operators cannot pick the seed manually: `iproofs controls` accepts no `--seed` flag for a full suite run. Individual controls draw randomness from `random.Random(f"{control_seed}:{control_id}:{k}")` using only `.random()`, the one method CPython guarantees stable across versions, choosing an index in `[0, m)` via `floor(r * m)`. Replaying with the recorded seed reproduces every mutation byte for byte (INV-CTRL-3).
 
 ### Split suites
 
-Amendment of 2026-11-09 (every control's data as soon as possible). A suite may run in parts, on several hosts at once, and be merged into the `controls.json` one run writes. Every other rule of this RFC holds for each control in each part.
+Amendment of 2026-11-09 (enabling parallel control collection). A control suite may be partitioned into parts, executed across multiple hosts concurrently, and merged into the single `controls.json` associated with a run. Every other rule in this RFC applies unchanged to each control inside each part.
 
-- SPLIT-1. One seed, drawn once. `iproofs controls RUN_DIR --draw-seed` draws `control_seed` from `os.urandom` and writes it, with the UTC time it was drawn, the run id and the sha256 of the run's `manifest.json`, to `RUN_DIR/controls-seed.json` (`controls-seed/1`, [RFC-0012](0012-schemas-and-serialization.md)). It refuses when that file or `controls.json` exists, so a run has one seed record and one suite. Every part takes its seed from that record (`iproofs controls RUN_DIR --only ID[,ID...]`); `--seed SEED`, hex or decimal, only confirms it and is refused when it differs, and is refused without `--only`. A whole suite is refused once a seed record exists. Every attempt at a part, finished or stopped, is listed in the campaign's record.
-- SPLIT-2. Whole controls. A part runs whole controls, each with its honest twins in the same part (INV-CTRL-2) and its mutations from `control_seed` and its own id (INV-CTRL-3); C6's five trials and its twin stay together. A control's record therefore does not depend on which other controls ran in its part. A part that would record a control differently from a single run is refused before any call: P1 when a perturbed commitment exists but its weights are not in this host's cache.
-- SPLIT-3. One run, one image, the run's profiles. Every part runs against the same run directory (its run id and the sha256 of its `manifest.json`), in the run's image, with the same harness version and commit and a checkout clean in `harness/`, `systems/<system>/`, `schema/` and `reference/`. Verifier-side controls run on hosts of the run's verifier profile, prover-side controls (P1, P2, `weakened_prover`) on hosts of the run's prover profile, and every part binds its verify calls to verifier-cpu's CPU count (`cpu.logical_cpus`), with or without a GPU. A prover-side part on a GPU other than the one in the run's machine record is refused. A host that cannot prove (no GPU on a GPU profile, or a host that binds a verifier only) refuses a prover-side control before any call, so a prove that cannot run there never reads as `prover_failed`. Every other profile check the host does not meet ([RFC-0006](0006-reference-hardware-and-cost.md) conformance, for a verifier-only host verifier-cpu's memory) is recorded in the part, not refused.
-- SPLIT-4. Parts. A part is a `controls-part/1` document ([RFC-0012](0012-schemas-and-serialization.md)) named `controls-part-<16 hex of the seed>-<12 hex of the sha256 of the subset>.json`. It holds the subset, the whole suite in `controls.json` order, what SPLIT-1 and SPLIT-3 name (seed and the sha256 of the seed record; run id and manifest digest; image; verifier and run profiles; verifier CPU count; perturbed commitment; harness version, commit and dirty flag), the host it ran on (its RFC-0006 machine record and the profile checks it does not meet, which parts need not share), then the subset's records. It is a working file, kept with the run's evidence and never in `results/`: the merged `controls.json` holds every trial's `seconds`, and the parts say which host measured which. Each control call that returns logs `control.call` (control, trial, subcommand, exit code, seconds) in the run's `harness.jsonl`, so a part shows its progress and a stopped part leaves its finished calls' spans.
-- SPLIT-5. Merge. `iproofs controls RUN_DIR --merge PART...` needs RUN_DIR's `run.json`, `manifest.json` and `controls-seed.json`, and refuses, with a `config` error and nothing written: a part not valid against `controls-part/1`, not made against RUN_DIR or not run with its seed record; parts that differ in any field SPLIT-4 lists before the host; a part whose records are not its subset; a control in two parts, in no part, or outside the suite; an existing `controls.json`. It writes the records in suite order, recomputes `summary` (INV-CTRL-5) and `disclosure_pending`, and checks the document against `controls/1`. The merged file is written next to the stored run it belongs to, where the refusal of an existing `controls.json` applies; `iproofs controls --only` on a run that has `controls.json` is refused too.
-- SPLIT-6. A part that stops before its end (deadline, cancelled job, host failure) writes no part. Its controls run again in a new part, with the same seed record, which reproduces their mutations byte for byte, and with a deadline sized from the stopped part's `control.call` spans; the stopped job's log stays in the campaign record (AGENTS.md rule 5). A control whose call failed is not rerun: its `error` outcome is in its part.
+- SPLIT-1. One seed, drawn once. `iproofs controls RUN_DIR --draw-seed` draws `control_seed` from `os.urandom` and writes it, along with the UTC timestamp, run ID, and SHA-256 of the run's `manifest.json`, to `RUN_DIR/controls-seed.json` (`controls-seed/1`, [RFC-0012](0012-schemas-and-serialization.md)). The command refuses to run if `controls-seed.json` or `controls.json` already exists, ensuring each run has a single seed record and one suite. Each part reads its seed from that file (`iproofs controls RUN_DIR --only ID[,ID...]`); passing `--seed SEED` (hex or decimal) only cross-checks the recorded seed, failing if it differs or if used without `--only`. Running a whole unsplit suite is refused once a seed record exists. Every part execution attempt, whether finished or interrupted, is recorded in the campaign log.
+- SPLIT-2. Whole controls. Every part executes complete controls, keeping each control's honest twin in the same part (INV-CTRL-2) and deriving all mutations from `control_seed` and the control ID (INV-CTRL-3). All five trials of C6 and its twin remain together, so a control's result never depends on which other controls ran alongside it. Any part that would behave differently from a single-host run is refused before making a call (for instance, running P1 when a perturbed commitment exists but its perturbed weights are missing from the local cache).
+- SPLIT-3. One run, one image, matching profiles. Every part must target the same run directory (matching run ID and `manifest.json` SHA-256), run inside the same adapter image, and use the same harness version and commit with a clean checkout across `harness/`, `systems/<system>/`, `schema/`, and `reference/`. Verifier-side controls run on hosts matching the run's verifier profile, prover-side controls (P1, P2, and `weakened_prover`) run on hosts matching the run's prover profile, and every part binds `verify` calls to `verifier-cpu`'s CPU count (`cpu.logical_cpus`) regardless of GPU presence. Running a prover-side part on a GPU model different from the run's machine record is refused. A host unable to prove (lacking a GPU on a GPU profile, or configured as verifier-only) rejects prover-side controls before any call so an impossible prove step is never misclassified as `prover_failed`. Any other profile conformance failures ([RFC-0006](0006-reference-hardware-and-cost.md), including `verifier-cpu` memory on a verifier-only host) are recorded in the part file rather than blocking execution.
+- SPLIT-4. Parts. Each part is saved as a `controls-part/1` document ([RFC-0012](0012-schemas-and-serialization.md)) named `controls-part-<16 hex of the seed>-<12 hex of the sha256 of the subset>.json`. It records the control subset, the complete suite order expected by `controls.json`, all provenance fields required by SPLIT-1 and SPLIT-3 (seed and seed-record SHA-256, run ID and manifest digest, image digest, verifier and run profiles, verifier CPU count, perturbed commitment, and harness version, commit, and dirty flag), the executing host's RFC-0006 machine record and any profile conformance failures (which may differ across parts), and the subset's control records. Part files are working artifacts archived alongside the run's evidence and never committed under `results/`; the merged `controls.json` preserves every trial's `seconds`, while the part files trace which host produced each measurement. Whenever a control call finishes, the runner appends a `control.call` entry (`control`, `trial`, `subcommand`, `exit_code`, `seconds`) to `harness.jsonl` so progress is visible and interrupted parts leave timing spans for completed calls.
+- SPLIT-5. Merge. `iproofs controls RUN_DIR --merge PART...` requires `run.json`, `manifest.json`, and `controls-seed.json` in `RUN_DIR`. It aborts with a `config` error (writing nothing) if any part fails `controls-part/1` validation, targets a different run or seed record, disagrees on any pre-host SPLIT-4 field, contains records outside its declared subset, duplicates or omits any control in the suite, includes a control outside the suite, or if `controls.json` already exists. On success, it emits records in suite order, recomputes `summary` (INV-CTRL-5) and `disclosure_pending`, validates the result against `controls/1`, and writes `controls.json` beside the stored run. Running `iproofs controls --only` against a run that already has `controls.json` is likewise refused.
+- SPLIT-6. Interrupted parts. A part terminated early (by deadline, job cancellation, or host failure) writes no part file. Its controls are rerun in a fresh part using the same seed record, reproducing all mutations byte for byte, with a deadline informed by the interrupted run's `control.call` spans; the interrupted job's log stays in the campaign record (AGENTS.md rule 5). A control whose call completed with an error is not rerun; its `error` outcome remains in its part.
 
 ### Proof selection
 
-Controls act on honest proofs that the run's own `verify` step accepted. The harness picks `target` = the first accepted proof in release order, and for controls that need two requests, `other` = the next accepted proof in release order with a different request. If the run has no accepted proof, every control is `void`.
+Controls operate on honest proofs accepted during the run's own `verify` step. The harness selects `target` as the first accepted proof in release order, and for two-request controls selects `other` as the next accepted proof in release order with a distinct request. If the run has no accepted proofs, every control is recorded as `void`.
 
 ### Shared controls, verifier side
 
-All are applied to honest proofs. `vocab_size` comes from the workload's model record ([RFC-0003](0003-workloads.md)).
+All verifier-side controls operate on honest proofs, reading `vocab_size` from the workload's model record ([RFC-0003](0003-workloads.md)).
 
-The harness issues each verifier-side control trial to the adapter as an ordinary counted verification: its `job.json` carries `control: false`, with the same fields as a counted `verify` call. The job file therefore does not tell a verifier that it is being tested, and a verifier that checks honestly only when the flag says so is caught by the control it accepts. This removes the declared signal, not every signal: in a level run a counted verification runs under the trace wrapper ([RFC-0018](0018-level-1-ladder.md)) and a control verification does not, so a verifier that looks for a tracer can still tell the two apart. Closing that is open work. The trial is still a control to the harness, which keeps it out of measured rows by its own record (INV-CTRL-4), not by a field the adapter reads. This applies to the verify step only; prover-side controls (P1, P2, `weakened_prover`) still carry `control: true`, since the adapter needs it to accept W′ and the weakening flags its own rule 4 otherwise refuses.
+The harness submits every verifier-side control trial to the adapter as a normal verification call: `job.json` sets `control: false` and uses the exact same schema and fields as a counted `verify` call. Because the job file does not advertise that a call is a control, a verifier that behaves honestly only when `control: true` is caught when it accepts a tampered proof. This hides the explicit flag, though not every possible side channel: in a level run, counted verifications execute under the trace wrapper ([RFC-0018](0018-level-1-ladder.md)) while control verifications do not, so a verifier probing for a tracer could still distinguish them (closing that gap remains open work). The harness still tracks the trial internally as a control and keeps it out of measured rows based on its own state (INV-CTRL-4), not on `job.json`. This rule applies strictly to `verify`; prover-side controls (P1, P2, `weakened_prover`) still pass `control: true` so the adapter allows perturbed weights W' and weakening flags that rule 4 otherwise forbids.
 
 | ID | Control | Expected set |
 |---|---|---|
-| C1 | change the claimed output token | {`reject`} |
-| C2 | change one prompt token in the request | {`reject`} |
-| C3 | verify against the commitment of perturbed weights | {`reject`} |
-| C4 | replay a valid proof for a different request | {`reject`} |
-| C5 | truncate the largest part the verifier reads | {`reject`, `invalid_call`} |
-| C6 | flip one bit at a seeded offset in a seeded part the verifier reads, 5 seeds | {`reject`, `invalid_call`} for each seed |
-| C7 | swap the proofs of two requests in one batch | {`reject`} |
-| C8 | drop one part the verifier reads | {`reject`, `invalid_call`} |
+| C1 | Change the claimed output token | {`reject`} |
+| C2 | Change one prompt token in the request | {`reject`} |
+| C3 | Verify against the commitment of perturbed weights | {`reject`} |
+| C4 | Replay a valid proof for a different request | {`reject`} |
+| C5 | Truncate the largest part the verifier reads | {`reject`, `invalid_call`} |
+| C6 | Flip one bit at a seeded offset in a seeded part the verifier reads, 5 seeds | {`reject`, `invalid_call`} for each seed |
+| C7 | Swap the proofs of two requests in one batch | {`reject`} |
+| C8 | Drop one part the verifier reads | {`reject`, `invalid_call`} |
 
-Algorithms (pseudo-code; `rng(cid, k)` is the seeded generator above; `read(target.parts)` is the target's parts that the adapter declares its verify step reads, §Parts the verifier reads):
+Algorithms (pseudo-code, where `rng(cid, k)` is the seeded generator above and `read(target.parts)` denotes the subset of `target.parts` that the adapter declares its `verify` step reads; see §Parts the verifier reads):
 
 ```
 C1: out = target.claimed_output.copy(); i = len(out) - 1
@@ -106,38 +106,38 @@ C8: parts = sorted(read(target.parts) by name); q = parts[floor(rng("C8",0).rand
     # applicable iff len(target.parts) >= 2 (every part, read or not)
 ```
 
-`commit_perturbed` (C3) is the commitment of the workload's weights with one tensor perturbed: the harness copies the model directory, selects the weight tensor with the lexicographically first name among tensors of at least 1,024 elements, and adds one unit in the last place to element 0 at the stored precision. Because committing a full model is expensive (FlashProve's full-size route needs about 330 GB of host memory to start committing, per [RFC-0006](0006-reference-hardware-and-cost.md)), the perturbed commitment is created once per workload per release by `iproofs controls --prepare-perturbed WORKLOAD` and reused; its commit record carries its own digest and is stored under `results/<release>/<system>/_controls/<workload>/`. The perturbed weights never leave the runner's host. C3 is `not_applicable` if the system cannot commit the perturbed model (for example a fixed-architecture loader that rejects it); the reason is recorded.
+For C3, `commit_perturbed` commits to a copy of the workload's weights with one tensor modified: the harness copies the model directory, finds the lexicographically first weight tensor containing at least 1,024 elements, and adds one unit in the last place to element 0 at its stored precision. Because committing an entire model is expensive (FlashProve's full-size route needs roughly 330 GB of host memory just to start committing; [RFC-0006](0006-reference-hardware-and-cost.md)), the perturbed commitment is generated once per workload per release via `iproofs controls --prepare-perturbed WORKLOAD` and reused thereafter. Its commit record carries its own digest and lives under `results/<release>/<system>/_controls/<workload>/`, while the perturbed weight files stay on the runner host. If a system cannot commit the perturbed weights (for example, due to a fixed-architecture loader rejecting them), C3 is recorded as `not_applicable` along with the reason.
 
 ### Parts the verifier reads
 
-Amendment of 2026-11-09 (finding of a development run on Hugging Face Jobs, 2026-11-09). A control that mutates a part the adapter's `verify` never reads tests nothing: the mutated bytes never reach the verifier, and an `accepted` outcome then says nothing about the system. In that run (FlashProve, `fp-maverick-w1024-b1`, a development `controls.json` kept with the campaign's record, not under `results/`), C6 seeds 0 and 3 flipped bits of `response.proof` and were rejected (`NO: proof-refused`); seeds 1, 2 and 4 flipped bits 9, 16 and 28 of `response.y`, the 4-byte next-token word `cp_prove` writes, and were accepted, so C6 recorded `accepted`. The adapter's `verify` writes the token file `cp_verify` checks from the job's `claimed_output`, taken from the harness record (INV-CTRL-6), and passes `response.proof` alone, so `response.y` never reaches the verifier ([`systems/flashprove/README.md`](../systems/flashprove/README.md#values-for-systemyaml)). C1, which changes the claimed output token, covers the attack a changed `response.y` would stand for. This is a gap in the control design, not a finding against FlashProve: no disclosure follows from it (§Disclosure), and no row shows FlashProve failing a control because of it.
+Amendment of 2026-11-09 (prompted by a development run on Hugging Face Jobs on 2026-11-09). Mutating a proof file that the adapter's `verify` step never opens tests nothing: the altered bytes never reach the verifier, so an `accepted` verdict reveals nothing about the system. During that development run (FlashProve on `fp-maverick-w1024-b1`, recorded in the campaign's working `controls.json` outside `results/`), C6 seeds 0 and 3 flipped bits inside `response.proof` and were rejected (`NO: proof-refused`), whereas seeds 1, 2, and 4 flipped bits 9, 16, and 28 of `response.y` (the 4-byte next-token file written by `cp_prove`) and were accepted, causing C6 to report `accepted`. Because the FlashProve adapter reconstructs the token file passed to `cp_verify` from the job's `claimed_output` in the harness record (INV-CTRL-6) and passes only `response.proof`, `response.y` is never read by `verify` ([`systems/flashprove/README.md`](../systems/flashprove/README.md#values-for-systemyaml)). Control C1 already covers tampering with the claimed output token. This revealed a flaw in the control specification rather than a bug in FlashProve, so it does not trigger disclosure (§Disclosure) and is not reported as a FlashProve failure.
 
-- READ-1. Declaration. `system.yaml` `proofs.verify_reads` (optional in `system/1`, [RFC-0005](0005-adapter-contract.md#systemyaml)) declares which proof parts the adapter's `verify` reads: `"all"`, or `{read: [part, ...], not_read: [{part, reason}, ...]}` with both lists non-empty and every name a file name of `out.json` `parts[]`. Absent means `"all"`, the rule before this amendment. The declaration is static, reviewed with the adapter, and read by the harness from the checkout without a container call; every part of a split suite reads the same one (SPLIT-3, one harness commit). The adapter README says, with links at the pin, why each part is not read, and a prover adapter declares the field even when it reads every part (a review rule: `system/1` keeps the field optional, so the files written before stay valid).
-- READ-2. Fit. Before any call of the suite, or of a part of it, the harness checks the declaration against the target proof (§Proof selection): a declared part the proof does not have, a part of the proof the declaration does not place, or a part placed twice is refused with a `config` error, and nothing is written.
-- READ-3. Candidates. C5, C6 and C8 choose their part among the parts read only: each algorithm's candidate list is `read(target.parts)`, sorted by name as before. The seeds, the generator calls, the offsets, the applicability rules and the expected sets are unchanged, and C8's precondition still counts every part, so a mutated proof keeps at least one part. With `"all"`, every mutation is byte for byte the one this RFC specified before the amendment.
-- READ-4. Record. Each C5, C6 and C8 record in `controls.json` lists every part not read, with its declared reason, in `parts_not_read` (an optional `controls/1` property, absent when every part is read). C1 to C4 and C7 mutate no part and list none.
-- READ-5. Stored files. A `controls.json`, part or seed record written before this amendment stays as recorded: it is never edited and its outcomes are never recomputed under the new candidate lists (append-only, [RFC-0009](0009-results-and-publication.md)). A rerun of the suite is a new record, made as §Where controls run says, with its own seed, never written over the earlier file. No `controls.json` under `results/` predates this amendment.
+- READ-1. Declaration. `proofs.verify_reads` in `system.yaml` (optional in `system/1`, [RFC-0005](0005-adapter-contract.md#systemyaml)) declares which proof parts the adapter's `verify` step actually reads: either `"all"`, or `{read: [part, ...], not_read: [{part, reason}, ...]}` where both lists are non-empty and every entry names a file from `out.json` `parts[]`. Omitting the field defaults to `"all"`, matching prior behaviour. The declaration is static, reviewed alongside the adapter code, and loaded by the harness from the repository checkout without invoking a container, ensuring every part of a split suite uses the same declaration (SPLIT-3). Each adapter README must explain, with links to the pinned upstream commit, why any unread part is skipped. Prover adapters should populate this field explicitly even when reading all parts (enforced during review, while `system/1` keeps it optional for backwards compatibility).
+- READ-2. Fit. Before executing any calls in a full suite or split part, the harness verifies that `proofs.verify_reads` matches the target proof (§Proof selection). If a declared part is missing from the proof, a proof part is omitted from the declaration, or a part is listed twice, the harness aborts with a `config` error and writes nothing.
+- READ-3. Candidates. Controls C5, C6, and C8 draw candidate parts exclusively from `read(target.parts)`, sorted by filename as before. Seeds, RNG calls, bit offsets, applicability checks, and expected sets remain identical, and C8's precondition still counts all parts in `target.parts` so a mutated proof retains at least one file. When `verify_reads` is `"all"`, every mutation is byte-for-byte identical to the pre-amendment specification.
+- READ-4. Record. In `controls.json`, the records for C5, C6, and C8 include every unread part and its declared reason under `parts_not_read` (an optional `controls/1` field omitted when all parts are read). Controls C1 through C4 and C7 do not mutate proof parts and omit this field.
+- READ-5. Stored files. Any `controls.json`, part file, or seed record created before this amendment remains untouched; past records are never edited or recomputed under updated candidate lists (append-only rule, [RFC-0009](0009-results-and-publication.md)). Rerunning the suite produces a separate record with a fresh seed rather than overwriting earlier results. No `controls.json` under `results/` predates this amendment.
 
 ### Shared controls, prover side
 
 | ID | Control | Expected set |
 |---|---|---|
-| P1 | commit W, prove with W' (the C3 perturbation) | {`prover_failed`, `reject`} |
-| P2 | prove with a precision other than the committed one | {`prover_failed`, `reject`}; `not_applicable` when the system supports one precision |
+| P1 | Commit W, prove with W' (the C3 perturbation) | {`prover_failed`, `reject`} |
+| P2 | Prove with a precision other than the committed one | {`prover_failed`, `reject`}; `not_applicable` when the system supports one precision |
 
-P1 runs a `prove` job with `model_dir` pointing at W' and `commitment_id` from the commit of W, at the workload's smallest batch, `batches: 1`. If `prove` exits non-zero, the outcome is `prover_failed`. If it produces a proof, the harness verifies it against the commit of W; the expected verdict is `reject`. P2 uses the same procedure with a model directory converted to another precision only if the workload declares an alternative precision; otherwise `not_applicable`. Prover-side controls run with `control: true` and never produce measured rows.
+P1 invokes `prove` using `model_dir` pointed at W' alongside the `commitment_id` computed from W, at the workload's smallest batch size and `batches: 1`. If `prove` exits non-zero, the outcome is `prover_failed`; if it emits a proof, the harness runs `verify` against the commitment of W, expecting `reject`. P2 follows the same procedure using weights converted to an alternative precision whenever the workload declares one; otherwise it is `not_applicable`. Prover-side controls run with `control: true` and never appear as measured rows.
 
 ### Honest twins
 
-Each verifier-side control runs its honest twin first: `verify(commit, target.request, target.claimed_output, target.proof)` on unmodified bytes, in the same control batch, with the same image digest and the same verifier profile. For C4 and C7 both proofs involved get a twin. If any twin is not `accept`, the control's outcome is `void` (INV-CTRL-2). For P1 the twin is the run's own honest prove and verify.
+Every verifier-side control runs its honest twin immediately beforehand: `verify(commit, target.request, target.claimed_output, target.proof)` on the unmodified bytes, inside the same control batch, using the same image digest and verifier profile. Controls C4 and C7 run twins for both proofs involved. If any twin does not return `accept`, the control's outcome is `void` (INV-CTRL-2). For P1, the honest twin is the original run's honest `prove` and `verify`.
 
 ### Outcomes
 
-`outcome` is one of: `rejected` (verdict `reject`), `accepted` (verdict `accept`), `no_verdict`, `invalid_call`, `void`, `not_applicable`, `error` (adapter or harness failure during the control, with the failure record), and for prover-side controls `prover_failed`. A control **passes** iff its outcome (or, for C6, every per-seed outcome) is in its expected set, mapping `reject` to `rejected`. A control that is `void`, `not_applicable` or `error` neither passes nor fails; it is counted separately.
+Each control records an `outcome` from the closed set: `rejected` (verdict `reject`), `accepted` (verdict `accept`), `no_verdict`, `invalid_call`, `void`, `not_applicable`, `error` (an adapter or harness failure during the control, saved with its failure record), or `prover_failed` (for prover-side controls). A control **passes** if and only if its outcome (or, for C6, all five per-seed outcomes) falls within its expected set (mapping `reject` to `rejected`). Outcomes of `void`, `not_applicable`, and `error` neither pass nor fail and are tallied separately.
 
 ### controls.json
 
-Generated JSON, schema `controls/1` ([RFC-0012](0012-schemas-and-serialization.md)):
+Generated JSON validated against schema `controls/1` ([RFC-0012](0012-schemas-and-serialization.md)):
 
 ```json
 {
@@ -164,11 +164,11 @@ Generated JSON, schema `controls/1` ([RFC-0012](0012-schemas-and-serialization.m
 }
 ```
 
-`seconds` is adapter-reported verify time for the trial; `summary` counts are derived by CI from `controls` and recomputed by `iproofs derive --check` (INV-CTRL-5).
+`seconds` captures the adapter-reported verification duration for that trial. `summary` counts are derived from `controls` and verified in CI by `iproofs derive --check` (INV-CTRL-5).
 
 ### System-specific controls
 
-`systems/<name>/controls.yaml` (schema `system-controls/1`, an optional file) registers controls from the upstream suite:
+An optional `systems/<name>/controls.yaml` file (schema `system-controls/1`) registers additional controls from the upstream system's own test suite:
 
 ```yaml
 schema: "system-controls/1"
@@ -185,114 +185,112 @@ controls:
     requires_unbound_edge: "<edge>"           # pass iff the binding report marks this edge unbound
 ```
 
-- `fixture_proof` controls verify an upstream-supplied proof as is; the twin is the run's honest proof.
-- `weakened_prover` controls run `prove` with `control: true` and `control_flags`, then `verify`. SASH's unsound switches are registered this way with expected `accepted`; the control passes only if the run's binding report (out.json `binding_report`) marks the corresponding edge unbound. The point is to show the switch is honest and the claim card's binding table is accurate, not that the verifier catches it ([RFC-0002](0002-claim-card.md)).
-- The list of edges and flag names is copied from upstream documentation at the pin by the SASH adapter issue; this RFC does not enumerate them.
+- `fixture_proof` controls verify an upstream-provided proof fixture as is, paired against the run's honest proof as its twin.
+- `weakened_prover` controls execute `prove` with `control: true` and `control_flags`, followed by `verify`. SASH's unsound switches are registered here with `expected: ["accepted"]`; the control passes only if `out.json`'s `binding_report` marks the corresponding edge unbound. This checks that the switch behaves honestly and that the claim card's binding table is accurate, not that the verifier rejects the weakened proof ([RFC-0002](0002-claim-card.md)).
+- The SASH adapter implementation copies the exact edge and flag names from upstream documentation at the pin rather than hardcoding them in this RFC.
 
 ### Applicability
 
-A control is `not_applicable`, with a recorded reason, when its precondition fails: C4 without a second distinct request; C7 with batch size 1 or no two accepted proofs in one batch; C8 with a single part; C3 and P1 when the perturbed commitment cannot be created; P2 when the workload has one precision. Applicability is decided before the twin runs.
+A control is marked `not_applicable` (with an explanatory reason) whenever its precondition is unmet: C4 when there is no second distinct request, C7 when `batch_size` is 1 or fewer than two proofs in one batch were accepted, C8 when the proof has only one part, C3 and P1 when the perturbed commitment cannot be produced, and P2 when the workload declares only one precision. Applicability is checked before running the honest twin.
 
 ### Reporting
 
-Per row the site and release index show: controls run, passed, rejected, accepted, `no_verdict`, `invalid_call`, void, not applicable, error ([RFC-0009](0009-results-and-publication.md)). Every `accepted` outcome where rejection was expected is printed in the row in full (control id, mutation, raw last line). Every `no_verdict` is listed.
+For each row, the site and release index report counts of controls run, passed, rejected, accepted, `no_verdict`, `invalid_call`, void, not applicable, and error ([RFC-0009](0009-results-and-publication.md)). Every unexpected `accepted` outcome (where rejection was expected) is displayed in full with its control ID, mutation details, and raw last line, and every `no_verdict` outcome is listed explicitly.
 
 ### Verifier trials (amended 2026-11-15)
 
-A verifier trial is a set of verify calls on stored proofs that neither a counted session nor its control suite makes: a publisher's second verifier on our proofs, the C3 null twin (a proof verified against the commitment of another session of the same weights), or C1 at every reply position. Its record is `results/<release>/<system>/_trials/<trial id>/trial.json` (`verifier-trial/1`), with the calls' own outputs under `raw/`.
+A verifier trial is any set of verification calls against stored proofs outside a counted session and its standard control suite, such as running a publisher's alternate verifier on stored proofs, running the C3 null twin (verifying a proof against a commitment from another session on the same weights), or running C1 across every reply token position. Each trial is recorded at `results/<release>/<system>/_trials/<trial id>/trial.json` (`verifier-trial/1`), with individual call outputs stored under `raw/`.
 
-- TR-1. A trial gates nothing: no check, petal, position or order reads it. A page may print its counts and its time range, computed by `iproofs.trials.summary`, with the program's name, the host, n and "gates nothing".
-- TR-2. Every commitment it uses comes from a harness record (INV-CTRL-6). A source marked `in_results` names a run directory in `results/`; the validator (G4, TRIAL-1) refuses a record whose commitment ID is not that run's manifest's, or whose archive digest is not the one in that run's `digests.txt`.
-- TR-3. The program runs unpatched, from the upstream commit the system pins, and the record says what it lacks (`missing`): a job script outside the harness, unpinned downloads, proofs whose run directory is not in `results/`. A time a job script took is an adapter-reported time (RFC-0004 INV-GRADE-2), never an input to a derived figure.
-- TR-4. A trial whose changed call is accepted where a reject was expected follows §Disclosure.
+- TR-1. Trials are informational and gate nothing: no check, petal, ranking position, or ordering reads them. A page may display a trial's counts and timing range (computed via `iproofs.trials.summary`) accompanied by the verifier program name, host, sample size `n`, and the label "gates nothing".
+- TR-2. Every commitment used by a trial MUST come from a harness record (INV-CTRL-6). Any source tagged `in_results` references a run directory under `results/`; gate G4 (`TRIAL-1`) rejects a trial if its commitment ID disagrees with that run's manifest or its archive digest disagrees with `digests.txt`.
+- TR-3. The verifier runs unpatched from the system's pinned upstream commit, and the trial record lists any gaps under `missing` (such as an external job script, unpinned downloads, or proofs whose run directory is outside `results/`). Any duration measured by an external job script is treated as an adapter-reported timing (RFC-0004 INV-GRADE-2) and never feeds a derived metric.
+- TR-4. If a tampered call inside a trial is unexpectedly accepted, it follows the §Disclosure workflow.
 
 ### Disclosure
 
-An accepted control where rejection was expected is a possible soundness or adapter defect. The harness marks the run `disclosure_pending: true` in `controls.json` (a computed flag; stored records carry it under that name). The runner first checks the adapter: a fault in the verdict mapping is fixed in this repository and the run is redone; it is not a finding against the system. Otherwise the runner reports it privately to the system's maintainers, through the channel in the system's security policy or, when none is published, through the upstream repository's contact, and opens no public pull request with that run until the embargo in `SECURITY.md` ends; the run is then published in full, its outcome unsoftened ([06-security](../docs/spec/06-security.md)).
+An `accepted` outcome on a control expecting rejection signals either an adapter bug or a potential soundness issue in the prover. The harness sets `disclosure_pending: true` in `controls.json` (a computed field stored under that key). First, the runner inspects the adapter: if a verdict-mapping bug caused the result, the adapter is fixed in this repository and the run is repeated (this is not a finding against the upstream system). Otherwise, the runner reports the issue privately to the system maintainers using their published security policy or repository contact, withholding any public pull request containing that run until the embargo window in `SECURITY.md` expires. Once the embargo ends, the run is published in full without softening the outcome ([06-security](../docs/spec/06-security.md)).
 
 ### Invariants
 
-- **INV-CTRL-1:** Every mutated input is produced by the harness; adapters never receive a request to mutate anything.
-- **INV-CTRL-2:** A control whose honest twin is not `accept` is `void`, never `rejected`.
-- **INV-CTRL-3:** Every mutation is a deterministic function of `control_seed`, the control id and the honest inputs.
-- **INV-CTRL-4:** A control job never produces a measured row, and a measured row never comes from a job with `control: true`.
-- **INV-CTRL-5:** `summary` in `controls.json` equals the counts recomputed from `controls`.
-- **INV-CTRL-6:** The commitment in every control verify call comes from the harness's commit records (the run's or the perturbed one), never from proof files.
-- **INV-CTRL-7:** A `controls.json` merged from parts (§Split suites) is byte for byte the one a single run of the suite with the same `control_seed` writes from the same verify results.
-- **INV-CTRL-8:** C5, C6 and C8 never mutate a part the adapter declares its verify step does not read, and their records list each such part with its reason (§Parts the verifier reads).
-- **INV-CTRL-9:** The `job.json` of a verifier-side control verification does not disclose that it is a control: it has `control: false` and the fields of a measured `verify` (§Shared controls, verifier side).
+- **INV-CTRL-1:** All mutated inputs are created by the harness; adapters are never asked to mutate data.
+- **INV-CTRL-2:** Any control whose honest twin fails to return `accept` is recorded as `void`, never `rejected`.
+- **INV-CTRL-3:** Every mutation is a deterministic function of `control_seed`, the control ID, and the honest inputs.
+- **INV-CTRL-4:** Control jobs never produce measured rows, and no measured row may originate from a job with `control: true`.
+- **INV-CTRL-5:** `summary` in `controls.json` matches the counts recomputed from `controls`.
+- **INV-CTRL-6:** Every verification commitment in a control call comes from the harness's own commit records (either the run's original commitment or the perturbed commitment), never from proof files.
+- **INV-CTRL-7:** Merging split parts into `controls.json` (§Split suites) produces bytes identical to running the entire suite in one shot with the same `control_seed` and identical verify outcomes.
+- **INV-CTRL-8:** Controls C5, C6, and C8 never mutate a proof part declared unread by the adapter's `verify` step, and their records list each unread part along with its reason (§Parts the verifier reads).
+- **INV-CTRL-9:** `job.json` for a verifier-side control call does not signal that it is a control: it sets `control: false` and uses the exact fields of a measured `verify` call (§Shared controls, verifier side).
 
 ### Failure modes
 
 | Failure | Response |
 |---|---|
-| Twin not accepted | control `void`; the run's honest verify result is cross-checked and a mismatch is logged as event `control.twin_mismatch` |
-| Adapter exits non-zero during a trial | outcome `error` with the failure record; other controls continue |
-| Perturbed commitment cannot be created | C3 and P1 `not_applicable` with reason |
-| Mutation produces bytes identical to the original (for example C1 with `vocab_size` 1) | harness asserts the mutated input differs; if not, `error` kind `internal` |
-| Verify timeout during a trial | outcome `error` kind `timeout` |
-| `proofs.verify_reads` does not fit the target proof (READ-2) | `config` error before any call; nothing written |
-| Accepted where rejection expected | `disclosure_pending: true`; private report to the upstream |
+| Honest twin not accepted | Control marked `void`; the harness cross-checks the original run's honest verify verdict and logs a `control.twin_mismatch` event on discrepancy |
+| Adapter exits non-zero during a trial | Outcome recorded as `error` with the failure record; remaining controls continue |
+| Perturbed commitment cannot be built | C3 and P1 recorded as `not_applicable` with the reason |
+| Mutation leaves bytes identical to original (e.g. C1 with `vocab_size` 1) | Harness asserts the mutated input differs; if not, records `error` with kind `internal` |
+| Verify call times out during a trial | Outcome recorded as `error` with kind `timeout` |
+| `proofs.verify_reads` disagrees with the target proof (READ-2) | `config` error before any container call; nothing written |
+| Control accepted where rejection was expected | `disclosure_pending: true`; private report sent to upstream maintainers |
 
 ## Alternatives Considered
 
-1. **Adapters implement their own tampering.** Considered because adapters understand their proof formats and could make semantically targeted mutations. Rejected: the measured party would author its own tests, and a mapping bug could hide behind a matching mutation bug. Harness-side byte and field mutations are weaker but neutral.
-2. **No honest twin; compare against the run's original verify.** Considered because it halves verify calls. Rejected: a control batch can run in a different container, with different files or a corrupted io dir; only a twin in the same batch shows the verify path itself works for the unmodified input.
-3. **Random fuzzing with many seeds.** Considered for coverage. Rejected for v0.1: verify on FlashProve costs about 21 s per proof on one CPU thread (grade external, tier reported, source FlashProve docs at `9e2bdd8ff5bf9c62f18263d7dac189b0400b260c`), so hundreds of trials per row cost hours of CPU; five seeded bit flips plus a truncation catch the gross failures. A structured mutation suite is a later RFC.
-4. **Pass or fail only, without `void`, `not_applicable`, `error`.** Rejected: it would hide whether a control actually tested anything.
-5. **Declare the parts read in the adapter's `info` output** (§Parts the verifier reads). Considered because `info` already reports what the image holds. Rejected: `info` is the measured party's answer at run time, from inside the container; `system.yaml` is reviewed with the adapter README that explains it, the harness reads it before any call, and split parts read the same file at one commit.
-6. **Let the adapter's verify step reject a mutated part it does not need** (for example compare `response.y` with `claimed_output`). Rejected: it changes the adapter's `verify` to make a control pass, and the check would test code the adapter added, not the system; C1 already tests the claimed token.
-7. **Public immediate disclosure of accepted controls.** Considered for transparency. Rejected: an accepted control may be a real soundness bug in a deployed system; a bounded embargo is standard practice and the finding is still published.
+1. **Having adapters implement tampering themselves.** Adapters know internal proof formats and could construct targeted semantic mutations, but letting the measured party author its own negative tests creates a conflict of interest and allows a verdict-mapping bug to hide behind a matching mutation bug. Harness-side byte and field mutations are narrower in scope, yet apply uniformly across every system without adapter cooperation.
+2. **Omitting honest twins and relying on the original run's verify verdict.** Cuts verify calls in half, but a control suite can execute later in a different container or on corrupted files; running a twin in the same batch is the only way to confirm the verify pipeline works for unmodified inputs.
+3. **High-volume random fuzzing across many seeds.** Increases coverage, but rejected for v0.1 because FlashProve's verification takes roughly 21 s per proof on one CPU thread (grade external, tier reported, source FlashProve docs at `9e2bdd8ff5bf9c62f18263d7dac189b0400b260c`), making hundreds of trials prohibitively expensive. Five seeded bit flips plus truncation catch gross verification failures, while structured fuzzing is left for a later RFC.
+4. **Binary pass/fail outcomes without `void`, `not_applicable`, or `error`.** Rejected because collapsing those states obscures whether a control actually tested the verifier.
+5. **Reading `verify_reads` from the adapter's `info` output** (§Parts the verifier reads). Considered because `info` already reports image metadata, but rejected because `info` is emitted by the measured container at runtime, whereas `system.yaml` is reviewed alongside the adapter README, read by the harness before any call, and identical across all split parts at one commit.
+6. **Modifying the adapter's `verify` step to check unread files** (for example, comparing `response.y` against `claimed_output`). Rejected because adding checks in the adapter would test adapter code rather than the upstream verifier, and C1 already tests tampering with the claimed token.
+7. **Immediate public disclosure of accepted controls.** Considered for openness, but rejected because an accepted control may reflect a real soundness vulnerability in a deployed prover; a time-bounded embargo follows standard security practice while still guaranteeing full publication afterward.
 
 ## Drawbacks
 
-- Byte-level mutations do not test semantic attacks a format-aware adversary would try; passing C5 and C6 shows integrity checking, not soundness.
-- C3 and P1 require committing a second, perturbed model once per workload per release, which for the Maverick workloads is costly in host memory and time.
-- Verify calls on real systems multiply verifier CPU time per row by roughly the number of trials plus twins (about 22 calls for the shared suite, a count of calls, not a measurement).
-- System-specific controls depend on upstream suites, so coverage differs between systems; rows show which controls ran.
-- `proofs.verify_reads` names parts by file name. A system whose part names vary between proofs and that leaves some part unread cannot declare it; it would need a pattern form, in a later amendment. SASH and FlashProve do not need one.
-- The declaration is the adapter author's statement, checked by review against the adapter's `verify` code and README, not by the harness. A part wrongly declared not read is never mutated; its name and reason are printed in every C5, C6 and C8 record, where review can see it.
-
+- Opaque byte mutations cannot test semantic attacks that a format-aware adversary might craft; passing C5 and C6 demonstrates basic integrity checking, not cryptographic soundness.
+- C3 and P1 require committing a second, perturbed copy of the weights once per workload per release, which is heavy on host memory and wall time for Maverick-sized models.
+- Running the shared suite adds roughly 22 `verify` calls per configuration (trials plus twins; a count of calls, not a measurement), multiplying verifier CPU time accordingly.
+- System-specific control coverage varies depending on what each upstream project ships; each row indicates which controls ran.
+- `proofs.verify_reads` matches parts by exact filename. A system with varying part names per proof that leaves some parts unread would need pattern matching in a future amendment (neither SASH nor FlashProve needs this).
+- `verify_reads` relies on adapter authors and code review rather than automated enforcement by the harness. If a part is misclassified as unread, it will never be mutated, though its name and stated reason appear in every C5, C6, and C8 record so reviewers can catch mistakes.
 
 ## Migration / Rollout
 
-- Replaces the control list of the initial design commit; IDs C1 to C8, P1, P2 are kept, C6 is fixed at five seeds and gains exact algorithms.
-- Harness mutations and classification, tested against `systems/fake` (all shared controls pass) and `systems/fake-broken` (every applicable verifier-side control `accepted`).
-- The suite runs on SASH and FlashProve rows, plus registered system-specific controls.
-- Split suites (amendment of 2026-11-09) change no control, algorithm, expected set or `controls/1` field; they add the `controls-seed/1` record, the `controls-part/1` working file, the `control.call` log event and the `--draw-seed`, `--only`, `--seed`, `--merge`, `--hosted`, `--gpu` and `--provider` options of `iproofs controls`. A merged file is a `controls.json` like any other (INV-CTRL-7).
-- Parts the verifier reads (amendment of 2026-11-09) changes no control id, applicability rule or expected set and no required field: it narrows the candidate lists of C5, C6 and C8 to the parts the verify step reads and adds the optional `system/1` `proofs.verify_reads` and `controls/1` `parts_not_read`. With `"all"` or no declaration every mutation is unchanged. Stored files stay as recorded (READ-5).
-- A new control or a change to an algorithm or expected set amends this RFC, with a new `controls/<major>` if the file shape changes. Past `controls.json` files are never edited; they name the RFC version they ran under.
+- Supersedes the control list from the initial design commit, retaining IDs C1 to C8, P1, and P2 while fixing C6 at five seeds and specifying exact algorithms.
+- Harness mutation and classification logic is verified against `systems/fake` (every applicable shared control passes) and `systems/fake-broken` (every applicable verifier-side control records `accepted`).
+- The full suite runs against SASH and FlashProve rows along with their registered system-specific controls.
+- Split suites (amendment of 2026-11-09) preserve all existing controls, algorithms, expected sets, and `controls/1` fields, while adding `controls-seed/1`, `controls-part/1`, the `control.call` log event, and the `--draw-seed`, `--only`, `--seed`, `--merge`, `--hosted`, `--gpu`, and `--provider` flags on `iproofs controls`. Merged outputs are identical to standard `controls.json` files (INV-CTRL-7).
+- Parts the verifier reads (amendment of 2026-11-09) preserves all control IDs, applicability rules, expected sets, and required fields, restricting C5, C6, and C8 candidates to declared read parts and adding optional `proofs.verify_reads` (`system/1`) and `parts_not_read` (`controls/1`). With `"all"` or no declaration, mutations are unchanged, and existing stored records remain untouched (READ-5).
+- Adding a new control or modifying an algorithm or expected set requires amending this RFC (and bumping `controls/<major>` if the schema breaks). Past `controls.json` files are never edited and record which RFC version produced them.
 
 ## Testing Strategy
 
-- `test_c1_changes_last_token_mod_vocab`: with `vocab_size = 10` and last token 9, the mutated token is 0.
-- `test_c2_seeded_position_stable`: the same `control_seed` yields the same position across two processes; a different seed yields a different position for a 1,024-token request in at least one of ten fixed seeds.
-- `test_c5_truncates_largest_part_tiebreak_by_name`: two parts of equal size, the lexicographically first is truncated to `floor(size/2)` bytes.
-- `test_c6_five_trials_flip_one_bit`: each trial differs from the original in exactly one bit; trial mutations are reproducible from the seed.
-- `test_c7_not_applicable_batch_one` and `test_c8_not_applicable_single_part`.
-- `test_c6_chooses_only_read_parts`, `test_c5_truncates_largest_read_part`, `test_c8_drops_only_read_parts` (READ-3): with one part declared not read, the same seeds give trials whose parts are all read parts, indexed into the read list sorted by name, and with `"all"` the mutations are the ones the undeclared suite makes.
-- `test_declaration_that_does_not_fit_is_refused_before_any_call` (a declared part the proof does not have, a part of the proof not placed; whole suite and a part without C5, C6, C8), `test_part_placed_twice_refused` and `test_controls_refused_when_a_declared_part_does_not_exist` (through `iproofs controls`, nothing written) (READ-2).
-- `test_unread_part_finding_reproduced_then_closed` (READ-3, READ-4, INV-CTRL-8): on a hand-made system whose verifier never opens one part, the undeclared suite has an accepted C6 trial on that part; declared, every C5, C6 and C8 mutation hits the part read, none is accepted, each record lists the part not read with its reason, and C1 to C4 and C7 are the same records. `test_controls_on_a_stored_run_read_the_declaration`: a run made before the declaration, controlled after it.
-- `test_twin_failure_voids_control`: a fake verifier that rejects everything yields `void` for every control, never `rejected`.
-- `test_fake_all_shared_controls_pass`: on `systems/fake`, every applicable control passes and `summary.accepted == 0`.
-- `test_fake_broken_all_accepted`: on `systems/fake-broken`, every applicable verifier-side control is `accepted` and `disclosure_pending` is true.
-- `test_summary_recomputed`: editing one outcome in a stored `controls.json` makes `iproofs derive --check` fail.
-- `test_weakened_prover_requires_unbound_edge`: a `weakened_prover` control with outcome `accepted` and a binding report marking the edge bound does not pass.
-- `test_control_job_never_measured_row`: a run directory with `control: true` in its manifest fails `iproofs validate` if it appears in a release's measured rows ([RFC-0013](0013-validation-and-ci.md)).
-- `test_commitment_never_from_proof`: a proof directory containing a forged commitment file does not change the commitment passed to verify.
-- `test_merged_parts_equal_one_run_byte_for_byte` (INV-CTRL-7): on `systems/fake`, with a perturbed commitment (C3, P1) and three system controls, the whole suite run once, and the suite split into three parts, each on its own copy of the run with a fresh runner, then merged in a directory that holds only `run.json`, `manifest.json` and `controls-seed.json`, with one seed, give identical bytes.
-- `test_split_runs_with_one_drawn_seed`: no part without a seed record; the record is drawn once; `--seed` other than the recorded one, and the whole suite once a record exists, are refused (SPLIT-1).
-- `test_merge_refuses_*`: parts of another run, another seed record or any other SPLIT-4 field, overlapping or missing controls, records other than the subset (SPLIT-5).
-- `test_prover_side_refused_where_no_prove_can_run`: a prover-side control on a verifier host, or on a GPU profile without `--gpu`, stops before any call (SPLIT-3); `test_prover_part_records_its_host_and_refuses_another_gpu` and `test_p1_part_refused_without_the_perturbed_weights` (SPLIT-2, SPLIT-3).
+- `test_c1_changes_last_token_mod_vocab`: with `vocab_size = 10` and last token 9, verifies the mutated token wraps to 0.
+- `test_c2_seeded_position_stable`: confirms identical `control_seed` produces the same position across separate processes, and that different seeds vary the position on a 1,024-token request across ten fixed seeds.
+- `test_c5_truncates_largest_part_tiebreak_by_name`: given two equal-sized parts, verifies the lexicographically first part is truncated to `floor(size/2)` bytes.
+- `test_c6_five_trials_flip_one_bit`: confirms each trial differs by exactly one bit from the original and reproduces identically from the seed.
+- `test_c7_not_applicable_batch_one` and `test_c8_not_applicable_single_part`: confirm applicability checks.
+- `test_c6_chooses_only_read_parts`, `test_c5_truncates_largest_read_part`, `test_c8_drops_only_read_parts` (READ-3): when one part is declared unread, verifies all trials target read parts sorted by name, and `"all"` matches pre-amendment mutations.
+- `test_declaration_that_does_not_fit_is_refused_before_any_call` (covers a declared part missing from the proof and an undeclared proof part, across both a full suite and a part omitting C5, C6, C8), `test_part_placed_twice_refused`, and `test_controls_refused_when_a_declared_part_does_not_exist` (invoked through `iproofs controls`, verifying nothing is written) (READ-2).
+- `test_unread_part_finding_reproduced_then_closed` (READ-3, READ-4, INV-CTRL-8): on a fixture system whose verifier skips one part, verifies the undeclared suite yields an accepted C6 trial on that part, while adding the declaration restricts C5, C6, and C8 to read parts, eliminates the accepted outcome, records `parts_not_read` with the reason, and leaves C1 through C4 and C7 identical. `test_controls_on_a_stored_run_read_the_declaration`: verifies controlling a stored run created prior to adding the declaration reads the updated declaration.
+- `test_twin_failure_voids_control`: a fake verifier rejecting all inputs yields `void` for every control rather than `rejected`.
+- `test_fake_all_shared_controls_pass`: on `systems/fake`, every applicable control passes with `summary.accepted == 0`.
+- `test_fake_broken_all_accepted`: on `systems/fake-broken`, every applicable verifier-side control records `accepted` and `disclosure_pending` is `true`.
+- `test_summary_recomputed`: altering a single outcome in a stored `controls.json` causes `iproofs derive --check` to fail.
+- `test_weakened_prover_requires_unbound_edge`: a `weakened_prover` control returning `accepted` fails if its binding report still marks the edge bound.
+- `test_control_job_never_measured_row`: a run directory carrying `control: true` fails `iproofs validate` if listed among a release's measured rows ([RFC-0013](0013-validation-and-ci.md)).
+- `test_commitment_never_from_proof`: planting a forged commitment file inside a proof directory does not alter the commitment passed to `verify`.
+- `test_merged_parts_equal_one_run_byte_for_byte` (INV-CTRL-7): on `systems/fake` with a perturbed commitment (C3, P1) and three system controls, confirms running the suite in one shot and running it across three split parts on separate copies of the run, then merging in a directory holding only `run.json`, `manifest.json`, and `controls-seed.json` under the same seed, produces byte-identical output.
+- `test_split_runs_with_one_drawn_seed`: verifies parts require a seed record, the seed record can only be drawn once, a mismatched `--seed` is rejected, and running a whole suite after drawing a seed is rejected (SPLIT-1).
+- `test_merge_refuses_*`: verifies merge rejects parts from a different run, seed record, or SPLIT-4 provenance field, as well as overlapping, missing, or mismatched subset records (SPLIT-5).
+- `test_prover_side_refused_where_no_prove_can_run`: verifies prover-side controls abort before any call on a verifier host or on a GPU profile without `--gpu` (SPLIT-3); `test_prover_part_records_its_host_and_refuses_another_gpu` and `test_p1_part_refused_without_the_perturbed_weights` (SPLIT-2, SPLIT-3).
 
 ## Decisions
 
-- Q1. There are no controls on the binding between a proof and served traffic: no v0.1 system claims that binding.
-- Q2. C3 and P1 run for SASH workloads, and for FlashProve on its smallest supported synthetic shape when committing the full-size perturbed Maverick model does not fit the release compute budget, with the substitution declared in the row; otherwise they are `not_applicable`.
-
-- Q4. An upstream rejected-proof example that comes with its own commitment (for example FlashProve `examples/rejected-proofs`) is registered as a control only if the harness can regenerate its commitment through the adapter's `commit` step, since the commitment always comes from a harness record (INV-CTRL-6); otherwise it is listed in the adapter README and not run as a control.
-- Q5. A `fixture_proof` control is recorded as `not_applicable`, with that reason: `system-controls/1` names only an upstream `source`, and adapters see only `/io` and `/models`, so no path brings its bytes to the harness. `weakened_prover` controls run as specified.
-- Q6 (2026-11-15). Verify calls outside a session's suite are recorded as verifier trials that gate nothing (§Verifier trials): they add evidence beside the six checks without changing what a check reads.
+- Q1. No controls test binding between proofs and served traffic because no v0.1 system makes that claim.
+- Q2. C3 and P1 run on SASH workloads, and on FlashProve's smallest supported synthetic shape whenever committing a full-size perturbed Maverick model exceeds the release compute budget (with the substitution noted in the row); otherwise they are recorded as `not_applicable`.
+- Q4. Upstream rejected-proof examples bundled with their own commitments (such as FlashProve's `examples/rejected-proofs`) are registered as controls only if the harness can regenerate their commitments via `commit`, since commitments always come from harness records (INV-CTRL-6); otherwise they are documented in the adapter README and not executed as controls.
+- Q5. `fixture_proof` controls are recorded as `not_applicable` with that reason because `system-controls/1` specifies only an upstream `source` URL and adapters see only `/io` and `/models`, leaving no channel to supply the fixture bytes to the harness. `weakened_prover` controls execute as specified.
+- Q6 (2026-11-15). Verification calls outside a session's standard suite are recorded as verifier trials that gate nothing (§Verifier trials), providing supplemental evidence alongside the six checks without affecting check states.
 
 ## References
 

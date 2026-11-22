@@ -1,6 +1,6 @@
 # RFCs
 
-Methodology decisions (what is measured, how, and how it is published) and load-bearing technical decisions (interfaces, schemas, measurement, integrity) are written down as RFCs.
+Methodology decisions (what the benchmark measures, how it runs, and how results are published) and core technical decisions (interfaces, schemas, measurement, and integrity) are documented as RFCs.
 
 | # | Title |
 |---|---|
@@ -23,4 +23,4 @@ Methodology decisions (what is measured, how, and how it is published) and load-
 | [0017](0017-requests-tasks-and-tested-states.md) | Requests, tasks and tested states (Part B replaced by RFC-0018) |
 | [0018](0018-level-1-ladder.md) | Level 1: the ladder, six checks, cost and fidelity |
 
-New RFC: copy [0000-template.md](0000-template.md) to the next free number and fill the sections that apply.
+To propose a new RFC, copy [0000-template.md](0000-template.md) to the next available number and fill in the relevant sections.

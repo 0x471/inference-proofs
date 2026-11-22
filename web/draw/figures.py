@@ -766,22 +766,23 @@ def check_pictures():
 # what each check does and what it needs (RFC-0018, the six checks), for a reader with no context;
 # the rules in full are the checks page's (`CHECK_HELD`), which each name links
 CHECK_DOES = {
-    "run": ("We run", "the publisher's prover as published, honestly, from a cold start",
-            "each of the {slots} slots has a complete session: every reply gets an accepted "
-            "proof"),
-    "model": ("We change", "one weight, after the prover committed to the original weights",
+    "run": ("We run", "the publisher's prover honestly from a cold start as published",
+            "each of the {slots} slots produces a complete session with an accepted proof for "
+            "every reply"),
+    "model": ("We change", "a single weight after the prover commits to the original weights",
               "no proof is accepted against the original commitment, and an honest proof is "
-              "refused against the changed weights' commitment too"),
-    "prompt": ("We change", "one prompt token, at a position a seed sets",
-               "the verifier refuses the proof"),
-    "reply": ("We change", "the first, the last or one inside reply token, one at a time",
-              "the verifier refuses each, and every proof covers all {reply} reply tokens"),
-    "no_weight_file": ("We take away", "the model file and the GPU, from the verifier",
-                       "the verifier reaches every verdict all the same"),
-    "fidelity": ("We compare", "each proved reply with the original model's reply to the same "
-                 "prompt, token by token from the start",
-                 "the proved replies match more of the original's leading tokens than the bar "
-                 "(a deliberately damaged copy) does, by a paired statistical test"),
+              "rejected against the modified weights' commitment"),
+    "prompt": ("We change", "one prompt token at a seeded position",
+               "the verifier rejects the proof"),
+    "reply": ("We change", "the first, last, or one interior reply token, one at a time",
+              "the verifier rejects every modified proof, and every honest proof covers all "
+              "{reply} reply tokens"),
+    "no_weight_file": ("We remove", "the model files and GPU access from the verifier",
+                       "the verifier still reaches every verdict without them"),
+    "fidelity": ("We compare", "each proved reply against the original model's reply token by "
+                 "token from the start",
+                 "proved replies match more leading tokens than the bar (a deliberately damaged "
+                 "copy), verified by a paired statistical test"),
 }  # fmt: skip
 
 

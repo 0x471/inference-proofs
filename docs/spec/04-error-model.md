@@ -1,91 +1,91 @@
 # 04. Error model
 
-Part of the specification corpus indexed in [docs/SPEC.md](../SPEC.md). The error taxonomy is normative in [RFC-0010 §Error taxonomy](../../rfcs/0010-harness-runner.md#error-taxonomy); this section summarises it and catalogues failure modes across the whole system. The implementation is `harness/src/iproofs/errors.py`.
+This document is part of the specification corpus indexed in [docs/SPEC.md](../SPEC.md). The normative error taxonomy is defined in [RFC-0010 §Error taxonomy](../../rfcs/0010-harness-runner.md#error-taxonomy) and implemented in `harness/src/iproofs/errors.py`; this section summarises the taxonomy and catalogues failure modes across the system.
 
 ## Principles
 
-1. **A failure is a result.** A job that fails is written as a run directory with its failure record and counted in `n_failed`. It is never deleted or retried into success ([AGENTS.md hard rule 5](../../AGENTS.md#hard-rules), PRD N3).
-2. **Fail before measuring, not during.** Everything that can be checked before a timed step (schemas, hashes, image digest) is checked before it; profile conformance is checked and recorded, and refuses nothing, so that a failed precondition costs no GPU time and produces no partial measurement.
-3. **Verdicts are not errors.** `accept`, `reject`, `no_verdict` and `invalid_call` are outcomes of a verify call. An adapter that cannot produce one of them has failed.
-4. **One taxonomy, closed.** Every failure has exactly one `ErrorKind`. A new kind goes into RFC-0010 and `errors.py` together.
-5. **No silent degradation.** When a measurement is incomplete (sampler gaps, unobservable proof release), the number is marked `degraded` or null with a `null_reason`, never estimated.
+1. **A failure is a result.** Every failed job is written to a run directory with its failure record and counted in `n_failed`. Failed runs are never deleted or retried until they succeed ([AGENTS.md hard rule 5](../../AGENTS.md#hard-rules), PRD N3).
+2. **Fail before measuring, not during.** Preconditions that can be checked ahead of time (schemas, file hashes, and image digests) are validated before any timed step begins, avoiding wasted GPU time and partial measurements. Profile conformance is checked and logged, but never blocks execution.
+3. **Verdicts are not errors.** `accept`, `reject`, `no_verdict`, and `invalid_call` are valid outcomes of a `verify` call. An adapter error occurs only when the adapter fails to return one of these verdicts.
+4. **One closed taxonomy.** Every failure maps to a single `ErrorKind`. Adding a new kind requires updating both RFC-0010 and `errors.py` together.
+5. **No silent degradation.** When a measurement is incomplete (such as sampler gaps or an unobservable proof release), the resulting quantity is marked `degraded` or set to null with an explicit `null_reason`, never interpolated or guessed.
 
 ## Error kinds
 
 | Kind | Meaning | Typical step | CLI exit |
 |---|---|---|---|
-| `config` | an input file or argument is invalid | before jobs, `resolved` | 1 or 2 |
-| `environment` | a prerequisite is missing (NVML on a GPU profile, a lock held by another runner). The RFC-0006 conformance checks PC-* (`iproofs.provenance.check_profile`) are recorded in the manifest and never raise it | before jobs, `machine_recorded` | 3 |
-| `integrity` | a hash, digest or pin does not match | `resolved`, `image_ready`, `info` | 4 (in a job), 1 (validate) |
-| `fetch` | a network fetch failed after 3 attempts | `resolved`, `image_ready` | 4 |
-| `adapter` | the adapter exited non-zero or broke the contract | any adapter step | 4 |
-| `timeout` | a step exceeded its wall limit | any adapter step | 4 |
-| `resource` | OOM kill or disk full | any adapter step | 4 |
-| `policy` | a weakening configuration outside a control job | `prove`, validate | 4 (run), 1 (validate) |
-| `internal` | a harness bug or an interrupted job | any | 5 |
+| `config` | An input file or CLI argument is invalid | Before jobs, `resolved` | 1 or 2 |
+| `environment` | A required runtime dependency is missing (for example NVML on a GPU profile, or a lock held by another runner). RFC-0006 profile conformance checks PC-* (`iproofs.provenance.check_profile`) are recorded in the manifest and never raise this error | Before jobs, `machine_recorded` | 3 |
+| `integrity` | A file hash, image digest, or commit pin does not match | `resolved`, `image_ready`, `info` | 4 (during a job), 1 (in `validate`) |
+| `fetch` | A network download failed after 3 attempts | `resolved`, `image_ready` | 4 |
+| `adapter` | The adapter exited non-zero or violated the adapter contract | Any adapter step | 4 |
+| `timeout` | A step exceeded its wall-clock limit | Any adapter step | 4 |
+| `resource` | The container was OOM-killed or the disk filled up | Any adapter step | 4 |
+| `policy` | A weakening flag or control configuration appeared outside a control job | `prove`, `validate` | 4 (in `run`), 1 (in `validate`) |
+| `internal` | A harness bug occurred or the runner process was interrupted | Any | 5 |
 
-Every recorded failure has the shape `{kind, step, message, exit_code, last_lines[], at}` ([RFC-0010 §Failure record](../../rfcs/0010-harness-runner.md#failure-record)), with `last_lines` holding the last 50 lines of adapter stderr after redaction ([05-observability §Redaction](05-observability.md#redaction)).
+Every failure record has the structure `{kind, step, message, exit_code, last_lines[], at}` ([RFC-0010 §Failure record](../../rfcs/0010-harness-runner.md#failure-record)), where `last_lines` contains up to the last 50 redacted lines of adapter stderr ([05-observability §Redaction](05-observability.md#redaction)).
 
 ## Failure-mode catalogue
 
-Each row names a failure, how it is detected, what the system does, and how it is recorded. "Run failed" means the job reaches `written` with `status: "failed"` and the given kind.
+Each row describes a failure condition, how the system detects and handles it, and how it is recorded. "Run failed" means the job reaches the `written` state with `status: "failed"` and the specified error kind.
 
 | # | Failure | Detection | Response | Recorded as |
 |---|---|---|---|---|
-| 1 | Workload, system, reference or target file fails its schema | `iproofs.schema` validation on load | stop before any job | `config`, exit 1 (validate) or 2 (run) |
-| 2 | Workload not listed in `system.yaml` `workloads` | runner check at `resolved` | stop before any job | `config`, exit 2 |
-| 3 | YAML date or ambiguous scalar not quoted | schema type check | reject the file | `config` |
-| 4 | Model fetch fails (network, 5xx, rate limit) | exception in fetcher | retry 3 times with backoff 2 s, 8 s, 32 s; then fail | `fetch`, run failed at `resolved` |
-| 5 | Gated model licence not accepted or `HF_TOKEN` missing | 401 or 403 from source | no retry | `fetch` with message naming the model, token never logged |
-| 6 | Weight file hash differs from the workload | SHA-256 check before any container sees the file | delete the fetched file, fail | `integrity` at `resolved` |
-| 7 | Prompt corpus bytes differ from `corpus.yaml` digest | SHA-256 check | fail | `integrity` at `resolved` |
-| 8 | Image digest differs from `system.yaml` | `docker image inspect` | fail | `integrity` at `image_ready` |
-| 9 | `info` reports an upstream commit other than `system.yaml` | field comparison | fail | `integrity` at `info` |
-| 10 | Unpinned reference (short hash, tag instead of digest) | pin check | reject in CI; refuse to run | `integrity`, exit 1 |
-| 11 | cgroup v1, kernel below 5.19, Docker below 25.0, toolkit below 1.17 | environment probe | recorded; the run goes on | manifest `harness.nonconforming: true` |
-| 12 | Host below profile (GPU model, CPUs on the GPU's NUMA node, memory, disk) | machine record against profile | recorded; the run goes on | manifest `harness.nonconforming: true` |
-| 13 | Another compute process on the bound GPU | NVML process list before each job | recorded; the job goes on | manifest profile checks |
-| 14 | Another runner active on the results tree | `flock` on `results/.runner.lock` or live staging dir | stop | `environment`, exit 3 |
-| 15 | Adapter subcommand exits non-zero | container exit status | run failed; continue with next repetition | `adapter` with exit code and last lines |
-| 16 | out.json missing, not JSON, or invalid against `adapter-out/1` | parse and schema validation | run failed | `adapter`; raw file kept in `logs/` |
-| 17 | out.json `contract` or `subcommand` differs from the job | field check | run failed | `adapter` |
-| 18 | Proof listed in out.json but not released, or released but not listed | INV-ADAPTER-6 check | run failed; released proofs still digested | `adapter` |
-| 19 | Path in out.json escapes `/io`, symlink or device file in a proof | path resolution on host | run failed | `adapter` naming the path |
-| 20 | Proof part above 64 GiB or more than 10,000 parts | size and count check | run failed | `adapter` |
-| 21 | Tokens covered inconsistent with the shape | INV-ADAPTER-7 | run failed | `adapter` |
-| 22 | Leftover `.tmp-*` proof directory after `prove` | directory scan | ignored, not counted | warning event `proof.tmp_left` |
-| 23 | Step exceeds its wall limit | harness timer (`iproofs.measure.timed_call`) | `docker kill --signal KILL`, wait up to 30 s, container removed, run failed, `step.timeout` event, no retry | `timeout` |
-| 24 | Container OOM killed | `docker inspect` `State.OOMKilled` after a non-zero exit (`timed_call`) | run failed, `step.oom` event | `resource` |
-| 25 | Disk full while writing proofs or records | `OSError` with `ENOSPC` in a job state (`Runner.run`) | run failed; staging kept for diagnosis | `resource` |
-| 26 | NVML sample gap above 150 ms | sampler timestamps | count the gap; above 5 % gaps mark GPU metrics `degraded: true` | quantity flag, event `sampler.gap` |
-| 27 | NVML unavailable on a GPU profile | NVML init failure | stop before the job | `environment` |
-| 28 | cgroup files of the container unreadable | read error | host memory and CPU time null with `null_reason: "missing_input"` | event `sampler.cgroup_unavailable` |
-| 29 | Proofs released all at once (no observable steady window) | release times within one poll interval, or `steady_boundary: not_observable` | `prove.steady` null | `null_reason: "not_externally_observable"` |
-| 30 | Fewer than two proofs in a session | count | `prove.steady` null | `null_reason: "fewer_than_two_proofs"` |
-| 31 | Verify returns a value outside the four verdicts | schema validation | that verify call failed | `adapter`; row or control outcome `error` |
-| 32 | Honest verify returns `reject` or `no_verdict` | verdict per proof | recorded in the row; acceptance count reflects it | verdict counts in `run.json` |
-| 33 | Forbidden flag outside a control job | adapter refuses; CI policy check on `commands.jsonl` | run failed or PR blocked | `policy` |
-| 34 | A control job appears among a release's measured rows | CI check on manifest `control` | PR blocked | `policy`, exit 1 |
-| 35 | Control twin not accepted | twin verdict | control `void` | control outcome `void` |
-| 36 | Accepted control where rejection was expected | classification | private disclosure, embargo | `disclosure_pending: true` in `controls.json` |
-| 37 | Mutation identical to the original input | assertion in `iproofs.controls` | control `error` | `internal` |
-| 38 | Derived value differs from recomputation | `iproofs derive --check` | PR blocked | exit 1 |
-| 39 | Quantity missing unit, grade, tier, source or a required scope | label check | PR blocked | exit 1 |
-| 40 | Committed JSON not byte-identical to re-serialisation | format check | PR blocked | exit 1 |
-| 41 | Run dir edited or deleted after merge | CI diff check on `results/` | PR blocked | exit 1 |
-| 42 | Secret or host identifier in a committed file | secrets scan | PR blocked | exit 1 |
-| 43 | Runner killed or host lost power mid-job | stale staging dir on next start | written as failed, never resumed | `internal` at last reached step |
-| 44 | Harness writes a document that fails its own schema | validation at `written` | run failed; invalid file kept in `logs/invalid/` | `internal`, exit 5 |
-| 48 | Reference row cannot run on the profile (model does not fit) | adapter failure or declared infeasibility | row recorded failed, overhead null | the failed run record; overhead `null_reason: "missing_input"` |
-| 49 | No perturbed commitment for the workload (no tensor of at least 1,024 elements, the adapter cannot commit the copy, or the weights are not on this host) | `iproofs controls --prepare-perturbed`; `_perturbed` lookup at control time | C3 and P1 `not_applicable` with the reason | `config` exit 2 from `--prepare-perturbed`; control note |
+| 1 | Workload, system, reference, or target file fails schema validation | `iproofs.schema` check on load | Abort before starting any job | `config`, exit 1 (`validate`) or 2 (`run`) |
+| 2 | Workload is not listed in `system.yaml` `workloads` | Runner check at `resolved` | Abort before starting any job | `config`, exit 2 |
+| 3 | Unquoted YAML date or ambiguous scalar | Schema type check | Reject the file | `config` |
+| 4 | Model download fails (network error, 5xx, rate limit) | Exception in fetcher | Retry 3 times with backoff of 2 s, 8 s, and 32 s, then fail | `fetch`, run failed at `resolved` |
+| 5 | Gated model licence not accepted or `HF_TOKEN` missing | HTTP 401 or 403 from source | Do not retry | `fetch` naming the model; token is never logged |
+| 6 | Weight file hash does not match the workload definition | SHA-256 check before mounting into any container | Delete the downloaded file and fail | `integrity` at `resolved` |
+| 7 | Prompt corpus bytes do not match `corpus.yaml` digest | SHA-256 check | Fail | `integrity` at `resolved` |
+| 8 | Container image digest does not match `system.yaml` | `docker image inspect` | Fail | `integrity` at `image_ready` |
+| 9 | `info` subcommand reports an upstream commit different from `system.yaml` | Field comparison | Fail | `integrity` at `info` |
+| 10 | Unpinned reference (abbreviated commit hash or mutable tag) | Pin validation | Reject in CI and refuse to run | `integrity`, exit 1 |
+| 11 | cgroup v1, kernel below 5.19, Docker below 25.0, or toolkit below 1.17 | Environment probe | Record nonconformance and continue | Manifest `harness.nonconforming: true` |
+| 12 | Host falls short of profile requirements (GPU model, NUMA CPUs, memory, disk) | Machine record check against profile | Record nonconformance and continue | Manifest `harness.nonconforming: true` |
+| 13 | Another compute process is running on the bound GPU | NVML process list check before each job | Record nonconformance and continue | Manifest profile checks |
+| 14 | Another runner holds the lock on the results tree | `flock` on `results/.runner.lock` or active staging directory | Abort | `environment`, exit 3 |
+| 15 | Adapter subcommand exits non-zero | Container exit code | Mark run failed and proceed to the next repetition | `adapter` with exit code and trailing stderr lines |
+| 16 | `out.json` is missing, malformed JSON, or invalid under `adapter-out/1` | Parse and schema validation | Mark run failed | `adapter`; raw file preserved in `logs/` |
+| 17 | `out.json` `contract` or `subcommand` does not match the job | Field check | Mark run failed | `adapter` |
+| 18 | Proof listed in `out.json` was not released, or a released proof was not listed | INV-ADAPTER-6 check | Mark run failed; digest any released proofs anyway | `adapter` |
+| 19 | Path in `out.json` escapes `/io`, or a proof contains a symlink or device file | Host-side path resolution | Mark run failed | `adapter` naming the offending path |
+| 20 | Proof part exceeds 64 GiB or total parts exceed 10,000 | Size and count validation | Mark run failed | `adapter` |
+| 21 | Declared tokens covered do not match workload shape | INV-ADAPTER-7 check | Mark run failed | `adapter` |
+| 22 | Leftover `.tmp-*` directory remains in proofs after `prove` | Directory scan | Ignore and exclude from proof count | Warning event `proof.tmp_left` |
+| 23 | Step exceeds its wall-clock timeout | Harness timer (`iproofs.measure.timed_call`) | Send `docker kill --signal KILL`, wait up to 30 s, remove container, mark run failed, emit `step.timeout`, and do not retry | `timeout` |
+| 24 | Container killed by OOM killer | `docker inspect` `State.OOMKilled` after non-zero exit (`timed_call`) | Mark run failed and emit `step.oom` | `resource` |
+| 25 | Disk runs out of space while writing proofs or records | `OSError` with `ENOSPC` during a job state (`Runner.run`) | Mark run failed and retain staging directory for inspection | `resource` |
+| 26 | NVML sampling gap exceeds 150 ms | Sampler timestamps | Tally gap duration; if gaps exceed 5 %, mark GPU metrics `degraded: true` | Quantity `degraded` flag and `sampler.gap` event |
+| 27 | NVML is unavailable on a GPU profile | NVML initialisation error | Abort before starting the job | `environment` |
+| 28 | Container cgroup files cannot be read | File read error | Set host memory and CPU time to null with `null_reason: "missing_input"` | Event `sampler.cgroup_unavailable` |
+| 29 | All proofs are released together with no observable steady window | Release timestamps fall within one poll interval, or `steady_boundary: not_observable` | Set `prove.steady` to null | `null_reason: "not_externally_observable"` |
+| 30 | Session contains fewer than two proofs | Proof count check | Set `prove.steady` to null | `null_reason: "fewer_than_two_proofs"` |
+| 31 | `verify` returns a verdict outside the four allowed values | Schema validation | Mark that verify call failed | `adapter`; row or control outcome recorded as `error` |
+| 32 | Honest `verify` call returns `reject` or `no_verdict` | Per-proof verdict | Record in the run and reflect in acceptance counts | Verdict counts in `run.json` |
+| 33 | Forbidden flag used outside a control job | Adapter refusal or CI policy scan of `commands.jsonl` | Mark run failed or block pull request | `policy` |
+| 34 | Control job appears among a release's measured rows | CI check on manifest `control` flag | Block pull request | `policy`, exit 1 |
+| 35 | Honest twin of a negative control is not accepted | Twin verdict check | Mark control `void` | Control outcome `void` |
+| 36 | Negative control accepted when rejection was expected | Outcome classification | Follow private disclosure and embargo process | `disclosure_pending: true` in `controls.json` |
+| 37 | Control mutation produces bytes identical to original input | Assertion in `iproofs.controls` | Mark control `error` | `internal` |
+| 38 | Stored derived quantity differs from recomputed value | `iproofs derive --check` | Block pull request | Exit 1 |
+| 39 | Quantity omits unit, grade, tier, source, or required timing scope | Label validation | Block pull request | Exit 1 |
+| 40 | Committed JSON is not byte-identical to canonical re-serialization | Format check | Block pull request | Exit 1 |
+| 41 | Merged run directory is modified or deleted | CI diff check on `results/` | Block pull request | Exit 1 |
+| 42 | Secret or host identifier detected in a committed file | Secrets scan | Block pull request | Exit 1 |
+| 43 | Runner killed or host loses power mid-job | Stale staging directory found on next startup | Write incomplete job as failed and never resume it | `internal` at the last reached step |
+| 44 | Harness generates a document that fails its own schema | Validation at `written` | Mark run failed and keep invalid file in `logs/invalid/` | `internal`, exit 5 |
+| 48 | Reference row cannot run on the profile (for example, model does not fit in memory) | Adapter failure or declared infeasibility | Record run as failed and set overhead to null | Failed run record; overhead `null_reason: "missing_input"` |
+| 49 | No perturbed commitment is available for the workload (no tensor with at least 1,024 elements, adapter cannot commit the perturbed copy, or weights are absent on this host) | `iproofs controls --prepare-perturbed`; `_perturbed` lookup at control time | Mark C3 and P1 `not_applicable` with the reason | `config` exit 2 from `--prepare-perturbed`; control note |
 
 ## Recovery rules
 
-- **Before measurement:** `fetch` retries; every other failure stops the job or the invocation.
-- **During measurement:** nothing retries. The runner records the failure and moves to the next repetition ([RFC-0010 §Retry policy](../../rfcs/0010-harness-runner.md#retry-policy)).
-- **After a crash:** the stale job is written as failed `internal` and never resumed ([RFC-0010 §Crash recovery](../../rfcs/0010-harness-runner.md#crash-recovery)). `iproofs run` does this on start (`Runner.recover`): failure step is the last state the job reached, message `runner terminated before completion`, event `runner.recovered`; a staging directory whose runner is still alive on this boot makes it exit 3.
-- **In CI:** every check failure blocks the merge; there is no override flag. A maintainer who believes a check is wrong changes the check by pull request.
+- **Before measurement:** Network `fetch` failures retry up to three times; all other precondition failures stop the job or invocation immediately.
+- **During measurement:** Steps are never retried. The runner records the failure and continues with the next repetition ([RFC-0010 §Retry policy](../../rfcs/0010-harness-runner.md#retry-policy)).
+- **After a crash:** On startup, `iproofs run` calls `Runner.recover` to convert any stale staging directory into a failed run (`ErrorKind.internal`, recording the last reached state, message `runner terminated before completion`, and event `runner.recovered`) rather than resuming it ([RFC-0010 §Crash recovery](../../rfcs/0010-harness-runner.md#crash-recovery)). If a staging directory belongs to a runner still alive on the current boot, `iproofs run` exits with code 3.
+- **In CI:** Every check failure blocks merge with no override flag. If a maintainer believes a check is wrong, they update the check via pull request.
 
 ## Error messages
 
-Messages are one sentence, name the file, field or step, and state the expected and actual values where they are safe to print (hashes, versions, counts). They never include secrets, host names, IP addresses or absolute home paths; redaction applies to messages as to logs.
+Error messages should be a single clear sentence identifying the file, field, or step along with expected and actual values whenever safe to print (such as hashes, versions, or counts). They never expose secrets, hostnames, IP addresses, or absolute home paths; the same redaction pipeline applies to error messages as to log output.
