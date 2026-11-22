@@ -24,11 +24,19 @@ import re
 
 from . import state as S
 from .chrome import AUTORESEARCH_PAGE, LEARN_PAGE, MANDATE_PAGE, footer, header, link, page
-from .figures import EXPLORERS, FIGURES, MEASURED, STAGE_WORD
+from .figures import EXPLORERS, FIGURES, MEASURED, STAGE_WORD, autoresearch
 from .glossary import Halt, defs, glossary, glossary_entries, plain, slug, squeeze, term  # noqa: F401
 from .ladder import nobreak
 from .pages import mandate_parts, title_band
-from .words import AUTORESEARCH_SOON, AUTORESEARCH_TITLE, MANDATE_BELIEF, curly, e, quoted
+from .words import (
+    AUTORESEARCH_PARTS,
+    AUTORESEARCH_SOON,
+    AUTORESEARCH_TITLE,
+    MANDATE_BELIEF,
+    curly,
+    e,
+    quoted,
+)
 
 # ------------------------------------------------------------------ inline
 TOKEN = re.compile(
@@ -172,6 +180,19 @@ def block(name, arg, body, ctx):
         paras = "".join(f"<p>{quoted(p)}</p>" for p in re.split(r"\n\s*\n", body.strip()))
         return (f'<blockquote class="said2">{paras}<cite><a href="{e(address(url, where))}">'
                 f"{inline(who, ctx)}</a></cite></blockquote>")  # fmt: skip
+    if name == "cells":
+        # numbered cells side by side, one per `### Title` of the body, each with its text
+        parts = re.split(r"^### (.+)$", body.strip(), flags=re.M)
+        if parts[0].strip() or len(parts) < 3:
+            raise Halt(f"{where}: a cells block is `### Title` lines, each over its text")
+        cells = []
+        for k in range(1, len(parts), 2):
+            hid = ctx["ids"](parts[k])
+            cells.append(f'<section class="lcell" aria-labelledby="{hid}">'
+                         f'<p class="lcn" aria-hidden="true">{k // 2 + 1:02d}</p>'
+                         f'<h3 class="lch" id="{hid}">{inline(parts[k], ctx, keep=True)}</h3>'
+                         f"{markdown(parts[k + 1], ctx)}</section>")  # fmt: skip
+        return f'<div class="lcells">{"".join(cells)}</div>'
     if name == "reading":
         return listing([ln for ln in body.split("\n") if ln.strip()], ctx, cls="reading")
     drawn = {"figure": FIGURES, "explore": EXPLORERS, "measured": MEASURED}.get(name)
@@ -504,10 +525,12 @@ def build_hub():
 
 
 def build_autoresearch():
-    """Autoresearch, announced and not open yet: "Coming soon" over its title, then the band's
-    summary, the strip of its sections and its text (`autoresearch` in web/learn/index.yaml).
-    Under its own tab, not on the hub; not indexed, shared or searched while it is not open. A
-    tree without its words prints the title and the two words."""
+    """Autoresearch, announced and not open yet. Its band: "Coming soon" over its title and
+    summary, the parts the track is for set huge behind them as a texture, and a mock-up of the
+    track's screen standing on the band's lower edge. Then the strip of its sections and its
+    text (`autoresearch` in web/learn/index.yaml). Under its own tab, not on the hub; not
+    indexed, shared or searched while it is not open. A tree without its words prints the title
+    and the two words."""
     entry = (S.V.get("learn") or {}).get("autoresearch")
     soon = f'<span class="soon">{e(AUTORESEARCH_SOON)}</span>'
     if entry is None:
@@ -516,7 +539,16 @@ def build_autoresearch():
     else:
         ctx = context(entry, terms(), defs())
         text = markdown(text_of(entry), ctx)
-        main = f"""{band(soon, entry["title"], entry["summary"])}
+        line = " ".join(e(p) for p in AUTORESEARCH_PARTS)
+        texture = "".join(f"<span>{line} {line}</span>" for _ in range(5))
+        main = f"""<section class="mast mast-sys lband arband" aria-labelledby="h-name">
+    <div class="arw" aria-hidden="true">{texture}</div>
+    <div class="mast-in"><p class="kick">{soon}</p>
+      <h1 id="h-name" class="sysname lt-h">{e(entry["title"])}</h1>
+      <p class="lt-s">{nobreak(entry["summary"])}</p>
+      {autoresearch()}
+    </div>
+  </section>
   {strip(entry["title"], ctx.get("heads", []))}
   <div class="wrap lwrap">
     <article class="prose lpr">{text}</article>
