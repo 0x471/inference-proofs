@@ -192,7 +192,7 @@ The number of consecutive tokens at the beginning of a reply that match the orig
 
 ### Missing for Met
 
-The complete list of requirements separating a petal's current grade from Met. On each system page, these items are grouped by the next grade they unlock, showing who needs to act (the publisher or us) and where the system stands today.
+The complete list of requirements separating a petal's current grade from Met. On each system page, every item is an open square on its criterion's track, in the cell of the grade it unlocks; opened, the criterion lists each item there in words with who needs to act (the publisher or us), and one click further, where the system stands today.
 
 ### Mixture of experts
 
@@ -212,7 +212,7 @@ The headline ranking metric: steady-state GPU-seconds per proved reply divided b
 
 ### Next step
 
-The specific requirements needed to move a petal up one grade, computed directly from its decision table and tagged with who acts (the publisher or us). On system pages, all items needed for Met appear under **Missing for Met**, grouped by target grade. Undecided petals instead list what is needed to reach a verdict.
+The specific requirements needed to move a petal up one grade, computed directly from its decision table and tagged with who acts (the publisher or us). On system pages, every item needed for Met stands under the grade it unlocks, on each criterion's track (see **Missing for Met**). Undecided petals instead list what is needed to reach a verdict.
 
 ### Not decided
 

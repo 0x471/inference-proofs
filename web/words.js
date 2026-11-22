@@ -528,32 +528,25 @@
     if (!ticking) { ticking = true; requestAnimationFrame(() => { ticking = false; if (moved) { moved = false; away.forEach((f) => f()); } spy(); }); }
   };
 
-  // ------------------------------------------------------------ a petal and its line light each other: the large glyph's
-  // petals and the petals' table (a system page), the key's petals and the petals' sections (the checks page, where the
-  // section read lights its petal). On a system page a petal also lights the checks its red names (data-to on a
-  // check's name, p1 to p5), and a check lights those petals: the rest dim, never hide
-  const gb = $('.gbig');
+  // ------------------------------------------------------------ the checks page: the key's petals and the petals'
+  // sections light each other, and the section read lights its petal
+  const gb = $('.cwrap .gbig');
   const petals = gb ? $$('.sl', gb) : [];
   const names = gb ? $$('.t', gb) : [];
-  const lines = $$('.ckt tr.pt').length ? $$('.ckt tr.pt') : $$('.cwrap .chk');
-  const checks = $$('.ckt tr.ck');
-  const decides = checks.map((tr) => { const a = $('th a[data-to]', tr); return a ? a.dataset.to.split(' ').map((k) => +k.slice(1) - 1) : []; });
-  let hand = null;  // { p: petals in hand, c: checks in hand }
+  const lines = $$('.cwrap .chk');
+  let hand = null;  // the petal in hand
   let read = -1;
   const light = () => {
-    const ps = hand ? hand.p : (read >= 0 ? [read] : []);
-    const cs = hand ? hand.c : [];
+    const ps = hand !== null ? [hand] : (read >= 0 ? [read] : []);
     if (gb) gb.classList.toggle('lit-on', ps.length > 0);
     petals.forEach((p, k) => p.classList.toggle('lit', ps.includes(k)));
     names.forEach((p, k) => p.classList.toggle('lit', ps.includes(k)));
     lines.forEach((l, k) => l.classList.toggle('lit', ps.includes(k)));
-    checks.forEach((l, k) => l.classList.toggle('lit', cs.includes(k)));
-    $$('.ckt').forEach((t) => t.classList.toggle('dim', !!hand && checks.length > 0));
   };
   // the petal read is the last whose heading has passed a line a sixth of the way down the view under the
   // strip, so a petal arrived at by its link is the one read
   const petalSpy = () => {
-    if (!gb || !lines.length || lines[0].tagName === 'TR') return;
+    if (!gb || !lines.length) return;
     const wrap = gb.closest('.cwrap').getBoundingClientRect();
     const edge = pnav ? pnav.getBoundingClientRect().bottom : 0;
     const mid = edge + (innerHeight - edge) * 0.15;
@@ -564,30 +557,40 @@
     if (k !== read) { read = k; light(); }
   };
   if (gb && lines.length === petals.length) {
-    const petalIn = (i) => () => { hand = { p: [i], c: decides.flatMap((d, k) => (d.includes(i) ? [k] : [])) }; light(); };
-    const checkIn = (k) => () => { hand = { p: decides[k], c: [k] }; light(); };
+    const petalIn = (i) => () => { hand = i; light(); };
     const drop = () => { hand = null; light(); };
-    // the checks page's key: ground parts its arms, and the pointer crossing it keeps the arm it last pointed at
-    // (dropped there, the petal read would light between two arms and the key would blink); leaving the glyph drops it
+    // ground parts the key's arms, and the pointer crossing it keeps the arm it last pointed at (dropped there, the
+    // petal read would light between two arms and the key would blink); leaving the glyph drops it
     const key = $('svg', gb);
-    if (key && !lines[0].contains(petals[0])) key.addEventListener('pointerleave', drop);
+    if (key) key.addEventListener('pointerleave', drop);
     [petals, names].forEach((set) => set.forEach((p, i) => {
-      // a system page's arm heads its own row: the row's handlers light it
-      if (lines[i].contains(p)) return;
       p.addEventListener('pointerenter', petalIn(i));
-      // a petal that is a link (the checks page's key) goes there itself
+      // a petal that is a link goes there itself
       if (!p.closest('a')) p.addEventListener('click', () => lines[i].scrollIntoView({ block: 'nearest', behavior: smooth() ? 'smooth' : 'auto' }));
     }));
     gb.classList.add('linked');
-    const hold = (els, on) => els.forEach((l, i) => {
-      l.addEventListener('pointerenter', on(i));
+    lines.forEach((l, i) => {
+      l.addEventListener('pointerenter', petalIn(i));
       l.addEventListener('pointerleave', drop);
-      l.addEventListener('focusin', on(i));
+      l.addEventListener('focusin', petalIn(i));
       l.addEventListener('focusout', drop);
     });
-    hold(lines, petalIn);
-    hold(checks, checkIn);
   }
+  // a system page's criteria: a link to one (#petal-<id>) lands on its row, opened, as the page opens or the address
+  // changes; without script it lands on the row closed
+  const crit = () => {
+    let t = null;
+    try { t = location.hash && document.getElementById(decodeURIComponent(location.hash.slice(1))); } catch (_) { t = null; }
+    const d = t && t.matches('.crr') ? $(':scope > details.crd', t) : null;
+    if (d && !d.open) d.open = true;
+  };
+  crit();
+  addEventListener('hashchange', crit);
+  // a link to the criterion the address already names changes no hash: it opens the row again all the same
+  document.addEventListener('click', (ev) => {
+    const a = ev.target instanceof Element ? ev.target.closest('a[href^="#petal-"]') : null;
+    if (a && a.getAttribute('href') === location.hash) crit();
+  });
   addEventListener('scroll', onScroll, { passive: true });
   addEventListener('resize', onScroll, { passive: true });
   // the strip moves up or down with the top bar after the scroll that moved the bar has ended (a page opened
@@ -864,8 +867,8 @@
   }
 
   // ------------------------------------------------------------ one page into the next: leaving the ladder for a system's
-  // page, that row's name takes the name the page gives its title, so it morphs into it (the page has no glyph of its
-  // own to morph into: its arms head the petals' table). A system's page morphs back into the ladder only: leaving for
+  // page, that row's name takes the name the page gives its title, so it morphs into it (the page draws no glyph of
+  // its own to morph into: it grades the criteria in words). A system's page morphs back into the ladder only: leaving for
   // any other page, its name gives up its name
   addEventListener('pageswap', (ev) => {
     hide();

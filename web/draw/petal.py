@@ -1,15 +1,20 @@
-"""A petal on a system page (RFC-0018 SI-3, GL-11, amended 2026-11-17, owner decision).
+"""A criterion on a system page (RFC-0018 SI-3, GL-11, amended 2026-11-17 and 2026-11-22, owner
+decisions).
 
-Each petal answers four questions in the owner's order: what full marks (Met) need, what the
-system has, what it misses and who acts, and where to check. The default row prints the plain
-question, the grade as a word in its ink, one sentence (the first item missing), Met needs and
-Has in a few words, and the count missing with who acts, the toggle of one native disclosure.
-Opened, it prints the items missing beside the evidence and the grading rule; one click more,
-"Why this grade, in full": what the grade comes from, why, Met needs and Has in full, each item
-with what it is today, our records, the limits no rule counts and the field's terms (Q45). Every line is worded here and in words.py from the board's
-keys (`to_met`, `read_facts`, `why`, the petal's facts) and the stored records; nothing is typed
-per system, and nothing here sets a state. The page does not print a petal's `reason` or scale
-label: both stay on the board.
+Each criterion (a petal of the glyph, which the system page no longer draws) answers four
+questions in the owner's order: what full marks (Met) need, what the system has, what it misses
+and who acts, and where to check. Its closed row prints its name, its plain question, its grade
+as a word in its ink, one sentence (the first item missing) and its track: Partly met, Mostly met
+and Met as three cells, those it holds solid in its grade's ink, each of the others holding one
+open square per item missing for it. Opened, the track unfolds in place: each square becomes its
+numbered item in words under its cell, with who acts; what it protects, what Met needs and what
+it has stand under the question; Fidelity draws its mean among the runs its thresholds come
+from; then the evidence and "Why this grade" one click further each: what the grade comes from,
+why, Met needs and Has in full, each item with what it is today, our records, the limits no rule
+counts and the field's terms. Every line is worded here and in words.py from the board's keys
+(`to_met`, `read_facts`, `why`, the petal's facts) and the stored records; nothing is typed per
+system, and nothing here sets a state. The page does not print a petal's `reason` or scale label:
+both stay on the board.
 """
 
 import re
@@ -17,9 +22,15 @@ import re
 from . import state as S
 from .chrome import CHECKS_PAGE, link, rung_of
 from .ladder import bits_words, name_of, proved_words
+from .plots import ZERO, hbar
 from .words import (
     CAME_FROM,
     CAUSE_WORD,
+    CHART_BAR,
+    CHART_CAPTION,
+    CHART_NEEDS,
+    CHART_NOT_SHOWN,
+    CONTROL_NAME,
     EVIDENCE,
     EVIDENCE_TAG,
     FIELD_TERMS_TITLE,
@@ -33,17 +44,17 @@ from .words import (
     HAS_HEAD,
     IN_FULL,
     KEPT_TIME,
-    MISSING_NONE,
     MISSING_STEP,
     MISSING_TAG,
     NEEDS_HEAD,
     NEEDS_SHORT,
     NEEDS_TINY,
-    PANEL_HEAD,
     PETAL_ASK,
     PETAL_BLOCK,
     PETAL_NAME,
+    PETAL_PROTECTS,
     PETAL_TERM,
+    PROTECTS_HEAD,
     REACH_LABEL,
     READING_MARK,
     READING_TOPIC,
@@ -51,12 +62,12 @@ from .words import (
     RECORDS,
     SCOPE_LINK,
     STEP_WORD,
+    TRACK_SAID,
     VISIBLE_KINDS,
     VISIBLE_OTHERS,
     VISIBLE_TAG_WORD,
     WHO,
-    WHO_ACTS,
-    WHO_SPLIT,
+    WHO_HEAD,
     WHO_TAG,
     e,
     petal_step,
@@ -82,6 +93,22 @@ def state_word(state, word):
     """A check's state on a system page as the petals print their grades: a word in its ink, set
     in display type (passed green, failed red, not decided muted)."""
     return f'<span class="pvd sw {CHECK_INK.get(state, "hollow")}">{e(word)}</span>'
+
+
+QUANT = re.compile(r"q\d")  # a quantized copy's id ("q8_0", "q4_k_m")
+
+
+def control_name(cid):
+    """A control's name as a row prints it: its words (CONTROL_NAME: a quantized copy by its bits,
+    its id in parentheses), else a quantized copy by its id in capitals. Returns (name, title: the
+    id, and for a quantized copy the llama.cpp commit that made it, FI-2)."""
+    name = CONTROL_NAME.get(cid) or (cid.upper() if QUANT.match(cid) else cid)
+    if not QUANT.match(cid):
+        return name, (cid if cid in CONTROL_NAME else "")
+    engine = S.V["constants"].get("fidelity_engine") or {}
+    made = (f", made by {engine['tool']} at {str(engine['commit'])[:7]}"
+            if engine.get("tool") and engine.get("commit") else "")  # fmt: skip
+    return name, f"{cid}{made}"
 
 
 # a publisher's Markdown and source-comment marks, which a quote prints without: **strong**, a
@@ -277,7 +304,7 @@ def came_from_words(p):
     return EVIDENCE["from"].format(src=CAME_FROM[key]) + pts
 
 
-# ------------------------------------------------------------------ the default row
+# ------------------------------------------------------------------ Met needs and Has, in a few words
 
 
 def per_words(f, short=False):
@@ -398,7 +425,7 @@ CHECK_WORD = {"model": "Model", "prompt": "Prompt", "reply": "Reply",
 
 
 def item_short(it, p, row):  # noqa: PLR0911 (one phrase per item key)
-    """An item in a few words, for the default row."""
+    """An item in a few words, as an opened row lists it under its grade's cell."""
     need, f = it["need"], facts_of(p)
     run = (
         it.get("run")
@@ -471,7 +498,7 @@ def reading_topics(facts):
 
 
 def item_long(it, p, row, petals, mixed):  # noqa: PLR0912, PLR0915 (one sentence set per key)
-    """An item in full, for the Missing block: what is needed, then "Today ...", and in a group
+    """An item in full, one click down: what is needed, then "Today ...", and in a group
     where both act, who acts."""
     need, f = it["need"], facts_of(p)
     st = row.get("statement") or {}
@@ -640,12 +667,6 @@ def item_long(it, p, row, petals, mixed):  # noqa: PLR0912, PLR0915 (one sentenc
     return said
 
 
-def first_item(p):
-    """The first item missing for Met, the one the row's sentence words; None at Met."""
-    items = items_of(p)
-    return items[0] if items else None
-
-
 def fidelity_figures(p):
     """Fidelity's row in numbers: the row's mean matched leading tokens and the 8-bit and 4-bit
     copies' means at four significant digits, as the Fidelity check prints its mean, and the first
@@ -682,7 +703,7 @@ def runs_words(fid):
     return ", and ".join(parts) if parts else "no slot count is recorded"
 
 
-# ------------------------------------------------------------------ the closed row (amended 2026-11-17)
+# ------------------------------------------------------------------ the row's words (amended 2026-11-17)
 
 
 def needs_tiny(p, row, petals):
@@ -696,9 +717,10 @@ def needs_tiny(p, row, petals):
     )
 
 
-def has_tiny(p, row, petals):  # noqa: PLR0911, PLR0912 (one phrase per rule path)
+def has_tiny(p, row, petals, charted=False):  # noqa: PLR0911, PLR0912 (one phrase per rule path)
     """What the system has, in a few words: the figure or the fact, the gap left to the row's
-    sentence. Every path the short words do not cover reads as `has_short`."""
+    sentence; Fidelity's figure alone where its chart (`charted`) prints the copies'. Every path
+    the short words do not cover reads as `has_short`."""
     f, pid, step, cause = facts_of(p), p["id"], p["step"], p["cause"]
     if cause == "not_stated":
         if pid == "weights_hidden" and f.get("verifier_gets_weights") is False:
@@ -721,6 +743,8 @@ def has_tiny(p, row, petals):  # noqa: PLR0911, PLR0912 (one phrase per rule pat
             return "a zero-knowledge theorem for what we run"
         return "a zero-knowledge theorem for the method"
     if pid == "faithful_model" and f:
+        if charted:
+            return f"{sig(f['mean'])} matched tokens"
         fig = fidelity_figures(p)
         return f"{fig['own']} matched tokens (8-bit copy {fig['q8']}, 4-bit copy {fig['q4']})"
     if pid == "machine_checked":
@@ -745,10 +769,11 @@ def has_tiny(p, row, petals):  # noqa: PLR0911, PLR0912 (one phrase per rule pat
 
 def gap_sentence(p, row, petals):  # noqa: PLR0911, PLR0912 (one sentence per item kind)
     """The row's one sentence: the first item missing for Met, in plain words; "Nothing missing."
-    at Met."""
+    at Met. A row below Met whose board lists no item (a board from before `to_met`) has none:
+    nothing is said to be missing or not."""
     groups = p["to_met"]
     if not groups:
-        return GAP["none"]
+        return GAP["none"] if p["step"] == "green" else ""
     g, it = groups[0], groups[0]["items"][0]
     if g["kind"] in ("decide", "repair"):
         return GAP[g["kind"]].format(need=item_short(it, p, row))
@@ -785,14 +810,14 @@ def gap_sentence(p, row, petals):  # noqa: PLR0911, PLR0912 (one sentence per it
     return GAP_ANY.format(need=item_short(it, p, row))
 
 
-# an item's first sentence (what it needs, which the opened petal's Missing list already says)
+# an item's first sentence (what it needs, which the opened row's items already say)
 # ends at the first full stop followed by a new sentence
 FIRST_SENTENCE = re.compile(r"(?<=[\w)\]])\. (?=[A-Z(])")
 
 
 def today_html(p, row, petals):
     """One click down, each item missing by its number with what it is today and our facts on it:
-    the item in full less its first sentence, which the Missing list above already says; an item
+    the item in full less its first sentence, which the opened row's items already say; an item
     with nothing more is left out."""
     lis = []
     for k, it in enumerate(items_of(p), 1):
@@ -817,7 +842,7 @@ def used_facts(p):
 
 def reading_html(p, skip=()):
     """ "Our reading, on two points the grade uses. (1) ... (2) ...", each note's plain words; a
-    fact only Met reads is named under Missing, not here."""
+    fact only Met reads is named among the items missing, not here."""
     used = used_facts(p)
     facts = [f for f in used if f["fact"] not in skip]
     if not facts or not p["reading"]:
@@ -935,7 +960,7 @@ def why_html(p, row, petals):
     if p["id"] == "unforgeable":
         i, j = w["first"], w["last"]
         items = f"item {i}" if i == j else f"items {i} to {j}"
-        said = f"{step}: the limit is not shown to cover what we run ({items} under Missing)."
+        said = f"{step}: the limit is not shown to cover what we run ({items} above)."
         if w["floor"] == 80:
             said += f" Its exponents, as written, are {and_list(str(t) for t in w['exps'])}."
         else:
@@ -944,12 +969,12 @@ def why_html(p, row, petals):
     if p["id"] == "weights_hidden":
         n = w["n"]
         return p_(e(f"{step}: there is a zero-knowledge theorem, at least for the method. Met needs the "
-                    f"{count(n, 'item')} under Missing."), "pwy")  # fmt: skip
+                    f"{count(n, 'item')} above."), "pwy")  # fmt: skip
     if p["id"] == "machine_checked":
         run = w.get("run")
         read = ", on our reading of the reach and the conclusion" if w.get("read") else ""
         stop = (f" It does not reach {run}." if not w.get("gaps")
-                else " Met needs the items under Missing.")  # fmt: skip
+                else " Met needs the items above.")  # fmt: skip
         return p_(e(f"{step}{read}.{stop}"), "pwy")
     return ""
 
@@ -1255,9 +1280,10 @@ def details_list(head, body):
 
 
 def evidence_short(p, row, petals):  # noqa: PLR0912 (one line per kind of evidence)
-    """The opened petal's evidence, one line each: the publisher's words (their count, opening on
-    the quotes), the documents read where they are silent, what the publisher states and lists,
-    our reading's notes, and our test or rebuild in a few words, linked to its record."""
+    """An opened row's evidence, one line each, under the disclosure that names it: what the grade
+    comes from where our reading is part of it, the publisher's words (their count, opening on the
+    quotes), the documents read where they are silent, what the publisher states and lists, our
+    reading's notes, and our test or rebuild in a few words, linked to its record."""
     out, pid = [], p["id"]
     src = came_from_words(p) if read_sets_grade(p) else ""
     if src:
@@ -1311,7 +1337,7 @@ def evidence_short(p, row, petals):  # noqa: PLR0912 (one line per kind of evide
         out.append(p_(f'<a href="#fidelity">{e(said)}</a>{recl}', "pel"))
     else:
         out.append(p_(e(cap(EVIDENCE["none_short"])), "pel"))
-    return f'<h5 class="pbh">{e(EVIDENCE["head"])}</h5>' + "".join(out)
+    return "".join(out)
 
 
 def records_full(p, row):
@@ -1524,7 +1550,7 @@ def terms_html(p, row, petals):  # noqa: PLR0912, PLR0915 (one sentence per fact
     return block("terms", p_(html, "ptm"))
 
 
-# ------------------------------------------------------------------ the petal
+# ------------------------------------------------------------------ a criterion's row (amended 2026-11-22, owner decision)
 
 
 def block(key, body):
@@ -1532,7 +1558,7 @@ def block(key, body):
 
 
 def in_full(p, row, petals):
-    """One click down in an opened petal: this system's own facts in full (what it has, every
+    """One click down in an opened row: this system's own facts in full (what it has, every
     item missing with what it is today, our records, why the grade, the limits the publisher
     states, the field's terms). How a grade is set is the checks page's."""
     why = why_html(p, row, petals)
@@ -1547,56 +1573,142 @@ def in_full(p, row, petals):
     return f'<details class="more pfull"><summary>{e(IN_FULL)}</summary>{body}</details>'
 
 
-def missing_list(p, row):
-    """The opened petal's Missing block: the items in their groups, each in a few words; who acts
-    beside each item where both act."""
-    groups = p["to_met"]
-    if not groups:
-        return p_(e(MISSING_NONE.capitalize()))
-    out, k = [], 0
-    mixed = len({it["by"] for it in items_of(p)}) > 1
-    for gi, g in enumerate(groups):
-        if g["kind"] in ("decide", "repair"):
-            head = MISSING_STEP[g["kind"]]
-        else:
-            head = MISSING_STEP["first" if gi == 0 else "then"].format(to=STEP_WORD[g["to"]])
-        lis = []
+LADDER = ("amber_lower", "amber_upper", "green")  # the grades a track draws, lowest first
+TRACK_CLASS = {"held": "hd", "open": "op", "unlisted": "un", "lead": "ld"}  # words.css draws each
+
+
+def track(p):
+    """The track a row draws, from the board's `to_met`: one column per grade from Partly met to
+    Met, lowest first, after one for the items that come before any grade (a decision for a Not
+    decided row, a repair for a Failed one) where the row has them. Each column is {key, word,
+    kind, items}: kind `held` for a grade the row holds (drawn solid in its ink), `open` for one
+    it does not hold up to the highest grade the board lists items for (an outline, one open
+    square per item, none where reaching the grade above takes it too), `unlisted` for a grade
+    past that one (dashed: the board lists what it needs only once the grades below are held),
+    `lead` for the decision or the repair; items are (number, item), numbered from 1 in the
+    board's order, the numbers "Why this grade" refers to."""
+    numbered, k = [], 0
+    for g in p["to_met"]:
+        its = []
         for it in g["items"]:
             k += 1
-            who = f'<span class="pwho">{e(WHO_TAG[it["by"]])}</span>' if mixed else ""
-            lis.append(f'<li value="{k}"><span>{e(cap(item_short(it, p, row)))}</span>{who}</li>')
-        out.append(f'<p class="pgh">{e(head)}</p><ol class="pmi">{"".join(lis)}</ol>')
-    return "".join(out)
+            its.append((k, it))
+        numbered.append((g, its))
+    held = LADDER.index(p["step"]) + 1 if p["step"] in LADDER else 0
+    reach = max((LADDER.index(g["to"]) + 1 for g, _ in numbered if g["to"] in LADDER), default=0)
+    cols = []
+    lead = [(g, its) for g, its in numbered if g["to"] not in LADDER]
+    if any(its for _, its in lead):
+        cols.append({"key": None, "word": MISSING_STEP[lead[0][0]["kind"]], "kind": "lead",
+                     "items": [x for _, its in lead for x in its]})  # fmt: skip
+    for i, key in enumerate(LADDER, 1):
+        kind = "held" if i <= held else "open" if i <= reach else "unlisted"
+        cols.append({"key": key, "word": STEP_WORD[key], "kind": kind,
+                     "items": [x for g, its in numbered if g["to"] == key for x in its]})  # fmt: skip
+    return cols
 
 
-def panel(p, row, petals):
-    """The petal opened, under the row's Met needs and Has: what is missing, each item with who
-    acts, beside the evidence and the grading rule; then why the grade, and this system's facts in
-    full, one click down."""
-    miss = (f'<div class="pq pqm"><h5 class="pbh">{e(PANEL_HEAD["missing"])}</h5>'
-            f"{missing_list(p, row)}</div>")  # fmt: skip
-    return (
-        f'<div class="pqs">{miss}<div class="pq pevs">{evidence_short(p, row, petals)}</div></div>'
-        f"{in_full(p, row, petals)}"
-    )
+def track_said(cols):
+    """The track in words, for a screen reader: "Partly met: held. Mostly met: 3 missing. Met:
+    2 missing."."""
+    return " ".join(TRACK_SAID[c["kind"]].format(grade=c["word"], n=f"{len(c['items']):,}") + "."
+                    for c in cols)  # fmt: skip
 
 
-def missing_tag(p):
-    """The disclosure's label: "5 missing · publisher acts", "3 missing · publisher 2, us 1"; at
-    Met, "Evidence"."""
-    items = items_of(p)
-    if not items:
-        return EVIDENCE_TAG, ""
-    pub = sum(1 for it in items if it["by"] == "publisher")
-    us = len(items) - pub
-    who = (WHO_ACTS["publisher"] if not us else WHO_ACTS["us"] if not pub
-           else WHO_SPLIT.format(pub=pub, us=us))  # fmt: skip
-    return MISSING_TAG.format(n=len(items)), who
+def track_head(cols):
+    """The closed row's track: each grade's word over its cell, a held grade's cell solid in the
+    row's ink, each other cell holding one open square per item missing for it (words.css draws
+    the kinds). The drawing is hidden from a screen reader, which reads `track_said`; opened, the
+    squares give way to the items under their cells (`track_items`)."""
+    cells = "".join(f'<span class="ctp {TRACK_CLASS[c["kind"]]}"><span class="cth">{e(c["word"])}'
+                    '</span><span class="ctc">'
+                    + '<i class="ctq"></i>' * len(c["items"]) + "</span></span>"
+                    for c in cols)  # fmt: skip
+    return (f'<div class="ctk"><p class="sr">{e(track_said(cols))}</p>'
+            f'<div class="ctg n{len(cols)}" aria-hidden="true">{cells}</div></div>')  # fmt: skip
+
+
+def track_items(cols, p, row, mixed):
+    """The opened row's items, the track's columns again: under each grade's cell, in its column,
+    each item missing for it by its number, in a few words, with who acts where both act. A
+    grade's word and cell stand over its items on a phone only, where the columns stand one under
+    another (words.css)."""
+    out = []
+    for c in cols:
+        lis = "".join(f'<li><span class="ctn">{n:,}</span><span class="ctx">'
+                      f'{e(cap(item_short(it, p, row)))}'
+                      + (f'<span class="ctw">{e(WHO_TAG[it["by"]])}</span>' if mixed else "")
+                      + "</span></li>" for n, it in c["items"])  # fmt: skip
+        out.append(f'<div class="ctp {TRACK_CLASS[c["kind"]]}"><p class="cth">{e(c["word"])}</p>'
+                   '<span class="ctc"></span>'
+                   + (f'<ul class="ctl">{lis}</ul>' if lis else "") + "</div>")  # fmt: skip
+    return f'<div class="ctg cti n{len(cols)}">{"".join(out)}</div>'
+
+
+def kv_lines(p, row, petals, charted=False):
+    """An opened row's three lines under its question: whom the criterion protects, what Met
+    needs and what the system has, each in a few words, one home for every grade."""
+    lines = ((PROTECTS_HEAD, PETAL_PROTECTS[p["id"]]), (NEEDS_HEAD, needs_tiny(p, row, petals)),
+             (HAS_HEAD, has_tiny(p, row, petals, charted)))  # fmt: skip
+    return ('<dl class="ckv">'
+            + "".join(f"<div><dt>{e(k)}</dt><dd>{e(v)}</dd></div>" for k, v in lines if v)
+            + "</dl>")  # fmt: skip
+
+
+# a chart line's kind (its class) and how plots.hbar draws its bar: the row's own mean (solid
+# paper), a grade's threshold (an outline), a run on the same prompts (grey)
+CHART_INK = {"cfm": "bp", "cft": "bc", "cfo": "bg"}
+
+
+def fidelity_chart(p, row):
+    """Fidelity opened: the row's mean matched leading tokens among what its grades are measured
+    against, as bars from zero on one scale: what Mostly met and Met need (outlines), the runs on
+    the same prompts each lies halfway between and the bar's copy (grey, the bar linked to its
+    definition), the row itself (solid), highest first, each beside its figure, a list a screen
+    reader reads line by line; the axis from zero to the reply's length (the request's reply
+    tokens), the measure and n between its ends, the figure's caption. Drawn only where the board
+    holds the row's mean, n, the reply's length and one value at least to set beside the mean,
+    every one on that axis; else nothing."""
+    f, req = facts_of(p), S.V.get("request")
+    top = req.get("output_tokens") if isinstance(req, dict) else None
+    if p["id"] != "faithful_model" or not isinstance(f.get("mean"), int | float) \
+            or not f.get("n") or not isinstance(top, int) or top <= ZERO:  # fmt: skip
+        return ""
+    lines = [(e(name_of(row)), sig(f["mean"]), f["mean"], "cfm")]
+    for key, step in (("upper", "amber_upper"), ("green", "green")):
+        t = f.get(key) or {}
+        if isinstance(t.get("display"), int | float):
+            said = tenth(t["display"]) + (CHART_NOT_SHOWN if t.get("shown") is False
+                                          and f["mean"] > t["display"] else "")  # fmt: skip
+            lines.append((e(CHART_NEEDS.format(grade=STEP_WORD[step])), said,
+                          t.get("value", t["display"]), "cft"))  # fmt: skip
+    bar = (f.get("bar") or {}).get("control")
+    named = [*((f.get("upper") or {}).get("controls") or ()),
+             *((f.get("green") or {}).get("controls") or ()), *((bar,) if bar else ())]  # fmt: skip
+    for cid in dict.fromkeys(named):
+        c = (f.get("controls") or {}).get(cid) or {}
+        if isinstance(c.get("mean"), int | float):
+            name, title = control_name(cid)
+            label = e(cap(name.partition(" (")[0]))
+            label = f'<span title="{e(title)}">{label}</span>' if title else label
+            if cid == bar:
+                label += f', <a href="/glossary#bar">{e(CHART_BAR)}</a>'
+            lines.append((label, sig(c["mean"]), c["mean"], "cfo"))
+    if len(lines) < 2 or any(not ZERO <= v <= top for _, _, v, _ in lines):
+        return ""
+    bars = "".join(f'<li class="cfr {kind}"><span class="cfl">{label}</span>'
+                   f'<span class="cff">{e(said)}</span>{hbar([(v, CHART_INK[kind])], top, h=12)}'
+                   "</li>" for label, said, v, kind in sorted(lines, key=lambda r: -r[2]))  # fmt: skip
+    caption = CHART_CAPTION.format(n=f"{f['n']:,}")
+    axis = (f'<figcaption class="cfx"><span>{ZERO:,}</span><span class="cfu">{e(caption)}</span>'
+            f"<span>{top:,}</span></figcaption>")  # fmt: skip
+    return f'<figure class="cfc"><ul class="cfg">{bars}</ul>{axis}</figure>'
 
 
 def verdict(p):
     """The grade as a word in its ink, in display type, linked to the rule that sets it on the
-    checks page (its cause's line where a cause set it)."""
+    checks page (its cause's line where a cause set it); "our reading" beside it, linked to what
+    that means there, where a reading of ours sets the grade."""
     tok = f"{p['state']} {p['form']}".strip()
     href = f"{CHECKS_PAGE}#cause-{e(p['cause'])}" if p["cause"] else f"{CHECKS_PAGE}#{e(p['id'])}"
     # the cause in the title, unless the step word already says it ("Not stated")
@@ -1607,34 +1719,42 @@ def verdict(p):
     return f'<a class="pvd {tok}" href="{href}"{title}>{e(petal_step(p))}</a>{mark}'
 
 
-def petal_row(i, p, row, petals):
-    """One petal's row: its name and plain question; its grade, a word in its ink, and what it
-    comes from; the one sentence of what is missing first, with what Met needs and what it has
-    in a few words; the row opens on the three blocks and the evidence."""
-    tok = f"{p['state']} {p['form']}".strip()
+def criterion(p, row, petals):
+    """One criterion's row. Closed: its name (linked to its rule on the checks page, its field
+    term in the link's title), its plain question, its grade (`verdict`), the one sentence of what
+    is missing first and its track; the whole row opens it, its control the count missing (or
+    "Evidence" where none is), set at the row's top right. The control is a native disclosure's
+    summary laid over the closed row (words.css), so nothing a reader can click sits inside it:
+    the name's, the grade's and our reading's links stand over it. Opened (with or without script): Protects, Met needs and Has under the
+    question; the items under their grades' cells, who acts; Fidelity's chart; then the evidence
+    and "Why this grade", one click further each (the evidence open at once where nothing is
+    missing, as the control already says "Evidence"). `data-step` and `data-cause` carry the
+    board's step and cause."""
+    pid, tok = p["id"], f"{p['state']} {p['form']}".strip()
     data = f' data-step="{e(p["step"] or "none")}"'
     if p["cause"] is not None:
         data += f' data-cause="{e(p["cause"])}"'
-    has = has_tiny(p, row, petals)
-    has = (f'<span class="k">{e(HAS_HEAD)}</span><span>{nobreak(e(has), row)}</span>'
-           if has else "")  # fmt: skip
-    mini = (
-        f'<span class="pmini"><span class="k">{e(NEEDS_HEAD)}</span>'
-        f"<span>{nobreak(e(needs_tiny(p, row, petals)), row)}</span>{has}</span>"
-    )
-    owner = f'<span class="sr">, {e(PETAL_NAME[p["id"]])}</span>'
-    n, who = missing_tag(p)
-    tag = f'<b>{e(n)}</b><span class="pwt"> \u00b7 {e(who)}</span>' if who else f"<b>{e(n)}</b>"
-    summary = (f'<span class="pgap">{nobreak(e(gap_sentence(p, row, petals)), row)}</span>{mini}'
-               f'<span class="pdl">{tag}{owner}</span>')  # fmt: skip
-    details = (f'<details class="more pdt"><summary>{sup(summary)}</summary>'
-               f'<div class="pbd">{sup(nobreak(panel(p, row, petals), row))}</div></details>')  # fmt: skip
-    return (f'<tr class="pt {tok}" id="petal-{e(p["id"])}"><th scope="row">'
-            f'<a class="sl s{i + 1} {tok}"{data} href="{CHECKS_PAGE}#{p["id"]}" data-k="p{i + 1}" '
-            f'title="{e(FIELD_TERMS_TITLE.format(term=PETAL_TERM[p["id"]]))}"><span>{e(PETAL_NAME[p["id"]])}</span></a>'
-            f'<span class="pst">{e(PETAL_ASK[p["id"]])}</span></th>'
-            f'<td class="cst">{verdict(p)}</td>'
-            f'<td class="prs">{details}</td></tr>')  # fmt: skip
+    cols, items = track(p), items_of(p)
+    whos = sorted({it["by"] for it in items})
+    gap = gap_sentence(p, row, petals)
+    head = (f'<div class="crh"><h3 class="crn"><a href="{CHECKS_PAGE}#{e(pid)}" '
+            f'title="{e(FIELD_TERMS_TITLE.format(term=PETAL_TERM[pid]))}">'
+            f'{e(PETAL_NAME[pid])}</a></h3><p class="crq">{e(PETAL_ASK[pid])}</p>'
+            f'<p class="crg">{verdict(p)}</p><div class="crm">'
+            + (f'<p class="crs">{e(gap)}</p>' if gap else "") + f"{track_head(cols)}</div></div>")  # fmt: skip
+    who = (f'<p class="crw"><span class="k">{e(WHO_HEAD)}</span> {e(WHO_TAG[whos[0]])}</p>'
+           if len(whos) == 1 else "")  # fmt: skip
+    evidence = (f'<details class="more cev"{"" if items else " open"}><summary>'
+                f'{e(EVIDENCE["head"])}</summary><div class="cevb">'
+                f"{evidence_short(p, row, petals)}</div></details>")  # fmt: skip
+    chart = fidelity_chart(p, row)
+    body = (f'<div class="crb">{kv_lines(p, row, petals, bool(chart))}<div class="crbm">'
+            f"{track_items(cols, p, row, len(whos) > 1)}{who}{chart}"
+            f'<div class="cro">{evidence}{in_full(p, row, petals)}</div></div></div>')  # fmt: skip
+    tag = MISSING_TAG.format(n=f"{len(items):,}") if items else EVIDENCE_TAG
+    toggle = f'<summary class="crt" aria-label="{e(tag)}, {e(PETAL_NAME[pid])}">{e(tag)}</summary>'
+    return sup(nobreak(f'<div class="crr {tok}" id="petal-{e(pid)}"{data}>{head}'
+                       f'<details class="more crd">{toggle}{body}</details></div>', row))  # fmt: skip
 
 
 POWER = re.compile(r"(?<=[0-9q])\^(-?)(\d+)")  # 2^-128, 2^24 as the data writes them
@@ -1663,38 +1783,47 @@ def sup(html):
     return "".join(out)
 
 
+HYPHENED = r"(?<![\w-])\w+(?:-\w+)+(?![\w-])"  # "8-bit", "zero-knowledge", "one-at-a-time"
+
+
+def whole(m):
+    """A match kept whole: one span, and in it each of its words, where it has more than one, kept
+    whole too, so a column narrower than the name breaks it at a space only (words.css)."""
+    words = m.group(0).split(" ")
+    if len(words) > 1:
+        each = " ".join(f'<span class="nw">{w}</span>' for w in words)
+        return f'<span class="nw">{each}</span>'
+    return f'<span class="nw">{m.group(0)}</span>'
+
+
 def nobreak(html, row):
-    """A verifier's name never breaks across lines ("boundary-grid --verify"): it is wrapped in a
-    span that CSS keeps whole, its characters unchanged, so a copied command still runs. Only in
-    text, never inside a tag or an attribute."""
+    """A verifier's name never breaks across lines ("boundary-grid --verify"), nor a word at its
+    hyphen ("8-bit"): each is wrapped in a span that CSS keeps whole, its characters unchanged, so
+    a copied command still runs; in an item's or a line's narrow column a name breaks at its space
+    only (`whole`). Only in text, never inside a tag or an attribute."""
     names = sorted({n for n in ((row.get("statement") or {}).get("verifiers") or {}).values()
                     if n and "-" in n}, key=len, reverse=True)  # fmt: skip
-    if not names:
-        return html
-    pat = re.compile("|".join(re.escape(e(n)) for n in names))
+    pat = re.compile("|".join([*(re.escape(e(n)) for n in names), HYPHENED]))
     parts = re.split(r"(<[^>]*>)", html)
-    return "".join(pt if pt.startswith("<") else pat.sub(lambda m: f'<span class="nw">{m.group(0)}</span>', pt)
-                   for pt in parts)  # fmt: skip
+    return "".join(pt if pt.startswith("<") else pat.sub(whole, pt) for pt in parts)
 
 
 def grade_scale():
-    """The one line over the five petals: the grades, best first, each in its ink, each linked to
-    its definition; a line breaks only before a separator, which starts the next line."""
+    """The grades on the title's line, always shown: their label, then the grades, best first, each
+    in its ink, each linked to its definition; a line breaks only before a separator, which starts
+    the next line."""
     seps = ("", *GRADE_SCALE_SEP)
     words = "".join('<span class="gw">'
                     + (f'<span class="gsep" aria-hidden="true">{e(sep)}</span>' if sep else "")
                     + f'<a class="pvd {tok}" href="/glossary#{slug}">{e(w)}</a></span>'
                     for (tok, w, slug), sep in zip(GRADE_SCALE, seps, strict=True))  # fmt: skip
-    return f'<p class="gscale"><span class="k">{e(GRADE_SCALE_HEAD)}</span>{words}</p>'
+    return f'<p class="gscale crsc"><span class="k">{e(GRADE_SCALE_HEAD)}</span>{words}</p>'
 
 
-def glyph_section(row, scope_head):
-    """The Glyph section (amended 2026-11-17, owner decision): the grade scale on one line, the five
-    petals, then soundness, zero knowledge and completeness on one line with the stated security and
-    the scope card (`scope_head`) one click down."""
+def criteria_section(row, scope_head):
+    """The Criteria section (amended 2026-11-22, owner decision): the grade scale on the title's
+    line, always shown, the five criteria in the board's order (`criterion`), then completeness on
+    one line with the stated security and the scope card (`scope_head`) one click down."""
     petals = {p["id"]: p for p in row["glyph"]}
-    trs = "".join(petal_row(i, p, row, petals) for i, p in enumerate(row["glyph"]))
-    return (grade_scale()
-            + '<div class="checks"><table class="rt ckt gbig gpl"><caption class="sr">Petal, grade, '
-            f'what is missing first, what Met needs and what it has</caption><tbody>{trs}</tbody>'
-            f'</table></div><div id="scope">{scope_head}</div>')  # fmt: skip
+    rows = "".join(criterion(p, row, petals) for p in row["glyph"])
+    return f'{grade_scale()}<div class="cri">{rows}</div><div id="scope">{scope_head}</div>'

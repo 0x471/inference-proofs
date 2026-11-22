@@ -1,9 +1,9 @@
 """The system pages (RFC-0018 SI-3), the checks page and the 404.
 
-A system page holds one row of the board: its other figures in one ruled row; the glyph once,
-large, its arms the heads of a ruled table of the petals (state, reason, and behind a disclosure
-the publisher's quotes and basis); then the six checks as a ruled table (state, cause, evidence
-behind a disclosure), the cost parts, fidelity beside the model's controls and the sessions.
+A system page holds one row of the board: its band; the five criteria, one row each (its grade
+in words and its track, what it misses one click down, `petal.py`); the statement; the six checks
+as a ruled table (state, cause, evidence behind a disclosure); the cost, fidelity beside the
+model's controls and the sessions.
 """
 
 import math
@@ -61,7 +61,7 @@ from .ladder import (
     whole_line,
     whole_note,
 )
-from .petal import chip, glyph_section, quote_links, state_word
+from .petal import chip, control_name, criteria_section, quote_links, state_word
 from .plots import (
     PLOT_BESIDE,
     axis_svg,
@@ -87,7 +87,6 @@ from .words import (
     CHECK_NAME,
     CHECK_PLAIN,
     CHECKS_DESC,
-    CONTROL_NAME,
     COPY_WORD,
     DTYPE_BITS,
     FID_HEAD,
@@ -146,7 +145,6 @@ from .words import (
     PARTS_HEAD,
     PETAL_CAUSE_DRAW,
     PETAL_CAUSE_RULE,
-    PETAL_CHECKS,
     PETAL_MORE,
     PETAL_NAME,
     PETAL_NOT_GRADED,
@@ -342,12 +340,6 @@ def stacked(heads, rows, titles=None):
     return f'<table class="rt stk"><thead><tr>{ths}</tr></thead><tbody>{trs}</tbody></table>'
 
 
-def petals_of(check):
-    """The petals whose red names a check (PETAL_CHECKS), by their place in the glyph (p1 to
-    p5), so the page lights them with the check's row (words.js)."""
-    return " ".join(f"p{i + 1}" for i, p in enumerate(S.V["petals"]) if check in PETAL_CHECKS[p])
-
-
 def scope_card_html(formal):
     """The scope card (MC-6, amended 2026-11-15): for soundness, zero knowledge and completeness,
     the publisher's bound verbatim and linked, then what it states of the protocol, the verifier
@@ -388,7 +380,7 @@ def scope_card_html(formal):
 
 
 def scope_head_html(row):
-    """Under the five petals (the paragraph after MC-7, amended 2026-11-17, owner decision):
+    """Under the five criteria (the paragraph after MC-7, amended 2026-11-17, owner decision):
     soundness, zero knowledge and completeness on one line, in that order, each linked to its
     definition, with the petal that grades it or our Run check's count of accepted replies; the
     publisher's stated security, verbatim with its link, and the scope card one click down."""
@@ -396,7 +388,7 @@ def scope_head_html(row):
     parts = []
     for slug_, name, pid in SCOPE_TERMS:
         term = f'<a class="df" href="/glossary#{slug_}">{e(name)}</a>'
-        if pid is not None:  # graded by its petal above; the glossary says which
+        if pid is not None:  # graded by its criterion above; the glossary says which
             continue
         run = f'<a href="{CHECKS_PAGE}#run">{e(CHECK_NAME["run"])} check</a>'
         said = e(SCOPE_TESTED.format(n=f"{n:,}", run="\x00")).replace(" of ", "\u00a0of\u00a0")
@@ -435,10 +427,11 @@ def counted_words(k, one):
     return f"{k:,} {one}" if k == 1 else f"{k:,} {one}s"
 
 
-def glyph_block(row):
-    """The Glyph section (amended 2026-11-17): what each petal needs for Met, has, misses and
-    where to check (`petal.glyph_section`), then soundness, zero knowledge and completeness."""
-    return glyph_section(row, scope_head_html(row))
+def criteria_block(row):
+    """The Criteria section (amended 2026-11-22, owner decision): what each criterion needs for
+    Met, has, misses and where to check (`petal.criteria_section`), then soundness, zero
+    knowledge and completeness."""
+    return criteria_section(row, scope_head_html(row))
 
 
 # RFC-0018 SI-3 (amended 2026-11-15): the Statement block's rows, in the view's order
@@ -1169,21 +1162,7 @@ def p_bound(p):
     return mant * 10**exp
 
 
-QUANT = re.compile(r"q\d")  # a quantized copy's id ("q8_0", "q4_k_m")
 RULE_AT = re.compile(r"\s*\((?:RFC-\d+ )?[A-Z]{2}-\d+[a-z]?\)$")  # a note's closing rule id
-
-
-def control_name(cid):
-    """A control's name as a row prints it: its words (CONTROL_NAME: a quantized copy by its bits,
-    its id in parentheses), else a quantized copy by its id in capitals. Returns (name, title: the
-    id, and for a quantized copy the llama.cpp commit that made it, FI-2)."""
-    name = CONTROL_NAME.get(cid) or (cid.upper() if QUANT.match(cid) else cid)
-    if not QUANT.match(cid):
-        return name, (cid if cid in CONTROL_NAME else "")
-    engine = S.V["constants"].get("fidelity_engine") or {}
-    made = (f", made by {engine['tool']} at {str(engine['commit'])[:7]}"
-            if engine.get("tool") and engine.get("commit") else "")  # fmt: skip
-    return name, f"{cid}{made}"
 
 
 def control_th(cid):
@@ -1691,12 +1670,10 @@ def checks_block(row):
         if links or full or ran:
             more.append(f'<div><dt>{e(CHECK_NAME[c["id"]])}</dt><dd>{full}{ran}'
                         f'<span class="evs">{"".join(links)}</span></dd></div>')  # fmt: skip
-        to = petals_of(c["id"])
-        to = f' data-to="{to}"' if to else ""
         rec = first_record(c) if c["evidence"] else '<span class="na">none</span>'
         trs.append(
             f'<tr class="ck {c["state"]}" id="ck-{c["id"]}"><th scope="row">'
-            f'<a href="{CHECKS_PAGE}#{c["id"]}"{to} title="{e(filled(CHECK_PLAIN[c["id"]]))}">'
+            f'<a href="{CHECKS_PAGE}#{c["id"]}" title="{e(filled(CHECK_PLAIN[c["id"]]))}">'
             f"{e(CHECK_NAME[c['id']])}</a></th>"
             f'<td class="cst">{state_word(c["state"], STATE_WORD[c["state"]])}</td>'
             + (f"<td>{cause}</td>" if caused else "")
@@ -2047,8 +2024,9 @@ def pin_html(pin, name):
 def system_page(row):
     """A system on a model (SI-3): the band (its name, sized by its length, never more than two
     lines; its one figure on the right, labelled for what it is; the facts under them, the
-    publisher's repository at the row's commit among them), then the glyph and its petals, its
-    other figures, the checks, the cost, fidelity and, last, the sessions (the audit trail)."""
+    publisher's repository at the row's commit among them), then the five criteria (the glyph's
+    petals, in words and tracks), the statement, the checks, the cost, fidelity and, last, the
+    sessions (the audit trail)."""
     rung = rung_of(row)
     sysd = S.V["systems"][row["system"]]
     name = name_of(row)
@@ -2097,7 +2075,9 @@ def system_page(row):
     )
     # the share group at the strip's end on a wide screen
     share_strip = f'<div class="shr" role="group" aria-label="{e(SHARE[0])}">{share}</div>'
-    parts = (("glyph", "Glyph"), ("statement", "Statement"),
+    # the criteria keep the section's address (#glyph) and each one its own (#petal-<id>), so
+    # links made before 2026-11-22 still land
+    parts = (("glyph", "Criteria"), ("statement", "Statement"),
              ("checks", "Checks"), ("cost", "Cost"), ("fidelity", "Fidelity"),
              ("sessions", "Sessions"))  # fmt: skip
     body = f"""
@@ -2106,7 +2086,7 @@ def system_page(row):
   {band_}
   {pnav(name, parts, share_strip)}
   <div class="wrap">
-    {section("glyph", "Glyph", glyph_block(row))}
+    {section("glyph", "Criteria", criteria_block(row))}
     {section("statement", "Statement", statement_block(row))}
     {section("checks", "Checks", checks_block(row))}
     {section("cost", "Cost", cost_block(row))}
@@ -2320,10 +2300,10 @@ def build_checks():
     # the step words once, each on its chip (the inks are drawn, never named: SI-6)
     legend = ('<p class="rd slg">' + " ".join(step_chip(k) for k in STEP_WORD) + "</p>"
               f'<p class="rd">{e(PETAL_STEPS_FOOT)}</p>')  # fmt: skip
-    # why a petal is red or hollow: one address per cause, which a system page's State cell links,
-    # in a block after the key's (a block inside it would be read as a sixth petal: words.js pairs
-    # the key's arms with `.cwrap .chk`); then what "our reading" means (#reading, which a system
-    # page's From cell links)
+    # why a petal is red or hollow: one address per cause, which the grade word of a system page's
+    # criterion links, in a block after the key's (a block inside it would be read as a sixth
+    # petal: words.js pairs the key's arms with `.cwrap .chk`); then what "our reading" means
+    # (#reading, which a criterion's "our reading" links)
     petal_causes = "".join(
         f'<div id="cause-{e(k)}"><dt>{e(CAUSE_WORD[k])}</dt><dd>{cause_rule(k, v)}</dd></div>'
         for k, v in PETAL_CAUSE_RULE.items()

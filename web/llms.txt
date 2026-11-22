@@ -19,7 +19,7 @@ The deployment article discusses hypothetical agreements, not an enacted treaty.
   - [What a relying party supplies](https://www.inferenceproofs.ai/deployment#what-a-relying-party-supplies)
   - [In an agreement](https://www.inferenceproofs.ai/deployment#in-an-agreement)
 - [FlashProve · Inference proofs](https://www.inferenceproofs.ai/flashprove): FlashProve on Llama 4 Maverick 17B-128E Instruct, passed. Cost vs serving: 1,317×.
-  - [Glyph](https://www.inferenceproofs.ai/flashprove#h-glyph)
+  - [Criteria](https://www.inferenceproofs.ai/flashprove#h-glyph)
   - [Statement](https://www.inferenceproofs.ai/flashprove#h-statement)
   - [Checks](https://www.inferenceproofs.ai/flashprove#h-checks)
   - [Cost](https://www.inferenceproofs.ai/flashprove#h-cost)
@@ -91,7 +91,7 @@ The deployment article discusses hypothetical agreements, not an enacted treaty.
   - [Today's systems](https://www.inferenceproofs.ai/proof-of-inference#today-s-systems)
   - [Passed](https://www.inferenceproofs.ai/proof-of-inference#passed)
 - [SASH · Inference proofs](https://www.inferenceproofs.ai/sash): SASH on Llama 3.1 8B Instruct, passed. Cost vs serving: 62,160×.
-  - [Glyph](https://www.inferenceproofs.ai/sash#h-glyph)
+  - [Criteria](https://www.inferenceproofs.ai/sash#h-glyph)
   - [Statement](https://www.inferenceproofs.ai/sash#h-statement)
   - [Checks](https://www.inferenceproofs.ai/sash#h-checks)
   - [Cost](https://www.inferenceproofs.ai/sash#h-cost)
