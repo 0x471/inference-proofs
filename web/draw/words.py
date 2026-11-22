@@ -168,17 +168,17 @@ READ_AS = "our reading"  # before ACCEPT_STATE["read"], linked to the checks pag
 PETAL_NAME = {"unforgeable": "Integrity", "weights_hidden": "Confidentiality",
               "faithful_model": "Fidelity", "machine_checked": "Formally verified",
               "no_trusted_party": "Trust assumptions"}  # fmt: skip
-# each petal's field term, its subtitle under its name on a system page and the checks page
-# (depths 2 to 4): the plain name for the policy reader, the term for the expert
+# each petal's field term, in the title of its name's link on a system page and under its name on
+# the checks page (depths 2 to 4): the plain name for the policy reader, the term for the expert
 PETAL_TERM = {"unforgeable": "soundness",
               "weights_hidden": "zero knowledge of the weights",
               "faithful_model": "quantization error, in matched leading tokens",
               "machine_checked": "machine-checked soundness proof",
               "no_trusted_party": "trusted setup or party"}  # fmt: skip
-# the petal name's title on a system page, which the probe shows beside it: its field term
+# the title of a criterion's name on a system page, which the probe shows beside it: its field term
 FIELD_TERMS_TITLE = "in the field's terms: {term}"
 # each petal in plain words: a question, what it grades, whom it protects, what Met means. The
-# name's title at depths 1 and 2; printed under the name at depth 3 and on the checks page
+# name's title at depths 1 and 2; printed on the checks page
 PETAL_PLAIN = {
     "unforgeable": "Could a provider get a reply accepted that the committed model did not "
     "actually compute? Integrity grades the soundness bound stated by the publisher and whether "
@@ -199,12 +199,10 @@ PETAL_PLAIN = {
     "as whoever ran a one-time setup or controls a hardware signing key? It protects the "
     "customer. Met requires the publisher to state that verification rests on cryptography alone.",
 }
-# whom each petal protects (the checks page's "Protects" line)
+# whom each petal protects (the "Protects" line on the checks page and in an opened criterion)
 PETAL_PROTECTS = {"unforgeable": "the customer", "weights_hidden": "the provider",
                   "faithful_model": "the customer", "machine_checked": "the customer",
                   "no_trusted_party": "the customer"}  # fmt: skip
-# a reading's notes, in a petal's disclosure (GL-10, amended 2026-11-15): our words, not a quote
-READING_HEAD = "Our reading"
 # a petal's stored (step, cause) in words (RFC-0018 §The glyph, step table, amended 2026-11-16):
 # one word set for all five petals, keyed by the step, and by the cause where red splits; the
 # inks are drawn, never printed (SI-6)
@@ -221,18 +219,6 @@ def step_key(step, cause):
 def petal_step(p):
     """A petal's step in words (STEP_WORD)."""
     return STEP_WORD[step_key(p["step"], p["cause"])]
-
-
-# what a petal rests on, beside its step (amended 2026-11-16): our test, the publisher's words,
-# or our reading of them (GL-10)
-SAID_WORD = {"test": "tested by us", "statement": "stated", "reading": "read as"}
-
-
-def said_word(p):
-    """The word for what a petal rests on, from its basis and its reading flag."""
-    if p["basis"] == "statement" and p["reading"]:
-        return SAID_WORD["reading"]
-    return SAID_WORD[p["basis"]]
 
 
 # why a petal is red or hollow (GL-1, GL-3); the checks page defines each at #cause-<id>
@@ -269,14 +255,10 @@ PETAL_CAUSE_RULE = {
 PETAL_CAUSE_DRAW = {"Not stated (drawn as an outline)": ("red", "open"),
                     "Not met or Failed (drawn filled, name struck)": ("red", ""),
                     "Not decided (drawn hollow)": ("hollow", "")}  # fmt: skip
-BASIS_WORD = {"statement": "the publisher's documents", "test": "our tests"}
-# the From cell of a petal decided on the publisher's documents when a fact it read carries a note
+# what a petal decided on the publisher's documents comes from when a fact it read carries a note
 # (the board petal's `reading`), and what that means, on the checks page (#reading, a block of its
 # own after the causes, headed by BASIS_READING[1]; GL-1, GL-5)
 BASIS_READING = ("the publisher's documents", "our reading")
-# a system page's From line (GL-1, GL-5): the label over a silent red's documents read, and the
-# words, linked to #reading, that say a fact behind the step is our reading
-DOCS_READ, AS_READ = "Documents read", "as we read them"
 READING_RULE = (
     "At least one fact behind this grade comes from our interpretation of multiple passages "
     "rather than a single explicit sentence from the publisher. The petal flags that it relies "
@@ -288,8 +270,6 @@ SCOPE_ROW_WORD = {"soundness": "Soundness", "zero_knowledge": "Zero knowledge",
                   "completeness": "Completeness"}  # fmt: skip
 SCOPE_COL_WORD = {"protocol": "Protocol", "verifier_run": "The verifier we run",
                   "prover_run": "The prover we run"}  # fmt: skip
-# Formally verified's stored build (GL-5), a fact beside the tool in the petal's details
-PROOF_BUILD_HEAD = "Proof build"
 # "tested" is the publisher's word for its own tests ("tested, not proved"), never ours: our runs are
 # the Completeness line above the card
 SCOPE_VALUE_WORD = {"machine_checked": "machine-checked", "paper": "on paper",
@@ -303,14 +283,13 @@ CARD_ERRATUM = "Erratum: the card's {fields} describe {says}. At Level 1:"
 SCOPE_CARD_HEAD = (
     "What is verified, and for which code, as the publisher states it. It sets no state."
 )
-# the one line under the five petals (RFC-0018, the paragraph after MC-7, amended 2026-11-17, owner
+# the one line under the five criteria (RFC-0018, the paragraph after MC-7, amended 2026-11-17, owner
 # decision): the three properties a proof system is read for, in priority order, each its
 # glossary entry, then where it is graded or tested; what each means and whom it protects is the
 # glossary's. (glossary id, name, the petal that grades it or None)
 SCOPE_TERMS = (("soundness", "Soundness", "unforgeable"),
                ("zero-knowledge", "Zero knowledge", "weights_hidden"),
                ("completeness", "Completeness", None))  # fmt: skip
-SCOPE_GRADED = "graded under {petal}"
 SCOPE_TESTED = "{n} of {n} replies accepted, our {run}"
 SCOPE_CARD_WORD = "scope card"  # with the stated security, behind one disclosure under the line
 STATED_SECURITY = "Stated security"
@@ -503,24 +482,6 @@ PETAL_NOT_GRADED = {
 }
 # once for the checks page's glyph section, after the steps
 PETAL_STEPS_FOOT = "Each system page shows what every petal still needs for Met and who must act, computed directly from these rules."
-# Confidentiality's steps as a scale of what was proved or stated (§4, amended 2026-11-16),
-# printed beside the step at depth 3: what the publisher proved, never a result for the row.
-# Mostly met splits by its path: WH-6's missing conditions, or WH-5 capped by our reading (GL-10)
-HIDING_LABEL = {"green": "Zero knowledge proved for what we run",
-                "amber_upper": "Zero knowledge proved, with limits",
-                "amber_reading": "Zero knowledge proved for what we run, on our reading",
-                "amber_lower": "Stated, no proof",
-                ("red", "stated"): "Not hidden",
-                ("red", "not_stated"): "No guarantee stated"}  # fmt: skip
-# the need a reading adds to a next step (glyph.py's READING_NEED, the same words on the board)
-READING_NEED = "a sentence of the publisher's that says it, in place of our reading"
-# Confidentiality's architecture fact (§4): printed on every Level 1 row, it sets no state
-ARCH_SHORT = "Architecture: visible"
-ARCH_LONG = (
-    "Not graded at Level 1: every model here is open-weights, so its architecture is public. A "
-    "closed-weights level would grade hiding it."
-)
-ARCH_NO_FACT = "the model is open-weights"
 # Formally verified: what is verified, by `formal.reach` (§3, amended 2026-11-16); glyph.py's
 # _REACH_WORDS holds the same words for the reasons
 REACH_LABEL = {"verifier_run": "the verifier we run",
@@ -529,28 +490,15 @@ REACH_LABEL = {"verifier_run": "the verifier we run",
                "the model without the protocol)",
                "part": "part of the protocol",
                "none": "nothing, as the publisher states", "not_stated": "not stated"}  # fmt: skip
-REACH_GAP = {"base": "no trusted base listed", "input": "input-reading code outside the proof"}
-REACH_STATED = "{said}: {label}"  # "stated" or "read as" (SAID_WORD), by the petal's reading
-# the line that says which verifier a theorem is about (§3): only the one the row runs is the code
-VERIFIER_LINE = (
-    "The theorem is stated for {stated}; we run {run}. Only the verifier we run counts as the code."
-)
 # a petal's next step (GL-11), at depth 3 under its reason
 NEXT_HEAD = {"up": "Next step, {to}", "decide": "To decide", "repair": "Next step"}
 NEXT_BY = {("publisher",): "By the publisher.", ("us",): "By us.",
            ("publisher", "us"): "By the publisher and us."}  # fmt: skip
-# a system page's petal row (amended 2026-11-16): the next step's target and who acts, every need
-# in the petal's disclosure; a cut reason's first clause and how many clauses follow
-NEXT_SHORT = {"up": "Next step: {to}, {by}", "decide": "To decide, {by}"}
-NEXT_MORE = "{need}, and {k} more"
-# the one disclosure per petal, and the head of the full reason inside it
-DETAILS_HEAD = "Details"
-REASON_HEAD = "Reason"
-# ------------------------------------------------------------------ a petal on a system page (RFC-0018 SI-3, GL-11,
-# amended 2026-11-17, owner decision): what full marks need, what the system has, what it misses and who acts,
-# and where to check. Every line is worded here from the board's keys; nothing is typed per system.
-# the grade scale, the one line over the five petals (amended 2026-11-17, owner decision): each
-# grade in its ink, best first, linked to its definition in the glossary; no paragraph
+# ------------------------------------------------------------------ a criterion on a system page (RFC-0018 SI-3, GL-11,
+# amended 2026-11-17 and 2026-11-22, owner decisions): what full marks need, what the system has, what it misses
+# and who acts, and where to check. Every line is worded here from the board's keys; nothing is typed per system.
+# the grade scale, one click down at the Criteria section's title (amended 2026-11-22, owner
+# decision): each grade in its ink, best first, linked to its definition in the glossary
 GRADE_SCALE = (("green", "Met", "met-mostly-met-partly-met"),
                ("amber", "Mostly met", "met-mostly-met-partly-met"),
                ("amber cut", "Partly met", "met-mostly-met-partly-met"),
@@ -561,7 +509,7 @@ GRADE_SCALE_HEAD = "Grades"
 # slash between the three reds, which are not ranked among themselves, a middle dot before Not
 # decided, which is on no rank
 GRADE_SCALE_SEP = ("\u203a", "\u203a", "\u203a", "/", "/", "\u00b7")
-# each petal's plain question, beside its name in the default row
+# each petal's plain question, under its name in its row
 PETAL_ASK = {
     "unforgeable": "Could a fake reply pass verification?",
     "weights_hidden": "Does a proof keep the model weights secret?",
@@ -578,24 +526,31 @@ CAME_FROM = {
     "build_reading": "the publisher's words, our rebuild, and our reading",
 }
 FROM_WORD = "from"
-# the default row's three labels, then the disclosure's label
-NEEDS_HEAD, HAS_HEAD = "Met needs", "Has"
+# an opened row's three lines under its question, in this order
+PROTECTS_HEAD, NEEDS_HEAD, HAS_HEAD = "Protects", "Met needs", "Has"
 # beside the grade, where a reading of ours sets it (GL-10), linked to the checks page's #reading
 READING_MARK = "our reading"
-# the opened petal's head over its items missing
-PANEL_HEAD = {"missing": "Missing"}
-# the disclosure's label: how many items Met lacks and who acts ("5 missing · publisher acts",
-# "3 missing · publisher 2, us 1"); at Met, the evidence alone
+# the row's one control: how many items Met lacks; with none, the evidence alone
 MISSING_TAG = "{n} missing"
-WHO_TAG = {"publisher": "publisher", "us": "us"}
-WHO_ACTS = {"publisher": "publisher acts", "us": "we act"}
-WHO_SPLIT = "publisher {pub}, us {us}"
 EVIDENCE_TAG = "Evidence"
-# the one more click down in an opened petal: this system's own facts in full
+# who acts on an opened row's items: under each item where both act, else once under them all
+WHO_HEAD = "Who acts"
+WHO_TAG = {"publisher": "publisher", "us": "us"}
+# the track in words, for a screen reader (the drawing is hidden from it): each grade the row
+# holds, and for each it does not how many items it lacks, or that the board lists none for it
+# yet (a grade past the last one listed, drawn dashed); a decision or a repair before any grade
+TRACK_SAID = {"held": "{grade}: held", "open": "{grade}: {n} missing",
+              "unlisted": "{grade}: items not listed", "lead": "{grade}: {n} missing"}  # fmt: skip
+# Fidelity's opened row: its mean, what each grade needs and the runs those thresholds are
+# halfway between (and the bar's copy), as bars from zero to the reply's length; the axis says
+# the measure and n
+CHART_CAPTION = "matched leading tokens, mean, n\u00a0=\u00a0{n} prompts"
+CHART_NEEDS = "{grade} needs"  # a grade's threshold, as the "Met needs" line names it
+CHART_NOT_SHOWN = ", not shown"  # a threshold the mean is above, not shown above by the test
+CHART_BAR = "the bar"  # after the pass bar's copy, linked to its glossary entry
+# the one more click down in an opened row: this system's own facts in full
 IN_FULL = "Why this grade"
-# the opened petal's link to the rule that sets its grade, on the checks page
-RULE_LINK = "Grading rule"
-# what full marks need, per petal, in a few words for the closed row ({green}: Fidelity's Met
+# what full marks need, per petal, in a few words for the opened row ({green}: Fidelity's Met
 # threshold)
 NEEDS_TINY = {
     "unforgeable": "a proved bound of 2^-128 for {run}",
@@ -615,11 +570,11 @@ GAP = {
     "program_none": "The stated bound does not name a verifier.",
     "zk_batch": "The theorem covers one request per proof, not our {n}-reply batches.",
     "zk_run": "The theorem does not cover the exact setup we run.",
-    "above": "Our test has not shown an average above {value} tokens, which {to} requires.",
+    "above": "Our test has not shown an average above {value} matched tokens, as {to} requires.",
     "one_at_a_time": "Our fidelity run did not execute one request at a time.",
     "reach_stated": "The formal proof stops at {stated} and does not cover {run}.",
     "reach_none": "No formal proof covers {run}, the verifier we run.",
-    "rests_sentence": "No single sentence from the publisher states this directly.",
+    "rests_sentence": "No single publisher sentence says checking rests on cryptography alone.",
     "no_setup_secret": "The setup produced a secret in an open ceremony.",
     "hide_statement": "We read {docs} and found no claim about hiding the weights.",
     "zk_theorem": "The publisher does not prove a zero-knowledge theorem.",
@@ -630,8 +585,8 @@ GAP = {
     "reading": "Met requires explicit publisher wording {topics}, whereas today we rely on our reading.",
 }
 GAP_ANY = "Missing: {need}."
-# what full marks need, per petal, in one short line for the default row ({green}: Fidelity's
-# Met threshold)
+# what full marks need, per petal, in one line, one click down under "Why this grade" ({green}:
+# Fidelity's Met threshold)
 NEEDS_SHORT = {
     "unforgeable": "a proved bound of at most 2^-128 on a fake reply passing the verifier we run",
     "weights_hidden": "a theorem proving that proofs of the exact setup we run reveal nothing "
@@ -643,21 +598,16 @@ NEEDS_SHORT = {
     "no_trusted_party": "an explicit statement from the publisher that verification needs no "
     "setup secret and no trusted party",
 }
-# the blocks one click down in an opened petal (IN_FULL), in order: this system's own facts
+# the blocks one click down in an opened row (IN_FULL), in order: this system's own facts
 PETAL_BLOCK = {"needs": "Met needs, in full", "has": "What this system has",
                "missing": "Where each item stands today",
                "records": "Our records", "terms": "In the field's terms",
                "limits": "Limits stated by the publisher (not graded)"}  # fmt: skip
-# an open question in our rules, linked to the RFC
-OPEN_QUESTION = "an open question in our rules"
-# the Missing line of the default row and the Missing block: counts, who acts, the group heads
+# who acts on an item, one click down where both act ("for the publisher")
 WHO = {"publisher": "for the publisher", "us": "for us"}
-MISSING_NONE = "nothing."
-MISSING_GROUP = {"first": "To reach {to}", "then": "Then, to reach {to}", "decide": "To decide",
-                 "repair": "To repair"}  # fmt: skip
-# the opened petal's Missing block: each group's head, who acts in parentheses where one acts
-MISSING_STEP = {"first": "For {to}", "then": "For {to}", "decide": "To decide",
-                "repair": "To repair"}  # fmt: skip
+# the word over a track's first cell, where a row lacks items before any grade: a Not decided
+# row's decision, a Failed row's repair
+MISSING_STEP = {"decide": "To decide", "repair": "To repair"}
 # the topics our reading covers, per fact: (subject, predicate), so two that share a subject
 # read "that the limit holds ... and is ..."
 READING_TOPIC = {
@@ -677,7 +627,7 @@ READING_TOPIC = {
     "conclusion": ("its conclusion", "is about the model"),
     "rests_on": ("soundness", "rests solely on cryptographic assumptions"),
 }  # fmt: skip
-# the opened petal's evidence lines, then the heads one click down
+# the opened row's evidence lines, then the heads one click down
 EVIDENCE = {
     "quotes": "Publisher's quotes at {pin} ({n})",
     "notes": "Our reading notes ({n})",
@@ -707,11 +657,6 @@ RECORDS = {
 }
 RECORD_LINK = "Record ↗"
 SCOPE_LINK = "the scope table further down this page ↓"
-# the checks whose failure a petal's red names (PETAL_RULE), so a petal and its checks light
-# together on a system page
-PETAL_CHECKS = {"unforgeable": ("model", "prompt", "reply"), "weights_hidden": ("no_weight_file",),
-                "faithful_model": ("fidelity",), "machine_checked": ("model", "prompt", "reply"),
-                "no_trusted_party": ()}  # fmt: skip
 # ------------------------------------------------------------------ the figures (RFC-0018 §Cost, FI-7)
 # The figures the checks page defines: the anchor on the checks page, the figure's name, and the
 # definition as (label, words) lines, a line with no label its figure's own. {slots}, {gap} (the

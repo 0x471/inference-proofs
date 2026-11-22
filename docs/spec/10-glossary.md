@@ -42,6 +42,8 @@ The website's Learn glossary ([`web/learn/glossary.md`](../../web/learn/glossary
 
 <a id="criteria-file"></a>**Criteria file.** `web/_data/criteria.json`, the v0.1 glyph data file (schema `criteria/1`, removed on 2026-11-15 and preserved in git history at `b9dfa3e`). It stored the six [glyph properties](#glyph-property), four [glyph states](#glyph-state), and one row per measured, reference, and public-source system, recording each cell's state, rationale, and source citations, validated under Gate G2. [RFC-0016](../../rfcs/0016-glyph-properties-and-states.md#criteria-file-contract).
 
+<a id="criterion"></a>**Criterion.** A [glyph property](#glyph-property) as a system's page grades it: one row of its Criteria section, with its name, plain question, grade word, the first item missing for Met and its [track](#track) (titled Glyph until 2026-11-22; not the v0.1 [criteria file](#criteria-file)). [RFC-0018](../../rfcs/0018-level-1-ladder.md) SI-3, Q53.
+
 <a id="derived-metric"></a>**Derived metric.** A metric computed deterministically by `iproofs.derive` from stored raw measurements using a named formula (such as `D-RATE-S`). Derived metrics are never typed manually. [RFC-0004](../../rfcs/0004-metrics-timing-grades.md).
 
 <a id="digest"></a>**Digest.** A SHA-256 hash formatted as `sha256:<64 lowercase hex>`. Exact byte constructions for model, proof, corpus, prompt-set, and container image digests are defined in [RFC-0012](../../rfcs/0012-schemas-and-serialization.md).
@@ -132,7 +134,7 @@ The website's Learn glossary ([`web/learn/glossary.md`](../../web/learn/glossary
 
 <a id="scope"></a>**Scope (timing scope).** The time interval covered by a duration or throughput metric: `setup`, `commit`, `prove.steady`, `prove.session`, `whole_wall`, `verify`, `verify.single_thread`, or `primitive`. Every time-based quantity specifies exactly one scope. [RFC-0004](../../rfcs/0004-metrics-timing-grades.md).
 
-<a id="scope-card"></a>**Scope card.** The table of facts displayed under the Formally verified petal on a system's page, showing whether the publisher states soundness, zero knowledge, and completeness as machine-checked, proved on paper, tested, or not stated across three targets: the protocol, the verifier code we run, and the prover code we run, with supporting quotes. It provides context and does not set a petal state on its own. [RFC-0018](../../rfcs/0018-level-1-ladder.md#formally-verified-machine_checked).
+<a id="scope-card"></a>**Scope card.** The table of facts displayed under the five criteria on a system's page, one click down, showing whether the publisher states soundness, zero knowledge, and completeness as machine-checked, proved on paper, tested, or not stated across three targets: the protocol, the verifier code we run, and the prover code we run, with supporting quotes. It provides context and does not set a petal state on its own. [RFC-0018](../../rfcs/0018-level-1-ladder.md#formally-verified-machine_checked).
 
 <a id="seed"></a>**Seed.** The 64-bit integer used to sample prompt offsets from the corpus. Measured jobs draw a fresh seed from the OS at startup and record it in the manifest; `--prompts-from` replays a previous run's recorded seeds. [RFC-0003](../../rfcs/0003-workloads.md).
 
@@ -153,6 +155,8 @@ The website's Learn glossary ([`web/learn/glossary.md`](../../web/learn/glossary
 <a id="teacher-forced-agreement"></a>**Teacher-forced agreement.** A non-gating fidelity metric displayed beside the matched-prefix check (shown on the site as a percentage mean labelled "Fidelity", SI-9). An engine is fed the prompt followed by the reference reply, and its score for that prompt is how many of the 512 reply positions match the reference token as its top prediction (unit `agreeing positions`), always conditioning on reference tokens rather than its own outputs. For prover rows, this figure is "computed by the system's own code on the reference reply, not by the proved computation"; the board distinguishes positions covered by a proof on that text from positions produced solely by the system's code (FI-16). [RFC-0018 FI-10 to FI-15](../../rfcs/0018-level-1-ladder.md#teacher-forced-agreement-and-kl-amended-2026-11-13-fi-10-to-fi-15).
 
 <a id="tokens-covered"></a>**Tokens covered.** The number of token positions whose computation a proof binds, declared by the claim card and adapter and verified against the workload (for example, the window size for a next-token prefill proof, or all positions in a segment grid). Used as the denominator for all per-token metrics. [RFC-0004](../../rfcs/0004-metrics-timing-grades.md).
+
+<a id="track"></a>**Track.** The three grades Partly met, Mostly met and Met drawn as cells on a [criterion](#criterion)'s row, lowest first: the grades it holds solid in its ink, each other one holding one open square per item `to_met` lists for it; opened, each square becomes its numbered item in words. [RFC-0018](../../rfcs/0018-level-1-ladder.md) SI-3, GL-11, Q53.
 
 <a id="unbound"></a>**Unbound.** Describes an edge of the computation not constrained by verifier acceptance, whether by design or because a weakening switch turned off its check.
 

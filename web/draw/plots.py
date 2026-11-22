@@ -14,6 +14,7 @@ from itertools import pairwise
 
 VB = 1000  # a bar's length in user units, at the largest value it is drawn beside
 MIN = 4  # a part shorter than this, in user units, is also marked by a line where it ends
+ZERO = 0  # the value at a bar's start: every bar is drawn from zero (RFC-0018 Q50)
 
 
 def svg(cls, h, body):

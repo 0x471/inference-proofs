@@ -23,6 +23,11 @@ SLICE = re.compile(
     r'class="sl s(\d) (green|amber|red|hollow)(?: (cut|open))?" data-step="([a-z_]+)"'
     r'(?: data-cause="([a-z_]+)")?'
 )
+# a criterion's row on a system page: its ink and form, its petal, the board's step and cause
+CRITERION = re.compile(
+    r'<div class="crr (green|amber|red|hollow)(?: (cut|open))?" id="petal-([a-z_]+)"'
+    r' data-step="([a-z_]+)"(?: data-cause="([a-z_]+)")?>'
+)
 CHECK_ROW = re.compile(
     r'<tr class="ck (held|failed|undecided)"(?: id="ck-[a-z_]+")?><th scope="row">'
     r'<a href="/checks#([a-z_]+)"'
@@ -126,10 +131,11 @@ def drawn(found: list[tuple[str, ...]]) -> list[tuple[str, str, str, str, str]]:
 
 
 def test_glyphs_draw_the_board_states(board_site: Any) -> None:
-    """GL-5, §The glyph (Q7): every glyph of a row, on the overview and on its page, draws its
-    five petals in order, one arm each, with the board's state, step and cause, in the form its
-    step and cause give; a petal the board marks as our reading says so on the page; the page's
-    checks table prints the board's check states."""
+    """GL-5, §The glyph (Q7): every glyph of a row on the overview draws its five petals in
+    order, one arm each, with the board's state, step and cause, in the form its step and cause
+    give; its page grades the five criteria in the same order with the same state, step and
+    cause, each in its step's word (SI-3, amended 2026-11-22); a petal the board marks as our
+    reading says so on the page; the page's checks table prints the board's check states."""
     text = pages(board_site.out)
     index = text["index.html"]
     for row in rows(board_site.board):
@@ -145,38 +151,133 @@ def test_glyphs_draw_the_board_states(board_site: Any) -> None:
         for k in range(0, len(found), 5):
             assert found[k : k + 5] == want, row["system"]
         page = text[f"{row['system']}.html"]
-        assert page.count('class="sl ') == 5, row["system"]
-        assert drawn(SLICE.findall(page)) == want, row["system"]
+        assert 'class="sl ' not in page, row["system"]  # the page draws no glyph of its own
+        graded = [(pid, s, f, st, c) for s, f, pid, st, c in CRITERION.findall(page)]
+        assert graded == want, row["system"]
+        words = re.findall(
+            r'<p class="crg"><a class="pvd [^"]*" href="[^"]*"[^>]*>([^<]*)</a>', page
+        )
+        assert words == [board_site.build.petal_step(p) for p in row["glyph"]], row["system"]
         read = [p.get("reading", False) and p["basis"] == "statement" for p in row["glyph"]]
         assert page.count('href="/checks#reading"') == sum(read), row["system"]
         checks = [(c, s) for s, c in CHECK_ROW.findall(page)]
         assert checks == [(c, row["checks"][c]["state"]) for c in CHECKS], row["system"]
 
 
-def test_petal_rows_count_the_boards_items_for_met(board_site: Any) -> None:
-    """SI-3 (amended 2026-11-17): a petal's row counts the board's items missing for Met
-    (`to_met`) and who acts on them, never typed; at Met it counts none."""
-    text = pages(board_site.out)
-    for row in rows(board_site.board):
-        page = text[f"{row['system']}.html"]
-        trs = re.findall(r'<tr class="pt [^"]*"[^>]*>(.*?)</tr>', page, re.S)
-        assert len(trs) == len(row["glyph"]), row["system"]
-        for tr, p in zip(trs, row["glyph"], strict=True):
-            tag = re.search(r'<span class="pdl">(.*?)<span class="sr">', tr, re.S)
-            assert tag, (row["system"], p["id"])
-            said = html.unescape(re.sub(r"<[^>]+>", "", tag[1]))
-            groups = p.get("to_met")
-            if groups is None:  # a board from before 2026-11-17: its next step's needs
-                nx = p.get("next")
-                groups = [{"items": nx["needs"]}] if nx else []
-            items = [i for g in groups for i in g["items"]]
-            if not items:
-                assert "missing" not in said, (row["system"], p["id"])
-                continue
-            us = sum(1 for i in items if i["by"] == "us")
-            pub = len(items) - us
-            who = "publisher" if not us else "us" if not pub else f"{pub} publisher, {us} us"
-            assert said == f"{len(items)} missing \u00b7 {who}", (row["system"], p["id"], said)
+LADDER = ("amber_lower", "amber_upper", "green")
+TRACK_CELL = re.compile(
+    r'<span class="ctp (hd|op|un|ld)"><span class="cth">([^<]*)</span>'
+    r'<span class="ctc">((?:<i class="ctq"></i>)*)</span></span>'
+)
+
+
+def met_items(p: dict[str, Any]) -> list[dict[str, Any]]:
+    groups = p.get("to_met")
+    if groups is None:  # a board from before 2026-11-17: its next step's needs, in one group
+        nx = p.get("next")
+        groups = [{"to": nx["to"], "items": nx["needs"]}] if nx else []
+    return [{**i, "to": g["to"]} for g in groups for i in g["items"]]
+
+
+def test_criteria_count_the_boards_items_for_met(board_site: Any, release_site: Any) -> None:
+    """SI-3 (amended 2026-11-22): a criterion's row counts the board's items missing for Met
+    (`to_met`), never typed: its control says how many ("Evidence" where none is), its track
+    holds the grades its step holds solid and one square per item in the cell of the grade the
+    item's group reaches (a decision or a repair in a cell before Partly met), and opened it
+    lists each item by its number with who acts (under each item where both act, once where one
+    does). On the example board and the release's."""
+    for site in (board_site, release_site):
+        text = pages(site.out)
+        for row in rows(site.board):
+            page = text[f"{row['system']}.html"]
+            blocks = page.split('<div class="crr ')[1:]
+            assert len(blocks) == len(row["glyph"]), row["system"]
+            for block, p in zip(blocks, row["glyph"], strict=True):
+                at = (row["system"], p["id"])
+                items = met_items(p)
+                tag = re.search(r'<summary class="crt"[^>]*>([^<]*)</summary>', block)
+                assert tag, at
+                assert re.findall(r"\d+", tag[1]) == ([str(len(items))] if items else []), at
+                grid = re.search(r'<div class="ctg n\d" aria-hidden="true">(.*?)</div>', block)
+                assert grid, at
+                cells = TRACK_CELL.findall(grid[1])
+                held = LADDER.index(p["step"]) + 1 if p["step"] in LADDER else 0
+                lead = [i for i in items if i["to"] not in LADDER]
+                want = [(len(lead), "ld")] if lead else []
+                want += [(sum(1 for i in items if i["to"] == s), "hd" if k < held else "")
+                         for k, s in enumerate(LADDER)]  # fmt: skip
+                got = [(len(sq) // len('<i class="ctq"></i>'), k if k in ("hd", "ld") else "")
+                       for k, _, sq in cells]  # fmt: skip
+                assert got == want, at
+                printed = [int(n) for n in re.findall(r'<li><span class="ctn">(\d+)</span>', block)]
+                assert sorted(printed) == list(range(1, len(items) + 1)), at
+                whos = re.findall(r'<span class="ctw">([^<]*)</span>', block)
+                one = re.findall(r'<p class="crw"><span class="k">[^<]*</span> ([^<]*)</p>', block)
+                if len({i["by"] for i in items}) > 1:
+                    assert sorted(whos) == sorted(i["by"] for i in items), at
+                    assert not one, at
+                else:
+                    assert not whos, at
+                    assert one == ([items[0]["by"]] if items else []), at
+
+
+def test_criterion_tracks_by_hand(board_site: Any) -> None:
+    """SI-3 (amended 2026-11-22): the track a row draws, computed from its step and `to_met`,
+    against cases worked by hand: each column (its grade's word, its kind, its items' numbers),
+    lowest grade first. Held: a grade the step holds. Open: a grade it does not hold, up to the
+    highest one the board lists items for, with one item per square (none where reaching the
+    grade above takes it too). Unlisted: a grade past that one. A decision or a repair stands in
+    a column before Partly met. Items number from 1 in the board's order."""
+    track = board_site.build.draw.petal.track
+
+    def g(to: str | None, kind: str, *by: str) -> dict[str, Any]:
+        return {
+            "to": to,
+            "kind": kind,
+            "items": [{"need": "text", "text": "x", "by": b} for b in by],
+        }
+
+    def cols(step: str | None, *groups: dict[str, Any]) -> list[tuple[str, str, list[int]]]:
+        return [(c["word"], c["kind"], [n for n, _ in c["items"]])
+                for c in track({"step": step, "to_met": list(groups)})]  # fmt: skip
+
+    pub, us = "publisher", "us"
+    # FlashProve's Integrity on the release board: Partly met; 3 items for Mostly met, 2 for Met
+    assert cols("amber_lower", g("amber_upper", "up", pub, pub, pub), g("green", "up", pub, pub)) \
+        == [("Partly met", "held", []), ("Mostly met", "open", [1, 2, 3]),
+            ("Met", "open", [4, 5])]  # fmt: skip
+    # SASH's Confidentiality: Not stated; 1 item for Partly met, 1 for Mostly met, 3 for Met
+    assert cols(
+        "red",
+        g("amber_lower", "up", pub),
+        g("amber_upper", "up", pub),
+        g("green", "up", pub, pub, pub),
+    ) == [("Partly met", "open", [1]), ("Mostly met", "open", [2]), ("Met", "open", [3, 4, 5])]
+    # Met: every grade held, nothing missing
+    assert cols("green") == [("Partly met", "held", []), ("Mostly met", "held", []),
+                             ("Met", "held", [])]  # fmt: skip
+    # Not met, the board listing what Partly met needs only: the two grades above are unlisted
+    assert cols("red", g("amber_lower", "up", pub, us)) == [
+        ("Partly met", "open", [1, 2]),
+        ("Mostly met", "unlisted", []),
+        ("Met", "unlisted", []),
+    ]
+    # Failed: a repair before any grade; Not decided: a decision before any grade
+    assert cols("red", g(None, "repair", pub)) == [
+        ("To repair", "lead", [1]), ("Partly met", "unlisted", []),
+        ("Mostly met", "unlisted", []), ("Met", "unlisted", [])]  # fmt: skip
+    assert cols(None, g(None, "decide", us)) == [
+        ("To decide", "lead", [1]), ("Partly met", "unlisted", []),
+        ("Mostly met", "unlisted", []), ("Met", "unlisted", [])]  # fmt: skip
+    # Mostly met on a board that lists no item (before `to_met`): Met is unlisted, not empty
+    assert cols("amber_upper") == [("Partly met", "held", []), ("Mostly met", "held", []),
+                                   ("Met", "unlisted", [])]  # fmt: skip
+    # Not stated with items for Met only: reaching Met takes the two grades under it too
+    assert cols("red", g("green", "up", pub, pub)) == [
+        ("Partly met", "open", []),
+        ("Mostly met", "open", []),
+        ("Met", "open", [1, 2]),
+    ]
 
 
 def test_order_and_positions_are_the_boards(board_site: Any) -> None:
@@ -287,6 +388,31 @@ def test_system_page_drawings_sit_where_the_figures_say(board_site: Any) -> None
             )
             me = re.findall(r'<svg class="mk me" x="([^"]+)"', block)
             assert me == [f"{100 * (mine['percent'] - low) / (100 - low):.2f}%"], system
+
+
+def test_fidelity_criterion_chart_is_the_boards(release_site: Any) -> None:
+    """SI-3 (amended 2026-11-22): Fidelity's opened row draws the row's mean among its grades'
+    thresholds and the runs they lie halfway between (and the bar's copy), highest first, each
+    beside its figure, as bars from zero to the reply's 512 tokens, the axis saying n. By hand,
+    FlashProve on the release board: 500.344 (the original, run again, grey) is 1,000 x 500.344 /
+    512 = 977.24 of the bar's 1,000; Met's threshold 283.026 (an outline) is 552.79; the 8-bit
+    copy's 65.708 is 128.34; Mostly met's threshold 47.997 is 93.74; the 4-bit copy's 30.286 is
+    59.15; FlashProve's own 29.658 (solid) is 57.93; the 3-bit copy, the bar, 11.15 is 21.78; the
+    axis runs from 0 to 512 over n = 360 prompts."""
+    page = (release_site.out / "flashprove.html").read_text()
+    chart = re.search(r'<figure class="cfc">(.*?)</figure>', page, re.S)
+    assert chart
+    lines = re.findall(r'<span class="cff">([^<]*)</span>'
+                       r'.*?<rect class="(bp|bg|bc)" x="0.00"(?: y=".75")? width="([^"]+)"',
+                       chart[1])  # fmt: skip
+    assert lines == [("500.3", "bg", "977.24"), ("283.0", "bc", "552.79"),
+                     ("65.71", "bg", "128.34"), ("48.0", "bc", "93.74"), ("30.29", "bg", "59.15"),
+                     ("29.66", "bp", "57.93"), ("11.15", "bg", "21.78")]  # fmt: skip
+    axis = re.search(r"<figcaption[^>]*>(.*?)</figcaption>", chart[1])
+    assert axis
+    numbers = re.findall(r"\d+", html.unescape(re.sub(r"<[^>]+>", " ", axis[1])))
+    assert (numbers[0], numbers[-1]) == ("0", "512")
+    assert "360" in numbers
 
 
 def test_overview_positions_are_the_boards(board_site: Any) -> None:
