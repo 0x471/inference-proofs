@@ -1,6 +1,6 @@
 # Schemas
 
-JSON Schema Draft 2020-12 files for every document the project reads or writes. The catalogue, the versioning rules and the labelled-quantity type are normative in [RFC-0012](../rfcs/0012-schemas-and-serialization.md#schema-catalogue).
+This directory contains JSON Schema Draft 2020-12 definitions for every document the project reads or writes. The schema catalogue, versioning rules, and labelled-quantity types are defined normatively in [RFC-0012](../rfcs/0012-schemas-and-serialization.md#schema-catalogue).
 
 ## Layout
 
@@ -11,14 +11,14 @@ schema/<name>/examples/invalid/*       must fail
 schema/<name>/examples/invalid/*.reason   text the validation error must contain
 ```
 
-- Every document names its schema in a top-level `schema` field, `<name>/<major>` (for example `run/1`). Each schema pins that field with `const`.
-- `$id` and `$ref` resolve from this tree only. The validator never fetches anything over the network; the `$id` host is a name that is never dereferenced (RFC-0012 Q1).
-- Every object sets `additionalProperties: false` unless the schema documents it as an open map.
-- Formats asserted: `date`, `date-time`, `uri` (syntax only).
+- Every document identifies its schema in a top-level `schema` field formatted as `<name>/<major>` (for example, `run/1`), which each schema fixes with `const`.
+- All `$id` and `$ref` lookups resolve strictly within this local tree. The validator never makes network requests, and the `$id` hostname is purely an identifier that is never dereferenced (RFC-0012 Q1).
+- Every object sets `additionalProperties: false` unless the schema explicitly defines it as an open map.
+- Format assertions cover `date`, `date-time`, and `uri` (syntax only).
 
 ## Status
 
-Schemas in the RFC-0012 catalogue that have landed, with their Python model in `iproofs.model` where code reads the document field by field ([RFC-0012 §Python loading](../rfcs/0012-schemas-and-serialization.md#python-loading)):
+The table below lists all schemas from the RFC-0012 catalogue that are currently implemented, along with their corresponding Python models in `iproofs.model` where code accesses fields directly ([RFC-0012 §Python loading](../rfcs/0012-schemas-and-serialization.md#python-loading)):
 
 | Schema | Instances | Model |
 |---|---|---|
@@ -36,33 +36,33 @@ Schemas in the RFC-0012 catalogue that have landed, with their Python model in `
 | `adapter-out/1` | `/io/out.json` inside an adapter container | `AdapterOut`, `ProofEntry`, `CommandLine` |
 | `controls/1` | `results/<release>/<system>/<run-id>/controls.json` | none (read as a tree) |
 | `controls-part/1` | `<run-dir>/controls-part-<seed>-<subset>.json`, a working file (RFC-0008 §Split suites) | none (read as a tree) |
-| `controls-seed/1` | `<run-dir>/controls-seed.json`, the split suite's one seed (RFC-0008 SPLIT-1) | none (read as a tree) |
+| `controls-seed/1` | `<run-dir>/controls-seed.json`, the split suite's single seed (RFC-0008 SPLIT-1) | none (read as a tree) |
 | `release/1` | `releases/<release>/release.yaml` | `Release` |
 | `release-index/1` | `releases/<release>/index.json` | none (read as a tree) |
 | `target/1` | `targets/<author>/<id>.yaml` | none (read as a tree) |
 | `perturbed-commitment/1` | `results/<release>/<system>/_controls/<workload>/perturbed.json` | `PerturbedCommitmentRecord` |
 | `site-facts/1` | `web/_data/facts.json` | `SiteFacts`, `SiteInfo`, `ModelFacts`, `RowFacts`, `LicenceFacts`, `StatusFacts` |
-| `criteria/1` | `web/_data/criteria.json` (deleted 2026-11-15: it held RFC-0016's vocabulary (Formally verified "yes" from documents), which no page reads; the v0.1 record is in git history at b9dfa3e) | none (read as a tree) |
+| `criteria/1` | `web/_data/criteria.json` (deleted on 2026-11-15; it stored RFC-0016's vocabulary, such as Formally verified "yes" from documents, which no page uses anymore; the v0.1 record remains in git history at `b9dfa3e`) | none (read as a tree) |
 | `level/1` | `levels/L<k>.yaml` (RFC-0018) | none (read by `iproofs.level`) |
-| `beacon/1` | `levels/L<k>-beacon.json`, the drand round the prompts are drawn from (RFC-0018 PR-2) | none (read as a tree) |
-| `verify-trace/1` | `<run-dir>/verify-trace/<proof-id>.json`, the file opens of one verify call (RFC-0018 CH-4) | none (read as a tree) |
-| `fidelity/1` | `results/<release>/fidelity/<rung>/fidelity.json` (RFC-0018 FI-8), with the run's slot count, the Fidelity petal's two step thresholds and each row's tests over them (optional, 2026-11-13) | none (read as a tree) |
-| `fidelity-run/1` | `results/<release>/fidelity/<rung>/fidelity-run.json`, the record of one fidelity run | none (read as a tree) |
-| `board/1` | `releases/<release>/board.json`, what the site reads (RFC-0018 §The board file); each row's five petals carry step, cause, basis, the checks that lowered them and `reading` when a fact the decision read is the reader's reading (changed in place 2026-11-13, before any release froze; `ineligible_sessions` added in place 2026-11-15) | none (read as a tree) |
-| `properties/1` | `systems/<name>/properties.yaml`, the statement petals of the glyph as typed states; replaced by `properties/2` (2026-11-13) | none (read as a tree) |
-| `properties/2` | `systems/<name>/properties.yaml`, the facts each statement petal is computed from, with their deciding quotes at the pin (RFC-0018 GL-1); `bound.batch`, `bound.program` and `formal.toolchain` added in place 2026-11-13 | none (read as a tree) |
-| `refusal/1` | `results/<release>/<system>/refusals/slot-<k>.json`, a refusal by a system's own code with the upstream commit it was made at (RFC-0018 SE-5, 2026-11-15) | none (read as a tree) |
-| `proof-build/1` | `results/<release>/proof-build/<system>/proof-build.json`, one build of the theorem a properties file names, under the toolchain it pins (same spelling) in a digested image, and the axioms it reports (RFC-0018 MC-4, MC-5) | none (read as a tree) |
-| `verifier-trial/1` | `results/<release>/<system>/_trials/<trial id>/trial.json`, verify calls on stored proofs outside any session's suite (a second verifier, the C3 null twin, C1 at every position); it gates nothing (RFC-0008 §Verifier trials, 2026-11-15) | none (read as a tree) |
+| `beacon/1` | `levels/L<k>-beacon.json`, the drand round used to draw prompts (RFC-0018 PR-2) | none (read as a tree) |
+| `verify-trace/1` | `<run-dir>/verify-trace/<proof-id>.json`, recording the file opens from a single verify call (RFC-0018 CH-4) | none (read as a tree) |
+| `fidelity/1` | `results/<release>/fidelity/<rung>/fidelity.json` (RFC-0018 FI-8), including the run's slot count, the two step thresholds for the Fidelity petal, and each row's tests against them (optional, added 2026-11-13) | none (read as a tree) |
+| `fidelity-run/1` | `results/<release>/fidelity/<rung>/fidelity-run.json`, recording a single fidelity run | none (read as a tree) |
+| `board/1` | `releases/<release>/board.json`, the dataset consumed by the site (RFC-0018 §The board file); each row's five petals include step, cause, basis, any checks that lowered them, and `reading` when a decision relies on an editor's interpretation (updated in place 2026-11-13 before any release froze; `ineligible_sessions` added in place 2026-11-15) | none (read as a tree) |
+| `properties/1` | `systems/<name>/properties.yaml`, storing the glyph's statement petals as typed states; superseded by `properties/2` (2026-11-13) | none (read as a tree) |
+| `properties/2` | `systems/<name>/properties.yaml`, storing the underlying facts for each statement petal along with deciding quotes at the pinned commit (RFC-0018 GL-1); `bound.batch`, `bound.program`, and `formal.toolchain` were added in place on 2026-11-13 | none (read as a tree) |
+| `refusal/1` | `results/<release>/<system>/refusals/slot-<k>.json`, recording a refusal from a system's own code along with the upstream commit where it occurred (RFC-0018 SE-5, 2026-11-15) | none (read as a tree) |
+| `proof-build/1` | `results/<release>/proof-build/<system>/proof-build.json`, recording a build of the theorem referenced in a properties file using the pinned toolchain (exact same spelling) inside a digested image, plus the axioms reported (RFC-0018 MC-4, MC-5) | none (read as a tree) |
+| `verifier-trial/1` | `results/<release>/<system>/_trials/<trial id>/trial.json`, recording verify calls on stored proofs outside a session's main suite (such as a second verifier, the C3 null twin, or C1 at every position); these trials do not gate ranking (RFC-0008 §Verifier trials, 2026-11-15) | none (read as a tree) |
 
 ## Examples rule
 
-Every schema ships valid and invalid examples (AGENTS.md, working practice). Each invalid example has a sibling `<file>.reason` whose text must appear in the validation error, so an example cannot fail for an unrelated reason. Gate G2 runs the rule ([RFC-0013 §G2](../rfcs/0013-validation-and-ci.md#g2-schema-validation)); locally, `iproofs.schema.check_examples` runs it.
+Every schema must include both valid and invalid examples (see AGENTS.md, working practice). Each invalid example is paired with a sibling `<file>.reason` file whose text must appear in the resulting validation error, ensuring the example fails for the intended reason rather than an unrelated mistake. Gate G2 enforces this in CI ([RFC-0013 §G2](../rfcs/0013-validation-and-ci.md#g2-schema-validation)), and you can run it locally via `iproofs.schema.check_examples`.
 
 ## Quantity
 
-`quantity/1` holds shared `$defs` only: `quantity`, `statistic`, `stats`, `source` and the identifier patterns. No document names it in its `schema` field. Its examples are single values named `<def>.<case>.json` and are validated against `$defs/<def>`. Rules that need more than one value (the derivation graph, INV-QTY-3 second half, INV-QTY-6a, INV-QTY-9 OR rule) belong to gate G5; INV-QTY-8 `value == stats.mean` is checked by `iproofs.quantity.statistic_problems`.
+`quantity/1` defines shared `$defs` only: `quantity`, `statistic`, `stats`, `source`, and the common identifier patterns. No standalone document references it in its `schema` field. Its examples are individual values named `<def>.<case>.json` and are validated directly against `$defs/<def>`. Cross-field rules (such as the derivation graph, the second half of INV-QTY-3, INV-QTY-6a, and the INV-QTY-9 OR rule) are enforced by gate G5, while INV-QTY-8 (`value == stats.mean`) is checked by `iproofs.quantity.statistic_problems`.
 
 ## Changing a schema
 
-Additive changes (a new optional property, a wider enum, a new `$defs` entry) edit the current file and add a CHANGELOG entry. Anything else is a new major file ([RFC-0012 §Schema versioning](../rfcs/0012-schemas-and-serialization.md#schema-versioning)).
+Additive changes, such as adding an optional property, widening an enum, or introducing a new `$defs` entry, can be made directly in the existing schema file with a corresponding CHANGELOG entry. Any breaking change requires a new major schema file ([RFC-0012 §Schema versioning](../rfcs/0012-schemas-and-serialization.md#schema-versioning)).

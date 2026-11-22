@@ -5,8 +5,8 @@
 <h1>Inference Proofs</h1>
 
 <p><strong>An open benchmark for provable inference.</strong><br>
-The same models, the same reference hardware, the same timing rules,<br>
-and a claim card beside every number saying what the proof establishes.</p>
+Shared open-weights models, standardized hardware, consistent timing rules,<br>
+and a claim card next to every number explaining what the proof actually establishes.</p>
 
 <a href="https://github.com/ai-verification-observatory/inference-proofs/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/ai-verification-observatory/inference-proofs/ci.yml?branch=main&style=for-the-badge&label=CI&logo=githubactions&logoColor=white"></a>
 <a href="releases/v1.0/board.json"><img alt="Level 1, release v1.0" src="https://img.shields.io/badge/Level%201-v1.0-5B7BFF?style=for-the-badge"></a>
@@ -56,35 +56,35 @@ and a claim card beside every number saying what the proof establishes.</p>
 
 ## Why this exists
 
-Several open systems can now prove that a language model produced a given output. Each publishes its own numbers, and no two of them can be read side by side, because four things differ at once:
+Several open-source systems can now cryptographically prove that a language model produced a given output. Each project publishes its own benchmarks, yet those numbers are almost impossible to compare side by side because four variables change at once:
 
-| Differs | Example of the gap | What this benchmark fixes |
+| Variable | Why published results diverge | How this benchmark controls it |
 |---|---|---|
-| **Model** | an 8B dense model vs a mixture-of-experts model at another precision | pinned [workloads](rfcs/0003-workloads.md): model by public source and content hash, prompt sets by digest |
-| **Hardware** | each author's own machine and driver | pinned [reference profiles](rfcs/0006-reference-hardware-and-cost.md) with a machine record and CPU binding |
-| **Timing rule** | "proving time" that does or does not include start-up, commitment or batching | named [timing scopes](#timing-scopes), measured by the harness from outside the prover |
-| **Claim** | one proof binds the weights, another samples, a third proves a single layer | a [claim card](#the-claim-card) per configuration, copied from the system's own documentation |
+| **Model** | An 8B dense model vs a 400B mixture-of-experts model at a different precision | Pinned [workloads](rfcs/0003-workloads.md): models identified by public source and content hash, prompt sets pinned by digest |
+| **Hardware** | Each team's own GPU, driver, and CPU setup | Standardized [reference profiles](rfcs/0006-reference-hardware-and-cost.md) with full machine records and CPU pinning |
+| **Timing rule** | "Proving time" may or may not include start-up, weight commitment, or batching | Explicit [timing scopes](#timing-scopes) measured by our harness from outside the prover container |
+| **Claim** | One proof binds the weights, another samples activations, a third checks a single layer | A [claim card](#the-claim-card) per configuration, copied directly from the system's own documentation |
 
-The first three can be removed. The fourth cannot: two systems that prove different statements are not faster or slower than each other, they are doing different work. So this project removes the differences it can and **labels the one it cannot**. It is in the spirit of [Ethproofs](https://ethproofs.org/) for zkVM provers, with one addition that inference needs: the claim card.
+The first three differences can be standardized away. The fourth cannot: two systems proving fundamentally different statements are doing different work, not simply running faster or slower. Inference Proofs therefore standardizes what it can and **explicitly labels what it cannot**. It follows the spirit of [Ethproofs](https://ethproofs.org/) for zkVMs, with one addition tailored to AI inference: the claim card.
 
 > [!IMPORTANT]
-> This project **runs** provers and ranks them inside one model's rung by one measured figure, the cost of a proved reply as a multiple of serving it, among the systems that pass six checks we run ourselves ([RFC-0018](rfcs/0018-level-1-ladder.md)). It does not build or certify them, and it ranks nothing across models.
+> This project **runs** proof systems and ranks passing systems within each model rung by a single measured figure: the cost of generating and proving a reply as a multiple of unproved serving ([RFC-0018](rfcs/0018-level-1-ladder.md)). It does not build or certify provers, and it never ranks systems across different models.
 
 ## What gets measured
 
-Each system runs at a full commit hash, with no setting its documentation does not name, behind a five-subcommand [adapter contract](rfcs/0005-adapter-contract.md). The v1.0 runs are hosted: their manifests record the provider's network, and the verify trace records the files the verifier opens, not its connections.
+Every system runs at a pinned full Git commit hash using only documented settings, wrapped in a five-subcommand [adapter contract](rfcs/0005-adapter-contract.md). Level 1 v1.0 runs execute on hosted GPUs: manifests record the hosting environment, and verify traces record every file opened by the verifier (though not network connections).
 
 ```
 info → setup → commit → prove → verify
 ```
 
-The harness times every call and every proof release from outside the container ([RFC-0011](rfcs/0011-measurement-and-sampling.md)), samples GPU and host resources through NVML and cgroups, runs the same tampering controls against every verifier ([RFC-0008](rfcs/0008-negative-controls.md)), and recomputes every derived figure in CI from the raw records ([RFC-0004](rfcs/0004-metrics-timing-grades.md)).
+The harness times every call and proof release from outside the container ([RFC-0011](rfcs/0011-measurement-and-sampling.md)), samples GPU and host telemetry via NVML and cgroups, tests every verifier against the same tampering controls ([RFC-0008](rfcs/0008-negative-controls.md)), and recomputes all derived metrics in CI from the raw records ([RFC-0004](rfcs/0004-metrics-timing-grades.md)).
 
-Each system is also set beside **reference rows** ([RFC-0015](rfcs/0015-reference-rows.md)): the same model served by a production engine (vLLM, publisher's release precision, defaults only) on the same GPU generation. The overhead of proving is read against that row, in GPU-seconds per token, with its scope on the label.
+Each prover is also paired with a **production-serving reference row** ([RFC-0015](rfcs/0015-reference-rows.md)): the same model served without proofs by vLLM at the publisher's release precision (using default settings) on the same GPU generation. Proving overhead is computed directly against that baseline in GPU-seconds per reply, with its timing scope attached.
 
 ## Anatomy of a number
 
-No number exists in this repository without its labels (one `quantity/1` type, [RFC-0012](rfcs/0012-schemas-and-serialization.md)). This is one, verbatim, from a stored v0.1 run:
+Every metric stored in this repository uses one structured `quantity/1` schema ([RFC-0012](rfcs/0012-schemas-and-serialization.md)) so no number ever appears without its metadata. Here is a verbatim example from a stored v0.1 run:
 
 ```jsonc
 // results/v0.1/sash/2026-11-09-sash-sash-l31-8b-c1024-prover-h200-hosted-1/run.json
@@ -93,7 +93,7 @@ No number exists in this repository without its labels (one `quantity/1` type, [
   "unit": "param_token/s",
   "scope": "prove.session",          // which clock events bound it
   "grade": "derived",                // how it was obtained
-  "tier": "reported",                // who stands behind it
+  "tier": "reported",                // who has verified the run
   "null_reason": null,
   "source": {
     "kind": "derivation",
@@ -106,51 +106,51 @@ No number exists in this repository without its labels (one `quantity/1` type, [
 }
 ```
 
-Three vocabularies label it. Each is normative in the RFC named beside it.
+Three controlled vocabularies govern every published number:
 
 <table>
-<tr><th>Grade: how it was obtained<br><sub><a href="rfcs/0004-metrics-timing-grades.md">RFC-0004</a></sub></th><th>Evidence tier: who stands behind it<br><sub><a href="rfcs/0007-evidence-tiers-and-reproduction.md">RFC-0007</a></sub></th><th>Wording: what a proof does<br><sub><a href="docs/spec/10-glossary.md">Glossary</a></sub></th></tr>
+<tr><th>Grade: how it was obtained<br><sub><a href="rfcs/0004-metrics-timing-grades.md">RFC-0004</a></sub></th><th>Evidence tier: who ran it<br><sub><a href="rfcs/0007-evidence-tiers-and-reproduction.md">RFC-0007</a></sub></th><th>Wording: what a check establishes<br><sub><a href="docs/spec/10-glossary.md">Glossary</a></sub></th></tr>
 <tr valign="top"><td>
 
 | Grade | Meaning |
 |---|---|
-| `measured` | read by the harness from this project's run |
-| `derived` | computed by CI by a named formula |
-| `projected` | from a named cost model |
-| `external` | read from a public source at a pin |
-| `asserted` | an input (a price) with source and date |
+| `measured` | recorded directly by our harness |
+| `derived` | computed in CI from a named formula |
+| `projected` | estimated by a documented cost model |
+| `external` | taken from a pinned public source |
+| `asserted` | a fixed input (e.g., GPU price) with source and date |
 
 </td><td>
 
 | Tier | Meaning |
 |---|---|
-| `reported` | produced by one runner and not yet checked |
-| `peer-reviewed` | reserved |
-| `reproduced` | reserved |
+| `reported` | run by one operator, not yet rerun externally |
+| `peer-reviewed` | reserved for future review |
+| `reproduced` | reserved for external reruns |
 
-Every tier the harness records is `reported` ([RFC-0007](rfcs/0007-evidence-tiers-and-reproduction.md)). In prose, a `reported` number is called "reported", never "measured" alone without its labels.
+Every run currently recorded by the harness has tier `reported` ([RFC-0007](rfcs/0007-evidence-tiers-and-reproduction.md)). In prose, always label reported numbers with their scope and tier.
 
 </td><td>
 
 | Word | Use |
 |---|---|
-| **proved** | a sound verifier's acceptance establishes it |
-| **bound** | an edge the verifier's acceptance constrains |
-| **sampled** | a random subset was checked; statistical |
+| **proved** | established by a sound verifier's acceptance |
+| **bound** | a computation link constrained by verification |
+| **sampled** | statistical check over a random subset |
 | **attested** | vouched for by hardware or a signer |
 
-Never "provably safe".
+Never say "provably safe".
 
 </td></tr>
 </table>
 
-Derived numbers are **computed, never typed**. CI recomputes every one from its inputs, bit for bit, and fails on any difference.
+Derived metrics are always **computed, never hand-typed**. CI recomputes every derived value from its raw inputs bit for bit and fails on any discrepancy.
 
 ## The claim card
 
-A claim card ([RFC-0002](rfcs/0002-claim-card.md)) is the machine-checkable statement, per system configuration, of what an accepted proof establishes: the relation, the security notion and level, the assumptions, which edges of the computation are bound, and the **residual**, what a cheating prover can still do while passing verification.
+A claim card ([RFC-0002](rfcs/0002-claim-card.md)) is a machine-checkable record of what an accepted proof establishes for a specific system configuration: the proved relation, security notion and bit level, underlying assumptions, which edges of the computation are bound, and the **residual** (what a cheating prover can still get away with while passing verification).
 
-Every field is copied from the system's own documentation at the pinned commit, with a line-anchored link, or written `not stated` where the source is silent. Nothing is inferred. An excerpt from [`systems/sash/claim.yaml`](systems/sash/claim.yaml):
+Every entry is copied verbatim from the system's documentation at the pinned commit with a line-anchored link, or marked `not stated` where the documentation is silent. Nothing is inferred. Here is an excerpt from [`systems/sash/claim.yaml`](systems/sash/claim.yaml):
 
 ```yaml
 upstream: {repo: "sg-ai-safety-hub/zk-inference-prover", commit: "4f41667297430a598165c4a8604258fe37d952ae"}
@@ -164,64 +164,64 @@ security:
 zero_knowledge: {claimed: "not stated", hidden: "not stated", not_hidden: "not stated", status: "not_stated"}
 ```
 
-A system enters the ranking by passing six checks we run ourselves ([RFC-0018](rfcs/0018-level-1-ladder.md#the-six-checks)):
+Before a system can be ranked on Level 1, it must clear six entry checks run by our harness ([RFC-0018](rfcs/0018-level-1-ladder.md#the-six-checks)):
 
-| Check | Passes when |
+| Check | Requirement to pass |
 |---|---|
-| **Run** | three sessions, each from a cold start on its own prompts, built from the pinned public commit, each returned an accepted proof for every request |
-| **Model** | a proof made after changing one committed weight was never accepted, and an honest proof was refused against another commitment |
-| **Prompt** | a proof was refused for a prompt with one token changed |
-| **Reply** | proofs cover all 512 reply tokens, and a changed token at the first, the last and an interior position was refused |
-| **Verify without weights** | every verdict came from a verify call with no GPU and no model file, under a file-open trace |
-| **Fidelity** | the committed copy's replies match the publisher's original weights for more leading tokens than the bar's: a floor, not a measure of closeness |
+| **Run** | Three cold-start sessions on fixed prompt slots, built from the pinned public commit, each returning an accepted proof for every request |
+| **Model** | Altering a single weight never produces an accepted proof against the original commitment, and an honest proof is rejected against the altered commitment |
+| **Prompt** | Modifying one prompt token causes the verifier to reject the proof |
+| **Reply** | Every proof covers all 512 reply tokens, and modifying the first, last, or an interior reply token causes rejection |
+| **Verify without weights** | Every verdict runs with no GPU visible and no model files on disk, confirmed via a file-open trace |
+| **Fidelity** | Proved replies match more leading tokens of the original model than the pass bar (a deliberately damaged copy), setting a basic quality floor |
 
-None of the checks attempts a forged proof: soundness and weight secrecy are not tested.
+None of these checks attempt adversarial forgery: soundness and weight secrecy are not empirically tested.
 
-The glyph then shows how far a system that ran is from a perfect prover ([RFC-0018](rfcs/0018-level-1-ladder.md#the-glyph)). Five petals, each at one step: Met, Mostly met, Partly met, Not met, Not stated, Failed (our check or our build of the publisher's proof contradicted it) or Not decided. The steps are drawn as inks; no printed word names an ink:
+Alongside the checks, a five-petal **glyph** summarizes how close each system is to an ideal prover ([RFC-0018](rfcs/0018-level-1-ladder.md#the-glyph)). Each petal receives one grade: `Met`, `Mostly met`, `Partly met`, `Not met`, `Not stated`, `Failed` (contradicted by a check or proof rebuild), or `Not decided`. Colours are rendered visually without naming them in text:
 
-| Petal | Protects | Met means |
+| Petal | Protects | What Met requires |
 |---|---|---|
-| **Integrity** (soundness) | the customer | a bound on a false reply being accepted, proved, that covers what the row runs, with every exponent in the stated bound 128 or more (a term 2^-t or q/2^t has exponent t) |
-| **Confidentiality** (zero knowledge of the weights) | the provider | zero knowledge proved for the configuration the row runs, the programs stated to implement it, and a published list of what stays visible with nothing that depends on the weights |
-| **Fidelity** (quantization error, in matched leading tokens) | the customer | the proved replies are shown above halfway between a second run of the publisher's model and its 8-bit copy, in a fidelity run of one request at a time |
-| **Formally verified** (machine-checked soundness proof) | the customer | a machine-checked soundness theorem covers the verifier code the row runs, with its trusted base listed and no input-reading code outside the proof, and a build of it at the pin, with the toolchain the publisher pins, is recorded |
-| **Trust assumptions** (trusted setup or party) | the customer | soundness rests on cryptography alone, and no setup ever produced a secret |
+| **Integrity** (soundness) | Customer | A proved soundness bound covering the exact setup we run, with every exponent at least 128 (in `2^-t` or `q/2^t`, the exponent is `t`) |
+| **Confidentiality** (zero knowledge of weights) | Provider | Zero knowledge proved for the exact configuration and batch size we run, stated for the compiled programs, plus a published list of visible values with nothing depending on the weights |
+| **Fidelity** (quantization drift in matched leading tokens) | Customer | Proved replies score significantly above the midpoint between a rerun of the original model and its 8-bit copy in a one-request-at-a-time fidelity run |
+| **Formally verified** (machine-checked soundness proof) | Customer | A machine-checked soundness theorem covering the actual verifier binary we run, with its trusted base listed, no unverified input-reading code outside the proof, and a passing rebuild by us using the publisher's pinned toolchain |
+| **Trust assumptions** (trusted setup or party) | Customer | Explicit publisher statement that soundness rests solely on cryptography, with no setup secret |
 
-Integrity, Confidentiality, Formally verified and Trust assumptions are computed from facts a reviewer copies, each with its quote, from the publisher's documents at the pin (`systems/<name>/properties.yaml`); no state is typed by hand. A value that is the reader's reading rather than the publisher's words carries a note; the system page marks the petal "read as" and grades it Mostly met at most. Fidelity is measured by our fidelity run. A failed check sets Failed on the petals it contradicts. Each system page prints, under each petal, its next step: what the row lacks for the step above, and who acts. Nothing adds the petals up, and the glyph never moves a position: the order is cost among the systems that passed.
+Four statement petals (Integrity, Confidentiality, Formally verified, Trust assumptions) are computed deterministically from quoted facts extracted from the publisher's documentation at the pinned commit (`systems/<name>/properties.yaml`); no grade is entered by hand. Whenever a fact relies on our interpretation rather than a single explicit sentence, it carries a note, the site marks the petal as our reading, and the grade is capped at `Mostly met`. Fidelity comes directly from our fidelity run, and any failed entry check overrides contradicted petals to `Failed`. Each system page lists everything still missing for `Met` along with who must act (the publisher or us). Petals are never combined into a single score and never change a system's ranking.
 
 ## Timing scopes
 
-Every time and every rate names exactly one scope ([RFC-0004 INV-SCOPE-1](rfcs/0004-metrics-timing-grades.md#timing-scopes)). Boundaries are harness clock events (`time.monotonic_ns()`); a proof's release time is the instant the harness observes its atomic rename into `/io/proofs/`.
+Every latency and throughput number carries exactly one timing scope ([RFC-0004 INV-SCOPE-1](rfcs/0004-metrics-timing-grades.md#timing-scopes)), bounded by harness monotonic clock events (`time.monotonic_ns()`). A proof's release timestamp is the moment the harness observes its atomic rename into `/io/proofs/`.
 
 | Scope | Starts at | Ends at | Tokens attributed |
 |---|---|---|---|
 | `commit` | `commit` call start | `commit` call exit | none |
-| `prove.session` | `prove` call start | release of the last proof | all proofs |
-| `prove.steady` | last release in the first batch | release of the last proof | requests after the first batch |
-| `whole_wall` | `commit` call start | release of the last proof | all proofs |
-| `verify` | `verify` call start, 8-CPU verifier | that call's exit | the proof's tokens |
-| `verify.single_thread` | same, 1-CPU verifier | that call's exit | the proof's tokens |
+| `prove.session` | `prove` call start | release of last proof | all proofs |
+| `prove.steady` | last release in first batch | release of last proof | requests after first batch |
+| `whole_wall` | `commit` call start | release of last proof | all proofs |
+| `verify` | `verify` call start (8-CPU verifier) | that call's exit | the proof's tokens |
+| `verify.single_thread` | same (1-CPU verifier) | that call's exit | the proof's tokens |
 
-`prove.steady` excludes start-up; `prove.session` includes it. A system that releases no proof before the whole request is proved has no steady scope, and its headline says so on the label.
+`prove.steady` excludes start-up overhead, while `prove.session` includes it. Systems that release all proofs together at the end have no steady-state scope, and their headline figure labels whole-session scope explicitly.
 
 ## Negative controls
 
-A benchmark that only times honest runs cannot tell a verifier from one that accepts everything. Every verifier faces the same tampering controls ([RFC-0008](rfcs/0008-negative-controls.md)), applied by the harness, never by the system:
+Timing honest runs alone cannot distinguish a real verifier from one that blindly accepts everything. Our harness applies the same suite of tampering controls ([RFC-0008](rfcs/0008-negative-controls.md)) to every verifier from outside the adapter:
 
-| Id | Tampering | Expected |
+| Id | Modification | Expected outcome |
 |---|---|---|
-| C1 | change the claimed output token | `reject` |
-| C2 | change one prompt token in the request | `reject` |
-| C3 | verify against the commitment of perturbed weights | `reject` |
-| C4 | replay a valid proof for a different request | `reject` |
-| C5 | truncate the largest part the verifier reads | `reject` or `invalid_call` |
-| C6 | flip one bit at a seeded offset in a part the verifier reads, 5 seeds | `reject` or `invalid_call`, each seed |
-| C7 | swap the proofs of two requests in one batch | `reject` |
-| C8 | drop one part the verifier reads | `reject` or `invalid_call` |
-| P1 | commit W, prove with perturbed W′ | `prover_failed` or `reject` |
-| P2 | prove at a precision other than the committed one | `prover_failed` or `reject` |
+| C1 | Alter a claimed output token | `reject` |
+| C2 | Alter one prompt token in the request | `reject` |
+| C3 | Verify against a commitment from perturbed weights | `reject` |
+| C4 | Replay a valid proof for a different request | `reject` |
+| C5 | Truncate the largest proof file the verifier reads | `reject` or `invalid_call` |
+| C6 | Flip one bit at a seeded offset in a read proof file (5 seeds) | `reject` or `invalid_call` on every seed |
+| C7 | Swap the proofs of two requests within a batch | `reject` |
+| C8 | Remove one proof file the verifier reads | `reject` or `invalid_call` |
+| P1 | Commit weights W, then prove with perturbed weights W′ | `prover_failed` or `reject` |
+| P2 | Prove at a different precision than committed | `prover_failed` or `reject` |
 
-Each control has an **honest twin**: the untouched proof, verified in the same batch with the same image. If the twin is not accepted, the control is `void`, never counted as a rejection. Switches that weaken a system's statement (for example SASH's `--unsound-skip-*`) run only in control jobs, where their documented acceptance is the expected outcome, and never produce a measured row.
+Every control trial runs alongside an untouched **honest twin** inside the same batch and container image. If the honest twin fails to verify, the trial is marked `void` rather than counting as a rejection. Flags that weaken a prover's guarantees (such as SASH's `--unsound-skip-*`) are permitted only inside dedicated negative-control jobs and never in measured runs.
 
 ## How a run works
 
@@ -243,29 +243,29 @@ flowchart LR
     F --> S["iproofs site build<br/>inferenceproofs.ai"]
 ```
 
-The commitment the verifier checks is taken from the harness's own record of the `commit` step, never from files shipped with a proof. Proof bytes are not in the repository and are not public yet: each run directory names them by sha256 in `digests.txt`, and the bytes sit in a private bucket ([RFC-0009](rfcs/0009-results-and-publication.md), [RFC-0014](rfcs/0014-provenance-and-integrity.md)). [docs/REPRODUCE.md](docs/REPRODUCE.md) says what can be checked without them.
+The verifier always checks against the commitment recorded by the harness during `commit`, never against metadata bundled with a proof. Raw proof bytes stay out of Git and are not yet publicly hosted; each run directory records their SHA-256 hashes in `digests.txt` while the binary proofs live in a private bucket ([RFC-0009](rfcs/0009-results-and-publication.md), [RFC-0014](rfcs/0014-provenance-and-integrity.md)). See [docs/REPRODUCE.md](docs/REPRODUCE.md) for everything you can verify offline without them.
 
 ## Level 1, release v1.0
 
-Level 1 ([RFC-0018](rfcs/0018-level-1-ladder.md), [`levels/L1.yaml`](levels/L1.yaml), frozen 2026-11-11) is a ladder of three open-weights models: Llama 4 Maverick, Llama 3.1 8B and GPT-2. Release v1.0's board, [`releases/v1.0/board.json`](releases/v1.0/board.json), is computed from the run records in [`results/v1.0/`](results/v1.0/) by `iproofs release board v1.0`, on NVIDIA H200 141 GB hosted profiles. Every figure in it is at evidence tier `reported`: our runs only, not rerun by anyone else. [docs/REPRODUCE.md](docs/REPRODUCE.md) rebuilds it.
+Level 1 ([RFC-0018](rfcs/0018-level-1-ladder.md), [`levels/L1.yaml`](levels/L1.yaml), frozen 2026-11-11) defines a three-model open-weights ladder: Llama 4 Maverick, Llama 3.1 8B, and GPT-2. Release v1.0's board ([`releases/v1.0/board.json`](releases/v1.0/board.json)) is generated directly from the run records in [`results/v1.0/`](results/v1.0/) via `iproofs release board v1.0`, measured on hosted NVIDIA H200 141 GB GPUs. Every figure carries evidence tier `reported` (run by us, not yet rerun externally). See [docs/REPRODUCE.md](docs/REPRODUCE.md) to rebuild it yourself.
 
-| System | Pinned upstream | Rung | Claim card |
+| System | Pinned upstream | Model rung | Claim card |
 |---|---|---|---|
 | FlashProve | [`anthropics/FlashProve@9e2bdd8`](https://github.com/anthropics/FlashProve/tree/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c) (v0.16.0) | Llama 4 Maverick (`l1-maverick-p512-o512`) | [`exact-match-cp-verify`](systems/flashprove/claim.yaml) |
-| SASH zk-inference-prover | commit [`4f41667`](https://github.com/sg-ai-safety-hub/zk-inference-prover/pull/36/commits/4f41667297430a598165c4a8604258fe37d952ae) of [pull request #36](https://github.com/sg-ai-safety-hub/zk-inference-prover/pull/36), written by this project's owner and not merged upstream; upstream `eb95bfa` refuses one of the level's prompts | Llama 3.1 8B, W8A8 (`l1-l31-8b-p512-o512`) | [`sound-defaults`](systems/sash/claim.yaml) |
-| DeepProve | [`Lagrange-Labs/deep-prove@9d1a53e`](https://github.com/Lagrange-Labs/deep-prove/tree/9d1a53e2ef49ffa2c902b8689cd3c58057a4e662). `prove` is wired, `verify` refuses: the upstream verifier takes its verifier key only from inside the proof file, and no documented step makes that key from the weights alone, so no session can complete ([systems/deepprove/README.md](systems/deepprove/README.md#weights-binding)) | GPT-2 (`l1-gpt2-p512-o512`) | none |
-| Production serving (reference) | vLLM | each rung's model at the publisher's release precision | not a proof |
+| SASH zk-inference-prover | Commit [`4f41667`](https://github.com/sg-ai-safety-hub/zk-inference-prover/pull/36/commits/4f41667297430a598165c4a8604258fe37d952ae) from [pull request #36](https://github.com/sg-ai-safety-hub/zk-inference-prover/pull/36) (authored by this project's owner, unmerged upstream; upstream `eb95bfa` refused one Level 1 prompt) | Llama 3.1 8B, W8A8 (`l1-l31-8b-p512-o512`) | [`sound-defaults`](systems/sash/claim.yaml) |
+| DeepProve | [`Lagrange-Labs/deep-prove@9d1a53e`](https://github.com/Lagrange-Labs/deep-prove/tree/9d1a53e2ef49ffa2c902b8689cd3c58057a4e662) (`prove` is wired, `verify` refuses because the upstream verifier reads its verifier key only from inside the proof file, with no documented way to derive it from model weights alone; see [systems/deepprove/README.md](systems/deepprove/README.md#weights-binding)) | GPT-2 (`l1-gpt2-p512-o512`) | none |
+| Production serving (reference) | vLLM | Each rung's model at publisher release precision | not a proof |
 
-No two systems share a rung, so nothing on the board is ranked against another system yet. The figures, with their scopes, sample sizes and ranges, are on **[inferenceproofs.ai](https://www.inferenceproofs.ai)** and in the board file; this README quotes none, so it cannot drift from them.
+Because no two runnable systems share a model rung yet, no system is ranked against another on the current board. All numbers (with scopes, sample sizes, and ranges) live on **[inferenceproofs.ai](https://www.inferenceproofs.ai)** and inside `releases/v1.0/board.json`; this README intentionally omits figures so it can never drift out of sync.
 
-Release v0.1 stays in [`releases/v0.1/`](releases/v0.1/) as a record (two systems on their native workloads); the site prints none of its figures (RFC-0018 SI-5).
+Earlier release `v0.1` remains archived in [`releases/v0.1/`](releases/v0.1/) as a historical record of native-workload runs; none of its figures appear on the site (RFC-0018 SI-5).
 
 > [!NOTE]
-> In v0.1, one control outcome sits outside its expected set and is kept as recorded: a C6 bit flip on FlashProve run `2026-11-08-…-b1-prover-h200-hosted-3` landed in a proof part the adapter's `verify` does not read, and was accepted. That is a gap in the control design, not a finding against FlashProve; the [RFC-0008 amendment](rfcs/0008-negative-controls.md) now restricts C5, C6 and C8 to the parts a verifier declares it reads. Stored records are never rewritten; a rerun is a new record.
+> One `v0.1` control outcome falls outside its expected set and is preserved as recorded: a C6 bit flip on FlashProve run `2026-11-08-…-b1-prover-h200-hosted-3` landed in a proof file that the adapter's `verify` command does not read, so verification still succeeded. That reflects a flaw in the original control design rather than a bug in FlashProve; the [RFC-0008 amendment](rfcs/0008-negative-controls.md) now restricts C5, C6, and C8 to files the verifier explicitly declares it reads. Historical records are never edited in place; reruns produce new records.
 
 ## Quick start
 
-The harness is one Python package, `iproofs` (Python 3.12 or 3.13), managed with [uv](https://docs.astral.sh/uv/). Everything below runs on a laptop, with no GPU.
+The harness is a Python package (`iproofs`, supporting Python 3.12 and 3.13) managed with [uv](https://docs.astral.sh/uv/). Everything below runs locally on a laptop without a GPU.
 
 ```bash
 git clone https://github.com/ai-verification-observatory/inference-proofs
@@ -274,54 +274,54 @@ uv sync
 uv run iproofs --version
 ```
 
-**Check the whole repository** the way CI does: schemas, claim cards, derivations, pins, licences, neutral language ([RFC-0013](rfcs/0013-validation-and-ci.md)).
+**Validate the entire repository** using the same offline gates CI runs: schemas, claim cards, derived metrics, commit pins, licences, and neutral-language checks ([RFC-0013](rfcs/0013-validation-and-ci.md)).
 
 ```bash
 uv run iproofs validate --all
 make ci          # lint, mypy --strict, tests, coverage gate, validate
 ```
 
-**Rebuild the Level 1 board** from the stored run records and compare it byte for byte ([docs/REPRODUCE.md](docs/REPRODUCE.md)):
+**Rebuild the Level 1 board** from stored run records and verify it matches byte for byte ([docs/REPRODUCE.md](docs/REPRODUCE.md)):
 
 ```bash
 uv run iproofs release board v1.0 --check
 ```
 
-**Recompute a stored run's derived metrics** from its raw records and compare them bit for bit:
+**Recompute a stored run's derived metrics** from its raw records bit for bit:
 
 ```bash
 uv run iproofs derive --check results/v0.1/sash/2026-11-09-sash-sash-l31-8b-c1024-prover-h200-hosted-1
 ```
 
-**Build the site** from the newest frozen release (`iproofs.site` computes every value a page prints; `web/build.py` draws the pages; every page reads in full without script):
+**Build the static site** from the latest frozen release (`iproofs.site` prepares the view data, and `web/build.py` renders static HTML pages that work completely without JavaScript):
 
 ```bash
 uv run iproofs site build            # writes web/
-uv run iproofs site build --out DIR  # a complete site in any other directory
+uv run iproofs site build --out DIR  # writes a complete site to DIR
 ```
 
-Optional extras install only where they are needed: `--extra gpu` (NVML sampling on a GPU host), `--extra fetch` (model download), `--extra prompts` (tokenizers). For a rerun on a GPU host, see [docs/REPRODUCE.md, Tier 3](docs/REPRODUCE.md#tier-3-rerun-gpu) and [docs/runbooks/gpu-run.md, Hosted execution](docs/runbooks/gpu-run.md#hosted-execution-prover-h100-hosted-prover-h200-hosted).
+Install optional dependency groups only when needed: `--extra gpu` (NVML sampling on GPU hosts), `--extra fetch` (model downloads), and `--extra prompts` (tokenizers). For GPU reruns, see [docs/REPRODUCE.md, Tier 3](docs/REPRODUCE.md#tier-3-rerun-gpu) and [docs/runbooks/gpu-run.md](docs/runbooks/gpu-run.md#hosted-execution-prover-h100-hosted-prover-h200-hosted).
 
 <details>
 <summary><b>Every command</b></summary>
 
-| Command | What it does | RFC |
+| Command | Purpose | RFC |
 |---|---|---|
-| `iproofs validate` | run every CI check on the given paths | [0013](rfcs/0013-validation-and-ci.md) |
-| `iproofs run` | run jobs of one system on one workload | [0010](rfcs/0010-harness-runner.md) |
-| `iproofs reverify` | verify a kept run again on a verifier host with no GPU | [0018](rfcs/0018-level-1-ladder.md) |
-| `iproofs derive` | compute derived metrics of a run directory | [0004](rfcs/0004-metrics-timing-grades.md) |
-| `iproofs controls` | run the negative-control suite against a run | [0008](rfcs/0008-negative-controls.md) |
-| `iproofs machine-record` | print the machine record as JSON | [0006](rfcs/0006-reference-hardware-and-cost.md) |
-| `iproofs fetch-model` | fetch a workload's weights and check every hash | [0014](rfcs/0014-provenance-and-integrity.md) |
-| `iproofs prompts` | prompt sets | [0003](rfcs/0003-workloads.md) |
-| `iproofs serving` | production-serving records | [0015](rfcs/0015-reference-rows.md) |
-| `iproofs release` | benchmark releases | [0009](rfcs/0009-results-and-publication.md) |
-| `iproofs site` | build the static site | [0009](rfcs/0009-results-and-publication.md) |
-| `iproofs level` | level files, beacon rounds and rung prompts | [0018](rfcs/0018-level-1-ladder.md) |
-| `iproofs fidelity` | the fidelity gate of a rung | [0018](rfcs/0018-level-1-ladder.md) |
-| `iproofs results` | copy a hosted job's run into `results/` | [0010](rfcs/0010-harness-runner.md) |
-| `iproofs proof-build` | proof-build records | [0018](rfcs/0018-level-1-ladder.md) |
+| `iproofs validate` | Run all offline CI validation gates on given paths | [0013](rfcs/0013-validation-and-ci.md) |
+| `iproofs run` | Execute benchmark jobs for one system and workload | [0010](rfcs/0010-harness-runner.md) |
+| `iproofs reverify` | Re-verify stored proofs on a CPU-only verifier host | [0018](rfcs/0018-level-1-ladder.md) |
+| `iproofs derive` | Compute derived metrics for a run directory | [0004](rfcs/0004-metrics-timing-grades.md) |
+| `iproofs controls` | Run negative-control tampering tests against a run | [0008](rfcs/0008-negative-controls.md) |
+| `iproofs machine-record` | Print the host hardware record as JSON | [0006](rfcs/0006-reference-hardware-and-cost.md) |
+| `iproofs fetch-model` | Download workload weights and verify every SHA-256 hash | [0014](rfcs/0014-provenance-and-integrity.md) |
+| `iproofs prompts` | Build and inspect prompt sets | [0003](rfcs/0003-workloads.md) |
+| `iproofs serving` | Record unproved production-serving baselines | [0015](rfcs/0015-reference-rows.md) |
+| `iproofs release` | Freeze benchmark releases and build boards | [0009](rfcs/0009-results-and-publication.md) |
+| `iproofs site` | Render the static website | [0009](rfcs/0009-results-and-publication.md) |
+| `iproofs level` | Manage level files, drand beacon records, and rung prompts | [0018](rfcs/0018-level-1-ladder.md) |
+| `iproofs fidelity` | Run and evaluate fidelity checks for a model rung | [0018](rfcs/0018-level-1-ladder.md) |
+| `iproofs results` | Import hosted run artifacts into `results/` | [0010](rfcs/0010-harness-runner.md) |
+| `iproofs proof-build` | Record formal proof-assistant rebuilds | [0018](rfcs/0018-level-1-ladder.md) |
 
 </details>
 
@@ -329,49 +329,48 @@ Optional extras install only where they are needed: `--extra gpu` (NVML sampling
 
 ```
 inference-proofs/
-├── rfcs/           normative decisions (sources of truth, in order: RFCs, spec, PRD)
+├── rfcs/           normative decisions (sources of truth: RFCs, then spec, then PRD)
 ├── docs/
-│   ├── PRD.md      why, for whom, scope, roadmap
-│   ├── SPEC.md     index and executive summary of the specification
-│   ├── spec/       sections 00 to 10, overview to glossary
-│   └── runbooks/   GPU-host procedures
-├── schema/         JSON Schemas, each with valid and invalid examples
-├── harness/        the iproofs package and its tests
-├── systems/        one adapter per system: Dockerfile, system.yaml, claim.yaml, controls
-├── workloads/      pinned models, prompt corpus, serving records
-├── reference/      hardware profiles and price basis
-├── results/        run directories, one per run, never edited after the fact
-├── releases/       frozen benchmark releases
-└── web/            the public site, built from the newest release
+│   ├── PRD.md      goals, audience, scope, and roadmap
+│   ├── SPEC.md     specification index and summary
+│   ├── spec/       sections 00 through 10 (overview to glossary)
+│   └── runbooks/   operational GPU-host procedures
+├── schema/         JSON Schemas with valid and invalid test fixtures
+├── harness/        the iproofs Python package and test suite
+├── systems/        per-system adapters (Dockerfile, system.yaml, claim.yaml, controls)
+├── workloads/      pinned models, prompt corpus, and serving records
+├── reference/      hardware profiles and GPU pricing basis
+├── results/        append-only run directories, one per run
+├── releases/       frozen benchmark releases and board files
+└── web/            static website generated from the latest release
 ```
 
 ## Principles and non-goals
 
-| We do | We do not |
+| What we do | What we do not do |
 |---|---|
-| put a claim card beside every number | publish a number without its scope, grade, tier and source |
-| run provers at pinned commits, with documented settings only | patch or tune a prover (SASH's Level 1 pin is a pull request this project's owner wrote, not merged upstream: [systems/sash/README.md](systems/sash/README.md)) |
-| report ranges and sample sizes | report a single "best" run |
-| record failed runs with their exit code and last lines | drop or round away a result |
-| apply the same controls to every verifier | let a system choose its own tests |
-| copy what systems state, and write `not stated` | infer a security property |
-| rank passed systems inside one rung by the order rule | rank across rungs, score, certify or crown |
-
+| Put a claim card alongside every benchmark number | Publish any figure without its scope, grade, evidence tier, and source |
+| Run provers at pinned commits with documented settings only | Patch or tune provers (SASH's Level 1 pin is an unmerged owner-authored PR: [systems/sash/README.md](systems/sash/README.md)) |
+| Report ranges and sample sizes across sessions | Cherry-pick a single lucky run |
+| Record failed runs with exit codes and log tails | Drop or round away inconvenient results |
+| Apply identical negative controls to every verifier | Let systems choose their own test suite |
+| Copy what publishers state and write `not stated` for gaps | Infer unstated cryptographic properties |
+| Rank passing systems within each model rung by cost | Rank across models, assign composite scores, or certify systems |
 
 ## Contributing
 
-Open an issue or a pull request ([CONTRIBUTING.md](CONTRIBUTING.md)). To add a system, follow the adapter guide, [systems/README.md](systems/README.md). A row on Level 1 also needs the Level 1 entries that guide describes in [From an adapter to a row on Level 1](systems/README.md#from-an-adapter-to-a-row-on-level-1).
+To report an issue or submit changes, see [CONTRIBUTING.md](CONTRIBUTING.md). To add a new proof system, follow [systems/README.md](systems/README.md), including [From an adapter to a row on Level 1](systems/README.md#from-an-adapter-to-a-row-on-level-1) for Level 1 entries.
 
 ## Licence
 
-Code is licensed under [Apache-2.0](LICENSE). Specifications, data, results and reports are licensed under [CC BY 4.0](LICENSES/CC-BY-4.0.txt).
+Code is licensed under [Apache-2.0](LICENSE). Specifications, data, results, and reports are licensed under [CC BY 4.0](LICENSES/CC-BY-4.0.txt).
 
-The boundary:
+Specifically:
 
-- Code (Apache-2.0): `harness/`, `systems/*/` (except `claim.yaml`, `claims/` and `external.yaml`), `site/` templates, `schema/` and CI configuration.
-- Documents and data (CC BY 4.0): `docs/`, `rfcs/`, `workloads/`, `reference/`, `results/`, `releases/`, `targets/`, `reports/`, `web/learn/` (the text of the site's Learn pages), and claim cards and external figures.
-- A file that fits neither list is code.
+- **Code (Apache-2.0):** `harness/`, `systems/*/` (excluding `claim.yaml`, `claims/`, and `external.yaml`), `site/` templates, `schema/`, and CI configuration.
+- **Documents and data (CC BY 4.0):** `docs/`, `rfcs/`, `workloads/`, `reference/`, `results/`, `releases/`, `targets/`, `reports/`, `web/learn/`, claim cards, and external figures.
+- Any file not matching either list defaults to code.
 
 <div align="center">
-<sub>Run by us, ranked inside a rung. Labelled, not rounded. Proved, bound, sampled or attested, and said which.</sub>
+<sub>Benchmarked externally, ranked within each model rung, labelled without rounding.</sub>
 </div>

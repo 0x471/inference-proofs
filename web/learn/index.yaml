@@ -1,31 +1,32 @@
 # The Learn pages (the hub at /learn): the tracks and their pages in reading order, then the
-# glossary. Each page's words are in <slug>.md beside this file, in the Markdown subset that
-# web/draw/learn.py reads. A slug is the page's address on the site.
+# glossary. Each page's text lives in <slug>.md next to this file, in the Markdown subset that
+# web/draw/learn.py parses. A slug is the page's address on the site.
 title: Learn
 lead: >-
-  Say a provider sends a reply to a prompt. A proof of inference lets anyone check, without the
-  model's weights, that the reply is what a model committed in advance produces for that prompt.
+  Suppose an AI provider sends back a reply to your prompt. A proof of inference lets anyone
+  check, without seeing the model's weights, that the reply really came from a model committed
+  in advance.
 tracks:
   - id: policy
     name: For policy readers
-    reader: No cryptography needed.
+    reader: No cryptography background needed.
     pages:
       - slug: proof-of-inference
         title: What a proof shows
         summary: >-
-          A proof shows a reply is the committed model's greedy reply to its prompt, not whose
-          model it is or that the reply was served.
+          A proof shows that a reply is the committed model's greedy output for a prompt. It does
+          not say whose model it is, or prove that the reply was served live.
       - slug: how-a-check-works
         title: How a check works
         summary: >-
-          One request for every system, a commitment, a proof and a verifier without the weights,
-          six checks drawn one by one, and the fraction behind the headline figure.
+          How the benchmark works: one shared request, a commitment, a proof checked without the
+          weights, six entry checks, and the cost ratio behind the headline number.
       - slug: deployment
         title: Deployments and treaties
         summary: >-
-          Proving a reply costs a large multiple of serving it, but checking the proof needs no
-          weights and no trusted chip. Under a treaty, an operator could prove replies sampled
-          from a trusted record.
+          Proving a reply costs many times more than serving it, yet checking the proof requires
+          no weights and no trusted chip. Under an agreement, an operator could prove replies
+          sampled from a trusted traffic log.
   - id: engineering
     name: For prover teams and engineers
     reader: ""
@@ -33,22 +34,23 @@ tracks:
       - slug: method
         title: How we compare
         summary: >-
-          Every system gets the same request. Those passing the six checks, with a stated
-          security level, are ranked by cost vs serving inside one model.
+          Every system runs the same request. Systems that pass all six checks and state a
+          security level are ranked by proving cost vs serving within each model rung.
       - slug: statement
         title: The statement
         summary: >-
-          The ladder's verifiers check a committed, quantized copy's greedy reply. No row has a
-          proved error bound that covers what it runs.
+          The verifiers on the ladder check the greedy reply of a committed, quantized copy of the
+          model. So far, no system has a proved error bound that covers the exact setup we run.
       - slug: forward-pass
         title: Proving a forward pass
         summary: >-
-          The verifier tests the prover's committed values at random points. Matrix products with
-          the committed weights are the cheap part to prove.
+          How inference provers work: the verifier tests the prover's committed values at random
+          points, and matrix multiplications with the committed weights turn out to be the easy
+          part.
 glossary:
   slug: glossary
   title: Glossary
-  summary: Each entry defines one word the ladder uses or one term of the field.
+  summary: Plain definitions for the terms used on the ladder and in verifiable inference.
 # the Autoresearch page (/autoresearch): under its own tab, not listed on the hub
 autoresearch:
   slug: autoresearch

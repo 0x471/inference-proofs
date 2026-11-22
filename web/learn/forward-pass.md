@@ -1,54 +1,54 @@
-Take one reply on Llama 3.1 8B Instruct. Checking it means checking a pass of a [quantized copy](/statement#integer-arithmetic) over the 1,024 tokens of prompt and reply. At two operations per parameter per token, attention aside ([Kaplan and others](https://arxiv.org/abs/2001.08361)), that is about 1.6 × 10^13 operations. A verifier on a CPU does not redo them.
+Consider a single reply from Llama 3.1 8B Instruct. Verifying it means checking a forward pass of a [quantized copy](/statement#integer-arithmetic) across all 1,024 tokens of prompt and reply. At roughly two operations per parameter per token, setting attention aside ([Kaplan and others](https://arxiv.org/abs/2001.08361)), that comes to about 1.6 × 10^13 arithmetic operations. A CPU verifier cannot simply redo all of that work.
 
-Instead, the prover commits to the weights once and, for each proof, to values of the pass. Then the verifier draws each test point after the prover has committed the values that point tests. Read as polynomials, a pass with one wrong value differs from the honest pass almost everywhere ([Schwartz-Zippel](https://doi.org/10.1145/322217.322225)). So a few points catch it, except with a probability that the [[security level]] bounds.
+Instead, the prover commits to the model weights once up front, and for each reply it commits to the intermediate values of the forward pass. The verifier then chooses random test points after those values are locked in. When intermediate traces are encoded as polynomials, even a single wrong value makes the cheating polynomial disagree with the honest one almost everywhere ([Schwartz-Zippel](https://doi.org/10.1145/322217.322225)). Testing a handful of random points catches almost every lie, up to the small error probability bounded by the system's [[security level]].
 
 :::figure pipeline
 :::
 
-The three weight products hold most of the arithmetic. [SASH's statement](https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/docs/statement.md?plain=1#L113-L115) says that inside its proofs, "each matmul is a Freivalds check against the committed weights". [FlashProve's guide](https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/how-it-works.md?plain=1#L108-L111) says its [[sumcheck]] and [[lookup argument|lookup arguments]] are designed to reduce the claim of a correct run to a few linear claims, inside a hash-based proof.
+The three linear projections with the model weights account for most of the arithmetic. [SASH's statement](https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/docs/statement.md?plain=1#L113-L115) explains that inside its proofs, "each matmul is a Freivalds check against the committed weights". [FlashProve's guide](https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/how-it-works.md?plain=1#L108-L111) describes using [[sumcheck]] and [[lookup argument|lookup arguments]] to reduce an entire inference trace to a few linear claims inside a hash-based proof.
 
 ## Testing a product at random
 
-A prover claims that C is the n × n product A·B. To test it, the verifier draws a random vector r and compares A·(B·r) with C·r. That takes three matrix-vector products of n² each, where the schoolbook product takes n³. This test is called [Freivalds' algorithm](https://en.wikipedia.org/w/index.php?title=Freivalds%27_algorithm&oldid=1371362986).
+Suppose a prover claims that C equals the n × n matrix product A·B. Rather than multiplying A and B directly (n³ work), the verifier picks a random vector r and checks whether A·(B·r) equals C·r. That requires only three matrix-vector products, or O(n²) work. This classical check is [Freivalds' algorithm](https://en.wikipedia.org/w/index.php?title=Freivalds%27_algorithm&oldid=1371362986).
 
 :::explore random-check
-A draw misses the wrong entry only when r is 0 in that entry's column.
+A random draw misses the modified entry only when r happens to be 0 in that entry's column.
 :::
 
-The test runs in a [[field]]. Arithmetic modulo 2^64 is not a field, and there an even entry of r times an error of 2^63 is 0, so the error drops out of C·r.
+For this check to work reliably, the arithmetic must live in a [[field]]. Standard 64-bit integer arithmetic modulo 2^64 is not a field: an even entry of r multiplied by an error of 2^63 wraps around to 0, letting the error vanish from C·r.
 
 ## Fiat-Shamir
 
-In place of the verifier's draws, each test point comes from a hash of the statement and the prover's messages. This is called [[Fiat-Shamir]]. The problem is a value left out of the hash, because the prover can then change it after the draw. Trail of Bits disclosed this bug in [seven repositories](https://blog.trailofbits.com/2022/04/13/part-1-coordinated-disclosure-of-vulnerabilities-affecting-girault-bulletproofs-and-plonk/) in 2022, and OtterSec in [six zkVMs](https://osec.io/blog/zkvms-unfaithful-claims/) in 2026.
+Real inference proofs are non-interactive: instead of waiting for a live verifier to send random challenges, the prover derives each challenge by hashing the statement and all messages sent so far. This is the [[Fiat-Shamir]] transform. The classic implementation bug is forgetting to include a committed value in the hash transcript, which lets a cheating prover adjust that value after seeing the challenge. Trail of Bits disclosed this class of bug in [seven repositories](https://blog.trailofbits.com/2022/04/13/part-1-coordinated-disclosure-of-vulnerabilities-affecting-girault-bulletproofs-and-plonk/) in 2022, and OtterSec found it in [six zkVMs](https://osec.io/blog/zkvms-unfaithful-claims/) in 2026.
 
 ## From one product to a layer
 
-A sumcheck tests an inner product by halving its vectors, one round per halving ([Thaler's book](https://people.cs.georgetown.edu/jthaler/ProofsArgsAndZK.html), chapter 4). Each round, the prover sends a degree-2 polynomial s, the sum with the next index bit left as a variable.
+The sumcheck protocol verifies an inner product by cutting the vectors in half over a series of rounds ([Thaler's book](https://people.cs.georgetown.edu/jthaler/ProofsArgsAndZK.html), chapter 4). In each round, the prover sends a degree-2 univariate polynomial s representing the partial sum with one index variable left free.
 
 :::explore sumcheck
-This lie survives 384 of 9,409 pairs of challenges, under the bound 2·2/97.
+This lie slips past 384 of the 9,409 challenge pairs, safely within the 2·2/97 error bound.
 :::
 
-After the last round, the verifier reads [[multilinear extension|a(r)]] from an opening of the [[polynomial commitment|weight commitment]]. The other factor, b(r), is a claim on the layer before, and it is reduced the same way, down to the input tokens the verifier holds ([GKR](https://doi.org/10.1145/1374376.1374396)). A whole matrix product takes one sumcheck, which costs the prover n² work on top of the product's n³ ([Thaler, 2013](https://eprint.iacr.org/2013/351)).
+After the final round, the verifier checks [[multilinear extension|a(r)]] by opening the [[polynomial commitment|weight commitment]] at the random point r. The remaining factor, b(r), becomes a claim about the previous layer and is reduced the same way all the way back to the input tokens the verifier already knows ([GKR](https://doi.org/10.1145/1374376.1374396)). Proving a full matrix product takes a single sumcheck, adding only O(n²) prover overhead on top of the n³ multiplication ([Thaler, 2013](https://eprint.iacr.org/2013/351)).
 
 ## Lookups
 
-Steps such as the softmax and the activation curve are not products with the weights. Provers check them against public tables of valid input-output pairs. This is called a [lookup argument](https://eprint.iacr.org/2026/1112).
+Operations like softmax, RMSNorm, and activation curves are not simple matrix multiplications. Provers check them against public tables of valid input-output pairs using a [lookup argument](https://eprint.iacr.org/2026/1112).
 
-On GPT-2 (BaseFold, sequence length 512, 48 threads), [DeepProve](https://eprint.iacr.org/2026/1112)'s authors find that "more than 50% of the prover cost comes from activation functions, Softmax, and requantization", in both the interactive proof and the commitments. We did not measure this, because the harness [times each prover from outside](/method).
+Even though linear layers dominate raw FLOPs, non-linearities often dominate proving cost. On GPT-2 (BaseFold, sequence length 512, 48 threads), [DeepProve](https://eprint.iacr.org/2026/1112)'s authors report that "more than 50% of the prover cost comes from activation functions, Softmax, and requantization" across both the interactive proof and the commitments. Our benchmark does not break out internal prover stages because the harness [times each prover strictly from outside](/method).
 
 ## One pass for a whole reply
 
-Generating a 512-token reply takes 512 passes in a row, but proving it can take one. DeepProve runs the model once on the prompt and the claimed reply. With the causal mask and a deterministic argmax, "the model's prediction at position `t` certifies the token at position `t+1`" ([its README](https://github.com/Lagrange-Labs/deep-prove/blob/9d1a53e2ef49ffa2c902b8689cd3c58057a4e662/zkml/README.md?plain=1#L21)). FlashProve proves [a window of tokens](https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/how-it-works.md?plain=1#L45) in one pass, and SASH a grid of [segments](/statement#each-system-s-statement) joined at [the seams](/statement#the-seams).
+Generating a 512-token reply requires 512 sequential forward passes, yet proving that reply can happen in one pass. Once the prover already has the full prompt and reply, it runs the transformer across all tokens together. With causal masking and deterministic argmax, "the model's prediction at position `t` certifies the token at position `t+1`" ([DeepProve's README](https://github.com/Lagrange-Labs/deep-prove/blob/9d1a53e2ef49ffa2c902b8689cd3c58057a4e662/zkml/README.md?plain=1#L21)). FlashProve proves [a window of tokens](https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/guide/how-it-works.md?plain=1#L45) in one pass, while SASH proves a grid of [segments](/statement#each-system-s-statement) chained across [the seams](/statement#the-seams).
 
 ## Zero knowledge
 
-When the prover commits to the weights, for example as the root of a [[Merkle tree]], it is bound to them, but that alone does not keep the proof from revealing them, which takes [[zero knowledge]] on top. Each opening reveals a linear equation over the weights, so an opening does not hide them. For the [Confidentiality](/checks#weights_hidden) petal, we read what publishers state and prove.
+Committing to model weights (for instance with a [[Merkle tree]] root) binds the prover to those weights, but binding alone does not keep them secret. Each polynomial opening reveals a linear combination of the weights, so hiding the weights requires adding [[zero knowledge]] masking on top. For the [Confidentiality](/checks#weights_hidden) petal, we record what each publisher explicitly states and proves about weight hiding.
 
-A verifier works at its random test points and on the openings there, not on the whole pass, and its cost differs by system ([verify time on the ladder](/)).
+Because the verifier only evaluates random test points and checks openings there rather than replaying the forward pass, verification is much cheaper than proving, though its exact speed varies widely by system ([verify time on the ladder](/)).
 
 ## What an accepted proof rests on
 
-If the verifier accepts a proof, at least one of four things is true: the statement holds, the draws hit a point where two different polynomials agree, an assumption broke, or the verifier has a bug.
+Whenever a verifier accepts a proof, at least one of four things happened: the statement is true, the random challenges hit a rare point where two distinct polynomials agree, an underlying cryptographic assumption failed, or the verifier has a bug.
 
-[The Ethereum Foundation writes](https://blog.ethereum.org/2025/12/18/zkevm-security-foundations) that many STARK-based zkEVMs rely on [[conjectured|conjectures]]: "Each conjecture that falls takes bits of security with it: what was advertised as 100 bits might actually be 80." No test tells 60 bits from 128 short of a 2^60 search, so for the [Integrity](/checks#unforgeable) petal we read [the bound each publisher states](/statement#the-error-bound).
+As [the Ethereum Foundation warns](https://blog.ethereum.org/2025/12/18/zkevm-security-foundations), many STARK-based zkEVMs rely on unproven [[conjectured|conjectures]]: "Each conjecture that falls takes bits of security with it: what was advertised as 100 bits might actually be 80." Short of running a 2^60 attack, no black-box test can distinguish 60 bits of security from 128, so the [Integrity](/checks#unforgeable) petal grades [the bound each publisher states](/statement#the-error-bound).

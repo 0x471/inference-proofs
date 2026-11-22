@@ -1,3 +1,1 @@
-`info.json` and `inputs.json` are what the built image returned (`docker run ... info`, and
-`/opt/iproofs/inputs.json`) for a build of `systems/sash/Dockerfile` on 2026-11-04, on a CPU-only
-docker host (16 CPUs, 858 s). That build was from a working tree, so `adapter_dirty` is true.
+`info.json` and `inputs.json` capture the outputs (`docker run ... info` and `/opt/iproofs/inputs.json`) from building `systems/sash/Dockerfile` on 2026-11-04 on a CPU-only Docker host (16 CPUs, 858 s). Because the image was built from a dirty working tree, `adapter_dirty` is true.

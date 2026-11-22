@@ -28,7 +28,7 @@ level_statement:
         url: "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/docs/statement.md#L32"
       - text: "The other preprocessed tree is the model's, and its root is not derivable by anyone but the publisher: it commits the weights, and the verifier compares it with the published manifest."
         url: "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/docs/statement.md#L134-L136"
-    note: "read as: the quotes together, from two files; none says in one sentence that an accept is the committed model's own greedy reply to the prompt"
+    note: "read as: combined from quotes across two files; no single sentence states that an accepted proof represents the committed model's greedy reply"
 # The verifier the row runs, as the publisher names it; no verifier is named for the 100 bits, which
 # pcs_config asserts (read 2026-11-15).
 verifiers:
@@ -74,13 +74,13 @@ petals:
       parameters:
         value: "row"
         quotes: [{text: "assert_eq!(cfg.security_bits(), 100, \"security parameter drifted\");", url: "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/src/util.rs#L26"}]
-        note: "The security parameters are constants (util.rs L14-L16), and pcs_config() asserts 100 bits (L26). The row runs the sound defaults."
-        plain: "Its code fixes the settings as constants and asserts 100 bits, but no sentence says that the limit is for the settings we run."
+        note: "The security parameters are hardcoded constants (util.rs L14-L16), and pcs_config() asserts 100 bits (L26). This row runs those sound defaults."
+        plain: "The source code hardcodes the security parameters as constants and asserts 100 bits, though no documentation sentence explicitly states that the bound covers the benchmark configuration."
       conditions_shown: {value: false, quotes: []}
       program:
         value: "not_stated"
         quotes: []
-        note: "no sentence states that the verifier the row runs uses pcs_config; the 100 bits are asserted in pcs_config itself (util.rs L26); not read while the basis is conjectured"
+        note: "No sentence explicitly states that the verifier we run uses pcs_config; the 100-bit assertion lives inside pcs_config itself (util.rs L26), and this field is not evaluated while the basis is conjectured."
   machine_checked:
     sources_read: ["README.md", "prover/README.md", "docs/statement.md", "prover/src/util.rs"]
     formal:
@@ -131,12 +131,12 @@ petals:
           - {text: "They are committed as a tree of their own, and what says they are the columns the public parameters give is that the verifier **builds that tree itself** and compares its root with the root the statement declares.", url: "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/docs/statement.md#L127-L129"}
           - {text: "`security` (the FRI parameters and the hash)", url: "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/README.md#L324"}
           - {text: "`Fixed` — produced at setup, trusted by the verifier: the shape and gadget parameters that determine every column size and selector, the security config, the tree column sizes, and the **pinned preprocessed root** (every table, selector, weight and scale column lives in tree 0, and B4 §3 / B5 / B6 all showed a corrupted table is invisible to everything else).", url: "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/src/compose.rs#L7-L11"}
-        note: "We apply the test FlashProve's row meets: we read a petal as transparent when a sentence among its quotes says what soundness rests on and none of it is a setup that produced a secret (GL-10, amended 2026-11-15). SASH states its soundness as stwo's conjectured accounting over the FRI parameters (util.rs L9-L12). It says the setup's two trees are a shape tree the verifier derives from the public parameters and a model tree compared with the published model commitment (prover/README.md L117-L119, docs/statement.md L127-L129). The Fixed statement it calls trusted by the verifier is those parameters and roots (compose.rs L7-L11). No sentence says in words that no setup produced a secret, so we read the petal as transparent and grade it Mostly met at most, as FlashProve's is."
-        plain: "The publisher states its soundness as stwo's conjectured estimate (see Integrity). Its setup commits two trees: a shape tree, whose root the verifier builds itself from the public settings, and a model tree, whose root the verifier compares with the published commitment. It calls some values `Fixed`, \"produced at setup, trusted by the verifier\". It lists them as the model's shape and the settings of its circuits, the security settings, the trees' column sizes, and the pinned root of the tree that holds every table, weight and scale column. We read \"trusted\" here to mean that the verifier takes these values as given. These are settings and a tree root, not the weights themselves, and the publisher calls none of them a secret."
+        note: "Applying the same rule used for FlashProve, we read a petal as transparent when the quoted passages specify what soundness rests on and none of it involves a secret setup (GL-10, amended 2026-11-15). SASH bases soundness on stwo's conjectured FRI accounting (util.rs L9-L12) and two setup trees: a public shape tree the verifier rebuilds itself and a model tree checked against the published commitment (prover/README.md L117-L119, docs/statement.md L127-L129). The Fixed values described as trusted by the verifier are those public parameters and roots (compose.rs L7-L11). Because no sentence explicitly states that no setup secret exists, we grade this petal as Mostly met at most, just like FlashProve."
+        plain: "SASH bases soundness on stwo's conjectured FRI estimate (see Integrity). Setup commits two trees: a shape tree whose root the verifier recomputes from public parameters, and a model tree whose root is checked against the published model commitment. The code labels certain setup values `Fixed` (\"produced at setup, trusted by the verifier\"), listing the model shape, circuit settings, security config, tree column sizes, and the pinned root of the table/weight/scale tree. We read \"trusted\" here as meaning the verifier takes those public inputs as given; they are parameters and roots rather than secrets."
       publicly_checkable:
         value: true
         quotes: [{text: "The **verifier** (`verify_composed`) takes those two byte strings and the //! serialized proof, and nothing else", url: "https://github.com/sg-ai-safety-hub/zk-inference-prover/blob/4f41667297430a598165c4a8604258fe37d952ae/prover/src/compose.rs#L15-L16"}]
-        plain: "The publisher states that the verifier takes two byte strings and the proof, and nothing else. We read this sentence to mean that anyone can check a proof, but the publisher does not say so in words."
+        plain: "The code states that the verifier takes only two byte strings and the serialized proof. We read this to mean anyone can verify a proof, though the publisher does not state that explicitly."
 # RFC-0018 SI-3 (amended 2026-11-15): the system page's Statement block, each row the fields of the
 # claim card that say it (kept here: an edit to claim.yaml would change the digest the v1.0 runs
 # record, RFC-0014 §Eligibility). `boundary-grid` takes no claimed output, so the reply it checks is the proof's own
@@ -150,7 +150,7 @@ verifier_inputs:
   # the Fixed statement carries the gadget switches (compose.rs L7-L8, "trusted by the verifier");
   # controls.yaml registers the switched provers with `expected: ["accepted"]`, and the adapter's
   # verdict reads the exit status, not `provenance.unsound_skips` (entrypoint verify)
-  proof_caveat: "the proof's Fixed statement carries the gadget switches, so a proof made with an --unsound-skip- switch is expected to be accepted with the skip reported, and our verdict does not yet refuse one. No such proof has been run"
+  proof_caveat: "because the proof's Fixed statement carries the gadget switches, a proof generated with an --unsound-skip- flag is expected to verify while reporting the skip, and our adapter does not yet reject that flag (no such proof has been tested yet)"
   decoding: ["coverage.policy.detail"]
   unchecked: "not stated"
   architecture: ["assumptions.0"]

@@ -1,14 +1,14 @@
 # Reproducing Level 1 v1.0
 
-How an outsider checks the published board from the repository alone. Tier 1 needs a laptop: no GPU, no proof bytes, no account. It shows that every state, position and figure on [inferenceproofs.ai](https://www.inferenceproofs.ai) follows from the stored run records by the rules in [RFC-0018](../rfcs/0018-level-1-ladder.md). It does not show that the run records are true: that needs the proof bytes (tier 2) or a rerun (tier 3).
+This guide explains how an outside reader can verify the published board from the repository alone. Tier 1 requires only a laptop, with no GPU, no proof bytes, and no external accounts. It confirms that every state, ranking position, and figure shown on [inferenceproofs.ai](https://www.inferenceproofs.ai) follows directly from the stored run records under the rules of [RFC-0018](../rfcs/0018-level-1-ladder.md). Tier 1 does not prove that the underlying run records are genuine; checking that requires either the raw proof bytes (Tier 2) or a fresh GPU rerun (Tier 3).
 
-Every command below was run on 2026-11-15, on a macOS laptop with no GPU, on a checkout of the commit that adds this file.
+All commands below were tested on 2026-11-15 on a macOS laptop without a GPU, using a checkout of the commit that added this document.
 
 ## Tier 1: rebuild and recompute (laptop)
 
 ### Set up
 
-Clone the whole history, not a shallow copy: the level's beacon round is computed from the commit that froze the level file (PR-2), and a shallow clone cannot date it.
+Clone the full git history rather than a shallow copy. The level's beacon round is derived from the commit timestamp that froze `levels/L1.yaml` (PR-2), which a shallow clone cannot inspect.
 
 ```bash
 git clone https://github.com/ai-verification-observatory/inference-proofs
@@ -18,14 +18,14 @@ uv sync --frozen
 
 ### The board
 
-`iproofs release board v1.0 --check` recomputes `releases/v1.0/board.json` from `results/v1.0/`, `levels/L1.yaml`, the claim cards, `systems/*/properties.yaml` and the reference profiles, and compares it byte for byte with the stored file.
+Running `iproofs release board v1.0 --check` recomputes `releases/v1.0/board.json` from `results/v1.0/`, `levels/L1.yaml`, the claim cards, `systems/*/properties.yaml`, and the reference profiles, then compares the output byte for byte against the committed file.
 
 ```bash
 uv run iproofs release board v1.0 --check
 # release board: releases/v1.0/board.json matches
 ```
 
-To see a difference rather than a verdict, run it without `--check` (it rewrites the file) and diff:
+If you want to inspect differences rather than just get a pass/fail exit code, omit `--check` to rewrite the file in place and inspect the diff:
 
 ```bash
 uv run iproofs release board v1.0
@@ -34,7 +34,7 @@ git diff --stat releases/v1.0/board.json   # empty when the board reproduces
 
 ### Every derived figure of every run
 
-Each run directory holds the raw records (`run.json`, `manifest.json`, `logs/`) and the derived metrics computed from them. `iproofs derive --check` recomputes the derived metrics and compares them bit for bit.
+Each run directory contains the raw records (`run.json`, `manifest.json`, and `logs/`) along with the derived metrics computed from them. Running `iproofs derive --check` recalculates every derived value and checks for a bit-exact match.
 
 ```bash
 for d in results/v1.0/*/2026-*/; do uv run iproofs --quiet derive --check "$d"; done
@@ -43,25 +43,25 @@ for d in results/v1.0/*/2026-*/; do uv run iproofs --quiet derive --check "$d"; 
 
 ### The level and its prompts
 
-`iproofs level check --frozen` checks the level file, the files it names, and that the stored beacon round in `levels/L1-beacon.json` is the first drand `quicknet` round after the freezing commit's time.
+Running `iproofs level check --frozen` validates the level definition, checks every file it references, and verifies that the drand `quicknet` round stored in `levels/L1-beacon.json` is the first round published after the freezing commit's timestamp.
 
 ```bash
 uv run iproofs level check --frozen
 # L1.yaml: ok (frozen 2026-11-11) sha256:6b7b0a06...
 ```
 
-The prompts of a rung are drawn again from the stored round. Each counted run's `manifest.json` names its slot's prompt digest (`workload.prompt_set_digest`), which the printed `slot-K` digest must equal.
+You can also regenerate a rung's prompts from the stored beacon round. Each counted run records its slot's prompt digest in `manifest.json` under `workload.prompt_set_digest`, which must match the corresponding `slot-K` digest printed by the command below.
 
 ```bash
 uv run --extra prompts iproofs level prompts --out /tmp/l1-prompts llama-3.1-8b
 # "slot-1": "sha256:616727b6...", the digest SASH's slot 1 session names
 ```
 
-The round's commit time is the committer's own clock. The level was frozen three times on 2026-11-11, and each freeze took a fresh round; PR-2's amendment of 2026-11-15 lists them. The harness checks `randomness == sha256(signature)` but not the BLS signature: check it with drand's own client.
+Note that the commit timestamp reflects the committer's own clock. The level was frozen three times on 2026-11-11, taking a fresh beacon round each time; the 2026-11-15 amendment to PR-2 lists all three rounds. The harness checks that `randomness == sha256(signature)` but does not verify the BLS signature itself, which you can check using drand's own client.
 
 ### Fidelity
 
-`iproofs fidelity score` rescores the stored replies of the reference, the controls and each row, and writes the rung's `fidelity.json` in place, so `git diff` shows any difference.
+Running `iproofs fidelity score` rescores the stored replies for the reference engine, the controls, and each prover row, updating the rung's `fidelity.json` in place so `git diff` reveals any changes.
 
 ```bash
 uv run iproofs fidelity score --rung llama-3.1-8b --release v1.0
@@ -70,7 +70,7 @@ uv run iproofs fidelity score --rung llama-3.1-8b --release v1.0 --part teacher-
 git diff --stat results/
 ```
 
-On 2026-11-15 the teacher-forced scores reproduced exactly. The matched-prefix scores reproduced every stored value, and the current code adds a `step_tests` block to each row that the stored files predate (39 added lines per rung, none changed). Run `git checkout results/` afterwards.
+When tested on 2026-11-15, the teacher-forced scores reproduced identically. The matched-prefix scores reproduced every stored number, while current code appends a `step_tests` block to each row that the stored files predate (39 added lines per rung, with no existing values altered). Run `git checkout results/` afterward to restore the working tree.
 
 ### The repository and the site
 
@@ -82,27 +82,27 @@ diff -rq /tmp/site web | grep -v '^Only in web'   # empty: the committed pages a
 
 ## Tier 2: verify the proofs again (CPU, needs the proof bytes)
 
-The proof bytes are not in the repository and are not public yet. Each run directory names every proof and verifier file by sha256 in `digests.txt`; the bytes sit in a private bucket.
+The raw proof bytes are not committed to this repository and are not yet public. Each run directory lists the SHA-256 digest of every proof and verifier file in `digests.txt`, while the bytes themselves remain in a private storage bucket.
 
-With the bytes, these need a CPU only:
+Once you have the proof bytes, the following checks run on a CPU alone:
 
-- `iproofs reverify <run_dir>` verifies a kept run again on a host with no GPU (RFC-0018 CH-4a), and the verdicts can be compared with `run.json`.
-- The tampering controls C1 to C3 and C4 to C8 (`iproofs controls <run_dir>`, RFC-0008) change a stored proof or its claimed input and verify it again.
-- A forgery attempt of your own: a proof the pinned verifier accepts for a commitment, prompt or reply it should refuse. Report it as [SECURITY.md](../SECURITY.md) says.
+- Run `iproofs reverify <run_dir>` on a machine without a GPU to re-verify a kept run (RFC-0018 CH-4a), then compare its verdicts against `run.json`.
+- Run the tampering controls C1 to C3 and C4 to C8 (`iproofs controls <run_dir>`, RFC-0008), which mutate a stored proof or its claimed input and re-verify it.
+- Submit a forgery attempt of your own: any proof accepted by the pinned verifier for a commitment, prompt, or reply it ought to reject. Report any such finding through the process in [SECURITY.md](../SECURITY.md).
 
 ## Tier 3: rerun (GPU)
 
-Outside reruns are a non-goal of Level 1 (RFC-0018 §Non-Goals, RFC-0007 §Non-Goals). The harness records every quantity as `reported`, and the `reproduced` tier is reserved, with no definition yet (RFC-0007). A rerun is a new record: it replaces no stored run and does not change the board. Nobody else has rerun any Level 1 run yet. The steps below follow [`gpu-run.md` §Hosted execution](runbooks/gpu-run.md#hosted-execution-prover-h100-hosted-prover-h200-hosted) and [`level-1.md`](runbooks/level-1.md). They were not run for this page.
+External reruns are explicitly outside the scope of Level 1 (RFC-0018 §Non-Goals, RFC-0007 §Non-Goals). The harness tags every quantity as `reported`, and the `reproduced` tier remains reserved without an active definition (RFC-0007). Any rerun produces a separate record; it does not overwrite a stored run or alter the published board. No outside party has rerun a Level 1 job yet. The instructions below adapt [`gpu-run.md` §Hosted execution](runbooks/gpu-run.md#hosted-execution-prover-h100-hosted-prover-h200-hosted) and [`level-1.md`](runbooks/level-1.md), and were not executed while writing this page.
 
-What each row needs, from [`reference/v1.0.yaml`](../reference/v1.0.yaml):
+Hardware requirements for each row, taken from [`reference/v1.0.yaml`](../reference/v1.0.yaml):
 
-- SASH on Llama 3.1 8B (`l1-l31-8b-p512-o512`): `prover-h200-hosted`, one H200 SXM with at least 140,000 MiB, 15 logical CPUs on the GPU's NUMA node and 23 in all, 200 GiB of host memory, 500 GiB of free disk, Ubuntu 24.04, kernel 5.19 or later, cgroup v2.
-- FlashProve on Llama 4 Maverick (`l1-maverick-p512-o512`): the same profile on a larger host, with 330 GB available to `commit`, a CPU with the SHA extensions and a sandbox that lets `madvise(MADV_WIPEONFORK)` through ([`systems/flashprove/README.md`](../systems/flashprove/README.md) §Machine needs).
-- The serving baselines (vLLM, RFC-0015): `serving-h200x1-hosted` (8B) and `serving-h200x4-hosted` (Maverick, four H200).
-- The Maverick fidelity reference (RFC-0018 FI-1): `fidelity-h200x8-hosted`, eight H200.
-- Verify again with no GPU: `verifier-cpu-hosted`, 16 CPUs and 115 GiB.
+- SASH on Llama 3.1 8B (`l1-l31-8b-p512-o512`): `prover-h200-hosted`, requiring one H200 SXM GPU with at least 140,000 MiB of memory, 15 logical CPUs on the GPU's NUMA node (23 total), 200 GiB of host RAM, 500 GiB of free disk, Ubuntu 24.04, Linux kernel 5.19 or newer, and cgroup v2.
+- FlashProve on Llama 4 Maverick (`l1-maverick-p512-o512`): the same profile on a larger host with at least 330 GB of available RAM for `commit`, a CPU supporting SHA extensions, and an environment that permits `madvise(MADV_WIPEONFORK)` ([`systems/flashprove/README.md`](../systems/flashprove/README.md) §Machine needs).
+- Serving baselines (vLLM, RFC-0015): `serving-h200x1-hosted` for 8B and `serving-h200x4-hosted` (four H200 GPUs) for Maverick.
+- Maverick fidelity reference (RFC-0018 FI-1): `fidelity-h200x8-hosted` (eight H200 GPUs).
+- CPU-only re-verification: `verifier-cpu-hosted`, with 16 CPUs and 115 GiB of RAM.
 
-One session, in a container started from the image of `systems/<name>/system.yaml` (`<repository>@<digest>`, the `system.image.ref` of the run's `manifest.json`), with at least 500 GiB of disk. A gated model needs `HF_TOKEN` from your own account in the environment ([`gpu-run.md`](runbooks/gpu-run.md)).
+To run one session, start a container from the image specified in `systems/<name>/system.yaml` (`<repository>@<digest>`, matching `system.image.ref` in the run's `manifest.json`) with at least 500 GiB of disk. Gated models require `HF_TOKEN` from your own account in the environment (see [`gpu-run.md`](runbooks/gpu-run.md)).
 
 ```bash
 git clone https://github.com/ai-verification-observatory/inference-proofs && cd inference-proofs
@@ -116,12 +116,12 @@ uv run iproofs run --system sash --workload l1-l31-8b-p512-o512 --profile prover
   --hosted --gpu <index> --provider <name> --level L1 --session <K> --keep-io
 ```
 
-`--keep-io` keeps the proofs, so `iproofs reverify <run_dir> --hosted --provider <name>` can verify them again in a container of the same image with no GPU, on a host that never fetched the weights (RFC-0018 CH-4a). Compare the run's figures by hand with its slot's entry in `releases/v1.0/board.json` (`rungs[].rows[].sessions[]`, matched by `slot`).
+Passing `--keep-io` preserves the generated proofs so you can run `iproofs reverify <run_dir> --hosted --provider <name>` afterward inside a container of the same image with no GPU on a host that never downloaded the weights (RFC-0018 CH-4a). Compare the resulting numbers manually against the matching `slot` entry under `rungs[].rows[].sessions[]` in `releases/v1.0/board.json`.
 
-A rung's other runs follow the same setup: the P1 control (`iproofs run ... --session <K> --control-run --control-suite`, RFC-0018 CH-1b), the fidelity runs (`iproofs fidelity run`) and the serving baseline.
+The remaining runs on a rung follow the same pattern: the P1 control (`iproofs run ... --session <K> --control-run --control-suite`, RFC-0018 CH-1b), the fidelity jobs (`iproofs fidelity run`), and the serving baseline.
 
-What the record will show:
+Keep three caveats in mind when inspecting the resulting records:
 
-- Every v1.0 GPU profile records the driver as `unpinned` (RFC-0006 Q5), so every run on them fails PC-DRIVER and records `harness.nonconforming: true`. The published runs record it too. No conformance check refuses a run (RFC-0006).
-- A different GPU model is its own configuration, never pooled or compared with the H200 rows (RFC-0006 R5). v1.0 declares no profile for another GPU model.
-- Every counted v1.0 run ran on Hugging Face Jobs (`provider` in each manifest). Another provider is untested: gVisor refused FlashProve's `madvise` call (#68), and the verify-without-weights check needs `strace` to trace the verify call's file opens inside the provider's container (RFC-0018 CH-4). A provider with another driver needs its own pin (RFC-0006 Q5).
+- Every v1.0 GPU profile leaves its driver version as `unpinned` (RFC-0006 Q5), so every run on these profiles fails PC-DRIVER and sets `harness.nonconforming: true` in the manifest. The published runs record this as well, and conformance failures never block execution (RFC-0006).
+- A different GPU model forms its own configuration and is never pooled or compared directly with H200 rows (RFC-0006 R5). Release v1.0 does not define profiles for other GPU models.
+- All counted v1.0 runs executed on Hugging Face Jobs (recorded in `provider` in each manifest). Other providers have not been tested: gVisor blocked FlashProve's `madvise` call (#68), and the verify-without-weights check requires `strace` to monitor file opens inside the container (RFC-0018 CH-4). A provider running a different driver requires its own driver pin (RFC-0006 Q5).

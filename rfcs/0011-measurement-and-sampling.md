@@ -6,38 +6,38 @@
 
 ## Summary
 
-This RFC specifies how the harness measures a job from outside the adapter container: the clock, how a container call is timed, how proof release times are observed, how GPU and host resources are sampled, how proof sizes are counted, and the self-test a host runs before its numbers are accepted. Every recorded metric in RFC-0004 is produced by exactly one mechanism defined here.
+This RFC defines how the harness measures a job from outside the adapter container: the clock source, container call timing, proof release observation, GPU and host resource sampling, proof size accounting, and the calibration self-test a host must pass before its results are accepted. Every recorded metric in RFC-0004 maps to exactly one measurement mechanism specified here.
 
 ## Motivation
 
-The benchmark's numbers are only as good as the instruments behind them. PRD F9 asks for a harness that "measures externally": upstream figures come from scripts and records readers cannot always see (FlashProve's performance page says its measuring scripts are not in the repository, RFC-0007), so this project must not depend on code inside the container for its headline numbers. The first SPEC listed the quantities (wall time, GPU memory peak at 10 Hz or faster, host memory from cgroup with file cache excluded, CPU time, energy, proof size) but not how to obtain each one correctly. Three details decide whether the numbers are right: cgroup files vanish when a container exits, page cache inflates `memory.peak`, and a proof's release time is invisible unless the adapter makes it observable. This RFC fixes all three.
+Benchmark numbers are only as trustworthy as the instrumentation behind them. PRD F9 calls for a harness that "measures externally": because upstream figures often come from scripts and logs that readers cannot inspect (for example, FlashProve's performance page notes that its measurement scripts are not in the repository, RFC-0007), this project cannot rely on code running inside the adapter container for its headline metrics. The initial SPEC listed the target quantities (wall time, GPU memory peak sampled at 10 Hz or faster, host memory from cgroups excluding file cache, CPU time, energy, and proof size), but left out how to collect them reliably. Three practical subtleties determine whether those readings are accurate: cgroup files disappear as soon as a container exits, page cache inflates `memory.peak`, and proof release times cannot be observed externally unless the adapter follows an explicit filesystem protocol. This RFC solves all three.
 
 ## Goals
 
-- Durations come from one monotonic clock in the harness process; no duration uses wall-clock time.
-- Proof release times are observed by the harness, not reported by the adapter.
-- GPU sampling meets 10 Hz minimum (20 Hz target) with gaps detected and reported.
-- Final cgroup counters (`memory.peak`, `cpu.stat`) are read after the container exits, exactly.
-- The harness's own measurement overhead stays inside a stated budget and runs on CPUs the job does not use.
-- A host proves it can measure (self-test) before any run on it is accepted.
+- Derive all durations from a single monotonic clock in the harness process; never compute durations from wall-clock timestamps.
+- Observe proof release times directly in the harness rather than trusting timestamps reported by the adapter.
+- Sample GPU metrics at 10 Hz minimum (20 Hz target), detecting and reporting any sampling gaps.
+- Read exact final cgroup counters (`memory.peak`, `cpu.stat`) after the container exits.
+- Keep the harness's own measurement overhead within a documented budget and isolate it onto CPUs not used by the job.
+- Require every host to pass a calibration self-test before any measurements taken on it are accepted.
 
 ## Non-Goals
 
-- Profiling inside the prover (kernel timings, NVTX ranges). Adapter-reported phases are allowed but are labelled and never feed derived metrics (RFC-0004 INV-GRADE-2).
-- Network and disk I/O accounting (containers run with `--network none`; disk I/O is not a v0.1 metric).
-- Non-Linux hosts for GPU runs. CPU-only steps (validation, derivation, fake-system runs) work anywhere; the cgroup and inotify mechanisms below are Linux-only and are replaced by portable fallbacks or disabled elsewhere (§Portability).
+- Internal prover profiling (such as kernel timings or NVTX ranges). Adapters may still report internal phases, provided they are clearly labelled and never feed derived metrics (RFC-0004 INV-GRADE-2).
+- Network and disk I/O accounting (containers run with `--network none`, and disk I/O is not a v0.1 metric).
+- Supporting non-Linux hosts for GPU runs. CPU-only operations (validation, derivation, and fake-system runs) work on any platform, while the Linux-specific cgroup and inotify code falls back to portable equivalents or is disabled elsewhere (§Portability).
 
 ## Proposed Design
 
 ### Clock
 
-- C-1. Durations use `time.monotonic_ns()` (CLOCK_MONOTONIC on Linux). Records also carry RFC 3339 UTC wall-clock timestamps from `datetime.now(UTC)` for humans; these never enter arithmetic.
-- C-2. Every boundary event in RFC-0004 §Timing scopes is a `mono_ns` integer stored in `run.json` `events` (`{"event": "prove.start", "mono_ns": ...}`, RFC-0012), so every duration can be recomputed from stored events. Seconds metrics are derived from events by `iproofs.measure.span_seconds(start_ns, end_ns) -> float` = `(end_ns - start_ns) / 1e9`.
-- C-3. The harness process pins itself (`os.sched_setaffinity`) to one logical CPU outside `cpu.bound_prover` and `cpu.bound_verifier` (RFC-0006), so its threads never compete with the job.
+- C-1. All durations are measured with `time.monotonic_ns()` (`CLOCK_MONOTONIC` on Linux). Records also include RFC 3339 UTC wall-clock timestamps from `datetime.now(UTC)` for human readers, but wall-clock values never enter arithmetic.
+- C-2. Every boundary event from RFC-0004 §Timing scopes is stored as a `mono_ns` integer in `run.json` under `events` (`{"event": "prove.start", "mono_ns": ...}`, RFC-0012), allowing every duration to be recomputed from stored events. Second-denominated metrics are computed by `iproofs.measure.span_seconds(start_ns, end_ns) -> float` = `(end_ns - start_ns) / 1e9`.
+- C-3. The harness pins itself via `os.sched_setaffinity` to a single logical CPU outside `cpu.bound_prover` and `cpu.bound_verifier` (RFC-0006), preventing harness threads from competing with the workload.
 
 ### Timing a container call
 
-Each adapter call is two Docker CLI steps: `docker create` (untimed, returns the container id) then `docker start --attach <id>` (timed).
+Each adapter invocation splits into two Docker CLI commands: `docker create` (untimed, returning the container id) followed by `docker start --attach <id>` (timed).
 
 ```python
 @dataclass(frozen=True, slots=True)
@@ -50,21 +50,21 @@ class CallTiming:
 def timed_call(argv_create: Sequence[str], timeout_s: float, on_started: Callable[[str], None]) -> CallTiming: ...
 ```
 
-- T-1. `start_ns` is read after `docker create` returns and before `subprocess.Popen` of `docker start`. Container start-up (namespace creation, GPU device injection) is inside the call and is not subtracted (RFC-0004).
-- T-2. Timeout per step comes from `system.yaml` (RFC-0010). On timeout the harness runs `docker kill`, records kind `timeout`, and still reads final cgroup counters.
-- T-3. The container id is used for cgroup paths and kill only; it is a host-local identifier and is never logged or written (RFC-0006 exclusion list).
+- T-1. `start_ns` is recorded after `docker create` finishes and immediately before spawning `docker start`. Container start-up overhead (namespace creation and GPU device injection) falls inside the timed window and is not subtracted (RFC-0004).
+- T-2. Step timeouts come from `system.yaml` (RFC-0010). When a call times out, the harness runs `docker kill`, classifies the failure as `timeout`, and still collects the final cgroup counters.
+- T-3. The container id is kept strictly in memory for cgroup lookups and `docker kill`; because it is a host-local identifier, it is never logged or written to disk (RFC-0006 exclusion list).
 
 ### Cgroup accounting
 
-The container's own cgroup is removed by the runtime when the container exits, so its final counters cannot be read afterwards. The harness therefore places each container under a parent slice it owns:
+Because the container runtime deletes a container's own cgroup upon exit, its final counters vanish before the harness can read them. To avoid losing the tail of the run, the harness runs each container inside a parent systemd slice that it controls:
 
-- G-1. Before each call the harness starts a placeholder scope `systemd-run --scope --slice=iproofs-<job_hash>-<step>.slice --unit=iproofs-<job_hash>-<step>-hold sleep infinity`, where `job_hash` is the first 12 hex digits of the sha256 of the run id. This keeps the slice alive after the container exits.
-- G-2. The container is created with `--cgroup-parent=iproofs-<job_hash>-<step>.slice`. Its cgroup becomes a child of the slice; cgroup v2 hierarchical accounting makes the slice's `memory.peak` and `cpu.stat` cover it.
-- G-3. Before start the harness reads the slice's `memory.peak` (placeholder only) as `baseline_bytes` and `cpu.stat` `usage_usec` as `cpu_baseline_usec`. After the call ends it reads both again, then stops the placeholder unit.
-- G-4. `<step>_host_memory_peak_kernel` = slice `memory.peak` after the call (bytes, includes page cache, exact for the slice, biased upward by at most `baseline_bytes`, which is recorded). `<step>_cpu_seconds` = (`usage_usec` after − `cpu_baseline_usec`) / 1e6.
-- G-5. `<step>_host_memory_peak_anon` = max over samples of `memory.stat` `anon` of the slice, sampled at 10 Hz by the sampler thread. It excludes file cache and is a sampled peak: a spike shorter than the sampling period can be missed.
+- G-1. Before starting a container call, the harness launches a lightweight placeholder scope: `systemd-run --scope --slice=iproofs-<job_hash>-<step>.slice --unit=iproofs-<job_hash>-<step>-hold sleep infinity`, where `job_hash` is the first 12 hex characters of the run id's SHA-256 digest. This placeholder keeps the parent slice alive after the container terminates.
+- G-2. The container is created with `--cgroup-parent=iproofs-<job_hash>-<step>.slice`, placing its cgroup as a child of the slice so cgroup v2 hierarchical accounting rolls `memory.peak` and `cpu.stat` up into the slice.
+- G-3. Before launching the container, the harness records the slice's `memory.peak` (covering only the placeholder) as `baseline_bytes` and `cpu.stat` `usage_usec` as `cpu_baseline_usec`. After the container exits, it reads both counters again and then tears down the placeholder unit.
+- G-4. `<step>_host_memory_peak_kernel` equals the slice's post-call `memory.peak` in bytes (which includes page cache, is exact for the slice, and is biased upward by at most the recorded `baseline_bytes`). `<step>_cpu_seconds` equals (`usage_usec` after − `cpu_baseline_usec`) / 1e6.
+- G-5. `<step>_host_memory_peak_anon` is the maximum value of `memory.stat` `anon` observed across 10 Hz samples taken by the sampler thread. It excludes file cache, though because it is sampled, a transient spike shorter than one sampling interval can be missed.
 
-RISK: "host memory peak, file cache excluded" has no exact kernel counter in cgroup v2; the anon peak is sampled. Resolution: both numbers are published with their definitions (`kernel` exact including cache, `anon` sampled excluding cache), never one silently in place of the other. If a system's anon peak and kernel peak diverge by more than page cache explains in review, a later change MAY add an eBPF-based peak.
+RISK: Cgroup v2 does not expose an exact kernel high-water mark for anonymous memory alone, so the anonymous peak has to be sampled. To stay transparent, the benchmark publishes both metrics with their exact definitions (`kernel` exact including page cache, `anon` sampled excluding cache) and never substitutes one for the other. If review shows the two values diverging by more than page cache can explain, a future revision MAY introduce an eBPF-based peak tracker.
 
 ```python
 class CgroupReader:
@@ -75,12 +75,12 @@ class CgroupReader:
     def oom_kills(self) -> int: ...                            # memory.events "oom_kill"
 ```
 
-- G-6. A non-zero `oom_kill` delta over the call makes the step fail with kind `resource`, whatever the exit code.
-- G-7. If `memory.peak` is absent (kernel older than 5.19) or the slice cannot be created, the conformance check fails (RFC-0006 PC-KERNEL, PC-CGROUP) before any timed step.
+- G-6. Any positive `oom_kill` delta during a call fails the step with error kind `resource`, regardless of the container's exit code.
+- G-7. If `memory.peak` is unavailable (indicating a kernel older than 5.19) or the slice cannot be created, host conformance fails (RFC-0006 PC-KERNEL, PC-CGROUP) before any timed step begins.
 
 ### Proof release watcher
 
-Adapters write each proof as `/io/proofs/.tmp-<proof_id>/` and then `rename(2)` it to `/io/proofs/<proof_id>/` (RFC-0005). `/io` is a bind mount of a host directory, so the rename is visible on the host.
+Adapters write each proof into `/io/proofs/.tmp-<proof_id>/` and then atomically `rename(2)` it to `/io/proofs/<proof_id>/` (RFC-0005). Because `/io` is a host bind mount, the harness observes the rename directly from the host.
 
 ```python
 @dataclass(frozen=True, slots=True)
@@ -98,11 +98,11 @@ class ReleaseWatcher:
     def observable(self) -> bool: ...         # false when releases are not distinguishable (W-4)
 ```
 
-- W-1. On Linux the watcher uses inotify through `ctypes` (`inotify_init1`, `inotify_add_watch` with `IN_MOVED_TO | IN_ONLYDIR`) in a dedicated thread; the timestamp is `monotonic_ns()` taken when the event is read. No third-party dependency.
-- W-2. If inotify is unavailable, the watcher polls `os.scandir` every 10 ms and timestamps a new non-`.tmp-` directory at the first poll that sees it. `mechanism` records which was used; with polling the release time error is at most one poll interval plus scheduling delay.
-- W-3. A directory that appears without passing through `.tmp-` (direct creation) is accepted but logged as event `release.nonatomic`; a proof whose parts change after release (detected by comparing part sizes at release and after the call) fails the job with kind `adapter`.
-- W-4. `observable` is false when `system.yaml` declares `incremental_proofs: false`, or when all k releases fall within one inotify read batch or one poll interval. Then `prove.steady` is null with `not_externally_observable` (RFC-0004 INV-SCOPE-3).
-- W-5. Releases after the prove call has exited are an `adapter` error (the adapter must finish writing before exiting).
+- W-1. On Linux, the watcher uses `inotify` via `ctypes` (`inotify_init1` and `inotify_add_watch` with `IN_MOVED_TO | IN_ONLYDIR`) in a dedicated thread, avoiding any third-party package dependency. Each release is timestamped with `monotonic_ns()` as soon as the event is read.
+- W-2. Where `inotify` is unavailable, the watcher falls back to polling `os.scandir` every 10 ms and timestamps each newly appearing non-`.tmp-` directory on the first poll that sees it. `mechanism` records which mode was active; under polling, release timing error is bounded by one poll interval plus OS scheduling delay.
+- W-3. If a proof directory appears directly without going through `.tmp-`, the watcher still accepts it but logs a `release.nonatomic` event. If any proof file changes size between release and the end of the `prove` call, the job fails with kind `adapter`.
+- W-4. `observable` is false if `system.yaml` sets `incremental_proofs: false`, or if all k releases arrive in a single `inotify` read batch or a single poll interval. In that case `prove.steady` is recorded as null with `not_externally_observable` (RFC-0004 INV-SCOPE-3).
+- W-5. Any proof released after the `prove` container has exited is treated as an `adapter` error, since the adapter must finish writing all proofs before exiting.
 
 ### GPU sampler
 
@@ -137,14 +137,14 @@ class Sampler:
     def write_trace(self, path: Path) -> None: ...   # 1 Hz downsampled trace (max per second), CSV
 ```
 
-- S-1. One sampler thread per call, started before `start_ns` and stopped after `end_ns`. Samples outside [`start_ns`, `end_ns`] are discarded from the summary.
-- S-2. Scheduling uses absolute deadlines `t0 + i × period`; a missed deadline is skipped, not caught up, so a stall shows as a gap rather than a burst.
-- S-3. Per sample, on the bound GPU only (`nvmlDeviceGetHandleByIndex(bound_index)`): `nvmlDeviceGetMemoryInfo().used`, `nvmlDeviceGetUtilizationRates().gpu`, and once at start and end `nvmlDeviceGetTotalEnergyConsumption()` (mJ). `anon` from the cgroup reader is read in the same loop at every second sample (10 Hz).
-- S-4. Memory peak is the max of `used` over the call; the pre-call `used` is recorded as `memory_baseline_mib` and not subtracted. Utilisation mean is the time-weighted mean over samples; p95 is the 95th percentile by the nearest-rank method.
-- S-5. A gap is an interval between consecutive samples above 150 ms. If gaps cover more than 5 % of the call, the GPU metrics are written with `degraded: true` in the quantity's `quality` field (RFC-0012) and the site prints the flag.
-- S-6. Energy is optional: if `nvmlDeviceGetTotalEnergyConsumption` returns `NVML_ERROR_NOT_SUPPORTED`, the energy metrics are null with `null_reason: not_applicable`.
-- S-7. Foreign-process check: before `info` and before each GPU step, `nvmlDeviceGetComputeRunningProcesses` on the bound GPU MUST return no process; otherwise the job fails with kind `environment` (RFC-0006 PC-GPU-BUSY). The check is repeated after each GPU step; a foreign process found then marks the step's GPU metrics `degraded: true` and logs `gpu.foreign_process`.
-- S-8. Verify steps have no GPU; the sampler runs with `gpu_index=None` and records only the cgroup anon peak.
+- S-1. Each call uses one sampler thread started before `start_ns` and stopped after `end_ns`. Any samples falling outside `[start_ns, end_ns]` are excluded from the summary.
+- S-2. Sampling follows absolute deadlines `t0 + i × period`. If a deadline is missed, the sampler skips ahead rather than bursting to catch up, so stalls appear honestly as gaps.
+- S-3. On each tick, the sampler queries only the bound GPU (`nvmlDeviceGetHandleByIndex(bound_index)`) for `nvmlDeviceGetMemoryInfo().used` and `nvmlDeviceGetUtilizationRates().gpu`, and reads `nvmlDeviceGetTotalEnergyConsumption()` (in mJ) once at the start and once at the end. On every second tick (10 Hz), the same loop reads `anon` memory from the cgroup reader.
+- S-4. `memory_peak_mib` is the maximum `used` value recorded during the call; the pre-call `used` reading is saved as `memory_baseline_mib` and is not subtracted. Mean GPU utilisation is time-weighted over the sample intervals, and `util_p95_pct` is the 95th percentile computed via the nearest-rank method.
+- S-5. Any interval longer than 150 ms between consecutive samples counts as a gap. If gaps account for more than 5 % of the call duration, the step's GPU metrics are flagged with `degraded: true` inside the quantity's `quality` object (RFC-0012), and the site displays that flag.
+- S-6. Energy reporting is optional: if `nvmlDeviceGetTotalEnergyConsumption` returns `NVML_ERROR_NOT_SUPPORTED`, energy metrics are stored as null with `null_reason: not_applicable`.
+- S-7. Foreign-process check: before `info` and before every GPU step, `nvmlDeviceGetComputeRunningProcesses` on the bound GPU MUST return an empty list; otherwise the job fails with kind `environment` (RFC-0006 PC-GPU-BUSY). The check runs again after each GPU step, and if a foreign process appears during the step, the harness marks the step's GPU metrics `degraded: true` and logs `gpu.foreign_process`.
+- S-8. Because `verify` runs without a GPU, its sampler starts with `gpu_index=None` and tracks only the cgroup anonymous memory peak.
 
 ### Proof size accounting
 
@@ -153,115 +153,114 @@ def proof_bytes(proof_dir: Path, io_root: Path) -> int: ...
 def files_bytes(paths: Sequence[str], io_root: Path) -> int: ...
 ```
 
-- Z-1. `proof_bytes` sums `st_size` of every regular file under `/io/proofs/<proof_id>/`. Symbolic links, device files and paths that resolve outside `io_root` fail the job with kind `adapter` (trust boundary, docs/spec/06-security.md).
-- Z-2. `verifier_download_bytes` = `files_bytes(commit.out.verifier_files)`, the per-commitment bytes a verifier fetches once. `prover_keep_bytes` = `files_bytes(commit.out.prover_files)`.
-- Z-3. Sizes are bytes as stored, uncompressed. Each part's sha256 is computed at the same time for the proof digest (RFC-0012) and `digests.txt` (RFC-0009).
+- Z-1. `proof_bytes` sums `st_size` across all regular files inside `/io/proofs/<proof_id>/`. Encountering symlinks, device nodes, or paths resolving outside `io_root` immediately fails the job with kind `adapter` (see trust boundaries in `docs/spec/06-security.md`).
+- Z-2. `verifier_download_bytes` equals `files_bytes(commit.out.verifier_files)`, representing the per-commitment data a verifier fetches once, while `prover_keep_bytes` equals `files_bytes(commit.out.prover_files)`.
+- Z-3. All sizes are measured in uncompressed on-disk bytes. Each part file's SHA-256 digest is computed during the same pass for both the proof digest (RFC-0012) and `digests.txt` (RFC-0009).
 
 ### Measurement overhead budget
 
-Targets (not results), checked by the self-test and by GPU-host test GH-OVERHEAD:
+The following operational targets (not benchmark results) are verified by the calibration self-test and by GPU-host test GH-OVERHEAD:
 
 | Item | Target |
 |---|---|
-| Sampler plus watcher CPU use | at most 1 % of one logical CPU at 20 Hz, on the harness CPU (C-3) |
+| Combined sampler and watcher CPU use | At most 1 % of one logical CPU at 20 Hz, pinned to the harness CPU (C-3) |
 | Sampling jitter | p99 deadline lateness at most 10 ms |
-| Harness resident memory | at most 256 MiB during a call |
-| Trace file size | 1 Hz downsampled trace, within the 1 MiB per-file log cap (RFC-0009) for calls up to 6 hours |
+| Harness resident memory | At most 256 MiB during a container call |
+| Trace file size | 1 Hz downsampled CSV trace staying within the 1 MiB per-file log cap (RFC-0009) for calls up to 6 hours |
 
-The harness never runs on prover or verifier CPUs (C-3), so its overhead does not enter the job's cgroup counters.
+Because the harness is pinned off the prover and verifier CPUs (C-3), its CPU and memory footprint stays out of the job's cgroup counters.
 
 ### Calibration self-test
 
-`iproofs machine-record --selftest` runs on the host before its first run of a release and before each run campaign; its JSON result is stored in `manifest.json` `self_test`. A run whose manifest lacks a passing self-test from the same harness version is ineligible for a release (RFC-0014 §Eligibility). Checks:
+A host runs `iproofs machine-record --selftest` before its first run of a release and before each run campaign, storing the resulting JSON in `manifest.json` under `self_test`. Any run whose manifest lacks a passing self-test from the same harness version is ineligible for release publication (RFC-0014 §Eligibility). The self-test executes seven checks:
 
 | Check id | Procedure | Pass when |
 |---|---|---|
-| ST-CLOCK | 100,000 consecutive `monotonic_ns()` reads | never decreasing; median step at most 1 µs |
-| ST-SAMPLER | sampler for 5 s at 20 Hz on the bound GPU | achieved at least 10 Hz, no gap above 150 ms |
-| ST-JITTER | same run | p99 lateness at most 10 ms |
-| ST-CGROUP | probe container (the pinned `systems/fake` image, subcommand `probe`, used only by the self-test) allocates and touches 256 MiB of anonymous memory, under a harness slice | slice `memory.peak` and sampled anon peak both at least 256 MiB; `cpu.stat` increased |
-| ST-WATCH | probe container renames 3 directories 200 ms apart in a bind mount | 3 releases seen, consecutive differences within 200 ms ± 20 ms, mechanism `inotify` |
-| ST-NVML | NVML init, bound GPU handle, busy check | no foreign process; energy support recorded |
-| ST-OOM | probe container exceeds a 64 MiB limit | `oom_kill` delta detected |
+| ST-CLOCK | Perform 100,000 consecutive `monotonic_ns()` reads | Readings never decrease and the median step is at most 1 µs |
+| ST-SAMPLER | Run the GPU sampler for 5 s at 20 Hz on the bound GPU | Achieved rate is at least 10 Hz with no gap over 150 ms |
+| ST-JITTER | Evaluated on the same 5 s run | p99 deadline lateness is at most 10 ms |
+| ST-CGROUP | Launch the pinned `systems/fake` probe container (`probe` subcommand, reserved for the self-test) inside a harness slice; it allocates and touches 256 MiB of anonymous memory | Both the slice's `memory.peak` and the sampled anonymous peak are at least 256 MiB, and `cpu.stat` increases |
+| ST-WATCH | Probe container renames 3 directories 200 ms apart inside a bind mount | All 3 releases are observed via `inotify`, with consecutive intervals within 200 ms ± 20 ms |
+| ST-NVML | Initialise NVML, acquire the bound GPU handle, and run the busy check | No foreign compute process is present; energy-counter support is recorded |
+| ST-OOM | Probe container allocates past a 64 MiB memory limit | An `oom_kill` delta is detected in the slice |
 
-Failure of any check exits 3 (`environment`) and names the check.
+If any check fails, the command exits 3 (`environment`) and reports the failing check id.
 
-On a host under hosted execution (RFC-0006 §Hosted execution), `iproofs machine-record --selftest --hosted` runs the `systems/fake` entrypoint's `probe` as a process of the container the harness runs in, not as a probe container. ST-CLOCK, ST-NVML, ST-SAMPLER and ST-JITTER are unchanged. ST-CGROUP passes when the container's sampled `memory.stat` anon rises at least 256 MiB over its baseline during the probe and `cpu.stat` increases; the container's `memory.peak` covers its whole life and is not read. ST-WATCH is unchanged, with the probe as a process. ST-OOM is not run and is absent from the record: the container cannot set a memory limit for a probe to exceed. OOM kills during a hosted job are still read from the container's `memory.events` (RFC-0006).
+Under hosted execution (RFC-0006 §Hosted execution), `iproofs machine-record --selftest --hosted` runs the `systems/fake` `probe` entrypoint as a regular child process inside the harness container rather than in a nested Docker container. ST-CLOCK, ST-NVML, ST-SAMPLER, and ST-JITTER behave identically. ST-CGROUP passes if the container's sampled `memory.stat` `anon` rises by at least 256 MiB above its pre-probe baseline and `cpu.stat` increases; the container's `memory.peak` spans the container's full lifetime and is not read. ST-WATCH also runs against the child process. ST-OOM is skipped and omitted from the record because the container cannot impose a sub-container memory limit on a child process, though OOM kills during actual hosted jobs are still read from the container's `memory.events` (RFC-0006).
 
 ### Portability
 
-On non-Linux hosts and in hosted CI (fake system only): the watcher uses polling, the sampler runs without NVML (`gpu_index=None`), and cgroup readers are replaced by a null reader that yields null host-memory and CPU metrics with `null_reason: not_applicable`. Such runs are valid for testing and can never enter `results/` for a release (the validator requires a passing self-test, which needs Linux and NVML).
+On non-Linux machines and in hosted CPU CI (fake system only), the watcher uses polling, the sampler runs with `gpu_index=None` (no NVML), and a null cgroup reader emits `null` host-memory and CPU metrics with `null_reason: not_applicable`. Runs produced this way are useful for development and testing, but cannot enter `results/` for a release because validation requires a passing Linux-plus-NVML self-test.
 
 ### Failure modes
 
 | Failure | Response |
 |---|---|
-| Slice cannot be created (no systemd, no permission) | conformance fails, `environment`, exit 3 |
-| Container exits before the sampler's first sample | summary with `samples: 0`; GPU metrics null with `step_failed` if the call failed, else `degraded: true` |
-| NVML call error during a call | sample skipped, counted as gap; after 10 consecutive errors the sampler stops, GPU metrics `degraded: true` |
-| OOM kill | step fails, kind `resource` (G-6) |
-| Timeout | `docker kill`, kind `timeout`, counters read (T-2) |
-| Proof symlink or path escape | kind `adapter`, job failed (Z-1) |
-| Release after call exit, or parts changed after release | kind `adapter` (W-3, W-5) |
-| Foreign GPU process before a step | kind `environment` (S-7) |
-| Placeholder unit left running after a crash | next `iproofs run` stops stale `iproofs-*-hold` units before conformance and logs `cgroup.stale_cleanup` |
+| Slice cannot be created (no systemd or insufficient privileges) | Conformance check fails with `environment`, exit 3 |
+| Container exits before the sampler collects its first sample | Summary records `samples: 0`; GPU metrics are null with `step_failed` if the call failed, or marked `degraded: true` otherwise |
+| NVML call fails mid-step | Sample is skipped and counted as a gap; after 10 consecutive errors the sampler stops and marks GPU metrics `degraded: true` |
+| OOM kill | Step fails with kind `resource` (G-6) |
+| Timeout | Harness calls `docker kill`, records `timeout`, and still reads final counters (T-2) |
+| Proof symlink or path traversal outside `io_root` | Job fails with kind `adapter` (Z-1) |
+| Release after container exit, or proof file mutated after release | Job fails with kind `adapter` (W-3, W-5) |
+| Foreign GPU process detected before a step | Job fails with kind `environment` (S-7) |
+| Orphaned placeholder unit left behind after a crash | The next `iproofs run` stops stale `iproofs-*-hold` units prior to conformance and logs `cgroup.stale_cleanup` |
 
 ## Alternatives Considered
 
-- **`docker stats` for memory and CPU.** Considered because it needs no cgroup code. Rejected: it reports usage including page cache at roughly 1 Hz, no peak, and stops at container exit.
-- **Read the container's own cgroup and sample `memory.peak` until exit.** Considered because it avoids the placeholder slice. Rejected: the final interval before exit is lost for both peak and CPU time; the parent slice gives exact final counters for the cost of one `sleep` process, whose memory is recorded as `baseline_bytes`.
-- **`--cgroupns` and a cgroupfs driver with harness-created directories.** Considered as simpler than systemd. Rejected: Docker hosts in the wild use the systemd driver by default, and mixing drivers on one host is unsupported; one mechanism is tested.
-- **Adapter-reported per-proof timestamps.** Considered because it needs no watcher. Rejected: it would make release times depend on container code (PRD F9); the rename contract costs adapters one `rename` call.
-- **A sampling subprocess instead of a thread.** Considered to avoid interpreter lock effects. Rejected for v0.1: the main thread is blocked in `wait` and NVML calls release the lock; ST-JITTER detects a host where this assumption fails, and the design can move to a subprocess without changing any record.
-- **DCGM instead of NVML.** Considered for richer counters. Rejected: an extra daemon on the host for counters NVML already gives.
+- **Use `docker stats` for memory and CPU.** While this would eliminate custom cgroup code, `docker stats` samples at roughly 1 Hz, bundles page cache into memory usage, does not report a true peak, and stops reporting as soon as the container exits.
+- **Sample `memory.peak` directly from the container's own cgroup until exit.** Skipping the placeholder slice would be simpler, but both the final peak memory and the final CPU time slice would be lost when the container's cgroup vanishes on exit. Keeping a parent slice alive costs only one `sleep` process, whose tiny footprint is recorded in `baseline_bytes`.
+- **Use `--cgroupns` with a cgroupfs driver and harness-managed directories.** Although lighter than systemd, most Linux Docker hosts default to the systemd cgroup driver, and mixing drivers on one host is unsupported. Standardising on a single tested mechanism avoids host-specific divergence.
+- **Trust per-proof timestamps reported by the adapter.** Doing so would avoid writing a watcher, but it would make release times depend on code inside the container, conflicting with PRD F9. The atomic rename contract adds just one `rename` call to each adapter.
+- **Run the sampler in a separate subprocess instead of a thread.** A subprocess would sidestep Python's GIL completely, yet in v0.1 the main thread spends its time blocked in `wait` and NVML calls release the GIL. ST-JITTER catches any host where that assumption breaks, and moving to a subprocess later would not change any record format.
+- **Use DCGM instead of NVML.** DCGM provides richer telemetry, but running an extra host daemon is unnecessary when NVML already supplies every counter v0.1 needs.
 
 ## Drawbacks
 
-- The harness needs permission to run `systemd-run` and Docker, in practice root or equivalent on the GPU host.
-- Container start-up is inside every call time; for short verify calls it can be a visible fraction (shown via `info_seconds`).
-- The anon peak is sampled and can miss short spikes (RISK above).
-- Release times under polling carry up to 10 ms error, recorded via `mechanism`.
-
+- Running `systemd-run` and Docker requires root or equivalent host privileges on the GPU machine.
+- Container start-up time is included in every timed step, which can be a noticeable fraction of short `verify` calls (made visible via `info_seconds`).
+- Anonymous host memory peak is sampled and can therefore miss spikes shorter than 100 ms (see RISK above).
+- Under fallback polling, release timestamps carry up to 10 ms of uncertainty, recorded via `mechanism`.
 
 ## Migration / Rollout
 
-This RFC replaces the measurement table of the first SPEC §4 with mechanisms; its "host memory peak, file cache excluded" becomes two labelled metrics. Fields introduced in `run/1` and `manifest/1` (RFC-0012): `events`, `sampler` summaries per step, `watcher.mechanism`, `selftest`, quantity `quality.degraded`. Adapters gain one obligation (atomic proof directories, RFC-0005) that the fake system implements first.
+This RFC replaces the high-level measurement table in Section 4 of the initial SPEC with concrete mechanisms, splitting "host memory peak, file cache excluded" into two explicitly labelled metrics. It adds `events`, per-step `sampler` summaries, `watcher.mechanism`, `selftest`, and quantity `quality.degraded` to `run/1` and `manifest/1` (RFC-0012). Adapters take on one new requirement, atomic proof directory renames (RFC-0005), implemented first in `systems/fake`.
 
-Amendment of 2026-11-09 (RFC-0015 SRV-6 production serving): with several bound GPUs, the sampler reads them as one (`iproofs.measure.ManyGpus`): at each sample the memory used is the maximum over the GPUs and the utilisation the mean over them, so `<step>_gpu_memory_peak` is the maximum over GPUs and samples and `<step>_gpu_util_mean` and `_p95` are over samples of the per-sample mean; `<step>_gpu_energy` is the sum. Keeping each GPU's reading in `raw` is a later change. Visible unbound GPUs are read for RFC-0006 PC-GPU-IDLE only, when the machine record is taken; their readings feed no metric. A production-serving run requires `mechanism: inotify` from the release watcher (RFC-0015 SRV-1); a polled serving run fails `environment`.
+Amendment of 2026-11-09 (RFC-0015 SRV-6 production serving): When multiple GPUs are bound, the sampler aggregates them via `iproofs.measure.ManyGpus`. At each tick, memory used is the maximum across the bound GPUs and utilisation is their mean, so `<step>_gpu_memory_peak` is the maximum over both GPUs and samples, `<step>_gpu_util_mean` and `_p95` summarise the per-sample means, and `<step>_gpu_energy` sums energy across all bound GPUs. Storing per-GPU readings in `raw` is deferred to a later change. Unbound visible GPUs are queried solely for RFC-0006 PC-GPU-IDLE when capturing the machine record and contribute to no metric. Production-serving runs require `mechanism: inotify` from the release watcher (RFC-0015 SRV-1); falling back to polling fails the job with `environment`.
 
 ## Testing Strategy
 
-CPU-only (hosted CI):
+CPU-only tests (hosted CI):
 
-- TC-SPAN: `span_seconds` on fixed integers; exact results.
-- TC-WATCH-POLL: temp dir, a thread renames 5 `.tmp-` directories 50 ms apart; poll watcher returns 5 releases, ordered, each within 50 ms ± 15 ms of the previous.
-- TC-WATCH-INOTIFY (Linux runners): same with inotify; tolerance ± 5 ms.
-- TC-WATCH-BURST: 5 renames within 1 ms; `observable` false.
-- TC-WATCH-DECLARED: `incremental_proofs: false` gives `observable` false regardless of timing.
-- TC-WATCH-NONATOMIC: direct mkdir; release accepted, event `release.nonatomic` logged.
-- TC-WATCH-MUTATED: a part grows after release; job fails `adapter`.
-- TC-SAMPLER-GAPS: sampler with a fake NVML backend that stalls 400 ms twice in a 20 s call (gaps cover 4 % of it); `gaps_over_150ms` 2, `degraded` false; stall 400 ms 10 times; `degraded` true. (Two 400 ms stalls in 5 s would cover 16 %, above the S-5 threshold.)
-- TC-SAMPLER-P95: fake utilisation series 1..100; p95 equals 95 by nearest rank.
-- TC-SAMPLER-ENERGY-UNSUPPORTED: fake backend raises not supported; energy null `not_applicable`.
-- TC-CGROUP-PARSE: `memory.stat`, `cpu.stat`, `memory.events` fixtures parsed to exact integers.
-- TC-PROOF-BYTES: fixture proof dirs; symlink and `..` escape both fail `adapter`; sizes exact.
-- TC-FOREIGN-PROC: fake NVML returns one process; job fails `environment` before `info`.
+- TC-SPAN: verifies exact integer-to-second conversion in `span_seconds`.
+- TC-WATCH-POLL: renames 5 `.tmp-` directories 50 ms apart in a temporary directory and asserts that the polling watcher returns 5 ordered releases, each within 50 ms ± 15 ms of the previous one.
+- TC-WATCH-INOTIFY (Linux runners): runs the same test using `inotify` with a ± 5 ms tolerance.
+- TC-WATCH-BURST: performs 5 renames within 1 ms and asserts `observable` is false.
+- TC-WATCH-DECLARED: verifies that `incremental_proofs: false` forces `observable` to false regardless of actual release spacing.
+- TC-WATCH-NONATOMIC: creates a proof directory directly with `mkdir` and verifies that the release is accepted while logging `release.nonatomic`.
+- TC-WATCH-MUTATED: appends bytes to a proof part after release and verifies an `adapter` failure.
+- TC-SAMPLER-GAPS: uses a fake NVML backend that stalls for 400 ms twice during a 20 s call (4 % gap fraction) to assert `gaps_over_150ms == 2` and `degraded == False`, then stalls 10 times to assert `degraded == True`. (Note that two 400 ms stalls in a 5 s call would equal 16 %, exceeding the S-5 threshold.)
+- TC-SAMPLER-P95: feeds a synthetic utilisation series 1..100 and asserts that nearest-rank p95 equals 95.
+- TC-SAMPLER-ENERGY-UNSUPPORTED: stubs NVML to raise not-supported and verifies null energy with `not_applicable`.
+- TC-CGROUP-PARSE: parses fixture `memory.stat`, `cpu.stat`, and `memory.events` files into exact integers.
+- TC-PROOF-BYTES: tests fixture proof directories, asserting exact byte totals and verifying that symlinks and `..` traversals fail with `adapter`.
+- TC-FOREIGN-PROC: stubs NVML to report one active compute process and verifies an `environment` failure before `info`.
 
-GPU host (runbook, not hosted CI):
+GPU-host tests (runbook, outside hosted CI):
 
-- GH-SELFTEST: `iproofs machine-record --selftest` passes on prover-h100.
-- GH-CGROUP-EXACT: probe container allocates 1 GiB anon then exits immediately; slice `memory.peak` at least 1 GiB after exit (proves the final read survives exit).
-- GH-OVERHEAD: 30-minute fake prove call; harness CPU at most 1 % of one CPU, p99 lateness at most 10 ms.
-- GH-NVML-PEAK: CUDA probe allocates 40 GiB on the bound GPU for 2 s; `memory_peak_mib` at least 40,960.
+- GH-SELFTEST: verifies that `iproofs machine-record --selftest` passes on `prover-h100`.
+- GH-CGROUP-EXACT: runs a probe container that allocates 1 GiB of anonymous memory and exits immediately, confirming that the slice's `memory.peak` remains at least 1 GiB after exit.
+- GH-OVERHEAD: runs a 30-minute fake `prove` call and confirms harness CPU stays at or below 1 % of one logical CPU with p99 lateness at or below 10 ms.
+- GH-NVML-PEAK: runs a CUDA probe allocating 40 GiB on the bound GPU for 2 s and confirms `memory_peak_mib` is at least 40,960.
 
 ## Decisions
 
-- Q1. Verify calls on a separate verifier host use the same slice mechanism, and the same self-test runs on that host.
-- Q2. Each adapter declares `incremental_proofs` from the upstream documentation; the first GPU-host run confirms the declaration, and a pull request corrects it if needed.
+- Q1. Verification calls executed on a separate verifier host use the exact same systemd slice mechanism, and that host must pass the same calibration self-test.
+- Q2. Each adapter declares `incremental_proofs` from upstream documentation; the first GPU-host run confirms the setting, and a pull request updates it if observed behaviour differs.
 
 ## References
 
-- docs/PRD.md §7 (F9), §11.
-- [RFC-0004](0004-metrics-timing-grades.md) for metric ids and scopes; [RFC-0005](0005-adapter-contract.md) for the proof directory contract; [RFC-0006](0006-reference-hardware-and-cost.md) for CPU binding and conformance; [RFC-0009](0009-results-and-publication.md) for log caps; [RFC-0010](0010-harness-runner.md) for steps, timeouts and error kinds; [RFC-0012](0012-schemas-and-serialization.md) for `run/1` fields.
-- Linux kernel documentation, cgroup v2 (`memory.peak`, `memory.stat`, `cpu.stat`, `memory.events`) and inotify(7).
+- `docs/PRD.md` §7 (F9), §11.
+- [RFC-0004](0004-metrics-timing-grades.md) for metric ids and scopes; [RFC-0005](0005-adapter-contract.md) for the proof directory contract; [RFC-0006](0006-reference-hardware-and-cost.md) for CPU binding and conformance; [RFC-0009](0009-results-and-publication.md) for log caps; [RFC-0010](0010-harness-runner.md) for steps, timeouts, and error kinds; [RFC-0012](0012-schemas-and-serialization.md) for `run/1` fields.
+- Linux kernel documentation for cgroup v2 (`memory.peak`, `memory.stat`, `cpu.stat`, `memory.events`) and `inotify(7)`.
 - NVIDIA Management Library API reference (`nvmlDeviceGetMemoryInfo`, `nvmlDeviceGetUtilizationRates`, `nvmlDeviceGetTotalEnergyConsumption`, `nvmlDeviceGetComputeRunningProcesses`).

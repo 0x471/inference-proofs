@@ -1,23 +1,12 @@
 # Proof build (RFC-0018 MC-4a, MC-5)
 
-Machine-checked stays hollow until a build of the publisher's named theorem is recorded at the
-row's pin. This page runs that build on Hugging Face Jobs and records it.
+A machine-checked proof claim remains unverified until we record a build of the publisher's named theorem at the row's pinned commit. This runbook describes how to execute that build on Hugging Face Jobs and record the outcome.
 
-The build is the publisher's own command, unpatched. For FlashProve at `9e2bdd8`:
-`LEAN_ABORT_ON_PANIC=1 lake build Johnson.Goal.Skeleton.SoundOfVerifyAt`, then its line
-`'VerifierAndGoals.AtTheName.sound_of_verify_at' depends on axioms: [...]`
-([lean/THEOREM.md L445-L457](https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L445-L457)).
-It trusts Mathlib's downloaded compiled files and runs no second kernel pass, as the publisher
-says (lean/CHECKING.md L270-L271, lean/THEOREM.md L487).
+We run the publisher's own build command without patches. For FlashProve at `9e2bdd8`, that command is `LEAN_ABORT_ON_PANIC=1 lake build Johnson.Goal.Skeleton.SoundOfVerifyAt`, which prints the axiom summary line `'VerifierAndGoals.AtTheName.sound_of_verify_at' depends on axioms: [...]` ([lean/THEOREM.md L445-L457](https://github.com/anthropics/FlashProve/blob/9e2bdd8ff5bf9c62f18263d7dac189b0400b260c/lean/THEOREM.md#L445-L457)). As documented by the publisher (`lean/CHECKING.md` L270-L271, `lean/THEOREM.md` L487), this targeted build trusts Mathlib's downloaded compiled files and does not run a second kernel replay pass.
 
 ## Run
 
-[`proof-build.sh`](proof-build.sh) runs in the Ubuntu image that `systems/flashprove/Dockerfile`
-pins by digest. It installs Lean 4.29.1 from its release archive, checked against the sha256 that
-the release lists, as an ordinary user. It clones the pin and checks `HEAD`, runs the publisher's
-check of its build files (`scripts/check.py --only tree`), fetches Mathlib's compiled files and
-refuses an empty fetch, then builds under a time limit of its own (`BUILD_TIMEOUT_S`, below the
-job's timeout). Everything it prints goes into `OUT` as it goes.
+[`proof-build.sh`](proof-build.sh) executes inside the digest-pinned Ubuntu base image referenced by `systems/flashprove/Dockerfile`. Running as an unprivileged user, the script installs Lean 4.29.1 from its release archive (verifying the release sha256), clones the pinned commit, checks `HEAD`, runs the publisher's build-file check (`scripts/check.py --only tree`), downloads Mathlib's precompiled cache (failing on an empty fetch), and starts the build under `BUILD_TIMEOUT_S` (set below the job timeout). All output streams directly into `OUT`.
 
 ```sh
 TS=$(date -u +%Y%m%dT%H%M%SZ); D=runs/$TS-proof-build-flashprove
@@ -29,14 +18,9 @@ hf jobs run --detach --flavor cpu-performance --timeout 8h --name iproofs-proof-
   "$IMG" bash /upload/$D/proof-build.sh
 ```
 
-Cap: 8 h on `cpu-performance` at 1.90 USD per hour, 15.20 USD. The targeted build of 2026-11-15
-took 6,388 s there.
+At 1.90 USD per hour on `cpu-performance`, an 8 h timeout caps spend at 15.20 USD. The targeted build on 2026-11-15 finished in 6,388 s on that flavor.
 
-The publisher's full check (`MODE=check`, lean/CHECKING.md step 5) builds the library from nothing,
-replays the kernel and audits the named theorems. Its heaviest files hold up to 49 GiB a process,
-and the publisher's whole run took 4 h 26 min on 84 cores and 960 GiB (CHECKING.md L83-L105), so it
-needs a machine of about 1 TB. The recorded run of 2026-11-16 ran on `rtx-pro-6000x4` (92 vCPU,
-1,024 GB, 11.00 USD per hour; its GPUs stay idle), with settings close to the publisher's:
+For the publisher's full check (`MODE=check`, `lean/CHECKING.md` step 5), the script builds the library from scratch, replays the kernel, and audits the named theorems. Its heaviest files use up to 49 GiB per process, and the publisher's reference run took 4 h 26 min on 84 cores and 960 GiB (`CHECKING.md` L83-L105), so this mode needs a machine with roughly 1 TB of memory. Our recorded run on 2026-11-16 used `rtx-pro-6000x4` (92 vCPU, 1,024 GB, 11.00 USD per hour, with the GPUs idle) and settings close to the publisher's:
 
 ```sh
 hf jobs run --detach --flavor rtx-pro-6000x4 --timeout 21h --name iproofs-proof-check-flashprove \
@@ -45,15 +29,11 @@ hf jobs run --detach --flavor rtx-pro-6000x4 --timeout 21h --name iproofs-proof-
   -e LEAN_NUM_THREADS=64 -e WIDE_JOBS=24 "$IMG" bash /upload/$D/proof-build.sh
 ```
 
-It took 68,494 s (19 h): about 2 h 30 min for the build, then the kernel replay, far slower than
-the publisher's 2 h 24 min. The check cannot resume, so `BUILD_TIMEOUT_S` only guards against a
-hang: a first run with 23,400 s was stopped in the replay and stored nothing. Size the limit to
-several times the expected time, and again whenever the machine changes. `SETUP_ONLY=1` stops a run after the publisher's check
-of its build files, for a dry run in local Docker (`--platform linux/amd64`).
+That run took 68,494 s (19 h): roughly 2 h 30 min for the build, followed by kernel replay that ran much slower than the publisher's 2 h 24 min. Because the check cannot resume after an interruption, `BUILD_TIMEOUT_S` should only act as a hang guard. An earlier attempt capped at 23,400 s timed out during kernel replay and wrote no record. Set the timeout to several times the expected duration, and re-evaluate it whenever you change machine types. For a local dry run in Docker (`--platform linux/amd64`), set `SETUP_ONLY=1` to stop right after the publisher's build-file check.
 
 ## Record
 
-Copy `OUT` from the bucket, then, in the repository:
+Download `OUT` from the bucket, then record the build and rebuild the board in the repository:
 
 ```sh
 iproofs proof-build record OUT --system flashprove --release v1.0 [--replace]
@@ -61,14 +41,10 @@ iproofs release board v1.0
 iproofs validate --all
 ```
 
-The record's status follows from the exit code and the output (MC-4, MC-4a): `built` at exit 0
-with the theorem's axioms line; `failed` when Lean gave up on its own (a panic, which
-`LEAN_ABORT_ON_PANIC=1` turns into an abort, a stack overflow or another abort), which sets the
-petal red; `stopped` at the build's own time limit or a SIGKILL or SIGTERM (out of memory among
-them), which leaves it hollow; `failed` otherwise. A job whose setup failed never started the
-build and gives no record, and so does a full check that reached no verdict on the library for
-a reason of its own: it ran nothing, or every step it failed starts Lake and was not run (too
-little memory at the step's start, no Lake call, other Lake files), or it exited 2 or 3. With
-`--replace`, the full check replaces a stored targeted build when it reached a verdict, built or
-failed; a stopped build, a targeted build over a full check, or a second full check replaces
-none.
+The harness derives the record status from the exit code and log output (MC-4, MC-4a):
+
+- `built`: exited 0 and printed the theorem's axioms line.
+- `failed`: Lean aborted on its own (for example, a panic converted to an abort by `LEAN_ABORT_ON_PANIC=1`, a stack overflow, or another abort) or exited with a non-zero build error. This turns the petal red.
+- `stopped`: terminated by `BUILD_TIMEOUT_S`, `SIGKILL`, or `SIGTERM` (including out-of-memory kills). This leaves the petal hollow.
+
+No record is written if setup failed before the build started, or if a full check failed to reach a verdict on the library (for instance, it ran nothing, exited 2 or 3, or every failed step was a skipped Lake invocation due to insufficient memory at startup, missing Lake calls, or unexpected Lake files). Passing `--replace` lets a full check with a verdict (`built` or `failed`) replace an existing targeted build. A stopped build, a targeted build attempting to overwrite a full check, or a second full check will never replace an existing record.

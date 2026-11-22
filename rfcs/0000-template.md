@@ -4,56 +4,56 @@
 - Created: YYYY-MM-DD
 - Requires: RFC numbers this one depends on
 
-Write "None." where a section has no content. Normative text uses MUST, SHOULD and MAY as defined in RFC 2119.
+Write "None." in any section that does not apply. Normative text uses MUST, SHOULD, and MAY as defined in RFC 2119.
 
 ## Summary
 
-One paragraph: what this RFC decides and why it matters.
+Summarize in one paragraph what this RFC decides and why it matters.
 
 ## Motivation
 
-The problem, with evidence: a run, a system's documentation at a pinned commit, a user's need, a passage of `docs/PRD.md` or a section of `docs/spec/`. Concrete scenarios.
+Explain the problem with concrete evidence and scenarios, such as a specific run, a system's documentation at a pinned commit, a user requirement, a passage in `docs/PRD.md`, or a section of `docs/spec/`.
 
 ## Goals
 
-- Bulleted and testable.
+- List concrete, testable goals as bullet points.
 
 ## Non-Goals
 
-- What this RFC explicitly does not address.
+- State clearly what this RFC does not attempt to address.
 
 ## Proposed Design
 
-The full design, in `###` subsections:
+Present the full design using `###` subsections covering:
 
-- Public interfaces: CLI shapes, JSON Schemas in `schema/` (referenced, not copied), Python signatures, on-disk formats.
+- Public interfaces: CLI commands and flags, JSON Schemas in `schema/` (referenced rather than copied), Python signatures, and on-disk formats.
 - Internal architecture: module and class responsibilities.
 - Data flow and lifecycle.
-- Concurrency, determinism, error propagation.
-- Failure modes, each with the system's response.
+- Concurrency, determinism, and error propagation.
+- Failure modes and how the system responds to each one.
 
-Mark any part likely to be wrong with `RISK:` and the plan to resolve it.
+Mark any assumption or design point that may turn out to be wrong with `RISK:`, followed by the plan for resolving it.
 
 ## Alternatives Considered
 
-For each alternative: what it is, why it was considered, why it was rejected.
+For each alternative, explain what it is, why it was considered, and why it was rejected.
 
 ## Drawbacks
 
-What this design gives up.
+Describe the trade-offs and limitations of this design.
 
 ## Migration / Rollout
 
-Effect on existing adapters, claim cards, schemas and past results; how they are migrated or relabelled; schema version changes (RFC-0012).
+Describe how this change affects existing adapters, claim cards, schemas, and past results, including how they will be migrated or relabelled and any schema version changes (RFC-0012).
 
 ## Testing Strategy
 
-Named test cases that prove the design correct: unit, property, schema example, fixture, integration, GPU-host. Specific cases, not categories.
+List named test cases that verify the design across unit, property, schema example, fixture, integration, and GPU-host tests. Describe specific cases rather than broad categories.
 
 ## Decisions
 
-Each entry: `Qn. ` then the rule, stated plainly. Keep the number once code or docs cite it.
+Prefix each entry with `Qn. ` and state the rule clearly. Preserve the number once code or documentation references it.
 
 ## References
 
-Specifications, prior art, papers, related RFCs, upstream documentation at pinned commits.
+List specifications, prior art, papers, related RFCs, and upstream documentation at pinned commits.

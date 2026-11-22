@@ -432,27 +432,27 @@ def item_short(it, p, row):  # noqa: PLR0911 (one phrase per item key)
 
 
 SHORT = {
-    "basis": "a theorem, not a conjecture",
-    "adversary": "a statement that it holds against any cheating prover",
-    "unit": "a limit per whole reply",
+    "basis": "a mathematical theorem rather than a conjecture",
+    "adversary": "a statement that the bound holds against any cheating prover",
+    "unit": "a bound covering an entire reply",
     "granularity": "a record of how many replies one proof covers",
-    "batch": "a limit for each reply checked alone",
+    "batch": "a bound covering each reply verified individually",
     "batch_size": "a record of our batch size",
-    "parameters": "a statement that the limit is for the settings we run",
-    "reading": "the publisher's words for each point we read",
-    "programs": "a statement that its programs keep the weights secret",
-    "visible_list": "a published list of what stays visible",
-    "fitted": "nothing on that list that depends on the weights",
+    "parameters": "a statement that the bound applies to the settings we run",
+    "reading": "explicit publisher wording for each point currently based on our reading",
+    "programs": "a statement that the compiled programs keep the weights secret",
+    "visible_list": "a published list of what remains visible",
+    "fitted": "nothing on that list depending on the weights",
     "hide_statement": "a statement that a proof keeps the weights secret",
     "zk_theorem": "a zero-knowledge theorem",
-    "named_theorem": "a named computer-checked theorem",
-    "whole_method": "a theorem of the whole method, the model's computation included",
-    "conclusion": "a conclusion about the model",
-    "axioms": "a rebuild with only the tool's standard axioms",
-    "trusted_base": "a list of everything the theorem relies on",
-    "input_code": "no input-reading code outside the theorem",
-    "rests_sentence": "the publisher's own sentence saying so",
-    "no_setup_secret": "the publisher's statement that no setup made a secret",
+    "named_theorem": "a named machine-checked theorem",
+    "whole_method": "a formal theorem covering the full protocol and the model's computation",
+    "conclusion": "a formal conclusion about the model",
+    "axioms": "a rebuild using only the proof assistant's standard axioms",
+    "trusted_base": "a complete list of what the theorem relies on",
+    "input_code": "no unverified input-reading code outside the theorem",
+    "rests_sentence": "an explicit sentence from the publisher stating this",
+    "no_setup_secret": "a publisher statement that no setup produced a secret",
 }
 
 
@@ -481,152 +481,158 @@ def item_long(it, p, row, petals, mixed):  # noqa: PLR0912, PLR0915 (one sentenc
     if need == "text":
         said = cap(it["text"]) + "."
     elif need == "program":
-        said = f"The limit for {run}, the verifier we run. " + (
-            f"Today the theorem is about {stated} only." if it.get("stated") and f.get("basis") == "proved"
-            else f"Today the limit is stated for {stated} only." if it.get("stated")
+        said = f"A bound covering {run}, the verifier we run. " + (
+            f"Today the theorem covers {stated} only." if it.get("stated") and f.get("basis") == "proved"
+            else f"Today the bound is stated for {stated} only." if it.get("stated")
             else "Today no verifier is named.")  # fmt: skip
     elif need == "basis":
         least = min(it.get("terms") or [0])
-        said = (f"A theorem, not a conjecture. Today the {least} bits rest on an unproven "
-                "assumption." if it.get("basis") == "conjectured" else
-                "A theorem. Today the documents we read do not say whether the limit is proved.")  # fmt: skip
+        said = (f"A mathematical theorem rather than a conjecture. Today the {least}-bit figure "
+                "rests on an unproven assumption." if it.get("basis") == "conjectured" else
+                "A mathematical theorem. Today the documents we read do not say whether the bound "
+                "is proved.")  # fmt: skip
     elif need == "adversary":
-        said = "A statement that it holds against any cheating prover. " + (
-            "Today it is stated only against a weaker cheater." if it.get("adversary") == "weaker"
-            else "Today the documents we read do not say.")  # fmt: skip
+        said = "A statement that the bound holds against any cheating prover. " + (
+            "Today it is stated only against a weaker adversary." if it.get("adversary") == "weaker"
+            else "Today the documents we read do not specify the adversary model.")  # fmt: skip
     elif need == "unit":
         unit = it.get("unit")
         u = (f.get("said") or {}).get("unit") or {}
-        today = (f"Today it is for one {u['named']} ({u.get('described')})." if unit == "part" and u.get("named")
-                 else "Today it is for one part of a proof." if unit == "part"
-                 else "Today it is for one round." if unit == "round"
-                 else "Today one proof covers more than one reply." if unit == "proof"
-                 else "Today the documents we read do not say what it is for.")  # fmt: skip
-        said = f"A limit for a whole reply. {today}"
+        today = (f"Today it covers one {u['named']} ({u.get('described')})." if unit == "part" and u.get("named")
+                 else "Today it covers only part of a proof." if unit == "part"
+                 else "Today it covers only a single round." if unit == "round"
+                 else "Today a single proof covers more than one reply." if unit == "proof"
+                 else "Today the documents we read do not specify what unit the bound covers.")  # fmt: skip
+        said = f"A bound covering a full reply. {today}"
     elif need == "granularity":
         said = "A record of how many replies one proof covers. Today none is recorded."
     elif need == "batch":
         n = it.get("n")
         if it.get("batch") == "together":
-            said = (f"A limit for each reply checked on its own. We make replies in batches of {n} "
-                    "and check each reply's proof alone. The publisher's limit for a batch covers "
-                    f"its {n} proofs only when they are checked together ({n} times the limit for "
-                    "one proof, counting the hash queries made for the whole batch). For proofs "
-                    "checked one at a time it states no limit.")  # fmt: skip
+            said = (f"A bound covering each reply verified individually. We generate replies in "
+                    f"batches of {n} and verify each reply's proof on its own. The publisher's "
+                    f"batch bound covers all {n} proofs only when checked together ({n} times the "
+                    "single-proof error across total batch hash queries), with no bound stated "
+                    "for proofs verified one at a time.")  # fmt: skip
         else:
-            said = (f"A limit for each reply checked on its own. We make replies in batches of {n}, "
-                    "and the publisher states no limit for the members of a batch.")  # fmt: skip
+            said = (f"A bound covering each reply verified individually. We generate replies in "
+                    f"batches of {n}, and the publisher states no bound for individual replies "
+                    "inside a batch.")  # fmt: skip
     elif need == "batch_size":
         said = "A record of our batch size. Today none is recorded."
     elif need == "parameters":
-        said = "The publisher's statement that the limit is for the settings we run. " + (
-            "Today it is stated for other settings." if it.get("parameters") == "other"
-            else "Today the documents we read do not show that it is.")  # fmt: skip
+        said = "An explicit statement that the bound applies to the settings we run. " + (
+            "Today it is stated only for different settings." if it.get("parameters") == "other"
+            else "Today the documents we read do not state this explicitly.")  # fmt: skip
     elif need == "conditions":
-        head = ("A record that the theorem's condition holds for the files we run." if it.get("proved")
-                else "A record that the limit's conditions hold for the files we run.")  # fmt: skip
+        head = ("A record showing the theorem's preconditions hold for the files we run." if it.get("proved")
+                else "A record showing the bound's preconditions hold for the files we run.")  # fmt: skip
         plain = said_of(p, "conditions_shown").get("plain")
         cond = said_of(p, "conditions_shown").get("quotes") or []
-        today = plain or ("Today the documents we read name none and show none." if not cond
-                          else "Today no record shows that they hold.")  # fmt: skip
+        today = plain or ("Today the documents we read neither name nor verify any preconditions." if not cond
+                          else "Today no record shows that those preconditions hold.")  # fmt: skip
         trial = trial_of(row)
         aside = ""
         if trial and stated:
             aside = (f" Outside the grade, in our trial under {PETAL_NAME['machine_checked']}, "
                      f"{stated} accepted {trial['accepted']:,} of "
-                     f"{count(trial['honest'], 'honest proof')} at the files we run.")  # fmt: skip
+                     f"{count(trial['honest'], 'honest proof')} on our files.")  # fmt: skip
         said = f"{head} {today}{aside}"
     elif need == "exponent":
         floor, terms = it["floor"], it.get("terms") or []
         if f.get("basis") == "conjectured" or (len(terms) == 1 and not it.get("q")):
-            today = f"Today it is about 2^-{terms[0]} ({terms[0]} bits)." if terms else ""
+            today = f"Today it is roughly 2^-{terms[0]} ({terms[0]} bits)." if terms else ""
         else:
             written = [f"q × 2^-{t}" if i == 0 and it.get("q") else f"2^-{t}"
                        for i, t in enumerate(terms)]  # fmt: skip
-            today = f"Today the parts are {and_list(written)}."
-        said = f"Every part of the limit at most 2^-{floor}. {today}"
+            today = f"Today the error terms are {and_list(written)}."
+        said = f"Every term in the bound at most 2^-{floor}. {today}"
     elif need == "reading":
         k = len(it["facts"])
-        this = "this is" if k == 1 else "both are" if k == 2 else "all are"
-        said = f"The publisher's own words {reading_topics(it['facts'])}. Today {this} our reading."
+        this = "this rests on" if k == 1 else "both rest on" if k == 2 else "all rest on"
+        said = (
+            f"Explicit publisher wording {reading_topics(it['facts'])}. Today {this} our reading."
+        )
     elif need == "zk_run":
         n = it.get("n")
-        said = (f"The theorem for our {n}-reply batches. Today it covers one request per proof."
+        said = (f"A zero-knowledge theorem covering our {n}-reply batches. Today the theorem covers "
+                "only one request per proof."
                 if it.get("unit") == "request" and n and n > 1
-                else "That theorem for what we run.")  # fmt: skip
+                else "A zero-knowledge theorem covering the exact setup we run.")  # fmt: skip
     elif need == "programs":
-        said = "The publisher's statement that its programs keep the weights secret."
+        said = "An explicit publisher statement that the compiled programs keep the weights secret."
         if it.get("programs") == "expected":
-            said += " Today it states an expectation, not a statement."
+            said += " Today the publisher states only an expectation, not a guarantee."
         elif it.get("read"):
-            said += " Today, on our reading, we count none for the programs we run."
+            said += " Today, on our reading, no statement covers the programs we run."
     elif need == "visible_list":
-        said = ("A published list of what stays visible, with nothing on it that depends on the "
-                "weights.")  # fmt: skip
+        said = ("A published list of everything that stays visible, containing nothing that "
+                "depends on the weights.")  # fmt: skip
     elif need == "fitted":
         k = it["k"]
-        said = ("Nothing on the list of what stays visible that, by the publisher's own words, "
-                f"depends on the weights. Today {count(k, 'item')} {'does' if k == 1 else 'do'}.")  # fmt: skip
+        said = ("Nothing on the published list of visible values that depends on the weights "
+                f"according to the publisher's own description. Today {count(k, 'item')} "
+                f"{'does' if k == 1 else 'do'}.")  # fmt: skip
     elif need == "hide_statement":
-        said = "A statement that a proof keeps the weights secret from whoever checks it."
+        said = "A publisher statement that a proof keeps the weights secret from the verifier."
     elif need == "zk_theorem":
-        said = "A zero-knowledge theorem for it, at least for the method."
+        said = "A proved zero-knowledge theorem, at least for the protocol."
     elif need == "above":
         fd = f
         t = fd[it["key"]]
         a, b = (fd["controls"][c] for c in t["controls"])
         names = {"upper": ("our 8-bit copy", "our 4-bit copy"),
-                 "green": ("the original run a second time", "our 8-bit copy")}[it["key"]]  # fmt: skip
+                 "green": ("a second run of the original", "our 8-bit copy")}[it["key"]]  # fmt: skip
         said = (f"An average shown above {tenth(t['display'])} tokens, halfway between {names[0]} "
                 f"({sig(a['mean'])}) and {names[1]} ({sig(b['mean'])}). Today the average is "
-                f"{sig(fd['mean'])} tokens, not shown above it.")  # fmt: skip
+                f"{sig(fd['mean'])} tokens, which is not shown above that threshold.")  # fmt: skip
         if it is first_above(p):
-            said += (f" The number format of the copy {name_of(row)} proves is the publisher's "
-                     "choice, so this item is the publisher's.")  # fmt: skip
+            said += (f" Because the publisher chooses the number format of the copy {name_of(row)} "
+                     "proves, this item is for the publisher.")  # fmt: skip
     elif need == "one_at_a_time":
         fid = rung_of(row).get("fidelity") or {}
         engine = it.get("engine")
-        said = ("Our whole fidelity run on this model sending one request at a time"
-                + (f" in {engine}, as our rule asks" if engine else "") + ". Today "
+        said = ("Running our full fidelity evaluation on this model one request at a time"
+                + (f" in {engine}, as the rule requires" if engine else "") + ". Today "
                 + runs_words(fid) + ".")  # fmt: skip
         rerun = (f.get("controls") or {}).get(f.get("rerun") or "")
         tokens = (S.V.get("request") or {}).get("output_tokens")
         if rerun and f.get("rerun_engine") == "vllm" and tokens and rerun["mean"] < tokens:
-            said += (f" The original run a second time, in vLLM, scores {sig(rerun['mean'])}, not "
-                     f"{tokens}, and the {tenth(f['green']['display'])} threshold is computed "
-                     "from that score.")  # fmt: skip
+            said += (f" A second run of the original model in vLLM scores {sig(rerun['mean'])} "
+                     f"rather than {tokens}, and the {tenth(f['green']['display'])} threshold is "
+                     "computed from that score.")  # fmt: skip
     elif need == "named_theorem":
-        said = ("A named theorem, checked by a proof-checking program such as Lean, that at least "
-                "part of the method refuses fake replies, with the program's version pinned.")  # fmt: skip
+        said = ("A named theorem, checked by a proof assistant such as Lean with a pinned version, "
+                "proving that at least part of the protocol rejects fake replies.")  # fmt: skip
     elif need == "rebuild":
-        said = "Our rebuild of that new theorem." if it.get("new") else \
-            "Our rebuild of it (and of any later theorem)."  # fmt: skip
+        said = "Our own rebuild of that new theorem." if it.get("new") else \
+            "Our own rebuild of it (and of any updated theorem)."  # fmt: skip
     elif need == "whole_method":
-        said = ("The theorem covering the whole method, the model's computation included, its "
-                "conclusion about the model, with only the tool's standard axioms.")  # fmt: skip
+        said = ("A theorem covering the full protocol including the model's computation, with a "
+                "conclusion about the model and only standard proof-assistant axioms.")  # fmt: skip
     elif need == "conclusion":
-        said = "A conclusion about the model (a written-out definition of what it computes)."
+        said = "A formal conclusion about the model (a reference definition of its forward pass)."
     elif need == "axioms":
-        said = "A rebuild that reports only the tool's standard axioms."
+        said = "A rebuild using only the proof assistant's standard axioms."
     elif need == "reach_run":
         formal = p.get("formal") or {}
-        said = (f"A theorem that reaches {run}, the verifier we run, from the bytes it reads to "
-                "its verdict, with everything it relies on listed and no input-reading code "
-                "outside it.")  # fmt: skip
+        said = (f"A formal proof covering {run}, the verifier we run, from raw input bytes to "
+                "verdict, listing its trusted base and leaving no input-reading code outside "
+                "the proof.")  # fmt: skip
         if formal.get("reach") in ("protocol_and_statement", "protocol", "part") and stated:
-            said += f" Today it stops at {stated}"
-            said += (", and input-reading code sits outside it." if formal.get("input_code_unverified")
+            said += f" Today it covers only {stated}"
+            said += (", and unverified input-reading code sits outside it." if formal.get("input_code_unverified")
                      is True else ".")  # fmt: skip
     elif need == "trusted_base":
-        said = "A list of everything the theorem relies on. Today none is listed."
+        said = "A complete list of what the theorem relies on. Today none is listed."
     elif need == "input_code":
-        said = "No input-reading code outside the theorem. Today some sits outside it."
+        said = "No unverified input-reading code outside the proof. Today some remains outside."
     elif need == "rests_sentence":
-        said = ("The publisher's own sentence that soundness rests on cryptographic assumptions "
-                "only and no setup produced a secret. Today this is our reading.")  # fmt: skip
+        said = ("An explicit sentence from the publisher stating that soundness rests solely on "
+                "cryptographic assumptions with no setup secret. Today this relies on our reading.")  # fmt: skip
     elif need == "no_setup_secret":
-        said = ("The publisher's statement that no setup produced a secret. Today a setup made "
-                "one, in an open ceremony.")  # fmt: skip
+        said = ("A publisher statement that no setup produced a secret. Today a secret was "
+                "created during an open ceremony.")  # fmt: skip
     else:
         said = cap(need) + "."
     if mixed:
@@ -844,40 +850,42 @@ def has_unforgeable(p, row, petals):  # noqa: PLR0912, PLR0915 (one paragraph pe
             if tool and checked == "machine_checked"
             else ""
         )
-        said = (f"The publisher proves{by} a limit on the chance that a fake reply passes: at most "
-                f"{expr} {per}.")  # fmt: skip
+        said = (f"The publisher proves{by} an upper bound on the chance that a fake reply passes "
+                f"verification: at most {expr} {per}.")  # fmt: skip
         q = f.get("q_cross")
         if q:
             k = len(f["terms"]) - 1
-            said += (" Here q counts the hash queries a cheater makes, each a run of the hash "
-                     "function while it searches for a proof that passes. The other "
-                     f"{'part is' if k == 1 else 'parts are'} fixed, but the first grows with q. It "
-                     f"reaches 2^-100 at 2^{q[0]} queries and 2^-80 at 2^{q[1]} queries.")  # fmt: skip
+            said += (" Here q is the number of hash queries a cheating prover makes while "
+                     "searching for a forgery. The other "
+                     f"{'term is' if k == 1 else 'terms are'} fixed, while the first grows with q, "
+                     f"reaching 2^-100 at 2^{q[0]} queries and 2^-80 at 2^{q[1]} queries.")  # fmt: skip
         batch = next((i for i, it in enumerate(items_of(p), 1) if it["need"] == "batch"), None)
         if f.get("unit") == "proof" and f.get("one_reply") and batch:
-            said += (f" Each reply has its own proof, and we make replies in batches of "
-                     f"{f['batch_size']} (item {batch} below).")  # fmt: skip
+            said += (f" Each reply has its own proof, generated in batches of "
+                     f"{f['batch_size']} (see item {batch} below).")  # fmt: skip
         out.append(p_(e(said)))
     elif f.get("basis") == "conjectured":
         thing = unit_said.get("named") or "proof"
         said = (f"The publisher states {least} conjectured bits of security {per_words(f, True)}"
-                f"{' of a proof' if unit_said.get('named') else ''}: a chance of about 2^-{least} "
-                f"that a fake {thing} passes.")  # fmt: skip
+                f"{' of a proof' if unit_said.get('named') else ''}, corresponding to roughly a "
+                f"2^-{least} chance that a forged {thing} passes.")  # fmt: skip
         b = (f.get("said") or {}).get("basis") or {}
         if b.get("named"):
-            said += (f" The figure comes from the accounting of {b['named']}, "
-                     f"{b.get('described') or 'as the publisher states'}.")  # fmt: skip
-        said += " Conjectured means it rests on an unproven assumption, not a theorem."
+            said += (f" This figure comes from the accounting of {b['named']}, "
+                     f"{b.get('described') or 'as documented by the publisher'}.")  # fmt: skip
+        said += (
+            " Because it is conjectured, it rests on an unproven assumption rather than a proof."
+        )
         out.append(p_(e(said)))
     else:
-        out.append(p_(e(f"The publisher states a limit, {expr} {per}, and does not say whether it "
-                        "is proved.")))  # fmt: skip
+        out.append(p_(e(f"The publisher states a bound of {expr} {per}, without specifying "
+                        "whether it is formally proved.")))  # fmt: skip
     if f.get("unit") == "part" and unit_said.get("named"):
         q = (unit_said.get("quotes") or [None])[0]
         quote = f" ({q_html(q)})" if q else ""
-        out.append(p_(f"One {e(unit_said['named'])} proves {e(unit_said.get('described') or 'part of a reply')}"
-                      f"{quote}. A reply passes through every layer of the model, but the publisher "
-                      "states no limit for a whole reply."))  # fmt: skip
+        out.append(p_(f"One {e(unit_said['named'])} covers {e(unit_said.get('described') or 'part of a reply')}"
+                      f"{quote}. A full reply traverses every layer of the model, yet the "
+                      "publisher states no combined bound for an entire reply."))  # fmt: skip
     rq = ((vs.get("run") or {}).get("quotes") or [None])[0]
     run_d = (vs.get("run") or {}).get("described")
     run_words = e(f"{run}, {run_d}" if run_d else f"{run}, the verifier we run")
@@ -974,29 +982,31 @@ def has_weights_hidden(p, row, petals):  # noqa: PLR0912 (one paragraph per fact
         formal = petals["machine_checked"].get("formal") or {}
         in_tool = f" in {tool}" if tool and (formal.get("scope_card") or {}).get("zero_knowledge", {}).get(
             "protocol", {}).get("value") == "machine_checked" else ""  # fmt: skip
-        said = (f"The publisher proves{in_tool} a zero-knowledge theorem: everything a verifier "
-                "sees could have been produced without the weights.")  # fmt: skip
+        said = (f"The publisher proves{in_tool} a zero-knowledge theorem showing that everything "
+                "the verifier sees can be simulated without knowing the weights.")  # fmt: skip
         kind, model = f.get("zk_kind"), f.get("zk_model")
         if kind == "statistical":
-            said += (" It is statistical, which means the two can differ only by a tiny amount "
-                     "that the publisher bounds, in figures given under the field's terms below.")  # fmt: skip
-            said += (" It also treats the hash function as perfectly random, an assumption called "
-                     "the random-oracle model." if model == "random_oracle" else "")  # fmt: skip
+            said += (" The guarantee is statistical, meaning the real and simulated views differ "
+                     "by at most the tiny bound listed under the field's terms below.")  # fmt: skip
+            said += (" It also assumes the random-oracle model, treating the hash function as "
+                     "ideal randomness." if model == "random_oracle" else "")  # fmt: skip
         elif kind:
             said += f" It is {kind}."
         n = f.get("batch_size")
         if f.get("proof") == "protocol":
-            said += (" The theorem is about the method (the protocol as the publisher defines it"
-                     + (in_tool or "") + "), not about the programs we run")  # fmt: skip
-            said += (", and it covers one request per proof." if f.get("zk_unit") == "request"
+            said += (" The theorem covers the abstract protocol (as defined"
+                     + (in_tool or "") + ") rather than the compiled programs we run")  # fmt: skip
+            said += (", and applies to one request per proof." if f.get("zk_unit") == "request"
                      else ".")  # fmt: skip
             if f.get("zk_unit") == "request" and n and n > 1:
-                said += f" But we run batches of {n} replies, which it does not cover."
+                said += (
+                    f" Our benchmark runs batches of {n} replies, which the theorem does not cover."
+                )
         else:
-            said += " It covers what we run."
+            said += " It covers the exact setup we run."
         out.append(p_(e(said)))
     elif p["step"] == "amber_lower":
-        out.append(p_(e("The publisher states that a proof hides the weights, and proves no "
+        out.append(p_(e("The publisher claims that proofs hide the weights without proving a "
                         "zero-knowledge theorem.")))  # fmt: skip
     programs = next((r for r in used_facts(p) if r["fact"] == "programs"), None)
     if programs:
@@ -1138,34 +1148,35 @@ def has_machine_checked(p, row, petals):  # noqa: PLR0912 (one paragraph per fac
         return [p_(e(cap(has_short(p, row, petals)) + "."))]
     tool = str(formal.get("tool") or "").split(" ")[0]
     who = stated or "its verifier"
-    said = (f"The publisher proves, in {tool}, a theorem that {who} refuses fake replies, up to "
-            f"the chance limit under {PETAL_NAME['unforgeable']}. {tool} is a program that checks "
-            "every step of a proof.")  # fmt: skip
+    said = (f"The publisher proves in {tool} (a proof assistant that mechanically checks every "
+            f"step) that {who} rejects fake replies up to the error bound listed under "
+            f"{PETAL_NAME['unforgeable']}.")  # fmt: skip
     noted = {f["fact"] for f in used_facts(p)}
     if formal.get("reach") == "protocol_and_statement":
-        said += " The theorem's statement includes the model's computation" + (
-            " (our reading, below)." if "reach" in noted else ".")  # fmt: skip
+        said += " The theorem statement includes the model's computation" + (
+            " (see our reading below)." if "reach" in noted else ".")  # fmt: skip
     out.append(p_(e(said)))
     build = formal.get("build") or {}
     if build:
         version = str(build["toolchain"]["version"]).lstrip("v")
         if build.get("status") == "built" and build.get("exit_code") == 0:
             axioms = build.get("axioms") or []
-            said = (f"We rebuilt it at the version we ran ({pin7(row)}) with the {tool} version the "
-                    f"publisher pins, {version}. It checked: the publisher's check command exited with code 0 after "
+            said = (f"We rebuilt the proof at commit {pin7(row)} using the publisher's pinned "
+                    f"{tool} {version}. The publisher's check command exited 0 after "
                     f"{secs(build['seconds'])} ({hours(build['seconds'])}).")  # fmt: skip
             if axioms and p["step"] in ("amber_upper", "green"):
-                said += (f" It uses only {tool}'s {number(len(axioms))} standard axioms, the basic "
-                         f"assumptions any {tool} proof may use, so no step is skipped.")  # fmt: skip
+                said += (f" It relies only on {tool}'s {number(len(axioms))} standard axioms, "
+                         "confirming no proof steps were skipped.")  # fmt: skip
             if formal.get("limits"):
-                said += (f" {tool} itself is trusted, and the limits the publisher states are "
-                         "listed below.")  # fmt: skip
+                said += (f" {tool} itself remains part of the trusted base, and the publisher's "
+                         "documented caveats appear below.")  # fmt: skip
         elif build.get("status") == "stopped":
             said = (
-                f"Our rebuild at {pin7(row)} stopped before a verdict ({secs(build['seconds'])})."
+                f"Our rebuild at {pin7(row)} stopped before reaching a verdict "
+                f"({secs(build['seconds'])})."
             )
         else:
-            said = f"Our rebuild at {pin7(row)} failed (exit code {build.get('exit_code')})."
+            said = f"Our rebuild at {pin7(row)} failed with exit code {build.get('exit_code')}."
         out.append(p_(e(said)))
     elif p["cause"] == "proof_build_not_run":
         out.append(p_(e("We have not rebuilt it yet.")))

@@ -6,91 +6,91 @@
 
 ## Summary
 
-A claim card is a machine-readable statement, per system configuration, of what an accepted proof establishes, under which assumptions, which parts of the computation it binds, and what a dishonest prover can still do. Every published number is shown with its card, and no number is published without one. This RFC fixes the card's fields and types, the rule that every field copies the system's own documentation or says "not stated", the source link required per field, what counts as a distinct configuration, the review workflow, and the `claim_class` string that closed divisions and targets filter on. The normative schema is `schema/claim/1.schema.json` (RFC-0012).
+A claim card is a machine-readable record, defined per system configuration, stating what an accepted proof establishes, what assumptions it relies on, which parts of the computation it binds, and what a dishonest prover can still do. Every published benchmark number is accompanied by its claim card, and no number may be published without one. This RFC defines the card's fields and types, the rule that every field must quote the system's own documentation or record `not stated`, the per-field source link requirement, what constitutes a distinct configuration, the review metadata, and the `claim_class` string used to filter closed divisions and targets. The normative schema is `schema/claim/1.schema.json` (RFC-0012).
 
 ## Motivation
 
-The two v0.1 systems prove different statements ([PRD §1](../docs/PRD.md#1-problem)). FlashProve's proof states that the next token after a 1,024-token window is the top choice of a committed integer model, with soundness proved in Lean for its Lean verifier under an exact-match policy, and weights hidden except a declared list. SASH's proof is a grid of per-segment proofs over transformer layers and token blocks of Llama-3.1-8B W8A8, with a per-edge binding table and `--unsound-skip-*` switches that unbind each edge. A cost per token means nothing until the reader knows which of these statements it buys.
+The first two v0.1 systems prove substantially different statements ([PRD §1](../docs/PRD.md#1-problem)). A FlashProve proof establishes that the next token after a 1,024-token window is the top choice of a committed integer model, with soundness formally proved in Lean for its Lean verifier under an exact-match policy, and weights kept hidden apart from a declared list. A SASH proof consists of a grid of per-segment proofs covering transformer layers and token blocks of Llama-3.1-8B W8A8, accompanied by a per-edge binding table and `--unsound-skip-*` flags that disable individual edge bindings. A cost-per-token figure is meaningless until a reader knows which of these statements it actually buys.
 
-Scenarios:
+Concrete scenarios:
 
-1. A policy analyst sees two cost-per-token figures and needs to know, without reading source code, whether either proof hides the weights.
-2. A relying party publishes a target "verification under 60 s on a laptop, for exact-match next-token claims". The site must decide mechanically which rows the target applies to.
-3. SASH is run with one `--unsound-skip-*` flag in a negative-control job. Nothing about that run may appear as a measured row under SASH's card.
-4. A system's documentation says nothing about quantum adversaries. The card must not say "classical only" on its behalf.
+1. A policy analyst comparing two cost-per-token figures needs to tell, without inspecting source code, whether either proof hides the model weights.
+2. A relying party publishes a target requiring "verification under 60 s on a laptop, for exact-match next-token claims". The site needs a mechanical way to determine which rows match that target.
+3. SASH is executed with an `--unsound-skip-*` flag inside a negative-control job. That run must never appear as a measured row under SASH's claim card.
+4. A system's documentation makes no mention of quantum adversaries. Its claim card must not fill in "classical only" on the system's behalf.
 
 ## Goals
 
-- Every published row resolves to exactly one claim card, shown before any number (INV-CLAIM-1).
-- Every card field is either copied from the system's documentation at the pinned commit with a source link, or is the literal string `not stated` (INV-CLAIM-2).
-- A card is valid against `schema/claim/1.schema.json` and CI checks it.
-- Cards are comparable field by field across systems, and filterable by `claim_class`.
-- A configuration that weakens the statement has no card and cannot produce a measured row (INV-CLAIM-4).
+- Ensure every published row resolves to exactly one claim card, presented before any performance number (INV-CLAIM-1).
+- Ensure every field on a card either copies what the system's documentation states at the pinned commit (with a source link) or contains the literal string `not stated` (INV-CLAIM-2).
+- Validate every card against `schema/claim/1.schema.json` in CI.
+- Make cards comparable field by field across systems and filterable via `claim_class`.
+- Ensure any configuration that weakens the proved statement has no claim card and cannot produce a measured row (INV-CLAIM-4).
 
 ## Non-Goals
 
-- Auditing or certifying the security claims. The card reports what a system states; it does not check soundness proofs or code ([PRD §5](../docs/PRD.md#5-non-goals)).
-- A controlled vocabulary for assumptions (Q1).
-- A formal language for relations. `relation` is English, optionally linked to a formal statement.
+- Auditing or certifying security claims. A claim card documents what a system states; it does not verify soundness proofs or audit code ([PRD §5](../docs/PRD.md#5-non-goals)).
+- Defining a controlled vocabulary for assumptions (Q1).
+- Creating a formal specification language for relations. `relation` is plain English, with an optional link to a formal statement.
 - Ranking systems by the strength of their claims.
 
 ## Proposed Design
 
 ### File and identity
 
-- Path: `systems/<system>/claim.yaml` for a system with one configuration; `systems/<system>/claims/<configuration>.yaml` when it has several. A system uses one form or the other, not both.
-- Each card is identified by `(system, configuration, card_version)`. `card_version` is a positive integer that increases with every merged change to the card.
-- A run's manifest names the card it ran under as `claim: {system, configuration, card_version}`. CI fails a run whose card does not exist or whose configuration does not match the run's recorded configuration (RFC-0013).
+- Location: use `systems/<system>/claim.yaml` when a system has a single configuration, or `systems/<system>/claims/<configuration>.yaml` when it has multiple configurations. A system uses one layout or the other, never both.
+- Identity: each card is uniquely identified by `(system, configuration, card_version)`. `card_version` is a positive integer that increments with every merged edit to the card.
+- Manifest reference: each run's manifest records the card it ran under as `claim: {system, configuration, card_version}`. CI rejects any run whose referenced card does not exist or whose configuration does not match the run's recorded configuration (RFC-0013).
 
 ### Configuration identity
 
-A new configuration (a new card, not a new version of an existing card) is REQUIRED when any of the following differs, because each changes what an accepted proof means:
+A new configuration (meaning a separate card rather than a version bump on an existing card) is REQUIRED whenever any of the following changes, because each alters what an accepted proof establishes:
 
-1. The upstream commit (a new pin may change the statement; the card is copied forward).
-2. The acceptance policy (for example FlashProve's exact-match policy versus its clipped-gap policy for whole replies).
-3. The model family or precision as proved.
-4. The hiding mode (weights hidden or not).
-5. The verifier used to decide acceptance (for example a proved Lean verifier versus a tested C++ verifier), when they carry different security statements.
+1. The upstream commit (a new pin can alter the statement, so the card is copied forward under the new configuration).
+2. The acceptance policy (for example, FlashProve's exact-match policy versus its clipped-gap policy for full replies).
+3. The proved model family or precision.
+4. The hiding mode (whether weights are hidden or public).
+5. The verifier used to decide acceptance (for example, a formally proved Lean verifier versus a tested C++ verifier), whenever they carry different security statements.
 
-Changes that do NOT need a new configuration: batch size, prompt length within the workload's supported shapes, and hardware profile. These are workload and profile properties (RFC-0003, RFC-0006).
+Changes that do NOT require a new configuration include batch size, prompt length within the workload's supported shapes, and hardware profile. Those belong to workloads and hardware profiles (RFC-0003, RFC-0006).
 
 ### Fields
 
-Types use the RFC-0012 conventions. `Text` is a non-empty string; `NotStated` is the literal string `not stated`; `SourceRef` is a URL that MUST contain the full 40-hex upstream commit hash, or a path in this repository at a full commit hash.
+Field types follow RFC-0012 conventions. `Text` is a non-empty string, `NotStated` is the literal string `not stated`, and `SourceRef` is either a URL containing the full 40-character hexadecimal upstream commit hash or a path in this repository at a full commit hash.
 
 | Field | Required | Type | Content |
 |---|---|---|---|
-| `schema` | yes | `"claim/1"` | schema identifier |
-| `system` | yes | system id (`^[a-z][a-z0-9-]{1,31}$`) | matches `systems/<system>/` |
-| `configuration` | yes | id (`^[a-z0-9][a-z0-9-]{0,47}$`, RFC-0012) | e.g. `exact-match-lean` |
-| `card_version` | yes | integer >= 1 | |
-| `upstream` | yes | `{repo: Text, commit: 40-hex}` | repository and full commit hash |
-| `claim_class` | yes | string, see [Claim class](#claim-class) | filter key for closed divisions and targets |
-| `relation` | yes | `Text` | one English sentence: what is true if the verifier accepts. Optional `relation_formal: SourceRef` links a formal statement (for example a Lean theorem) |
-| `security.notion` | yes | `{kind: enum, verifier: Text}` | `kind` in `soundness`, `knowledge_soundness`, `other`, `not_stated`; `verifier` names which verifier the notion is stated for |
-| `security.level` | yes | `Text` or `NotStated` | as declared, in its exact form (for example "q/2^124 + 2^-101 after q hash queries"), never rounded to a headline bit count |
-| `security.model` | yes | `{assumption: Text or NotStated, adversary: enum}` | `assumption`: random oracle, standard model, interactive, other; `adversary` in `classical`, `quantum`, `not_stated` |
-| `security.setup` | yes | enum | `transparent`, `trusted`, `not_applicable`, `not_stated` |
-| `zero_knowledge` | yes | `{claimed: bool or NotStated, hidden: Text or NotStated, not_hidden: Text or NotStated, status: enum}` | `status` in `proved`, `tested`, `proved_and_tested`, `neither`, `not_stated` |
-| `assumptions` | yes | list of `Text`, may be empty only with `assumptions_not_stated: true` | commitments, configuration files, hardware, honest parties, trusted inputs |
-| `coverage` | yes | object, see below | |
-| `binding` | yes | `{edges: list of Edge}` or `{statement: Text}` or `NotStated` | per-edge table where the system reports one |
-| `residual` | yes | list of `Text`, at least one entry, or `[not stated]` | what a cheating prover can still do while passing verification |
-| `quality_gap` | no | list of `{metric: Text, value: Text, source: SourceRef}` | difference between the proved model and the reference model (for example top-token disagreement rate), as stated upstream |
-| `availability` | yes | enum | `available` (open source, runnable), `preview` (announced, not runnable), `research` (paper code, runnable, not maintained) |
-| `sources` | yes | map from field path to `SourceRef` | one entry for every field above whose value is not `not stated` |
-| `reviewed_by` | yes | list of `{handle: Text, organisation: Text, date: "YYYY-MM-DD", card_version: integer}` | recorded data; nothing prints or checks it |
-| `forbidden_flags` | no | list of strings | flags that weaken the statement; copied into `system.yaml` (RFC-0005) for the policy gate |
+| `schema` | yes | `"claim/1"` | Schema identifier |
+| `system` | yes | system id (`^[a-z][a-z0-9-]{1,31}$`) | Must match `systems/<system>/` |
+| `configuration` | yes | id (`^[a-z0-9][a-z0-9-]{0,47}$`, RFC-0012) | Configuration identifier, e.g. `exact-match-lean` |
+| `card_version` | yes | integer >= 1 | Monotonically increasing version number |
+| `upstream` | yes | `{repo: Text, commit: 40-hex}` | Upstream repository and full commit hash |
+| `claim_class` | yes | string, see [Claim class](#claim-class) | Filter key for closed divisions and targets |
+| `relation` | yes | `Text` | One English sentence stating what holds if the verifier accepts. Optional `relation_formal: SourceRef` links to a formal statement (such as a Lean theorem) |
+| `security.notion` | yes | `{kind: enum, verifier: Text}` | `kind` is one of `soundness`, `knowledge_soundness`, `other`, `not_stated`; `verifier` identifies which verifier the notion applies to |
+| `security.level` | yes | `Text` or `NotStated` | Declared security level in its exact upstream form (for example, "q/2^124 + 2^-101 after q hash queries"), never rounded to a headline bit count |
+| `security.model` | yes | `{assumption: Text or NotStated, adversary: enum}` | `assumption` describes the model (random oracle, standard model, interactive, other); `adversary` is one of `classical`, `quantum`, `not_stated` |
+| `security.setup` | yes | enum | `transparent`, `trusted`, `not_applicable`, or `not_stated` |
+| `zero_knowledge` | yes | `{claimed: bool or NotStated, hidden: Text or NotStated, not_hidden: Text or NotStated, status: enum}` | `status` is one of `proved`, `tested`, `proved_and_tested`, `neither`, `not_stated` |
+| `assumptions` | yes | list of `Text`, empty only if `assumptions_not_stated: true` | Trusted commitments, configuration files, hardware assumptions, honest parties, or trusted inputs |
+| `coverage` | yes | object, see below | Scope of computation covered by one proof |
+| `binding` | yes | `{edges: list of Edge}` or `{statement: Text}` or `NotStated` | Per-edge binding table when the system provides one |
+| `residual` | yes | list of `Text`, at least one entry, or `[not stated]` | What a dishonest prover can still do while passing verification |
+| `quality_gap` | no | list of `{metric: Text, value: Text, source: SourceRef}` | Difference between the proved model and the reference model (for example, top-token disagreement rate), as reported upstream |
+| `availability` | yes | enum | `available` (open source and runnable), `preview` (announced, not runnable), or `research` (paper code, runnable, unmaintained) |
+| `sources` | yes | map from field path to `SourceRef` | One entry for every field above whose value is not `not stated` |
+| `reviewed_by` | yes | list of `{handle: Text, organisation: Text, date: "YYYY-MM-DD", card_version: integer}` | Recorded review metadata; not rendered on the site or enforced by validation |
+| `forbidden_flags` | no | list of strings | Flags that weaken the proved statement; mirrored into `system.yaml` (RFC-0005) for the CI policy gate |
 
 `coverage`:
 
 | Field | Type | Content |
 |---|---|---|
-| `phase` | enum `prefill`, `decode`, `both`, `not_stated` | which inference phase one proof covers |
-| `unit` | enum `request`, `sequence`, `segment_grid`, `other` | what one proof in the benchmark's sense is |
-| `tokens_covered` | `Text` | how tokens covered are counted for one proof, in the terms of RFC-0004 (for example "the window's 1,024 positions" or "every position in the grid") |
-| `operations` | `Text` or `NotStated` | which operations are inside the proved computation (for example "all transformer layers and the output head") |
-| `policy` | `{kind: enum, detail: Text}` | `kind` in `exact_match`, `tolerance`, `other`, `not_stated` |
+| `phase` | enum `prefill`, `decode`, `both`, `not_stated` | Which inference phase a single proof covers |
+| `unit` | enum `request`, `sequence`, `segment_grid`, `other` | What constitutes one proof in the benchmark |
+| `tokens_covered` | `Text` | How tokens covered are counted per proof, in RFC-0004 terms (for example, "the window's 1,024 positions" or "every position in the grid") |
+| `operations` | `Text` or `NotStated` | Which operations fall inside the proved computation (for example, "all transformer layers and the output head") |
+| `policy` | `{kind: enum, detail: Text}` | `kind` is one of `exact_match`, `tolerance`, `other`, `not_stated` |
 
 `Edge`:
 
@@ -101,7 +101,7 @@ Types use the RFC-0012 conventions. `Text` is a non-empty string; `NotStated` is
   source: <SourceRef>
 ```
 
-`state` meanings: `bound` (the system states the edge is bound in this configuration), `unbound` (the system states it is not bound, for example because a switch is on), `absent` (the edge does not exist in this system's computation), `not_stated` (the system does not say).
+The `state` values mean: `bound` (the system documents that this edge is bound in this configuration), `unbound` (the system documents that it is not bound, such as when a flag disables it), `absent` (this edge does not exist in the system's computation), and `not_stated` (upstream documentation is silent on this edge).
 
 ### Example (shape only)
 
@@ -144,94 +144,92 @@ sources:
 reviewed_by: []
 ```
 
-The values above are illustrative, from docs/PRD.md; a real card fills the `<path>` and every other source link from the upstream documentation and copies what upstream states.
+The values above are illustrative examples drawn from `docs/PRD.md`. A production card fills in `<path>` and every other source link directly from upstream documentation and copies what upstream states.
 
 ### Rules
 
-1. **Copy, do not infer (INV-CLAIM-2).** Every field states what the system's own documentation states at the pinned commit. Where the documentation is silent, the field is `not stated` (or the enum value `not_stated`). The benchmark never fills a gap with its own inference, and never strengthens or rounds a stated level.
-2. **Card first (INV-CLAIM-1).** On every page and in every report that shows a number for a system, the card for that number's configuration appears before the number. RFC-0009 enforces this in the site generator.
-3. **Sources (INV-CLAIM-3).** `sources` has an entry for every field path whose value is not `not stated`. Each `SourceRef` contains the full upstream commit hash of the card's `upstream.commit`. CI fails a card with a missing or mismatched source.
-4. **Weakening configurations (INV-CLAIM-4).** A configuration that weakens the statement (for example any SASH `--unsound-skip-*` flag) has no card. A run with such a flag is valid only as a negative-control job (`control: true`, RFC-0008). The flags are listed in `forbidden_flags` and the policy gate (RFC-0013 gate 6) rejects any measured run whose manifest command lines contain one.
-5. **Versions.** Every change to a card increments `card_version`.
-6. **Published cards are frozen.** A release records the `card_version` of every card it shows (RFC-0009). Later card changes do not alter a published release.
+1. **Copy, do not infer (INV-CLAIM-2).** Every field reflects what the system's own documentation states at the pinned commit. Whenever upstream documentation is silent, the field MUST be `not stated` (or the enum value `not_stated`). The benchmark never infers undocumented properties, nor does it strengthen or round a stated security level.
+2. **Card first (INV-CLAIM-1).** On every page and in every report showing a number for a system, the claim card for that number's configuration appears before the number. RFC-0009 enforces this ordering in the site generator.
+3. **Sources (INV-CLAIM-3).** `sources` MUST contain an entry for every field path whose value is not `not stated`. Each `SourceRef` MUST include the full upstream commit hash matching `upstream.commit`. CI fails any card with a missing or mismatched source.
+4. **Weakening configurations (INV-CLAIM-4).** Any configuration that weakens the proved statement (such as passing a SASH `--unsound-skip-*` flag) has no claim card. Runs using such flags are permitted only as negative-control jobs (`control: true`, RFC-0008). Those flags are recorded in `forbidden_flags`, and the CI policy gate (RFC-0013 gate 6) rejects any measured run whose logged command lines contain them.
+5. **Versions.** Every modification to a card increments `card_version`.
+6. **Published cards are frozen.** Each release records the `card_version` of every card it includes (RFC-0009), so subsequent card edits never alter an already published release.
 
 ### Claim class
 
-`claim_class` is a slash-separated string of three lowercase tokens `<output>/<policy>/<weights>`:
+`claim_class` is a slash-separated string of three lowercase tokens, `<output>/<policy>/<weights>`:
 
 - `<output>`: `next-token`, `greedy-continuation`, `segment-grid`, `other`.
 - `<policy>`: `exact-match`, `tolerance`, `other`.
 - `<weights>`: `committed-weights`, `public-weights`, `other`.
 
-Pattern: `^(next-token|greedy-continuation|segment-grid|other)/(exact-match|tolerance|other)/(committed-weights|public-weights|other)$`. A closed workload (RFC-0003) fixes one `claim_class`; only cards with that exact string compete in it. A target (RFC-0009) names a `claim_class` filter, which may use `*` for one token. The class is chosen by the card author from the card's own `coverage` and `relation`. It is a filter key, not a security statement.
+Regex pattern: `^(next-token|greedy-continuation|segment-grid|other)/(exact-match|tolerance|other)/(committed-weights|public-weights|other)$`. A closed workload (RFC-0003) specifies a single `claim_class`, and only cards carrying that exact string compete in it. A target (RFC-0009) specifies a `claim_class` filter, which may use `*` as a wildcard for one token. Card authors assign the class based on the card's `coverage` and `relation`; it serves strictly as a filter key, not as a security statement.
 
 ### Validation
 
-`iproofs validate systems/<name>/claim.yaml` performs, in order: YAML safe load; schema validation against `claim/1`; INV-CLAIM-3 source completeness and commit match; `upstream.commit` equals the commit pinned in `systems/<name>/system.yaml`; `forbidden_flags` is a subset of `system.yaml` `forbidden_flags`. Each failure is an `integrity` or `config` error (RFC-0010) naming the field path.
+Running `iproofs validate systems/<name>/claim.yaml` executes these checks in order: YAML safe loading, schema validation against `claim/1`, INV-CLAIM-3 source completeness and commit matching, verifying that `upstream.commit` matches the commit pinned in `systems/<name>/system.yaml`, and verifying that `forbidden_flags` is a subset of `forbidden_flags` in `system.yaml`. Any failure produces an `integrity` or `config` error (RFC-0010) identifying the offending field path.
 
 ### Failure modes
 
 | Failure | Response |
 |---|---|
-| A field is filled with the benchmark's own inference | INV-CLAIM-3 catches it when the inferred field has no source |
-| Upstream documentation changes after the pin | No effect: sources pin the commit; a new pin is a new configuration |
-| Upstream documentation is contradictory | The card quotes both statements in the field, each with its source, and the release report notes the contradiction |
-
-| A run references a card version that was later changed | The run keeps its recorded `card_version`; the release shows the card version in force at freeze, and CI fails if the run's version is not the one frozen |
-| A card is missing for a run | CI fails the run; no number is published (INV-CLAIM-1) |
+| A field contains an inference made by the benchmark | INV-CLAIM-3 catches it because the inferred field lacks an upstream source |
+| Upstream documentation changes after the pin | No effect; source links pin the commit, and moving to a new pin creates a new configuration |
+| Upstream documentation contradicts itself | The card quotes both statements in the field, each with its source link, and the release report notes the contradiction |
+| A run references a card version that was later updated | The run retains its recorded `card_version`; the release displays the version frozen at release time, and CI fails if the run's version disagrees with the frozen card |
+| A run has no matching claim card | CI fails the run, and no number is published (INV-CLAIM-1) |
 
 ## Alternatives Considered
 
-- **Free-text claim paragraph.** Considered because it is easy for teams to write. Rejected: CI cannot check it, readers cannot compare it across systems, and targets cannot filter on it.
-- **Formal statements only (for example Lean or a logic of claims).** Considered because it is precise. Rejected for v0.1: most systems have no formal statement, and readers outside cryptography need the English sentence and the residual most.
-- **Benchmark-assigned security levels (for example normalised bits of security).** Considered because it would allow a single column. Rejected: it requires the benchmark to interpret security proofs, which is certification, a non-goal, and it rounds away the exact form.
-- **One card per system regardless of configuration.** Rejected: FlashProve's exact-match and clipped-gap policies prove different statements; one card would misdescribe one of them.
-- **Allowing weakened configurations as labelled rows.** Considered because the numbers are informative. Rejected: a fast number for a weakened statement next to a full one is the comparison error this project exists to prevent. Such runs stay controls.
+- **Free-text claim paragraph.** Easy for teams to write, but rejected because CI cannot validate it, readers cannot compare claims field by field across systems, and targets cannot filter on it.
+- **Formal statements only (such as Lean or a formal claim logic).** Precise, but rejected for v0.1 because most systems lack formal statements, and readers outside cryptography rely most on the plain-English relation and residual fields.
+- **Benchmark-assigned security levels (such as normalised security bits).** Would enable a single summary column, but rejected because interpreting security proofs amounts to certification (a non-goal) and discards the exact stated formula.
+- **One card per system regardless of configuration.** Rejected because distinct modes such as FlashProve's exact-match and clipped-gap policies prove different statements; collapsing them into one card would misrepresent at least one mode.
+- **Publishing weakened configurations as labelled rows.** Considered because those measurements can be informative, but rejected because placing a fast figure for a weakened statement next to a full proof creates the exact comparison hazard this project exists to avoid. Weakened runs remain negative controls only.
 
-The field set merges three sources: the relation, security definition and assumptions split used in proof-system harness designs; the binding tables some provers already print; and the residual, which readers outside cryptography most often miss.
+The field structure combines three influences: the separation of relation, security definition, and assumptions common in proof-system harnesses; the edge-binding tables already produced by some provers; and the residual field, which captures what non-cryptographers most often overlook.
 
 ## Drawbacks
 
-- Cards require reading each system's documentation closely and keeping links current; that cost falls on card authors.
-- `not stated` can look like a criticism of a system; the site explains that it records silence, not absence of a property.
-- `claim_class` is coarse. Two cards in the same class can still differ in security level or hiding; the class only narrows comparison, the card still has to be read.
-
+- Maintaining claim cards requires close reading of each system's documentation and keeping source links accurate, placing ongoing effort on card authors.
+- Seeing `not stated` can look like criticism of a system; the site explicitly explains that it records upstream silence rather than the absence of a property.
+- `claim_class` is intentionally coarse. Two cards sharing a class can still differ in security level or weight hiding, so the class only narrows a comparison and readers still need to inspect the card.
 
 ## Migration / Rollout
 
-1. `schema/claim/1.schema.json` with valid and invalid examples, the loader dataclass, and `iproofs validate` support.
-2. Cards for SASH and FlashProve, every field copied from upstream at the pins in `docs/spec/00-overview.md`, `reviewed_by: []`.
+1. Land `schema/claim/1.schema.json` along with valid and invalid examples, the loader dataclass, and `iproofs validate` support.
+2. Author claim cards for SASH and FlashProve, copying every field from upstream documentation at the pins listed in `docs/spec/00-overview.md`, with `reviewed_by: []`.
 
-An earlier version of this RFC used `reviewed_by_maintainers: false` and `security.bits` in the SPEC example; they are replaced by `reviewed_by: []` and `security.level`. No published data uses the old names.
+An earlier draft of this RFC used `reviewed_by_maintainers: false` and `security.bits` in the SPEC example. Both have been replaced by `reviewed_by: []` and `security.level`; no published data uses the older field names.
 
 ## Testing Strategy
 
 Schema examples in `schema/claim/examples/`:
 
-- `valid/minimal-all-not-stated.yaml`: every optional field absent, every stateable field `not stated`; passes.
-- `valid/flashprove-shape.yaml`: the example above with sources filled; passes.
-- `valid/binding-edges.yaml`: a `binding.edges` table with all four states; passes.
-- `invalid/missing-relation.yaml`: fails on `relation`.
-- `invalid/short-commit.yaml`: `upstream.commit: 9e2bdd8f`; fails on pattern.
-- `invalid/rounded-level-number.yaml`: `security.level: 124` (a number); fails on type.
-- `invalid/bad-claim-class.yaml`: `claim_class: next-token/exact`; fails on pattern.
-- `invalid/date-unquoted.yaml`: `reviewed_by[0].date` as an unquoted YAML date; fails on type.
-- `invalid/zk-status-unknown.yaml`: `zero_knowledge.status: likely`; fails on enum.
+- `valid/minimal-all-not-stated.yaml`: all optional fields omitted, all stateable fields set to `not stated`; passes.
+- `valid/flashprove-shape.yaml`: the shape example above with all source links populated; passes.
+- `valid/binding-edges.yaml`: a `binding.edges` table exercising all four edge states; passes.
+- `invalid/missing-relation.yaml`: fails validation on `relation`.
+- `invalid/short-commit.yaml`: `upstream.commit: 9e2bdd8f`; fails pattern validation.
+- `invalid/rounded-level-number.yaml`: `security.level: 124` (numeric instead of string); fails type validation.
+- `invalid/bad-claim-class.yaml`: `claim_class: next-token/exact`; fails pattern validation.
+- `invalid/date-unquoted.yaml`: `reviewed_by[0].date` given as an unquoted YAML date; fails type validation.
+- `invalid/zk-status-unknown.yaml`: `zero_knowledge.status: likely`; fails enum validation.
 
 Unit tests:
 
-- `test_sources_complete`: a card with `relation` filled and no `sources.relation` fails INV-CLAIM-3; adding it passes.
-- `test_source_commit_mismatch`: a source URL with a different commit hash fails.
+- `test_sources_complete`: a card with `relation` populated but missing `sources.relation` fails INV-CLAIM-3; adding the source link passes.
+- `test_source_commit_mismatch`: a source URL pointing to a different commit hash fails.
 - `test_forbidden_flags_subset`: a card listing a flag absent from `system.yaml` fails.
-- `test_run_card_resolution`: a run manifest pointing to a missing configuration fails; to an existing one passes.
-- `test_claim_class_wildcard`: target filter `next-token/*/committed-weights` matches `next-token/exact-match/committed-weights` and not `segment-grid/exact-match/committed-weights`.
-- Drift test (RFC-0012): dataclass fields equal schema properties.
+- `test_run_card_resolution`: a run manifest referencing a missing configuration fails; referencing an existing configuration passes.
+- `test_claim_class_wildcard`: target filter `next-token/*/committed-weights` matches `next-token/exact-match/committed-weights` and rejects `segment-grid/exact-match/committed-weights`.
+- Drift test (RFC-0012): confirms dataclass fields match the schema properties.
 
 ## Decisions
 
-- Q1. `assumptions` is free text; there is no controlled vocabulary.
-- Q2. A statistical guarantee (for example sampled recompute) fills `security` with `kind: other` and the system's own text.
-- Q3. The claim class has no fourth token for hiding: hiding is read from `zero_knowledge.claimed`, and targets filter on it directly.
+- Q1. `assumptions` is free text with no controlled vocabulary.
+- Q2. Systems offering statistical guarantees (such as sampled recompute) populate `security` using `kind: other` along with the system's own description.
+- Q3. `claim_class` does not include a fourth token for weight hiding. Hiding is recorded in `zero_knowledge.claimed`, and targets filter on that field directly.
 
 ## References
 

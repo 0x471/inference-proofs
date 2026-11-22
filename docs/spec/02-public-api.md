@@ -1,21 +1,21 @@
 # 02. Public API
 
-Part of the specification corpus indexed in [docs/SPEC.md](../SPEC.md). Normative detail lives in the linked RFCs.
+This document is part of the specification corpus indexed in [docs/SPEC.md](../SPEC.md). Normative details live in the linked RFCs.
 
 ## What is public
 
-The benchmark's public surface is everything a third party can depend on without reading harness source: the people who submit runs, the teams who write adapters, the readers who consume results, and the tools that parse them. Four surfaces are public. The Python API of `iproofs` is not.
+The benchmark's public API covers every interface a third party can rely on without reading harness source code: runners submitting results, prover teams building adapters, readers inspecting published data, and downstream tools parsing files. Four surfaces are public; the internal Python modules of `iproofs` are not.
 
 | Surface | Who depends on it | Contract | Version identifier |
 |---|---|---|---|
-| Command line `iproofs` | runners, CI | commands, arguments, exit codes, files written | harness version (SemVer) |
-| File schemas | submitters, readers, downstream tools | `schema/<name>/<major>.schema.json` | `schema: "<name>/<major>"` in every document |
-| Adapter contract | system teams writing adapters | invocation, job.json, out.json, proof release | `contract: "adapter/<major>"` |
-| Repository layout | everyone | paths of authored and generated files | benchmark release |
+| Command line `iproofs` | Runners, CI | Subcommands, flags, exit codes, and output files | Harness version (SemVer) |
+| File schemas | Submitters, readers, downstream tools | `schema/<name>/<major>.schema.json` | `schema: "<name>/<major>"` in every document |
+| Adapter contract | Prover teams implementing adapters | Container invocation, `job.json`, `out.json`, and proof release protocol | `contract: "adapter/<major>"` |
+| Repository layout | All users and tools | Paths of authored and generated files | Benchmark release |
 
 ## Command line
 
-Specified in [RFC-0010 §Command line](../../rfcs/0010-harness-runner.md#command-line). Summary:
+The full CLI specification lives in [RFC-0010 §Command line](../../rfcs/0010-harness-runner.md#command-line). Summary of subcommands:
 
 ```
 iproofs validate [PATH ...]
@@ -44,63 +44,63 @@ iproofs release plan RELEASE
 iproofs site build [--out DIR]                     # writes web/ (default) from the newest frozen release (RFC-0009 §Site)
 ```
 
-Contracts:
+CLI guarantees:
 
-- **CLI-1 Exit codes.** 0 success; 1 check failed; 2 usage error; 3 environment does not meet the profile; 4 a job ran and was recorded as failed; 5 internal error. These meanings never change within a harness major version.
-- **CLI-2 No measurement flags.** No command-line option changes what is measured or how. Workload, shape, profile, timeouts and forbidden flags come from reviewed files.
-- **CLI-3 Machine-readable output.** Commands that print data (`machine-record`, `prompts build`, `fetch-model --headers-only`) print JSON on stdout through the single writer; human progress goes to stderr and is suppressed by `--quiet`.
-- **CLI-4 Determinism.** `validate`, `derive`, `release freeze` and `site build` produce byte-identical output for identical inputs on any supported platform.
-- **CLI-5 Offline checks.** `validate`, `derive`, `release freeze` and `site build` need no network and no GPU, and run with the base install (no optional extras).
+- **CLI-1 Exit codes.** Exit code 0 means success; 1 means a check failed; 2 means a usage error; 3 means the environment does not satisfy the profile; 4 means a job executed and was recorded as failed; 5 means an internal error. These meanings stay fixed within a harness major version.
+- **CLI-2 No measurement flags.** No CLI flag alters what is measured or how timing works. Workloads, shapes, profiles, timeouts, and forbidden flags always come from reviewed files in the repository.
+- **CLI-3 Machine-readable output.** Data-emitting commands (`machine-record`, `prompts build`, and `fetch-model --headers-only`) write canonical JSON to stdout. Human progress lines go to stderr and can be muted with `--quiet`.
+- **CLI-4 Determinism.** `validate`, `derive`, `release freeze`, and `site build` produce byte-identical output for identical inputs across all supported platforms.
+- **CLI-5 Offline checks.** `validate`, `derive`, `release freeze`, and `site build` require neither network access nor a GPU, and work using only the base Python installation without optional extras.
 
 ## File schemas
 
-Specified in [RFC-0012](../../rfcs/0012-schemas-and-serialization.md). Every document the benchmark reads or writes has a JSON Schema (Draft 2020-12) and carries its schema identifier:
+Specified in [RFC-0012](../../rfcs/0012-schemas-and-serialization.md). Every document read or written by the benchmark has a JSON Schema (Draft 2020-12) and embeds its schema identifier:
 
 | Document | File | Authored or generated | Schema id |
 |---|---|---|---|
-| Claim card | `systems/<name>/claim.yaml` | authored | `claim/1` |
-| System manifest | `systems/<name>/system.yaml` | authored | `system/1` |
-| System-specific controls | `systems/<name>/controls.yaml` | authored | `system-controls/1` |
-| Workload | `workloads/<id>.yaml` | authored | `workload/1` |
-| Prompt corpus | `workloads/prompts/corpus.yaml` | authored | `corpus/1` |
-| Reference hardware and cost | `reference/<release>.yaml` | authored | `reference/1` |
-| CI profile (never released) | `reference/ci.yaml` | authored | `reference/1` |
-| Target | `targets/<author>/<id>.yaml` | authored | `target/1` |
-| Release record | `releases/<release>/release.yaml` | authored | `release/1` |
-| Run result | `results/.../run.json` | generated | `run/1` |
-| Run manifest | `results/.../manifest.json` | generated | `manifest/1` |
-| Control verdicts | `results/.../controls.json` | generated | `controls/1` |
-| Perturbed commitment | `results/<release>/<system>/_controls/<workload>/perturbed.json` | generated | `perturbed-commitment/1` |
-| Release index | `releases/<release>/index.json` | generated | `release-index/1` |
-| Adapter job | `/io/job.json` | generated | `adapter-job/1` |
-| Adapter output | `/io/out.json` | generated by adapters | `adapter-out/1` |
+| Claim card | `systems/<name>/claim.yaml` | Authored | `claim/1` |
+| System manifest | `systems/<name>/system.yaml` | Authored | `system/1` |
+| System-specific controls | `systems/<name>/controls.yaml` | Authored | `system-controls/1` |
+| Workload | `workloads/<id>.yaml` | Authored | `workload/1` |
+| Prompt corpus | `workloads/prompts/corpus.yaml` | Authored | `corpus/1` |
+| Reference hardware and cost | `reference/<release>.yaml` | Authored | `reference/1` |
+| CI profile (never released) | `reference/ci.yaml` | Authored | `reference/1` |
+| Target | `targets/<author>/<id>.yaml` | Authored | `target/1` |
+| Release record | `releases/<release>/release.yaml` | Authored | `release/1` |
+| Run result | `results/.../run.json` | Generated | `run/1` |
+| Run manifest | `results/.../manifest.json` | Generated | `manifest/1` |
+| Control verdicts | `results/.../controls.json` | Generated | `controls/1` |
+| Perturbed commitment | `results/<release>/<system>/_controls/<workload>/perturbed.json` | Generated | `perturbed-commitment/1` |
+| Release index | `releases/<release>/index.json` | Generated | `release-index/1` |
+| Adapter job | `/io/job.json` | Generated | `adapter-job/1` |
+| Adapter output | `/io/out.json` | Generated by adapters | `adapter-out/1` |
 
-Contracts:
+Schema guarantees:
 
-- **SCHEMA-1** A reader can validate any document with any Draft 2020-12 validator and the files in `schema/`; no harness code is needed.
-- **SCHEMA-2** Within a major, changes are additive and optional. Removing or renaming a field, changing a type, adding a required field or changing a field's meaning creates a new major through an RFC.
-- **SCHEMA-3** Every number in a generated document is a labelled quantity (`value`, `unit`, `scope`, `grade`, `tier`, `source`, `null_reason`), never a bare number ([RFC-0012 §Quantity](../../rfcs/0012-schemas-and-serialization.md)).
-- **SCHEMA-4** Generated JSON is byte-stable: sorted keys, two-space indent, UTF-8, LF, trailing newline, no NaN or Infinity.
+- **SCHEMA-1:** Any document can be validated using a standard JSON Schema Draft 2020-12 validator and the files under `schema/`, without running harness code.
+- **SCHEMA-2:** Within a major version, only additive optional changes are permitted. Removing or renaming a field, changing its type or meaning, or adding a required field requires a new major version introduced by an RFC.
+- **SCHEMA-3:** Every measurement in a generated document is stored as a labelled quantity (`value`, `unit`, `scope`, `grade`, `tier`, `source`, `null_reason`) rather than a bare number ([RFC-0012 §Quantity](../../rfcs/0012-schemas-and-serialization.md)).
+- **SCHEMA-4:** Generated JSON is byte-stable: sorted keys, two-space indentation, UTF-8 encoding, LF line endings, a single trailing newline, and no `NaN` or `Infinity` literals.
 
 ## Adapter contract
 
-Specified in [RFC-0005](../../rfcs/0005-adapter-contract.md). Summary of the contract a system team implements:
+Specified in [RFC-0005](../../rfcs/0005-adapter-contract.md). Every system team implementing an adapter conforms to the following interface:
 
-- An OCI image built from `systems/<name>/Dockerfile`, pinning upstream at a full commit hash.
-- An entrypoint with subcommands `info`, `setup`, `commit`, `prove`, `verify`, each called as `<subcommand> /io/job.json /io/out.json`, exiting 0 when the task completed whatever the verdict.
-- Proofs released atomically as directories under `/io/proofs/` by `rename`.
-- Verdicts normalised to `accept`, `reject`, `no_verdict`, `invalid_call`.
-- No network, read-only root, no capabilities, model mounted read-only.
+- Package the adapter as an OCI image built from `systems/<name>/Dockerfile`, pinning upstream source at a full commit hash.
+- Expose an entrypoint supporting five subcommands (`info`, `setup`, `commit`, `prove`, and `verify`), each invoked as `<subcommand> /io/job.json /io/out.json` and exiting 0 whenever the subcommand completed normally, regardless of the verification verdict.
+- Release proofs atomically into `/io/proofs/` via directory `rename`.
+- Map upstream verification outcomes to the four normalised verdicts: `accept`, `reject`, `no_verdict`, and `invalid_call`.
+- Run with no network access, a read-only root filesystem, no Linux capabilities, and model weights mounted read-only.
 
-Contracts:
+Adapter contract guarantees:
 
-- **ADAPTER-1** The harness never sends a field an adapter of the same contract major does not know. Adapters MUST ignore unknown optional fields in job.json.
-- **ADAPTER-2** The harness rejects any out.json that fails `adapter-out/<major>`; there is no lenient mode.
-- **ADAPTER-3** The commitment for `verify` always comes from the harness record of `commit`.
+- **ADAPTER-1:** The harness never sends fields unknown to adapters on the same contract major, and adapters MUST ignore unknown optional fields in `job.json`.
+- **ADAPTER-2:** The harness strictly rejects any `out.json` that fails `adapter-out/<major>` validation; there is no lenient mode.
+- **ADAPTER-3:** The commitment passed to `verify` always comes from the harness's stored record of the `commit` step.
 
 ## Repository layout
 
-The paths below are public: tools and people rely on them. Moving one is a breaking change announced one benchmark release ahead.
+Downstream tools and contributors rely on the paths below. Moving any of them is a breaking change that must be announced at least one benchmark release in advance.
 
 ```
 schema/<name>/<major>.schema.json          schema/<name>/examples/{valid,invalid}/
@@ -113,17 +113,17 @@ targets/<author>/<id>.yaml
 reports/<release>.md
 ```
 
-Contracts:
+Layout guarantees:
 
-- **LAYOUT-1** `results/` is append-only. A file once merged is never edited or deleted; a correction is a new run naming the run it replaces.
-- **LAYOUT-2** No weights, no proof bytes and no secrets are ever committed.
+- **LAYOUT-1:** `results/` is strictly append-only. Merged files are never modified or deleted; corrections are submitted as new runs referencing the run they supersede.
+- **LAYOUT-2:** Model weights, raw proof bytes, and secrets are never committed to the repository.
 
 ## What is not public
 
-- The Python modules, classes and functions of `iproofs`. They may change in any release. Their signatures in RFCs are design documentation for contributors. A downstream tool that needs data reads the files, which are public.
-- Log event names and fields in `logs/harness.jsonl` ([05-observability](05-observability.md)). They are stable within a harness minor version as a courtesy, not a contract.
-- The HTML structure of the generated site. The data behind it is public through `index.json` and the run files.
+- Internal Python modules, classes, and functions under `iproofs` may change in any release. Function signatures shown in RFCs serve as contributor design notes rather than an external SDK; downstream tools should read the public JSON and YAML files instead.
+- Event names and payload fields in `logs/harness.jsonl` ([05-observability](05-observability.md)) are kept stable within a harness minor version as a courtesy, not as a formal API contract.
+- The HTML structure of the generated website is internal; all underlying data is publicly available through `index.json` and the run files.
 
 ## Stability and versioning
 
-Version identifiers, deprecation windows and the changelog discipline are in [09-release-and-versioning](09-release-and-versioning.md). In short: harness versions follow SemVer 2.0 with the CLI, schemas, adapter contract and layout as the public API; schemas and the adapter contract carry their own majors; the harness reads the current and previous major of every schema and contract for at least one benchmark release.
+Full details on version lines, deprecation periods, and changelog rules are in [09-release-and-versioning](09-release-and-versioning.md). Briefly: the harness follows SemVer 2.0 with the CLI, schemas, adapter contract, and repository layout as its public API; schemas and the adapter contract maintain separate major numbers; and the harness reads both the current and previous major version of every schema and contract for at least one benchmark release.
