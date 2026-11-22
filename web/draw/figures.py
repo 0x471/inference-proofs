@@ -872,25 +872,25 @@ def measured_fraction():
 
 
 # ------------------------------------------------------------------ the Autoresearch page
-# A mock-up of the track's screen, drawn on the page's band: a task, its theorem, and a loop's
-# variants with the Lean verifier's verdict. Nothing has run, so no figure is printed: each
-# figure cell is a blank block, read out as "no figure", and the window's bar says it is a
-# mock-up. The variants are made up.
+# Mock-up of the track interface rendered on the Autoresearch hero band: a sample task, its Lean
+# soundness theorem, and an illustrative search loop with verifier verdicts. Nothing has run yet,
+# so each metric cell renders as a blank bar (screen-reader text: "no figure"), and the header bar
+# states explicitly that this is a mock-up with invented variants.
 LEAN_SKETCH = """theorem sound (P : Prover) (v : Fin N → F)
     (h : ∃ i, v i ∉ T) :
     Pr[verify T v (P v) = true] ≤ ε"""
-# the loop's past variants as cells, oldest first: a accepted, r refused, k the one kept; the
-# last six are the table's rows, and a cell for the variant running follows them
+# Past variants in the illustrative loop, oldest first: a accepted, r rejected, k kept; the last
+# five match the table rows, followed by a cell for the currently running candidate.
 LOOP_CELLS = "aarraraaarrara" + "arkar"
-LOOP = (  # the table's rows: (variant, the verifier's verdict, kept)
-    ("the starting prover", "accepted", False),
-    ("drop one check", "refused", False),
-    ("sort before the lookup", "accepted", True),
-    ("a GPU kernel for the counts", "accepted", False),
-    ("reuse a challenge", "refused", False),
+LOOP = (  # Table rows: (variant description, verifier verdict, kept)
+    ("baseline prover", "accepted", False),
+    ("drop one check", "rejected", False),
+    ("sort before lookup", "accepted", True),
+    ("GPU kernel for counts", "accepted", False),
+    ("reuse a challenge", "rejected", False),
 )
 LOOP_HEADS = ("Variant", "Lean verifier", "Prover time", "Proof size", "Verify time")
-CELL_SAID = {"a": "accepted", "r": "refused", "k": "kept"}
+CELL_SAID = {"a": "accepted", "r": "rejected", "k": "kept"}
 
 
 @drawn(FIGURES, "autoresearch")
@@ -899,10 +899,11 @@ def autoresearch():
     first = len(LOOP_CELLS) - len(LOOP) + 1
 
     def row(k, variant, said, kept):
+        cls = "refused" if said == "rejected" else said
         figs = "".join(f'<td data-h="{e(h)}">{nil if said == "accepted" else ""}</td>'
                        for h in LOOP_HEADS[2:])  # fmt: skip
         mark = '<span class="kept">kept</span>' if kept else ""
-        return (f'<tr class="{said}"><td class="arn">{k:02d}</td>'
+        return (f'<tr class="{cls}"><td class="arn">{k:02d}</td>'
                 f'<th scope="row">{e(variant)}</th><td class="arv">{e(said)}</td>{figs}'
                 f'<td class="ark">{mark}</td></tr>')  # fmt: skip
 
@@ -914,24 +915,24 @@ def autoresearch():
     heads = "".join(f'<th scope="col">{e(h)}</th>' for h in LOOP_HEADS)
     cells = "".join(f'<i class="c{c}"></i>' for c in LOOP_CELLS) + '<i class="crun"></i>'
     fixed = "".join(f"<div><dt>{e(k)}</dt><dd>{e(v)}</dd></div>" for k, v in (
-        ("Size", "small, on a CPU in minutes"),
+        ("Size", "small (minutes on a CPU)"),
         ("Field", "not decided"),
         ("Security level", "not decided"),
         ("Assumptions", "random oracle"),
     ))  # fmt: skip
     return (
-        '<div class="arx" role="group" aria-label="Mock-up of a task and its loop">'
+        '<div class="arx" role="group" aria-label="Mock-up of a task and automated loop">'
         '<p class="arx-bar"><span class="arx-app"><svg class="arx-tk" viewBox="0 0 19 16" '
         'width="14" height="12" aria-hidden="true" focusable="false"><path d="M0 0h3v16H0z'
         'M4 5h4v5H4zM9 5h4v5H9zM14 5h4v5h-4z"/></svg>autoresearch</span>'
         '<span class="arx-path">lookup · table of 2<sup>16</sup> · small size</span>'
-        '<span class="arx-mock">Mock-up, nothing has run</span></p>'
+        '<span class="arx-mock">Mock-up (no runs yet)</span></p>'
         '<div class="arx-in">'
         '<section class="arx-task" aria-label="Task">'
         '<p class="arx-h">Statement</p>'
-        '<p class="arx-st">Every one of N values is in a public table T of 2<sup>16</sup> '
+        '<p class="arx-st">Every one of N values belongs to a public table T of 2<sup>16</sup> '
         "entries.</p>"
-        '<p class="arx-h">Theorem, in Lean</p>'
+        '<p class="arx-h">Theorem in Lean</p>'
         f'<pre class="arx-code">{e(LEAN_SKETCH)}</pre>'
         f'<dl class="arx-fx">{fixed}</dl>'
         "</section>"

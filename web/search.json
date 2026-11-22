@@ -1093,10 +1093,10 @@
     {
       "group": "Glossary",
       "kind": "term",
-      "meta": "A range check is a proof that every value in a list fits in a fixed number of bits, for example that each one is below 2^16.",
+      "meta": "A proof that every value in a list fits within a fixed bit width, such as proving each value is below 2^16.",
       "name": "Range check",
       "pie": "",
-      "terms": "range check a range check is a proof that every value in a list fits in a fixed number of bits, for example that each one is below 2^16.",
+      "terms": "range check a proof that every value in a list fits within a fixed bit width, such as proving each value is below 2^16.",
       "tier": 4.2,
       "url": "/glossary#range-check"
     },
