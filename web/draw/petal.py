@@ -16,7 +16,7 @@ import re
 
 from . import state as S
 from .chrome import CHECKS_PAGE, link, rung_of
-from .overview import bits_words, name_of, proved_words
+from .ladder import bits_words, name_of, proved_words
 from .words import (
     CAME_FROM,
     CAUSE_WORD,

@@ -17,7 +17,7 @@ from .chrome import (
     LEARN_PAGE,
     MANDATE_PAGE,
     ONLY_RUN,
-    SCALE_PAGE,
+    OVERVIEW_PAGE,
     SITE_URL,
     counted,
     credit_words,
@@ -28,9 +28,7 @@ from .chrome import (
 )
 from .hexagon import glyph_svg
 from .inks import COBALT, GROUND, LINE, MUTED, PAPER, ratio
-from .learn import glossary, glossary_entries, sections
-from .mark import lockup_svg, mark_svg, stacked_svg, tile_svg
-from .overview import (
+from .ladder import (
     BARE,
     fig_html,
     filled,
@@ -39,7 +37,9 @@ from .overview import (
     name_of,
     states,
 )
-from .scale import scale_words
+from .learn import glossary, glossary_entries, sections
+from .mark import lockup_svg, mark_svg, stacked_svg, tile_svg
+from .overview import overview_words
 from .words import (
     CHECK_LINE,
     CHECK_NAME,
@@ -125,11 +125,11 @@ def search_entries():
     )
     add(
         "page",
-        "Scale",
-        SCALE_PAGE,
-        scale_words(),
+        "Overview",
+        OVERVIEW_PAGE,
+        overview_words(),
         PAGE_MARK,
-        "scale chart log decade axis",
+        "overview scale chart graph log decade axis",
     )
     add(
         "page",
@@ -171,6 +171,7 @@ GONE = {
     "/proof-systems": "/forward-pass",
     "/architectures": "/statement",
     "/cost": "/method",
+    "/scale": OVERVIEW_PAGE,  # the Overview page's name until 2026-11-20
 }
 
 

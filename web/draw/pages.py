@@ -12,6 +12,7 @@ import re
 from . import state as S
 from .chrome import (
     CHECKS_PAGE,
+    LEARN_PAGE,
     LEVEL_ANCHOR,
     MANDATE_PAGE,
     card_current,
@@ -34,7 +35,7 @@ from .chrome import (
 )
 from .glossary import term
 from .hexagon import glyph_svg
-from .overview import (
+from .ladder import (
     BARE,
     BINDING_GAP,
     NOT_TESTED,
@@ -2159,11 +2160,13 @@ def rules(lines, ids=(), at=""):
     return f'<dl class="cs">{rule_lines(lines, ids, at)}</dl>'
 
 
-def title_band(title, cls="ttl"):
+def title_band(title, cls="ttl", kicker="", under=""):
     """The band of a page that is not a system's (the checks, the mandate, the 404): its title
-    at the home title's size."""
-    return (f'<div class="mast mast-t"><div class="mast-in"><h1 id="h-name" class="{cls}">'
-            f"{e(title)}</h1></div></div>")  # fmt: skip
+    at the home title's size; `kicker` over it, where the page stands under another (the
+    mandate under Learn); `under` it, a line in the band's own ink."""
+    kick = f'<p class="kick">{kicker}</p>' if kicker else ""
+    return (f'<div class="mast mast-t"><div class="mast-in">{kick}<h1 id="h-name" class="{cls}">'
+            f"{e(title)}</h1>{under}</div></div>")  # fmt: skip
 
 
 def cause_rule(cause, text):
@@ -2440,19 +2443,27 @@ def build_mandate():
             + (corrections if title == MANDATE_CORRECTIONS_IN else "") + "</dl>")
         for title, lines in MANDATE
     )  # fmt: skip
-    parts = [(title.lower().replace(" ", "-"), title) for title, _ in MANDATE]
+    parts = mandate_parts()
+    # where the page stands: under Learn, whose hub lists it (the Learn tab is marked)
+    kicker = f'<span><a href="{LEARN_PAGE}">Learn</a></span>' if S.V.get("learn") else ""
     body = f"""
-{header("mandate")}
+{header("learn", under=True)}
 <main id="main" class="sys">
-  {title_band(MANDATE_BELIEF, cls="ttl creed")}
+  {title_band(MANDATE_BELIEF, cls="ttl creed", kicker=kicker)}
   {pnav("Mandate", parts)}
   <div class="wrap">
     {blocks}
   </div>
 </main>
 {footer()}"""
-    return page("Mandate", MANDATE_DESC, body, "system mandatepage", MANDATE_PAGE.strip("/"),
-                "home")  # fmt: skip
+    return page("Mandate", MANDATE_DESC, body, "system mandatepage learnpage",
+                MANDATE_PAGE.strip("/"), "home")  # fmt: skip
+
+
+def mandate_parts():
+    """The mandate's sections as (anchor, title), in its order: its own strip, and the Learn
+    hub's block on it."""
+    return [(title.lower().replace(" ", "-"), title) for title, _ in MANDATE]
 
 
 def build_404():

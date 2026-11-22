@@ -51,3 +51,10 @@ glossary:
   slug: glossary
   title: Glossary
   summary: Plain definitions for the terms used on the ladder and in verifiable inference.
+# the Autoresearch page (/autoresearch): under its own tab, not listed on the hub
+autoresearch:
+  slug: autoresearch
+  title: Autoresearch
+  summary: >-
+    Benchmarks of the parts of a prover, such as lookups and range checks, built for automated
+    search loops. Not open yet: we are writing the rules.

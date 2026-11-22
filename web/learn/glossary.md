@@ -302,6 +302,10 @@ Storing a model's weights or activations in fewer bits to make proving cheaper, 
 
 An idealized hash function that returns a fresh, uniformly random output for every distinct input. Most [[Fiat-Shamir]] soundness proofs assume the hash function behaves like a random oracle.
 
+### Range check
+
+A range check is a proof that every value in a list fits in a fixed number of bits, for example that each one is below 2^16. Provers often prove it with a [[lookup argument]] into a table of every allowed value.
+
 ### Read as
 
 When a glyph grade depends on our interpretation of a publisher's documents rather than a single explicit sentence, the system page marks it with "our reading" and shows the source at the top of the petal's evidence. **The publisher's words** means a direct statement by the publisher; **our reading** means we combined multiple linked passages because no single sentence states the point; **our test** refers to our benchmark runs; and **our rebuild** refers to running the publisher's proof checker ourselves. Any grade that relies on our reading is capped at Mostly met across all systems, and we never infer claims merely from a construction's name (such as STARK). Before 2026-11-17, the site used the labels "stated", "read as", and "tested by us".

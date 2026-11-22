@@ -37,7 +37,7 @@ def test_discovery_matches_public_pages(board_site: Any) -> None:
         )
         assert f"'sha256-{style_hash}'" in style_policy
         assert "unsafe-inline" not in style_policy
-        if page.stem == "404":
+        if page.stem in board_site.build.UNLISTED:
             assert '<meta name="robots" content="noindex">' in html
             continue
         canonical = re.search(r'<link rel="canonical" href="([^"]+)">', html)
@@ -74,7 +74,7 @@ def test_agent_guide_and_topics(board_site: Any) -> None:
     assert "does not certify AI safety" in guide
     assert "not an enacted treaty" in guide
     for page in out.glob("*.html"):
-        if page.stem == "404":
+        if page.stem in board_site.build.UNLISTED:
             continue
         html = page.read_text()
         block = re.search(r'<script type="application/ld\+json">(.*?)</script>', html)

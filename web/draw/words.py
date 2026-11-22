@@ -47,7 +47,7 @@ CHECK_PLAIN = {
 }
 # Each check's rule, RFC-0018's table ("Held when", "Failed when") in short, as a condition in the
 # present tense. {slots}, {attempts}, {reply_tokens} and {reference} are the level file's
-# constants (`overview.filled`); 3 of 3 and 0.05 (fidelity.alpha) are typed as the level's.
+# constants (`ladder.filled`); 3 of 3 and 0.05 (fidelity.alpha) are typed as the level's.
 CHECK_HELD = {
     # Terms (Slot, Session: complete), SE-1
     "run": "The model's prompts are divided into {slots} slots, and each slot has a complete "
@@ -746,7 +746,7 @@ HOW_MULTIPLE = {
 HOW_ON = {True: "both on {gpu} GPUs", False: "proved on {gpu}, served on {serving}"}
 SERVING_GPU = "H200"  # CO-4: the serving baseline runs on the fewest H200 that hold the model
 # CO-8 (adopted 2026-11-16): reply tokens per GPU-second under Cost (depth 3); amended 2026-11-16:
-# the proved and the served rate also print as one line under the multiple (`overview.rate_html`)
+# the proved and the served rate also print as one line under the multiple (`ladder.rate_html`)
 REPLY_TOKENS_HEAD = "Tokens per second"
 # that line (Q41): the proved rate's word after its number ("2.027 proved"), then its unit and
 # GPU ("tokens/s per H200"); a model's head prints its served rate in the same unit
@@ -970,15 +970,36 @@ REASON_LINK = {
     ("CHECK_MORE", "bar"): ("bar", "/method#the-checks"),
     ("ORDER_RULE", "models"): ("across models", "/method"),
 }
-# ------------------------------------------------------------------ the scale page (RFC-0018 SI-7)
+# ------------------------------------------------------------------ the overview page (RFC-0018 SI-7)
 SCALE_LOG = "log scale"  # beside an axis's unit
+SCALE_LINEAR = "linear scale"  # beside a linear axis's unit (Fidelity's on the overview)
 SCALE_SERVING = "Serving"  # a lane's foot: serving's line and its stored figure
-# a model no system has run on (the ladder, the scale page); its serving line keeps "not run yet"
+# a model no system has run on (the ladder, the overview page); its serving line keeps "not run yet"
 SCALE_NOT_RUN = "no system run yet"
-# the start of the scale page's description and search line, before its figures' names
-SCALE_LEAD = "Every benchmarked system plotted on a logarithmic scale"
+# the start of the overview page's description and search line, before its figures' names
+OVERVIEW_LEAD = "Every system run, on one plot"
+# over the rows a plot of the overview page could not place: one of their two figures is missing
+OVERVIEW_OFF = "Not on the plot, a figure missing"
+# the overview plot's axes: the name of the one figure FIGURE_HEAD does not hold, the pickers'
+# names, and which way each figure is better, in words (the plot sets that end up and right)
+OVERVIEW_MODEL = "Model size"
+OVERVIEW_UP, OVERVIEW_ACROSS = "Up", "Across"
+OVERVIEW_BETTER = {"multiple": "cheaper to prove", "check-time": "faster to verify",
+                   "proof-size": "smaller proof", "fidelity": "closer to the model",
+                   "model": "larger model"}  # fmt: skip
+# beside a row the plot leaves out on the axes picked (a figure missing there)
+OVERVIEW_OFF_SHORT = "not on the plot"
+# the counts under the page's title
+OVERVIEW_COUNTS = (("run", "systems run"), ("passed", "passed"), ("models", "models"),
+                   ("not_run", "systems not run"))  # fmt: skip
 # beside the size tab of the frontier's rung on the ladder (OR-6: the largest with a passed row)
 FRONTIER_WORD = "Largest model with a passed row"
+# ------------------------------------------------------------------ the autoresearch page
+# announced, not open yet: the tab's word, the page's title, and what the page says
+AUTORESEARCH_TITLE = "Autoresearch"
+AUTORESEARCH_SOON = "Coming soon"
+# the parts the track is for, set huge behind the title as a texture (read by no one: aria-hidden)
+AUTORESEARCH_PARTS = ("Lookup", "Range check", "Softmax", "SiLU", "RMSNorm", "GPU kernel")
 # ------------------------------------------------------------------ the mandate page
 # The headline, then who runs it, its ties, what we do, what we do not do, how to check us and how
 # a row is changed, with the dated corrections: each line
