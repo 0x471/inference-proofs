@@ -38,6 +38,11 @@
         "mark": "members/miden.svg",
         "name": "Miden",
         "url": "https://www.miden.xyz/"
+      },
+      {
+        "mark": "members/gpai-lab.png",
+        "name": "GPAI Lab",
+        "url": "https://gpaipolicylab.org/"
       }
     ]
   },
