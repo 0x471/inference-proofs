@@ -4,8 +4,7 @@ tiles, then dots). A few cells are lit, in the accent, its light and its deep bl
 drawing of the idea the site measures, something unreadable that gets checked, and it carries
 no data: every cell comes from a hash of the page's address, so a page keeps its rail from
 build to build. words.css places it under everything a band holds and passes one line of light
-along it when a page arrives; a lens follows the pointer along it (words.js), the cells under
-it drawn once more in brighter inks.
+along it when a page arrives.
 """
 
 import hashlib
@@ -87,8 +86,5 @@ def lattice(seed):
         out.append(f'<text class="{t}" y="{y + 13}" x="{" ".join(str(x) for x, _ in row)}">'
                    f'{"".join(c for _, c in row)}</text>')  # fmt: skip
     w, h = COLS * CELL, ROWS * CELL
-    box = f'width="{w}" height="{h}" viewBox="0 0 {w} {h}" focusable="false"'
-    # the rail, then the same cells once more inside the lens (words.css, words.js): drawn by reference, in brighter inks
-    return (f'<div class="latw" aria-hidden="true"><svg class="lat" {box}><g id="lat-g" class="lg">{"".join(out)}</g></svg>'
-            f'<div class="lens"><div class="lensin"><svg class="lat hot" {box}><use href="#lat-g"/></svg></div></div>'
-            "</div>")  # fmt: skip
+    return (f'<div class="latw" aria-hidden="true"><svg class="lat" width="{w}" height="{h}" viewBox="0 0 {w} {h}" '
+            f'focusable="false">{"".join(out)}</svg></div>')  # fmt: skip

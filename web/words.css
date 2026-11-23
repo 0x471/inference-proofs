@@ -61,8 +61,8 @@
   --top-h: 56px;
   --pnav-h: 44px;
   --stick: var(--top-h);
-  --quick: 120ms cubic-bezier(.3, .6, .2, 1);
-  --ease: 180ms cubic-bezier(.3, .6, .2, 1);
+  --quick: 120ms cubic-bezier(.2, .7, .2, 1);
+  --ease: 180ms cubic-bezier(.2, .7, .2, 1);
   /* a page's title (the checks, the mandate, the 404, a Learn page): the home title's size;
      only a system's name on its band is set larger */
   --title: clamp(44px, 5vw, 72px);
@@ -158,11 +158,6 @@ p { margin: 0; }
 .lk .lw { fill: var(--paper); transition: fill var(--quick); }
 .lk .lmk { fill: var(--accentlight); }
 .logo:hover .lw { fill: var(--accentlight); }
-/* the lockup in hand: light runs along the mark once, from its stem out through its cells */
-.anim .logo:hover .lmk path { animation: lmkpass 460ms cubic-bezier(.3, .6, .2, 1) both; }
-.anim .logo:hover .lmk path:nth-child(2) { animation-delay: 90ms; }
-.anim .logo:hover .lmk path:nth-child(3) { animation-delay: 180ms; }
-@keyframes lmkpass { 30% { fill: var(--paper); } }
 .tabs { display: flex; align-self: stretch; }
 .tab { position: relative; isolation: isolate; display: flex; align-items: center; padding: 0 14px; color: var(--muted); text-decoration: none; }
 .tab.on { color: var(--paper); }
@@ -246,28 +241,19 @@ html:has(.top.s-on) { overflow: hidden; }
 .mast { position: relative; isolation: isolate; --ground: var(--paper); --accent: var(--lift); --onaccent: var(--paper); background: var(--lift); color: var(--paper); }
 /* the lattice at a band's foot (draw/lattice.py): a rail of cipher characters, tiles and dots on a square grid, thick
    along the band's lower edge and thinning upward; nearly the band's own ink, a few cells lit (the accent, its light,
-   its deep blue). It stands under everything a band holds, takes no pointer and carries no data. Its cells are
-   styled from their own group (.lg), so the copy the lens draws by reference takes the same rules. When a page arrives
+   its deep blue). It stands under everything a band holds, takes no pointer and carries no data. When a page arrives
    one line of light runs along it and the rail shows behind the line (html.anim; still otherwise) */
-.latw { position: relative; height: 54px; overflow: hidden; pointer-events: none; container-type: inline-size; }
+.latw { position: relative; height: 54px; overflow: hidden; pointer-events: none; }
 .lat { position: absolute; right: 0; bottom: 0; font: 600 11px/1 var(--mono); }
-.lg text { text-anchor: middle; }
-.lg path, .lg text { fill: currentColor; }
-.lg .o { fill: none; stroke: currentColor; stroke-width: 2px; }
-.lg .d { color: var(--ld, color-mix(in srgb, var(--paper) 8%, var(--lift))); }
-.lg .b { color: var(--lb, color-mix(in srgb, var(--paper) 17%, var(--lift))); }
-.lg .p { color: var(--light); }
-.lg .a { color: var(--accentlight); }
-.lg .c { color: var(--deep); }
-.lg .k { color: var(--lk, var(--lift)); }
-/* the lens: a leaf of the band's ground a step lighter, two of its corners swept (the curve of a petal), that follows
-   the pointer along the rail a beat behind it, on one slow curve, and leans the way it travels; the cells under it
-   read brighter. A mouse only, and only where motion is welcome (words.js shows it) */
-.lens { position: absolute; top: 0; left: 0; width: 236px; height: 100%; overflow: hidden; border-radius: 54px 5px; background: var(--lk); opacity: 0; transform: translateX(var(--lx, 0px)); transition: transform 720ms cubic-bezier(.3, .6, .2, 1), border-radius 720ms cubic-bezier(.3, .6, .2, 1), opacity 320ms; --lk: color-mix(in srgb, var(--paper) 7%, var(--lift)); }
-.lens.lean { border-radius: 5px 54px; }
-.lens.on { opacity: 1; }
-.lensin { position: absolute; top: 0; left: 0; width: 100cqw; height: 100%; transform: translateX(calc(-1 * var(--lx, 0px))); transition: transform 720ms cubic-bezier(.3, .6, .2, 1); }
-.hot { --ld: color-mix(in srgb, var(--paper) 46%, var(--lift)); --lb: color-mix(in srgb, var(--paper) 84%, var(--lift)); }
+.lat text { text-anchor: middle; }
+.lat path, .lat text { fill: currentColor; }
+.lat .o { fill: none; stroke: currentColor; stroke-width: 2px; }
+.lat .d { color: color-mix(in srgb, var(--paper) 8%, var(--lift)); }
+.lat .b { color: color-mix(in srgb, var(--paper) 17%, var(--lift)); }
+.lat .p { color: var(--light); }
+.lat .a { color: var(--accentlight); }
+.lat .c { color: var(--deep); }
+.lat .k { color: var(--lift); }
 .anim .latw { animation: latin 800ms cubic-bezier(.3, .6, .2, 1) both; }
 .anim .latw:after { content: ""; position: absolute; top: 0; bottom: 0; left: -2px; width: 2px; background: var(--light); box-shadow: -7px 0 0 color-mix(in srgb, var(--light) 45%, transparent), -17px 0 0 color-mix(in srgb, var(--light) 24%, transparent), -30px 0 0 color-mix(in srgb, var(--light) 11%, transparent); opacity: 0; animation: latpass 800ms cubic-bezier(.3, .6, .2, 1) both; }
 @keyframes latin { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0); } }
@@ -385,13 +371,6 @@ html:has(.top.s-on) { overflow: hidden; }
 
 /* ---------------------------------------------------------------- a page's sections: a strip that stays under the top bar */
 .pnav { position: sticky; top: var(--top-h); z-index: 25; height: var(--pnav-h); background: var(--ground); box-shadow: inset 0 -1px 0 var(--line); }
-/* where the reader is in the page: a short line of light on the strip's lower edge follows the scroll, three fainter
-   lines behind it (the pass that crosses a band's rail, driven here by the reader). Only where the browser ties an
-   animation to the scroll, and with html.anim */
-@supports (animation-timeline: scroll()) {
-  .anim .pnav:after { content: ""; position: absolute; left: -28px; bottom: 0; width: 28px; height: 2px; background: var(--light); box-shadow: -34px 0 0 color-mix(in srgb, var(--light) 45%, transparent), -68px 0 0 color-mix(in srgb, var(--light) 24%, transparent), -102px 0 0 color-mix(in srgb, var(--light) 11%, transparent); pointer-events: none; animation: readpass linear both; animation-timeline: scroll(root block); }
-}
-@keyframes readpass { to { left: calc(100% - 28px); } }
 .ps { display: flex; align-items: stretch; height: 100%; margin-inline: var(--gut); overflow-x: auto; scrollbar-width: none; }
 .ps-t { position: sticky; left: 0; z-index: 1; flex: none; display: flex; align-items: center; margin-right: 0; max-width: 0; overflow: hidden; white-space: nowrap; background: var(--ground); box-shadow: inset 0 -1px 0 var(--line); font: 900 22px/1 var(--disp); opacity: 0; transition: opacity var(--ease), max-width var(--ease), margin-right var(--ease); }
 html:not(.js) .ps-t { display: none; }

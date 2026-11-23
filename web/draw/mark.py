@@ -27,18 +27,6 @@ def mark_path(x, y, u, grid=MASTER):
     )
 
 
-def mark_pieces(x, y, u):
-    """The master mark in the order light runs along it (words.css, a lockup in hand): the stem with
-    its joined cell, then each further cell, a path each."""
-    cut = ((MASTER[2][:2]), *((r,) for r in MASTER[2][2:]))
-    return [
-        "".join(
-            f"M{x + a * u:g} {y + b * u:g}h{w * u:g}v{h * u:g}h{-w * u:g}z" for a, b, w, h in rs
-        )
-        for rs in cut
-    ]
-
-
 def mark_svg(u, cls="lm", small=False):
     """The mark alone in currentColor, u px per unit (small: the whole-pixel drawing)."""
     grid = SMALL if small else MASTER
@@ -107,7 +95,7 @@ def lockup_svg(C, cls="lk", label="Inference proofs", ink=None, mark=None):
     if u == int(u):  # a whole-pixel unit: the mark's edges on the pixel grid
         x, ov = round(x), round(ov)
         a, wi = word("INFERENCE", 0, ov + C, C)
-    m = "".join(f'<path d="{d}"/>' for d in mark_pieces(x, ov, u))
+    m = mark_path(x, ov, u)
     x += MASTER[0] * u + GAP_P * u
     b, wp = word("PROOFS", x, ov + C, C)
     w, h = x + wp, C + 2 * ov
@@ -115,7 +103,7 @@ def lockup_svg(C, cls="lk", label="Inference proofs", ink=None, mark=None):
     mf = f' fill="{mark}"' if mark else ""
     return (f'<svg class="{cls}" viewBox="0 0 {w:.2f} {h:.2f}" width="{w:.1f}" height="{h:.1f}" '
             f'role="img" aria-label="{label}"><g class="lw"{wf}>{a}{b}</g>'
-            f'<g class="lmk"{mf} shape-rendering="crispEdges">{m}</g></svg>')  # fmt: skip
+            f'<path class="lmk"{mf} shape-rendering="crispEdges" d="{m}"/></svg>')  # fmt: skip
 
 
 def stacked_svg(C, ink, mark, cls="lk", label="Inference proofs"):
