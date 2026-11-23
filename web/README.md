@@ -34,7 +34,7 @@ Content placement is governed by depth: the surface shows results, and each step
 
 The site wordmark is set as a formal expression, INFERENCE ⊢ PROOFS, using uppercase Big Shoulders Display 900 outlines (`fonts/wordmark.json`) with the turnstile symbol between the two words at cap height. The turnstile mark ⊢ is constructed on a 20 × 15 unit grid (1 unit = cap height / 15): a solid 3-unit stem with three 5-unit square cells along its centre line separated by 1-unit gaps, the first cell joined to the stem. In the lockup it sits 4 units after the E and 3 units before the P. Below 32 px, it snaps to whole pixels (13 × 9 px at 16 px, doubled at 32 px). `draw/mark.py` generates all uses of the mark: the header logo, the site icon (`og/icon.svg`, touch icon, and 32 px PNG in ground ink on cobalt), and the page badge in search results.
 
-The visual system is "an instrument, made of words": a site built to be operated rather than skimmed like a brochure. Its palette uses a dark ground (`#0b0b0c`), paper text (`#f1efe9`), muted text (`#9b978e`), hairline rules (`#6f6a62`), a lift ground (`#17171a`) for active rows, and flat cobalt (`#5b7bff`) reserved strictly for the benchmark's own chrome (top bands with black type, the turnstile mark, active tabs and sections, hovered rows, focus states, and anchor arrivals; never data values or states). State inks fill petals and state chips (ground ink on green, amber, or red, with undecided and hollow states drawn as outlines), with no gradients, glows, or drop shadows. Names, headings, and positions use Big Shoulders Display (weights 800 and 900), while all labels and numbers use Martian Mono (weights 400 to 600, width 87.5) on a tight typographic scale. Page titles (Checks, Mandate, 404, and Learn pages) match the home title size (`--title`); only a system's name on its own band is larger. Both fonts are self-hosted in `fonts/` alongside their licences (`OFL-BigShoulders.txt`, `OFL-MartianMono.txt`); Martian Mono falls back to system monospace after 100 ms while loading, whereas Big Shoulders waits for its font file. Cell grids share meeting hairlines with no central stem.
+The visual system is "an instrument, made of words": a site built to be operated rather than skimmed like a brochure. Its palette takes Lucid Computing's colours: a night ground (`#07080c`), white text (`#ffffff`), muted text (`#8a8d97`), rules (`#5c5f6b`) and hairlines (`#24262e`), a lift ground (`#111218`) for active rows, and Lucid's flat cobalt (`#1b3bff`) reserved strictly for the benchmark's own chrome, always under white type (top bands, a model's size tab, active tabs and sections, the edge of hovered rows, blocks in hand, and anchor arrivals; never data values or states). Its light, periwinkle (`#93a5ff`), stands in where a thin line or a word must read on the night: the turnstile mark, focus rings, a name in hand. State inks fill petals and state chips (ground ink on green, amber, or red, with undecided and hollow states drawn as outlines), with no gradients, glows, or drop shadows. Names, headings, and positions use Big Shoulders Display (weights 800 and 900), while all labels and numbers use Martian Mono (weights 400 to 600, width 87.5) on a tight typographic scale. Page titles (Checks, Mandate, 404, and Learn pages) match the home title size (`--title`); only a system's name on its own band is larger. Both fonts are self-hosted in `fonts/` alongside their licences (`OFL-BigShoulders.txt`, `OFL-MartianMono.txt`); Martian Mono falls back to system monospace after 100 ms while loading, whereas Big Shoulders waits for its font file. Cell grids share meeting hairlines with no central stem.
 
 What stays in view: the top bar (lockup, the tabs Ladder, Overview, Learn, Checks and Autoresearch, search, GitHub; a system page marks Ladder, and a Learn page, the glossary and the mandate mark Learn; Learn only when the tree holds the Learn words; on a phone in two lines, the tabs 44 px tall, stepping away on the way down and back on the way up (a jump to an anchor sets it first, so the anchor lands right under what stays), and the same step-away on a phone held sideways, which also gets the 16 px field and a list that ends above the keyboard); on the ladder its heads and, under them, the divider of the model whose rows are passing; on the other pages a strip of the page's sections, the one in view marked (the one whose heading, or the anchor the address names inside it, sits right under the strip, else the earliest of those whose heading has passed a third of the window under it and is still under the strip, else the last that has passed, and at the page's top the first; at the page's end the last, unless the section a link went to is in view; it reads them again once the strip has moved with the top bar), the strip starting on a label's edge, the page's title in it once the band is gone, ruled on its right once stuck (not on a Learn page, whose chapter row and band name it, so every label stays whole; on a phone a label longer than the strip takes two lines). On a touch screen a target is 44 px (an evidence link 26 to 32 px above a phone's width, so a check's list stays a list, and 40 px on a phone; a check's "not run" 25 to 32 px, between neighbours; a row's standing and the ladder's figure heads 40 px; the checks page key's arms answer over half of each gap beside them; on a phone the glossary page's letters share the strip's width, about 20 px each and 44 px tall, rather than scroll); the search field is 44 px tall with 16 px words, and on a tablet, in use, the field widens over the tabs to its list's width (420 px), the tabs stepping aside and the list hanging under it. Each section keeps a heading at a modest display size; the first one, right under the strip, is for screen readers only.
 
@@ -64,25 +64,25 @@ The glossary translates the benchmark's own vocabulary from `docs/spec/10-glossa
 ## Inks and contrast (computed by the build, `draw/inks.py`)
 
 <!-- ladder -->
-| State | Ink | Luminance | Contrast on the ground `#0b0b0c` | Step from the state below |
+| State | Ink | Luminance | Contrast on the ground `#07080c` | Step from the state below |
 |---|---|---|---|---|
-| red | `#e03c44` | 0.195 | 4.59:1 | 4.59:1 |
-| amber | `#e49921` | 0.394 | 8.32:1 | 1.81:1 |
-| green | `#6ffeb7` | 0.777 | 15.49:1 | 1.86:1 |
+| red | `#e03c44` | 0.195 | 4.67:1 | 4.67:1 |
+| amber | `#e49921` | 0.394 | 8.46:1 | 1.81:1 |
+| green | `#6ffeb7` | 0.777 | 15.76:1 | 1.86:1 |
 
 | Pair | Contrast |
 |---|---|
-| paper text on ground (`#f1efe9` on `#0b0b0c`) | 17.11:1 |
-| muted text on ground (`#9b978e` on `#0b0b0c`) | 6.76:1 |
-| black text on cobalt (`#0b0b0c` on `#5b7bff`) | 5.36:1 |
-| cobalt text on ground (`#5b7bff` on `#0b0b0c`) | 5.36:1 |
-| paper text on lift (`#f1efe9` on `#17171a`) | 15.56:1 |
-| muted text on lift (`#9b978e` on `#17171a`) | 6.14:1 |
-| cobalt text on lift (`#5b7bff` on `#17171a`) | 4.87:1 |
-| ground text on red (`#0b0b0c` on `#e03c44`) | 4.59:1 |
-| ground text on amber (`#0b0b0c` on `#e49921`) | 8.32:1 |
-| ground text on green (`#0b0b0c` on `#6ffeb7`) | 15.49:1 |
-| red text on ground (`#e03c44` on `#0b0b0c`) | 4.59:1 |
+| paper text on ground (`#ffffff` on `#07080c`) | 20.02:1 |
+| muted text on ground (`#8a8d97` on `#07080c`) | 6.04:1 |
+| white text on cobalt (`#ffffff` on `#1b3bff`) | 6.74:1 |
+| periwinkle text on ground (`#93a5ff` on `#07080c`) | 8.64:1 |
+| paper text on lift (`#ffffff` on `#111218`) | 18.69:1 |
+| muted text on lift (`#8a8d97` on `#111218`) | 5.64:1 |
+| periwinkle text on lift (`#93a5ff` on `#111218`) | 8.07:1 |
+| ground text on red (`#07080c` on `#e03c44`) | 4.67:1 |
+| ground text on amber (`#07080c` on `#e49921`) | 8.46:1 |
+| ground text on green (`#07080c` on `#6ffeb7`) | 15.76:1 |
+| red text on ground (`#e03c44` on `#07080c`) | 4.67:1 |
 <!-- /ladder -->
 
 ## Files

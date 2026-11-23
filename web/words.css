@@ -1,6 +1,8 @@
 /* THE INSTRUMENT, set as INFERENCE ⊢ PROOFS. No data in this file. Colour meanings:
-   cobalt = the benchmark's own frame: the band, the mark, the tab and section in view, the row
-   in hand, focus; never a value or a state.
+   cobalt (Lucid's blue) = the benchmark's own frame: the band, a model's tab, the tab and section
+   in view, the row in hand, a block in hand, always under white words; never a value or a state.
+   periwinkle = the same blue as light on the night, where a thin line or a word must read: the
+   mark, focus, a name in hand.
    green / amber / red = a petal's or a check's state, only in the glyph's arms, the state chips,
    a grade's or a state's word, and the cells of the grades a criterion holds on a system page;
    a hollow petal or an undecided check is an outline in muted ink, never a fourth fill.
@@ -22,13 +24,17 @@
 /* /fonts */
 
 :root {
-  --ground: #0b0b0c;
-  --lift: #17171a;
-  --paper: #f1efe9;
-  --muted: #9b978e;
-  --rule: #6f6a62;
-  --line: #2a2927;
-  --cobalt: #5b7bff;
+  --ground: #07080c;
+  --lift: #111218;
+  --paper: #ffffff;
+  --muted: #8a8d97;
+  --rule: #5c5f6b;
+  --line: #24262e;
+  /* Lucid's blue: a ground under white words (the band, a tab, a block in hand) and a thick mark (a rule, a stem,
+     an edge); its light, periwinkle, where a thin line or a word must read on the night */
+  --cobalt: #1b3bff;
+  --oncobalt: #ffffff;
+  --peri: #93a5ff;
   /* the three filled states (build.py checks their steps from the ground and their contrast) */
   --red: #e03c44;
   --amber: #e49921;
@@ -69,7 +75,8 @@
 }
 .sys { --stick: calc(var(--top-h) + var(--pnav-h)); }
 * { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; -webkit-tap-highlight-color: transparent; scroll-padding-top: calc(var(--top-h) + 16px); }
+::selection { background: var(--cobalt); color: var(--oncobalt); }
+html { scrollbar-color: var(--rule) var(--ground); -webkit-text-size-adjust: 100%; -webkit-tap-highlight-color: transparent; scroll-padding-top: calc(var(--top-h) + 16px); }
 html:has(.pnav) { scroll-padding-top: calc(var(--top-h) + var(--pnav-h) + 16px); }
 /* while the search field has focus the page keeps no scroll padding: the field sits in the sticky bar, inside
    the padding, and the browser would scroll the page on every key to bring it out (words.js gives the padding
@@ -80,14 +87,14 @@ a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: 3px; 
 a:hover { text-decoration-thickness: 2px; }
 .df { text-decoration-style: dotted; }
 .df:hover { text-decoration-style: solid; }
-.skip { position: absolute; left: -9999px; top: 8px; z-index: 50; padding: 8px 12px; background: var(--cobalt); color: var(--ground); font: 600 13px/1.4 var(--mono); text-decoration: none; }
+.skip { position: absolute; left: -9999px; top: 8px; z-index: 50; padding: 8px 12px; background: var(--cobalt); color: var(--oncobalt); font: 600 13px/1.4 var(--mono); text-decoration: none; }
 .skip:focus { left: var(--gut); }
 button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; text-align: inherit; }
 code { font: inherit; font-weight: 600; }
 p { margin: 0; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-:focus-visible { outline: 2px solid var(--cobalt); outline-offset: 2px; }
-.mast :focus-visible, .skip:focus-visible { outline-color: var(--ground); }
+:focus-visible { outline: 2px solid var(--peri); outline-offset: 2px; }
+.mast :focus-visible, .skip:focus-visible { outline-color: var(--oncobalt); }
 .wrap { margin-inline: var(--gut); }
 .nw { white-space: nowrap; }
 /* what a search result or a key's petal moved focus to is marked by its arrival, not a ring */
@@ -116,11 +123,12 @@ p { margin: 0; }
 /* an open red in hand keeps its red edge, thicker, so it never reads as a lit hollow petal */
 .lit-on .sl.red.open.lit { stroke: var(--red); }
 /* the outline inside the arm's own box (half of a 4 px line), so every arm keeps its edges and its gaps */
-.lit-on .sl.key:not(.lit) { fill: var(--ground); stroke: var(--cobalt); stroke-width: 4px; vector-effect: non-scaling-stroke; clip-path: inset(0) fill-box; }
+.lit-on .sl.key:not(.lit) { fill: var(--ground); stroke: var(--peri); stroke-width: 4px; vector-effect: non-scaling-stroke; clip-path: inset(0) fill-box; }
 .lit-on .t.key:not(.lit) text { fill: var(--paper); }
 .gbig.linked .sl, .gbig.linked .t { cursor: pointer; }
 /* a petal's name on its arm: 4 units high on an arm 5 units high (hexagon.py NAME, TRACK) */
 .t text { fill: var(--ground); font: 800 4px/1 var(--disp); letter-spacing: .04em; }
+.t.key text { fill: var(--oncobalt); }
 .t.hollow text { fill: var(--muted); }
 .t.red.open text { fill: var(--red); }
 /* red on the lifted row is under 4.5:1 (inks.py): the open name takes paper there, its outline stays red */
@@ -143,8 +151,8 @@ p { margin: 0; }
 .brand .logo { display: block; color: var(--paper); }
 .lk { display: block; overflow: visible; }
 .lk .lw { fill: var(--paper); transition: fill var(--quick); }
-.lk .lmk { fill: var(--cobalt); }
-.logo:hover .lw { fill: var(--cobalt); }
+.lk .lmk { fill: var(--peri); }
+.logo:hover .lw { fill: var(--peri); }
 .tabs { display: flex; align-self: stretch; }
 .tab { position: relative; isolation: isolate; display: flex; align-items: center; padding: 0 14px; color: var(--muted); text-decoration: none; }
 .tab.on { color: var(--paper); }
@@ -153,11 +161,11 @@ p { margin: 0; }
 .top .repo { position: relative; isolation: isolate; display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 12px; margin-right: -12px; text-decoration: none; color: var(--muted); justify-self: end; grid-column: 4; }
 .top .repo .gh { display: block; flex: none; }
 /* pointed at or focused, a tab (a strip link, GitHub) fills with cobalt from its bottom edge, on a
-   hard edge in 120 ms, its words turning to ground ink once the fill is under them; it empties at
+   hard edge in 120 ms, its words turning white once the fill is under them; it empties at
    once. Pressed, it is full at once. */
 .tab:before, .top .repo:before, .ps a:before { content: ""; position: absolute; inset: 0; z-index: -1; background: var(--cobalt); clip-path: inset(100% 0 0 0); }
 .tab:hover:before, .tab:focus-visible:before, .tab:active:before, .top .repo:hover:before, .top .repo:focus-visible:before, .top .repo:active:before, .ps a:hover:before, .ps a:focus-visible:before, .ps a:active:before { clip-path: inset(0); }
-.tab:hover, .tab:focus-visible, .tab:active, .top .repo:hover, .top .repo:focus-visible, .top .repo:active, .ps a:hover, .ps a:focus-visible, .ps a:active { color: var(--ground); }
+.tab:hover, .tab:focus-visible, .tab:active, .top .repo:hover, .top .repo:focus-visible, .top .repo:active, .ps a:hover, .ps a:focus-visible, .ps a:active { color: var(--oncobalt); }
 .tab:focus-visible, .top .repo:focus-visible, .ps a:focus-visible { outline-color: var(--paper); }
 .anim .tab:hover:before, .anim .top .repo:hover:before, .anim .ps a:hover:before { transition: clip-path var(--quick); }
 .anim .tab:hover, .anim .top .repo:hover, .anim .ps a:hover { transition: color 0s 50ms; }
@@ -184,7 +192,7 @@ html:not(.js) .search { display: none; }
 .sopen, .sclose { display: none; }
 .sfield { position: relative; display: flex; align-items: center; gap: 10px; width: 100%; height: 34px; padding: 0 8px 0 12px; box-shadow: inset 0 0 0 1px var(--line); background: var(--ground); color: var(--muted); transition: box-shadow var(--quick), color var(--quick), background-color var(--quick); cursor: text; }
 .sfield:hover { box-shadow: inset 0 0 0 1px var(--rule); background: var(--lift); }
-.sfield:focus-within { box-shadow: inset 0 0 0 2px var(--cobalt); color: var(--paper); background: var(--ground); }
+.sfield:focus-within { box-shadow: inset 0 0 0 2px var(--peri); color: var(--paper); background: var(--ground); }
 .si { display: block; flex: none; }
 #q { flex: 1; min-width: 0; height: 100%; padding: 0; border: 0; background: none; color: var(--paper); font: 400 12px/1 var(--mono); font-stretch: 87.5%; outline: none; appearance: none; }
 /* the word in the empty field, in the muted ink, over the input; gone once a letter is typed */
@@ -207,23 +215,25 @@ html:has(.top.s-on) { overflow: hidden; }
 .sg > ul { list-style: none; margin: 0; padding: 0; }
 .sgh { display: block; padding: 10px 14px 4px; font: var(--f-label); color: var(--muted); text-transform: uppercase; letter-spacing: var(--track); }
 .so:hover, .so.on { background: var(--lift); box-shadow: inset 6px 0 0 var(--cobalt); }
-.so.on .sn { color: var(--cobalt); }
+.so.on .sn { color: var(--peri); }
 .so:active { background: var(--cobalt); box-shadow: none; }
 .so:active .sn, .so:active .sm, .so:active .lm { color: var(--ground); }
 .anim .so { transition: box-shadow var(--quick); }
 /* the words a result was found by */
-.so mark { background: none; color: inherit; text-decoration: underline 2px var(--cobalt); text-underline-offset: 3px; }
+.so mark { background: none; color: inherit; text-decoration: underline 2px var(--peri); text-underline-offset: 3px; }
 .so:active mark { text-decoration-color: var(--ground); }
 @media (max-width: 760px) {
   .sph { font-size: 16px; right: 52px; }
 }
 .sp .pie-svg { width: 25px; height: 31px; }
-.sp .lm { width: 26px; height: 18px; margin: 5px 1px; color: var(--cobalt); }
+.sp .lm { width: 26px; height: 18px; margin: 5px 1px; color: var(--peri); }
 .so .sm { grid-area: m; display: -webkit-box; min-width: 0; font: 400 11px/1.45 var(--mono); color: var(--muted); overflow: hidden; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 .snone { padding: 12px 14px; font: 400 12px/1.4 var(--mono); color: var(--muted); }
 
-/* ---------------------------------------------------------------- the band: black on cobalt, flat */
-.mast { background: var(--cobalt); color: var(--ground); }
+/* ---------------------------------------------------------------- the band: white on cobalt, flat */
+/* on the band, what is written in ground ink elsewhere is white, for all it holds; a block in hand is white with
+   blue words */
+.mast { --ground: var(--oncobalt); background: var(--cobalt); color: var(--oncobalt); }
 .mast-in { margin-inline: var(--gut); padding: 48px 0 40px; }
 /* the overview band: the title on one line (the ladder under it runs largest model first), and under it the
    lead, three sentences at a reading measure */
@@ -274,7 +284,7 @@ html:has(.top.s-on) { overflow: hidden; }
 .facts a { text-decoration-thickness: 1px; }
 /* the model's size under its name, on every screen (a phone's band too) */
 .facts .msz { display: block; margin-top: var(--s1); font-weight: 400; }
-/* a link on the band, in hand: a block of ground ink, the words in cobalt (as an index line) */
+/* a link on the band, in hand: a white block, the words in cobalt (as an index line) */
 .facts a:hover, .facts a:active, .facts a:focus-visible { background: var(--ground); color: var(--cobalt); text-decoration: none; box-shadow: 0 0 0 3px var(--ground); }
 @media print {
   .sbm .sub, .sbm .na { color: var(--paper); }
@@ -364,7 +374,7 @@ html:not(.js) .ps-t { display: none; }
 .pnav:has(.shr) .ps { flex: 1 1 auto; min-width: 0; margin-right: 0; }
 .shr { flex: none; display: flex; align-items: stretch; margin: 0 var(--gut) 0 12px; }
 .shr a, .shr button { display: flex; align-items: center; padding: 0 12px; font: var(--f-label); letter-spacing: var(--track); text-transform: uppercase; color: var(--muted); text-decoration: none; cursor: pointer; }
-.shr a:hover, .shr a:focus-visible, .shr button:hover, .shr button:focus-visible { background: var(--cobalt); color: var(--ground); }
+.shr a:hover, .shr a:focus-visible, .shr button:hover, .shr button:focus-visible { background: var(--cobalt); color: var(--oncobalt); }
 .shr :focus-visible { outline-offset: -2px; outline-color: var(--paper); }
 .shr [hidden], .fshr [hidden], .fshr { display: none; }
 html:not(.js) .shr:not(:has(a)) { display: none; }
@@ -380,7 +390,7 @@ html:not(.js) .shr:not(:has(a)) { display: none; }
   .fend dt { font: var(--f-label); letter-spacing: var(--track); text-transform: uppercase; color: var(--muted); }
   .fend dd { margin: 6px 0 0; font: 600 13px/19px var(--mono); overflow-wrap: anywhere; }
   .fend a, .fend button { text-decoration: underline 1px; text-underline-offset: 2px; }
-  .fend a:hover, .fend a:focus-visible, .fend button:hover, .fend button:focus-visible { background: var(--cobalt); color: var(--ground); text-decoration: none; box-shadow: 0 0 0 3px var(--cobalt); }
+  .fend a:hover, .fend a:focus-visible, .fend button:hover, .fend button:focus-visible { background: var(--cobalt); color: var(--oncobalt); text-decoration: none; box-shadow: 0 0 0 3px var(--cobalt); }
   .fend :is(.f-src, .f-pap) { display: none; }
   .fshr { display: block; }
   /* no card and no way to copy the link: the group has nothing to offer, so its name is not printed */
@@ -424,9 +434,9 @@ html:has(.lhd) { scroll-padding-top: calc(var(--top-h) + 40px); }
 .lad .dv > * { position: sticky; top: calc(var(--top-h) + var(--lh)); z-index: 3; height: var(--dh); padding: 3px 16px 0 0; background: var(--ground); box-shadow: inset 0 3px 0 var(--cobalt), inset 0 -1px 0 var(--line); text-align: left; vertical-align: middle; font-weight: 400; }
 .lad .dv > :last-child { padding-right: 0; }
 .dvn { display: flex; align-items: center; column-gap: 14px; padding: 6px 0; }
-.rk { flex: none; min-width: 56px; padding: 6px 9px 7px; background: var(--cobalt); color: var(--ground); font: 600 14px/1 var(--mono); font-variant-numeric: tabular-nums; letter-spacing: -.01em; text-align: center; }
+.rk { flex: none; min-width: 56px; padding: 6px 9px 7px; background: var(--cobalt); color: var(--oncobalt); font: 600 14px/1 var(--mono); font-variant-numeric: tabular-nums; letter-spacing: -.01em; text-align: center; }
 .rm { min-width: 0; margin: 0; font: 800 22px/1.05 var(--disp); letter-spacing: 0; color: var(--paper); text-wrap: balance; }
-.lad:target .rm { background: var(--cobalt); color: var(--ground); box-shadow: 0 -.12em 0 var(--cobalt), 0 .12em 0 var(--cobalt), .15em 0 0 var(--cobalt); }
+.lad:target .rm { background: var(--cobalt); color: var(--oncobalt); box-shadow: 0 -.12em 0 var(--cobalt), 0 .12em 0 var(--cobalt), .15em 0 0 var(--cobalt); }
 .dvn .none { flex: none; font: 400 13px/16px var(--mono); }
 .dvs { font: 400 12px/16px var(--mono); color: var(--muted); }
 .dvs .dl { display: block; margin: 0 0 2px; font: var(--f-label); letter-spacing: var(--track); text-transform: uppercase; }
@@ -452,8 +462,8 @@ html.js .row { cursor: pointer; }
 .row:hover > :first-child { box-shadow: inset 3px 0 0 var(--cobalt); }
 .row:focus-within > :first-child, .row.cur > :first-child { box-shadow: inset 6px 0 0 var(--cobalt); }
 .row:active > :first-child { box-shadow: inset 9px 0 0 var(--cobalt); }
-.row .sname:focus-visible { color: var(--cobalt); outline: 2px solid var(--cobalt); outline-offset: 4px; }
-.row.cur .sname { color: var(--cobalt); }
+.row .sname:focus-visible { color: var(--peri); outline: 2px solid var(--peri); outline-offset: 4px; }
+.row.cur .sname { color: var(--peri); }
 .row:has(.glyph:hover) .sname { text-decoration: underline; text-decoration-thickness: 3px; text-underline-offset: 5px; }
 /* a position: a square in the paper ink, position 1 solid, the others an outline; no position, a dash in a dim frame */
 .pos { display: block; }
@@ -738,13 +748,13 @@ a.fig.fp:hover .n { text-decoration: underline; text-decoration-thickness: 1px; 
 .opky { padding: 0 0 var(--s4); }
 .opkx { padding: var(--s3) 0 0; }
 .pkl { flex: none; display: inline-flex; align-items: baseline; justify-content: flex-end; gap: 6px; width: calc(var(--oyw) - var(--s2)); padding-right: 6px; font: var(--f-label); color: var(--muted); text-transform: uppercase; letter-spacing: var(--track); }
-.pkl .oar { font: 600 16px/1 var(--mono); color: var(--cobalt); }
+.pkl .oar { font: 600 16px/1 var(--mono); color: var(--peri); }
 .opc { position: relative; display: inline-flex; cursor: pointer; }
 .opc input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer; }
 .opc span { padding: 7px 12px 8px; border: 1px solid var(--line); font: 500 12px/1 var(--mono); color: var(--muted); text-transform: uppercase; letter-spacing: var(--track); white-space: nowrap; }
 .opc:hover span { color: var(--paper); border-color: var(--rule); }
-.opc input:checked + span { background: var(--cobalt); border-color: var(--cobalt); color: var(--ground); font-weight: 600; }
-.opc input:focus-visible + span { outline: 2px solid var(--cobalt); outline-offset: 3px; }
+.opc input:checked + span { background: var(--cobalt); border-color: var(--cobalt); color: var(--oncobalt); font-weight: 600; }
+.opc input:focus-visible + span { outline: 2px solid var(--peri); outline-offset: 3px; }
 .anim .opc span { transition: background var(--quick), color var(--quick), border-color var(--quick); }
 .oun { flex-basis: 100%; margin-top: 2px; padding-left: var(--oyw); font: var(--f-label); color: var(--muted); }
 .opkx .oun { order: -2; margin: 0 0 var(--s3); }
@@ -760,11 +770,11 @@ a.fig.fp:hover .n { text-decoration: underline; text-decoration-thickness: 1px; 
 .ovb { grid-area: 2 / 2; position: relative; z-index: 1; isolation: isolate; height: var(--ph); container-type: size; box-shadow: inset 1px 0 0 var(--rule), inset 0 -1px 0 var(--rule); }
 .gl { position: absolute; z-index: -2; inset: 0; display: none; overflow: visible; pointer-events: none; }
 .gl line { stroke: var(--line); stroke-width: 1px; }
-.gl line.goal { stroke: var(--cobalt); stroke-width: 1px; stroke-dasharray: 4 4; }
+.gl line.goal { stroke: var(--peri); stroke-width: 1px; stroke-dasharray: 4 4; }
 /* the better corner: a bracket in the frame's ink just off the plot, and over it what that end is, in words, on the
    line of the unit up */
-.ovb:after { content: ""; position: absolute; z-index: -1; top: -8px; right: -8px; width: 32px; height: 32px; box-shadow: inset -2px 2px 0 var(--cobalt); pointer-events: none; }
-.obt { position: absolute; bottom: calc(100% + var(--s4)); right: -8px; margin: 0; max-width: 70%; text-align: right; font: 600 11px/14px var(--mono); color: var(--cobalt); text-transform: uppercase; letter-spacing: var(--track); pointer-events: none; }
+.ovb:after { content: ""; position: absolute; z-index: -1; top: -8px; right: -8px; width: 32px; height: 32px; box-shadow: inset -2px 2px 0 var(--peri); pointer-events: none; }
+.obt { position: absolute; bottom: calc(100% + var(--s4)); right: -8px; margin: 0; max-width: 70%; text-align: right; font: 600 11px/14px var(--mono); color: var(--peri); text-transform: uppercase; letter-spacing: var(--track); pointer-events: none; }
 .obt .oar { margin-right: 6px; font-size: 13px; line-height: 14px; }
 .obt [class^="b-"] { display: none; }
 /* a system: a box at its place */
@@ -781,10 +791,10 @@ a.fig.fp:hover .n { text-decoration: underline; text-decoration-thickness: 1px; 
 .ons { padding: 0 4px; background: var(--ground); font: 400 11px/15px var(--mono); color: var(--muted); }
 /* in hand (pointed at or focused, here or in the list): a cobalt ring, two lines to the axes and its two figures on
    them, each cut out of the ticks' words by a ring of ground; the other systems dim, never hidden */
-.gx, .gy { position: absolute; z-index: -1; background: var(--cobalt); opacity: 0; pointer-events: none; }
+.gx, .gy { position: absolute; z-index: -1; background: var(--peri); opacity: 0; pointer-events: none; }
 .gx { left: 0; top: 0; width: 1px; height: calc(var(--fy) * 100cqh); }
 .gy { right: 0; top: 0; height: 1px; width: calc(var(--fx) * 100cqw); }
-.opv { position: absolute; z-index: 4; display: none; padding: 4px 7px; outline: 4px solid var(--ground); background: var(--cobalt); color: var(--ground); font: 600 12px/1 var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; pointer-events: none; }
+.opv { position: absolute; z-index: 4; display: none; padding: 4px 7px; outline: 4px solid var(--ground); background: var(--cobalt); color: var(--oncobalt); font: 600 12px/1 var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; pointer-events: none; }
 .opv .v { display: none; }
 .opv .pu { margin-left: .35em; font-weight: 500; }
 /* a figure on its axis slides along its mark so it never leaves the plot's edge: its start under a mark at the
@@ -795,7 +805,7 @@ a.fig.fp:hover .n { text-decoration: underline; text-decoration-thickness: 1px; 
 .obx:is(.hand, :has(.mk:focus-visible)) { z-index: 3; }
 .obx:is(.hand, :has(.mk:focus-visible)) > :is(.gx, .gy) { opacity: 1; }
 .obx:is(.hand, :has(.mk:focus-visible)) > .opv { display: block; }
-.obx:is(.hand, :has(.mk:focus-visible)) .gm { box-shadow: 0 0 0 3px var(--ground), 0 0 0 5px var(--cobalt); }
+.obx:is(.hand, :has(.mk:focus-visible)) .gm { box-shadow: 0 0 0 3px var(--ground), 0 0 0 5px var(--peri); }
 .obx:is(.hand, :has(.mk:focus-visible)) .onm { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px; }
 .ovw.handed .obx:not(.hand) > .mk { opacity: .35; }
 .anim :is(.mk, .gx, .gy) { transition: opacity var(--quick); }
@@ -806,7 +816,7 @@ a.fig.fp:hover .n { text-decoration: underline; text-decoration-thickness: 1px; 
   .obx:has(.mk:hover) { z-index: 3; }
   .obx:has(.mk:hover) > :is(.gx, .gy) { opacity: 1; }
   .obx:has(.mk:hover) > :is(.opv, .otp) { display: block; }
-  .obx:has(.mk:hover) .gm { box-shadow: 0 0 0 3px var(--ground), 0 0 0 5px var(--cobalt); }
+  .obx:has(.mk:hover) .gm { box-shadow: 0 0 0 3px var(--ground), 0 0 0 5px var(--peri); }
   .obx:has(.mk:hover) .onm { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px; }
   .ovw:has(.mk:hover) .obx:not(.hand, :has(.mk:hover)) > .mk { opacity: .35; }
   .ovw:has(.mk:hover) .ovq .ax .tl { opacity: .12; }
@@ -884,7 +894,7 @@ a.fig.fp:hover .n { text-decoration: underline; text-decoration-thickness: 1px; 
 .nrl { list-style: none; display: flex; flex-wrap: wrap; gap: 4px 28px; margin: 0; padding: 0; }
 .nrl li { min-width: 0; max-width: 100%; }
 .nn { display: block; max-width: 100%; font: 800 28px/1.1 var(--disp); overflow-wrap: anywhere; }
-.nrl li:target .nn { background: var(--cobalt); color: var(--ground); box-shadow: 0 0 0 .12em var(--cobalt); }
+.nrl li:target .nn { background: var(--cobalt); color: var(--oncobalt); box-shadow: 0 0 0 .12em var(--cobalt); }
 @media (max-width: 760px) {
   .notrun { margin-top: 80px; }
   .nrg > div { grid-template-columns: minmax(0, 1fr); row-gap: 6px; padding: 12px 0 14px; }
@@ -1351,7 +1361,7 @@ a.pvd:hover { text-decoration: underline 2px; text-underline-offset: 4px; }
 .cn2 { width: fit-content; margin: 0 0 12px -.12em; padding: 3px .12em 0; font: 800 26px/1 var(--disp); }
 /* arriving on a petal, a check, a figure, a cause, a rule or a line of the checks page: it is set
    in a cobalt block that slides in from its left edge */
-.chk:target .cn2, .cs > div:target dt, .checkspage .rd:target { background: var(--cobalt); color: var(--ground); }
+.chk:target .cn2, .cs > div:target dt, .checkspage .rd:target { background: var(--cobalt); color: var(--oncobalt); }
 .cs > div:target dt { width: fit-content; height: fit-content; margin-left: -.4em; padding: 0 .4em; }
 /* a paragraph's block grows around its words (a shadow, not padding), so they keep their place and their lines */
 .checkspage .rd:target { width: fit-content; box-shadow: 0 0 0 8px var(--cobalt), -4px 0 0 8px var(--cobalt), 4px 0 0 8px var(--cobalt); }
@@ -1366,13 +1376,13 @@ a.pvd:hover { text-decoration: underline 2px; text-underline-offset: 4px; }
    a row of cells whose rules meet (the list starts a rule's width early and clips it, so the
    first name of each line has none) */
 .cs dt a { text-decoration-color: var(--rule); }
-/* in hand, as a footer link: cobalt under ground ink, at once */
-.cs dt a:hover, .cs dt a:active, .cs dt a:focus-visible { background: var(--cobalt); color: var(--ground); text-decoration: none; box-shadow: 0 0 0 3px var(--cobalt); }
+/* in hand, as a footer link: cobalt under white words, at once */
+.cs dt a:hover, .cs dt a:active, .cs dt a:focus-visible { background: var(--cobalt); color: var(--oncobalt); text-decoration: none; box-shadow: 0 0 0 3px var(--cobalt); }
 .cs .mbr dd { max-width: none; }
 .mbl { list-style: none; display: flex; flex-wrap: wrap; row-gap: 8px; margin: 0 0 0 -20px; padding: 0; overflow: hidden; }
 .mbl li { min-width: 0; margin-left: -1px; padding: 0 20px 0 21px; box-shadow: inset 1px 0 0 var(--line); }
 .mbl a { display: block; font: 800 28px/1.1 var(--disp); color: var(--paper); text-decoration: none; overflow-wrap: anywhere; }
-.mbl a:hover, .mbl a:active { background: var(--cobalt); color: var(--ground); box-shadow: 0 0 0 3px var(--cobalt); }
+.mbl a:hover, .mbl a:active { background: var(--cobalt); color: var(--oncobalt); box-shadow: 0 0 0 3px var(--cobalt); }
 .rd { font: 400 var(--read)/var(--read-lh) var(--mono); max-width: 90ch; text-wrap: pretty; }
 .rd + .rd { margin-top: 10px; }
 .cwrap .hl { padding: 16px 0 0 16px; }
@@ -1422,7 +1432,7 @@ a.pvd:hover { text-decoration: underline 2px; text-underline-offset: 4px; }
 .lost a:hover { background: var(--lift); box-shadow: inset 3px 0 0 var(--cobalt); }
 .lost a:hover .ln { text-decoration: underline 3px; text-underline-offset: 5px; }
 .lost a:focus-visible { outline: none; background: var(--lift); box-shadow: inset 6px 0 0 var(--cobalt); }
-.lost a:focus-visible .ln { color: var(--cobalt); }
+.lost a:focus-visible .ln { color: var(--peri); }
 .lost a:active { box-shadow: inset 9px 0 0 var(--cobalt); }
 .anim .lost a { transition: box-shadow var(--quick), background-color var(--quick); }
 
@@ -1562,7 +1572,7 @@ a.pvd:hover { text-decoration: underline 2px; text-underline-offset: 4px; }
 /* ---------------------------------------------------------------- the partners: the home page's last section (ladder.py `partners_html`, styles.mjs scope "partners"),
    set as the systems not run are: the heading over a ruled grid, as many cells a line as fit (one line from 1 to 6, then
    more lines; up to 6 share the line), each a partner's mark in paper (a mask, so one ink sets every mark; the page's own rules give each its
-   shape). A cell in hand takes cobalt under ground ink, as a footer link does */
+   shape). A cell in hand takes cobalt under white, as a footer link does */
 .ptn { margin-top: 112px; }
 .ptn .nrh a { color: inherit; text-decoration: none; }
 .ptn .nrh a:hover { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 6px; }
@@ -1572,7 +1582,7 @@ a.pvd:hover { text-decoration: underline 2px; text-underline-offset: 4px; }
 .ptn-g > li { min-width: 0; box-shadow: inset -1px -1px 0 var(--line); }
 .ptn-c { display: grid; place-items: center; height: 128px; color: var(--paper); text-decoration: none; container-type: inline-size; transition: background-color var(--quick), color var(--quick); }
 .ptn-m { --s: min(64px, 24cqi); display: block; width: calc(var(--s) * var(--k)); height: calc(var(--s) / var(--k)); background: currentColor; -webkit-mask: center / contain no-repeat; mask: center / contain no-repeat; }
-.ptn-c:is(:hover, :active, :focus-visible) { background: var(--cobalt); color: var(--ground); }
+.ptn-c:is(:hover, :active, :focus-visible) { background: var(--cobalt); color: var(--oncobalt); }
 .ptn-c:focus-visible { outline: 2px solid var(--paper); outline-offset: -2px; }
 @media (max-width: 760px) {
   .ptn { margin-top: 80px; }
@@ -1592,9 +1602,9 @@ main { flex: 1 0 auto; }
 .fcells { display: flex; flex-wrap: wrap; list-style: none; margin: 0 var(--gut) 0 calc(var(--gut) - 20px); padding: 0 0 48px; overflow: hidden; }
 .fcells li { display: flex; align-items: baseline; flex-wrap: wrap; column-gap: 10px; margin-left: -1px; padding: 16px 20px 0 21px; box-shadow: inset 1px 0 0 var(--line); }
 .foot a { color: var(--paper); text-decoration-color: var(--rule); }
-/* a footer link pointed at, pressed or focused: cobalt under ground ink, at once; focused, a paper ring
+/* a footer link pointed at, pressed or focused: cobalt under white words, at once; focused, a paper ring
    round the block, as a tab's */
-.foot a:hover, .foot a:active, .foot a:focus-visible { background: var(--cobalt); color: var(--ground); text-decoration: none; box-shadow: 0 0 0 3px var(--cobalt); }
+.foot a:hover, .foot a:active, .foot a:focus-visible { background: var(--cobalt); color: var(--oncobalt); text-decoration: none; box-shadow: 0 0 0 3px var(--cobalt); }
 .foot a:focus-visible, .cs dt a:focus-visible { outline-color: var(--paper); outline-offset: 5px; }
 .foot code { color: var(--muted); font-weight: 400; overflow-wrap: anywhere; }
 /* a name printed on a phone only (its list names every line) */
@@ -1614,7 +1624,7 @@ main { flex: 1 0 auto; }
 .learnpage .lunder .mast-in { padding-bottom: 0; }
 .kick { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 32px; font: var(--f-label); letter-spacing: var(--track); text-transform: uppercase; margin-bottom: 18px; }
 .kick a { display: inline-flex; align-items: center; min-height: 24px; text-decoration: none; box-shadow: 0 1px 0 var(--ground); }
-/* in hand: a block of ground ink, the words in cobalt (as a link on the band) */
+/* in hand: a white block, the words in cobalt (as a link on the band) */
 .kick a:hover, .kick a:active, .kick a:focus-visible { background: var(--ground); color: var(--cobalt); text-decoration: none; box-shadow: 0 0 0 3px var(--ground); }
 .learnpage .lt-h { font-size: var(--title); line-height: .92; max-width: 22ch; padding-top: 0; overflow-wrap: normal; text-wrap: balance; }
 .lt-s { font: 400 14px/22px var(--mono); margin-top: 20px; max-width: 70ch; text-wrap: pretty; }
@@ -1625,16 +1635,18 @@ main { flex: 1 0 auto; }
 .lsc { flex: 1; display: flex; flex-direction: column; gap: 10px; min-height: 96px; padding: 12px var(--cp) 16px; color: var(--ground); text-decoration: none; }
 .lsn { font: 600 12px/14px var(--mono); font-variant-numeric: tabular-nums; }
 .lst { font: 800 20px/1 var(--disp); text-wrap: balance; }
-/* pointed at: black on cobalt flips to cobalt on ground, on a hard edge */
+/* pointed at: white on cobalt flips to cobalt on white, on a hard edge */
 .lsc:hover, .lway:hover { background: var(--ground); color: var(--cobalt); }
 .lsc:active, .lway:active { box-shadow: inset 0 -4px 0 var(--cobalt); }
+/* a night block laid on the band (the step in view, the Autoresearch mock-up and its tag) keeps the night's ink */
+.lsc.on, .mast .soon, .mast .arx { --ground: #07080c; }
 .lsc.on { background: var(--ground); color: var(--paper); view-transition-name: lstep; }
-.lsc.on .lsn { color: var(--cobalt); }
+.lsc.on .lsn { color: var(--peri); }
 .mast .lsc:focus-visible, .mast .lway:focus-visible { outline-offset: -5px; }
 .mast .lsc.on:focus-visible, .mast .lsc:hover:focus-visible, .mast .lway:hover:focus-visible { outline-color: var(--cobalt); }
 /* the hub's band: the two tracks as two cells, each over its pages */
 .lways { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px; margin: 40px calc(-1 * var(--cp)) 0; padding-top: 2px; background: var(--ground); }
-.lway { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "n c" "r r"; column-gap: 16px; align-content: start; padding: 16px var(--cp) 20px; background: var(--cobalt); color: var(--ground); text-decoration: none; }
+.lway { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "n c" "r r"; column-gap: 16px; align-content: start; padding: 16px var(--cp) 20px; background: var(--cobalt); color: var(--oncobalt); text-decoration: none; }
 .lwn { grid-area: n; font: 900 40px/.92 var(--disp); text-wrap: balance; }
 .lwc { grid-area: c; padding-top: 4px; font: var(--f-label); letter-spacing: var(--track); text-transform: uppercase; white-space: nowrap; }
 .lwr { grid-area: r; margin-top: 12px; max-width: 62ch; font: 400 13px/20px var(--mono); text-wrap: pretty; }
@@ -1650,14 +1662,14 @@ main { flex: 1 0 auto; }
 .hp:focus-visible { outline-offset: -2px; background: var(--lift); }
 .hp:active { box-shadow: inset 6px 0 0 var(--cobalt), inset 0 -1px 0 var(--line); }
 .hn { grid-row: 1 / span 2; font: 900 30px/30px var(--disp); color: var(--muted); font-variant-numeric: tabular-nums; }
-.hp:hover .hn, .hp:focus-visible .hn { color: var(--cobalt); }
+.hp:hover .hn, .hp:focus-visible .hn { color: var(--peri); }
 .ht { font: 900 30px/30px var(--disp); text-wrap: balance; }
 .hs { font: var(--f-meta); color: var(--muted); margin-top: 8px; max-width: 58ch; text-wrap: pretty; }
 /* every term of the glossary, set as a field of names */
 .lgl { margin: 104px calc(-1 * var(--cp)) 0; padding: 20px var(--cp) 0; border-top: 2px solid var(--paper); }
 .lgt { list-style: none; display: flex; flex-wrap: wrap; margin: 28px 0 0 -8px; padding: 0; font: 900 30px/1 var(--disp); }
 .lgt a { display: block; padding: 3px 8px 5px; margin-right: 10px; text-decoration: none; }
-.lgt a:hover, .lgt a:focus-visible { background: var(--cobalt); color: var(--ground); }
+.lgt a:hover, .lgt a:focus-visible { background: var(--cobalt); color: var(--oncobalt); }
 .lgt a:focus-visible { outline-offset: 0; }
 
 /* a page: its sections' heads in the margin beside the first lines they head; drawings and
@@ -1677,7 +1689,7 @@ main { flex: 1 0 auto; }
 .prose a { text-decoration-color: var(--muted); }
 .prose a:hover { text-decoration-color: currentColor; }
 .prose .df { text-decoration-color: var(--muted); }
-.prose .df:hover, .prose .df:focus-visible { text-decoration: underline solid 2px var(--cobalt); }
+.prose .df:hover, .prose .df:focus-visible { text-decoration: underline solid 2px var(--peri); }
 .prose strong { font-weight: 600; }
 /* emphasis in weight, never an underline (a link's mark) */
 .prose em { font-style: normal; font-weight: 600; }
@@ -1689,7 +1701,7 @@ main { flex: 1 0 auto; }
 .lpr > .ah + * { margin-top: 74px; }
 .ah3 { font: 800 24px/24px var(--disp); margin: 36px 0 10px; }
 /* arriving on an address (a search result, a link): the heading set in a cobalt block that slides in */
-.ah:target, .ah3:target, .sth:target { width: fit-content; background: var(--cobalt); color: var(--ground); box-shadow: 0 0 0 8px var(--cobalt); }
+.ah:target, .ah3:target, .sth:target { width: fit-content; background: var(--cobalt); color: var(--oncobalt); box-shadow: 0 0 0 8px var(--cobalt); }
 .anim :is(.ah:target, .ah3:target, .sth:target) { animation: wipe 240ms cubic-bezier(.2, .8, .1, 1) both; }
 .ls { list-style: none; margin: 14px 0; padding: 0; }
 .ls > li { position: relative; padding-left: 26px; text-wrap: pretty; }
@@ -1731,20 +1743,20 @@ ol.ls > li:before { counter-increment: n; content: counter(n); position: absolut
    nothing has run */
 .arband { position: relative; overflow: hidden; isolation: isolate; }
 .arband.mast-sys .mast-in { position: relative; padding-bottom: 0; }
-.arw { position: absolute; inset: -12px 0 auto; z-index: -1; display: flex; flex-direction: column; font: 900 clamp(96px, 13vw, 210px)/.8 var(--disp); text-transform: uppercase; letter-spacing: -.01em; color: color-mix(in srgb, var(--ground) 13%, var(--cobalt)); white-space: nowrap; pointer-events: none; user-select: none; }
+.arw { position: absolute; inset: -12px 0 auto; z-index: -1; display: flex; flex-direction: column; font: 900 clamp(96px, 13vw, 210px)/.8 var(--disp); text-transform: uppercase; letter-spacing: -.01em; color: color-mix(in srgb, #07080c 16%, var(--cobalt)); white-space: nowrap; pointer-events: none; user-select: none; }
 .arw span:nth-child(odd) { transform: translateX(-18%); }
 .arw span:nth-child(even) { transform: translateX(-46%); }
 .arband .kick { justify-content: flex-start; }
 .arband .lt-s { max-width: 56ch; }
 .soon { display: inline-flex; align-items: center; gap: 10px; padding: 7px 12px 6px; background: var(--ground); color: var(--paper); font: var(--f-label); letter-spacing: var(--track); text-transform: uppercase; }
-.soon::before { content: ""; width: 7px; height: 7px; background: var(--cobalt); }
+.soon::before { content: ""; width: 7px; height: 7px; background: var(--peri); }
 .anim .soon::before { animation: arblink 1.2s steps(1) infinite; }
 
 .arx { margin-top: 48px; background: var(--ground); color: var(--paper); font: 400 12px/18px var(--mono); }
 .arx-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; margin: 0; padding: 0 0 0 16px; min-height: 40px; box-shadow: inset 0 -1px 0 var(--line); font: var(--f-label); letter-spacing: var(--track); text-transform: uppercase; color: var(--muted); }
 .arx-app { display: inline-flex; align-items: center; gap: 8px; color: var(--paper); }
 /* the turnstile's arm, small: a stem and three cells */
-.arx-tk { fill: var(--cobalt); }
+.arx-tk { fill: var(--peri); }
 .arx-path { flex: 1; }
 .arx-mock { margin-left: auto; align-self: stretch; display: inline-flex; align-items: center; padding: 0 14px; background: var(--paper); color: var(--ground); }
 .arx-in { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 8fr); }
@@ -1763,7 +1775,7 @@ ol.ls > li:before { counter-increment: n; content: counter(n); position: absolut
 .arx-cells i { width: 14px; height: 14px; background: var(--cobalt); }
 .arx-cells .cr { background: none; box-shadow: inset 0 0 0 1px var(--rule); }
 .arx-cells .ck { background: var(--paper); }
-.arx-cells .crun { background: none; box-shadow: inset 0 0 0 1px var(--cobalt); }
+.arx-cells .crun { background: none; box-shadow: inset 0 0 0 1px var(--peri); }
 .anim .arx-cells .crun { animation: arblink 1.2s steps(1) infinite; }
 .arx-t { width: 100%; border-collapse: collapse; }
 .arx-t th, .arx-t td { padding: 8px 8px 8px 0; text-align: left; vertical-align: middle; border-bottom: 1px solid var(--line); font-weight: 400; }
@@ -1773,11 +1785,11 @@ ol.ls > li:before { counter-increment: n; content: counter(n); position: absolut
 .arx-t .arv { white-space: nowrap; }
 .arx-t .arv::before { content: ""; display: inline-block; width: 8px; height: 8px; margin-right: 8px; vertical-align: 1px; background: var(--cobalt); }
 .arx-t .refused .arv::before { background: none; box-shadow: inset 0 0 0 1px var(--rule); }
-.arx-t .running .arv::before { background: none; box-shadow: inset 0 0 0 1px var(--cobalt); }
+.arx-t .running .arv::before { background: none; box-shadow: inset 0 0 0 1px var(--peri); }
 .arx-t .refused :is(th, .arv) { color: var(--muted); }
 .arx-t .refused th { text-decoration: line-through; text-decoration-color: var(--rule); }
 .arx-t .running :is(th, .arv) { color: var(--muted); }
-.anim .arx-t .running .arv::after { content: "_"; margin-left: 2px; color: var(--cobalt); animation: arblink 1.2s steps(1) infinite; }
+.anim .arx-t .running .arv::after { content: "_"; margin-left: 2px; color: var(--peri); animation: arblink 1.2s steps(1) infinite; }
 .arx-t .accepted:has(.kept) { background: var(--lift); }
 .nil { display: inline-block; width: 6ch; height: 10px; vertical-align: middle; background: repeating-linear-gradient(135deg, var(--rule) 0 1px, transparent 1px 4px); }
 .kept { padding: 3px 7px 2px; background: var(--paper); color: var(--ground); font: var(--f-label); letter-spacing: var(--track); text-transform: uppercase; }
@@ -1793,7 +1805,7 @@ ol.ls > li:before { counter-increment: n; content: counter(n); position: absolut
 /* How it works: numbered cells side by side, ruled like the band's lower edge */
 .lpr > .lcells { grid-column: 2 / -1; max-width: 1000px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; background: var(--line); box-shadow: 0 0 0 1px var(--line); }
 .lcell { background: var(--ground); padding: 18px 20px 22px; }
-.lcn { margin: 0; font: 900 44px/1 var(--disp); color: var(--cobalt); }
+.lcn { margin: 0; font: 900 44px/1 var(--disp); color: var(--peri); }
 .lch { margin: 14px 0 10px; font: 800 22px/1.05 var(--disp); color: var(--paper); }
 .lcell p:not(.lcn) { font-size: 13px; line-height: 21px; }
 /* Not decided yet: each open choice an outlined chip */
@@ -1838,7 +1850,7 @@ ol.ls > li:before { counter-increment: n; content: counter(n); position: absolut
 .ar { display: block; color: var(--paper); margin-bottom: 8px; }
 .pt3 [data-k] { cursor: default; transition: opacity var(--quick), background-color var(--quick), box-shadow var(--quick); }
 .pt3.k-on [data-k]:not(.k-lit) { opacity: .4; }
-.pt3 .k-lit { background: var(--lift); box-shadow: inset 0 -2px 0 var(--cobalt); color: var(--paper); }
+.pt3 .k-lit { background: var(--lift); box-shadow: inset 0 -2px 0 var(--peri); color: var(--paper); }
 /* a forward pass as its operations, the matrix products in paper */
 .ops { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--rule); }
 .op { display: grid; grid-template-columns: 20ch minmax(0, 1fr) auto; column-gap: 16px; align-items: baseline; padding: 9px 0; border-bottom: 1px solid var(--line); font: 400 13px/20px var(--mono); }
@@ -1930,11 +1942,11 @@ ol.ls > li:before { counter-increment: n; content: counter(n); position: absolut
 .bl2 .rb .fig { color: var(--paper); }
 /* an explorer: a drawing a reader operates. Drawn in full by the build; framed in cobalt once script runs it */
 .xpl { padding: 18px; box-shadow: inset 0 0 0 1px var(--rule); }
-.xpl.on { box-shadow: inset 0 0 0 2px var(--cobalt); }
+.xpl.on { box-shadow: inset 0 0 0 2px var(--peri); }
 .xbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; margin-bottom: 16px; }
 .xb { font: 600 12px/14px var(--mono); padding: 10px 14px; box-shadow: inset 0 0 0 1px var(--rule); color: var(--paper); }
 .xb:hover:not(:disabled):not([aria-disabled=true]) { background: var(--paper); color: var(--ground); box-shadow: none; }
-.xb:active:not(:disabled):not([aria-disabled=true]) { background: var(--cobalt); color: var(--ground); }
+.xb:active:not(:disabled):not([aria-disabled=true]) { background: var(--cobalt); color: var(--oncobalt); }
 .xb:disabled, .xb[aria-disabled=true] { color: var(--rule); cursor: default; box-shadow: inset 0 0 0 1px var(--line); }
 .xc { display: inline-flex; align-items: center; gap: 8px; font: 400 13px/20px var(--mono); cursor: pointer; }
 .xc input { width: 16px; height: 16px; margin: 0; accent-color: var(--cobalt); }
@@ -1968,7 +1980,7 @@ ol.ls > li:before { counter-increment: n; content: counter(n); position: absolut
 .lpl { flex: none; display: flex; align-items: stretch; margin: 0 calc(var(--gut) - 12px) 0 12px; box-shadow: inset 1px 0 0 var(--line); font: var(--f-label); letter-spacing: var(--track); text-transform: uppercase; }
 .lpa { display: flex; align-items: center; justify-content: center; width: 44px; color: var(--muted); transition: color var(--quick), background-color var(--quick); }
 .lpa:hover { color: var(--paper); background: var(--lift); }
-.lpa:active { color: var(--ground); background: var(--cobalt); }
+.lpa:active { color: var(--oncobalt); background: var(--cobalt); }
 .lpa:focus-visible { outline-offset: -2px; }
 .lar { display: block; }
 .lpb .lar, .tp .lar { transform: scaleX(-1); }
@@ -1981,8 +1993,8 @@ ol.ls > li:before { counter-increment: n; content: counter(n); position: absolut
 .tp { box-shadow: inset 0 0 0 1px var(--rule); }
 .tp .tl2 { color: var(--muted); }
 .tp:hover { background: var(--lift); box-shadow: inset 0 0 0 1px var(--rule), inset 3px 0 0 var(--cobalt); }
-.tx { align-items: flex-end; text-align: right; background: var(--cobalt); color: var(--ground); }
-.tx:hover { background: var(--ground); color: var(--cobalt); box-shadow: inset 0 0 0 2px var(--cobalt); }
+.tx { align-items: flex-end; text-align: right; background: var(--cobalt); color: var(--oncobalt); }
+.tx:hover { background: var(--ground); color: var(--peri); box-shadow: inset 0 0 0 2px var(--peri); }
 .tp:active { box-shadow: inset 0 0 0 1px var(--rule), inset 6px 0 0 var(--cobalt); }
 .tx:active { box-shadow: inset 0 0 0 4px var(--cobalt); }
 .tx:focus-visible { outline-offset: 2px; }
@@ -2299,7 +2311,7 @@ ol.ls > li:before { counter-increment: n; content: counter(n); position: absolut
   .foot .fci a:after { content: ""; position: absolute; inset: 0; }
   /* pressed, the line turns cobalt under ground ink, its name with it */
   .fcells li > a:is(:hover, :active, :focus-visible) :is(.fk, .fv) { color: var(--ground); text-decoration: none; }
-  .foot .fci a:is(:hover, :active, :focus-visible) { background: none; box-shadow: none; color: var(--cobalt); }
+  .foot .fci a:is(:hover, :active, :focus-visible) { background: none; box-shadow: none; color: var(--peri); }
 }
 /* a field a finger types in: 44 px tall, its words at 16 px so the phone does not zoom on focus */
 @media (pointer: coarse) {
@@ -2327,10 +2339,11 @@ ol.ls > li:before { counter-increment: n; content: counter(n); position: absolut
   .top { box-shadow: none; }
   /* every fill that carries words in ground ink prints, so those words never print white on white */
   .schip, .sl, .sl.cut:before, .rk, .pos.p1 .pn, .fid tr.me, .fid tr.me > *, .ctp.hd > .ctc { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
-  /* a size tab's words dark on its cobalt */
-  .rk { color: #0b0b0c; }
+  /* a size tab's words white on its cobalt */
+  .rk { color: #fff; }
   /* a petal's name stays dark on its ink, and paper (now dark) on an outline */
-  .t text, .schip { fill: #0b0b0c; color: #0b0b0c; }
+  .t text, .schip { fill: #07080c; color: #07080c; }
+  .t.key text { fill: #fff; }
   .t.hollow text, .schip.undecided, .schip.hollow { fill: var(--paper); color: var(--paper); }
   /* a silent red on paper: its name in the text ink (red on white is under 4.5:1), its outline red */
   .t.red.open text, .schip.red.open { fill: var(--paper); color: var(--paper); }

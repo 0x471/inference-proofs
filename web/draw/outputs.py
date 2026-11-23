@@ -28,7 +28,7 @@ from .chrome import (
     standing,
 )
 from .hexagon import glyph_svg
-from .inks import COBALT, GROUND, LINE, MUTED, PAPER, ratio
+from .inks import COBALT, GROUND, LINE, MUTED, ON_COBALT, PAPER, PERI, ratio
 from .ladder import (
     BARE,
     fig_html,
@@ -387,7 +387,7 @@ def system_card(pid):
     weight = 600 if row["position"] is not None else 400
     css = f"""
 .top{{position:absolute;left:0;top:0;width:{CARD_W}px;height:72px;padding:0 64px;display:flex;align-items:center;box-shadow:inset 0 -1px 0 {LINE}}}
-.band{{position:absolute;left:0;top:72px;width:{CARD_W}px;height:244px;padding:0 64px 28px;background:{COBALT};color:{GROUND};display:flex;align-items:flex-end;justify-content:space-between;gap:40px}}
+.band{{position:absolute;left:0;top:72px;width:{CARD_W}px;height:244px;padding:0 64px 28px;background:{COBALT};color:{ON_COBALT};display:flex;align-items:flex-end;justify-content:space-between;gap:40px}}
 .who{{width:{CARD_NAME_W}px}}
 .name{{font-size:{size}px;line-height:.86;letter-spacing:-.012em;white-space:nowrap}}
 .model{{margin-top:16px;font-size:17px;line-height:23px;font-weight:600}}
@@ -432,7 +432,7 @@ def system_card(pid):
     figs = "".join(f'<div class="cell fit"><span class="lbl">{e(k)}</span>{v}</div>'
                    for k, v in cells)  # fmt: skip
     body = (
-        f'<div class="top">{lockup_svg(22, ink=PAPER, mark=COBALT)}</div>'
+        f'<div class="top">{lockup_svg(22, ink=PAPER, mark=PERI)}</div>'
         f'<div class="band"><div class="who fit"><p class="disp name fit">'
         f'{"<br>".join(e(t) for t in lines)}</p><p class="mono model fit">{model}</p></div>'
         f'<div class="mono lead fit"><span class="lbl">{e(label)}</span>{lead}</div></div>'
@@ -451,12 +451,12 @@ FAVICON = 32  # the PNG icon for clients that read no SVG icon
 def icon_svg():
     """The site's icon: the mark in ground ink on cobalt, drawn on the 16 px grid (whole pixels at
     16 and at 32)."""
-    return tile_svg(16, COBALT, GROUND, xmlns=True) + "\n"
+    return tile_svg(16, COBALT, ON_COBALT, xmlns=True) + "\n"
 
 
 def icon_card(size=ICON, name="icon"):
     """The touch icon (180 px) and the PNG icon (32 px), each drawn for its own size."""
-    body = tile_svg(size, COBALT, GROUND)
+    body = tile_svg(size, COBALT, ON_COBALT)
     page_ = card_page(name, body, "")
     return page_.replace(
         '<html lang="en">', f'<html lang="en" data-w="{size}" data-h="{size}" data-scale="1">', 1
@@ -526,7 +526,7 @@ html,body{{box-shadow:inset 0 0 0 2px {LINE}}}
 """
     cells = "".join(cell(x) for x in names)
     cells += "<div></div>" * (rows * cols - n)
-    body = (f'<div class="cl">{lockup_svg(26, ink=PAPER, mark=COBALT)}</div>'
+    body = (f'<div class="cl">{lockup_svg(26, ink=PAPER, mark=PERI)}</div>'
             f'<p class="mono by">{credit_words(linked=False)}</p>'
             f'<div class="mg">{cells}</div>')  # fmt: skip
     return card_page(MEMBERS_CARD, body, css)

@@ -4,7 +4,7 @@ ground ink on the ink of its state. The site's logo is the turnstile itself (mar
 """
 
 from . import state as S
-from .inks import COBALT, GROUND, MUTED
+from .inks import COBALT, GROUND, MUTED, ON_COBALT
 from .words import e
 
 # ------------------------------------------------------------------ the glyph: a stem and its arms
@@ -98,7 +98,7 @@ def glyph_svg(unit, arms, names=None, cls="pie-svg", hrefs=None):
         if long:
             x, base = STEM + PAD, y + (ARM + NAME * 0.8) / 2
             ink = (MUTED if state == "hollow" else S.INK.get("red", MUTED) if form == "open"
-                   else GROUND)  # fmt: skip
+                   else ON_COBALT if state == "key" else GROUND)  # fmt: skip
             style = (f'font-family="Big Shoulders Display,system-ui,sans-serif" font-weight="800" '
                      f'font-size="{_n(NAME)}" letter-spacing="{_n(NAME * TRACK)}" fill="{ink}"')  # fmt: skip
             caps = e(names[i].upper())
