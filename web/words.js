@@ -700,8 +700,6 @@
     if (!free && h > below && h <= above) y = r.top - h - 8;
     probe.style.setProperty('max-height', !free && h > Math.max(below, above) ? `${Math.max(0, below, above)}px` : 'none');
     probe.style.setProperty('transform', `translate(${Math.round(px)}px, ${Math.round(y)}px)`);
-    // the leaf's sharp corner: the one nearest what it reads
-    probe.dataset.c = (y + h / 2 < r.top + r.height / 2 ? 'b' : 't') + (px + w / 2 < r.left + r.width / 2 ? 'r' : 'l');
     probe.hidden = r.bottom <= top || r.top >= innerHeight;
   };
   const hide = () => {
@@ -1082,7 +1080,6 @@
         const x = Math.max(lo, Math.min(r.left, hi - w));
         const y = r.bottom + 8 + h > innerHeight ? top - h - 8 : r.bottom + 8;
         peek.style.setProperty('transform', `translate(${Math.round(x)}px, ${Math.round(y)}px)`);
-        peek.dataset.c = (y < top ? 'b' : 't') + (x + w / 2 < r.left + r.width / 2 ? 'r' : 'l');
       };
       const show = (a) => {
         if (on === a) return;

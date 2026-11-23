@@ -1569,15 +1569,9 @@ a.pvd:hover { text-decoration: underline 2px; text-underline-offset: 4px; }
 .probe .prk + .prk { margin-top: 6px; }
 .probe .prc { font: 400 11px/16px var(--mono); color: var(--muted); }
 .probe .prp { max-width: 44ch; margin: 8px 0 0; }
-/* a lens (a figure's labels, a term's meaning): a leaf, three corners swept and the fourth sharp, the sharp one at
-   the thing it reads (words.js names the corner); it opens from that corner, on the site's curve */
-.probe, .gpk { --leaf: 14px; border-radius: 0 var(--leaf) var(--leaf) var(--leaf); }
-:is(.probe, .gpk)[data-c=tr] { border-radius: var(--leaf) 0 var(--leaf) var(--leaf); --ur: 0%; --ul: 45%; }
-:is(.probe, .gpk)[data-c=bl] { border-radius: var(--leaf) var(--leaf) var(--leaf) 0; --ut: 65%; --ub: 0%; }
-:is(.probe, .gpk)[data-c=br] { border-radius: var(--leaf) var(--leaf) 0 var(--leaf); --ut: 65%; --ub: 0%; --ur: 0%; --ul: 45%; }
-.anim :is(.probe, .gpk) { animation: probe 200ms var(--curve) both; }
+.anim .probe { animation: probe var(--quick) both; }
 /* it appears where it stands, with no travel (its place is its transform, set by words.js) */
-@keyframes probe { from { opacity: 0; clip-path: inset(var(--ut, 0%) var(--ur, 45%) var(--ub, 65%) var(--ul, 0%)); } to { clip-path: inset(0% 0% 0% 0%); } }
+@keyframes probe { from { opacity: 0; } }
 .fig[data-t], .na[data-t] { cursor: help; }
 .probed { background: var(--line); box-shadow: 0 0 0 3px var(--line); }
 /* on a system's accent band and on its own replies row (paper) the block inverts the figure's inks instead */
