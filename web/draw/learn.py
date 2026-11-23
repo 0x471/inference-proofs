@@ -333,7 +333,7 @@ def band(kicker, title, summary, under=""):
     kick = f'<p class="kick">{kicker}</p>' if kicker else ""
     said = f'<p class="lt-s">{nobreak(summary)}</p>' if summary else ""
     return (f'<section class="mast mast-sys lband{" lunder" if under else ""}" '
-            f'aria-labelledby="h-name">{lattice(title)}<div class="mast-in">{kick}'
+            f'aria-labelledby="h-name">{lattice(title, 54)}<div class="mast-in">{kick}'
             f'<h1 id="h-name" class="sysname lt-h">{e(title)}</h1>{said}{under}</div></section>')  # fmt: skip
 
 

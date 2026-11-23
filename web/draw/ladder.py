@@ -791,7 +791,7 @@ def build_index():
     body = f"""
 {header("home")}
 <main id="main" class="home">
-  <section class="mast">{lattice("home")}<div class="mast-in">{band_html()}</div></section>
+  <section class="mast">{lattice("home", 50)}<div class="mast-in">{band_html()}</div></section>
   <div class="wrap ladder">{board}</div>
   <div class="wrap">{not_run_html()}{partners}</div>
 </main>

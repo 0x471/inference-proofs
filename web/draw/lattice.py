@@ -44,10 +44,10 @@ def _tone(seed, i, j, t):
     return "b" if _r(seed, i, j, "b") < 0.3 else "d"
 
 
-def _cell(seed, i, j):
+def _cell(seed, i, j, reach):
     """(kind, tone, drawing) of the cell at column i (0 the rightmost) and row j (0 the lowest),
     or None where the field is empty: kind fill and ring carry a path, text and cut a character."""
-    t = 1.0 - (i / 62) ** 1.15 - (j / ROWS) * 0.42 + (_r(seed, i, j, "j") - 0.5) * 0.3
+    t = 1.0 - (i / reach) ** 1.15 - (j / ROWS) * 0.42 + (_r(seed, i, j, "j") - 0.5) * 0.3
     if t < 0.45:  # the lowest level: a dot, or nothing
         return ("fill", "d", DOT) if t >= 0.25 and _r(seed, i, j, "s") < 0.55 else None
     if _r(seed, i, j, "g") < (0.34 if t < 0.7 else 0.14):
@@ -62,12 +62,13 @@ def _cell(seed, i, j):
     return ("cut" if k < 0.3 or (lit and k < 0.7) else "text", tone, ch)
 
 
-def lattice(seed):
-    """The field for one band, as an svg."""
+def lattice(seed, reach=62):
+    """The field for one band, as an svg; `reach`, the columns it takes to thin out (fewer under a
+    band whose lines of text run long)."""
     fills, rings, texts = {}, {}, {}
     for i in range(COLS):
         for j in range(ROWS):
-            cell = _cell(seed, i, j)
+            cell = _cell(seed, i, j, reach)
             if not cell:
                 continue
             kind, tone, what = cell
