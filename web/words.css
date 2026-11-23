@@ -61,8 +61,8 @@
   --top-h: 56px;
   --pnav-h: 44px;
   --stick: var(--top-h);
-  --quick: 120ms cubic-bezier(.2, .7, .2, 1);
-  --ease: 180ms cubic-bezier(.2, .7, .2, 1);
+  --quick: 120ms cubic-bezier(.3, .6, .2, 1);
+  --ease: 180ms cubic-bezier(.3, .6, .2, 1);
   /* a page's title (the checks, the mandate, the 404, a Learn page): the home title's size;
      only a system's name on its band is set larger */
   --title: clamp(44px, 5vw, 72px);
@@ -158,6 +158,11 @@ p { margin: 0; }
 .lk .lw { fill: var(--paper); transition: fill var(--quick); }
 .lk .lmk { fill: var(--accentlight); }
 .logo:hover .lw { fill: var(--accentlight); }
+/* the lockup in hand: light runs along the mark once, from its stem out through its cells */
+.anim .logo:hover .lmk path { animation: lmkpass 460ms cubic-bezier(.3, .6, .2, 1) both; }
+.anim .logo:hover .lmk path:nth-child(2) { animation-delay: 90ms; }
+.anim .logo:hover .lmk path:nth-child(3) { animation-delay: 180ms; }
+@keyframes lmkpass { 30% { fill: var(--paper); } }
 .tabs { display: flex; align-self: stretch; }
 .tab { position: relative; isolation: isolate; display: flex; align-items: center; padding: 0 14px; color: var(--muted); text-decoration: none; }
 .tab.on { color: var(--paper); }
@@ -380,6 +385,13 @@ html:has(.top.s-on) { overflow: hidden; }
 
 /* ---------------------------------------------------------------- a page's sections: a strip that stays under the top bar */
 .pnav { position: sticky; top: var(--top-h); z-index: 25; height: var(--pnav-h); background: var(--ground); box-shadow: inset 0 -1px 0 var(--line); }
+/* where the reader is in the page: a short line of light on the strip's lower edge follows the scroll, three fainter
+   lines behind it (the pass that crosses a band's rail, driven here by the reader). Only where the browser ties an
+   animation to the scroll, and with html.anim */
+@supports (animation-timeline: scroll()) {
+  .anim .pnav:after { content: ""; position: absolute; left: -28px; bottom: 0; width: 28px; height: 2px; background: var(--light); box-shadow: -34px 0 0 color-mix(in srgb, var(--light) 45%, transparent), -68px 0 0 color-mix(in srgb, var(--light) 24%, transparent), -102px 0 0 color-mix(in srgb, var(--light) 11%, transparent); pointer-events: none; animation: readpass linear both; animation-timeline: scroll(root block); }
+}
+@keyframes readpass { to { left: calc(100% - 28px); } }
 .ps { display: flex; align-items: stretch; height: 100%; margin-inline: var(--gut); overflow-x: auto; scrollbar-width: none; }
 .ps-t { position: sticky; left: 0; z-index: 1; flex: none; display: flex; align-items: center; margin-right: 0; max-width: 0; overflow: hidden; white-space: nowrap; background: var(--ground); box-shadow: inset 0 -1px 0 var(--line); font: 900 22px/1 var(--disp); opacity: 0; transition: opacity var(--ease), max-width var(--ease), margin-right var(--ease); }
 html:not(.js) .ps-t { display: none; }
