@@ -282,7 +282,7 @@
         },
         "lead": {
           "$ref": "#/$defs/organisation",
-          "description": "the organisation that leads it"
+          "description": "the organisation that convenes it"
         },
         "members": {
           "description": "the member organisations, in the order printed",

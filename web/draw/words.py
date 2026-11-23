@@ -976,7 +976,7 @@ MANDATE_DESC = "Who runs Inference proofs, what rules we follow, and how to veri
 MANDATE = (
     ("Who runs it", (
         ("Run by", "", None, "{lead}."),
-        ("Built by", "", None, "The {builder}, led by {lead}."),
+        ("Built by", "", None, "The {builder}, convened by {lead}."),
     )),
     ("Ties", (
         ("Its business", "lucidcomputing.ai", "https://lucidcomputing.ai/", "{lead} operates "

@@ -2,7 +2,7 @@
 then one board: the figure columns' heads, printed once and kept under the top bar; then one table
 per model, largest first, opened by its divider (its size in a tab, its name, its serving rate, its
 copies' Fidelity), which stays under the heads while its rows pass, then its rows in the board's
-order (OR-5); then the systems not run (SI-4). Rows sort only by the order rule: no column head
+order (OR-5); then the systems not run (SI-4); then the partners. Rows sort only by the order rule: no column head
 re-sorts them. What the layout already shows is not printed (the largest model with a passed row,
 a position's count, "Passed" beside a position, "proved" on the rate under the multiple), and a
 screen reader still hears it. Also the figure cells the system pages use.
@@ -11,6 +11,7 @@ screen reader still hears it. Also the figure cells the system pages use.
 from . import state as S
 from .chrome import (
     CHECKS_PAGE,
+    MANDATE_PAGE,
     ONLY_RUN,
     counted,
     fig_words,
@@ -19,11 +20,13 @@ from .chrome import (
     header,
     how_computed,
     lead_figure,
+    mark_shape,
     not_passed,
     page,
     rate_pair,
     rung_of,
     serving_gpu,
+    version,
 )
 from .glossary import term
 from .hexagon import glyph_svg
@@ -748,19 +751,51 @@ def not_run_html():
             f'<a href="{CHECKS_PAGE}#not-run">Systems not run</a></h2><dl class="nrg">{rows}</dl></section>')  # fmt: skip
 
 
+# ------------------------------------------------------------------ the partners
+# The home page's last section (DEPTH.md: depth 1, the Mandate's list one click down), set as the
+# systems not run are: its heading over a ruled grid, as many cells a line as fit, each partner's
+# own mark (`credit.members`, a file under web/members/ from its kit) linked to its site. A cell
+# in hand takes cobalt under ground ink, as a footer link does. The marks share one area (as on
+# the members' card), drawn as masks so one ink sets them all.
+PARTNERS_ID = "partners"  # the Mandate's row of them, where the heading leads
+
+
+def partners_html():
+    members = [m for m in S.V["credit"]["members"] if m.get("mark")]
+    if not members:
+        return "", ""
+    cells = "".join(
+        f'<li><a class="ptn-c" href="{e(m["url"])}">'
+        f'<span class="ptn-m ptn-m{i}" role="img" aria-label="{e(m["name"])}"></span></a></li>'
+        for i, m in enumerate(members, 1)
+    )
+    html_ = (f'<section class="ptn" aria-labelledby="h-ptn"><h2 class="nrh" id="h-ptn">'
+             f'<a href="{MANDATE_PAGE}#{PARTNERS_ID}">Partners</a></h2>'
+             f'<ul class="ptn-g">{cells}</ul></section>')  # fmt: skip
+    # each mark's own width over height (`--k`, its square root: the mark is --s·k wide and --s/k
+    # tall, so every mark covers --s²) and its file
+    css = "".join(
+        f".ptn-m{i}{{--k:{mark_shape(S.HERE / m['mark']) ** 0.5:.4f};"
+        f"-webkit-mask-image:url({version(m['mark'])});mask-image:url({version(m['mark'])})}}"
+        for i, m in enumerate(members, 1)
+    )
+    return html_, css
+
+
 def build_index():
-    """The home page: the band, then the board (the heads once, a table per model), then the
-    systems not run."""
+    """The home page: the band, then the board (the heads once, a table per model), the systems
+    not run, and the partners."""
     board = heads_html() + "".join(model_html(r) for r in S.V["rungs"])
+    partners, css = partners_html()
     body = f"""
 {header("home")}
 <main id="main" class="home">
   <section class="mast"><div class="mast-in">{band_html()}</div></section>
   <div class="wrap ladder">{board}</div>
-  <div class="wrap">{not_run_html()}</div>
+  <div class="wrap">{not_run_html()}{partners}</div>
 </main>
 {footer()}"""
-    return page("Inference proofs", home_words(), body, "home", "", "home")
+    return page("Inference proofs", home_words(), body, "home", "", "home", css=css)
 
 
 def home_words():

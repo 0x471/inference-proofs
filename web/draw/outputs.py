@@ -22,6 +22,7 @@ from .chrome import (
     counted,
     credit_words,
     font_faces,
+    mark_shape,
     only_run,
     rung_of,
     standing,
@@ -175,6 +176,19 @@ GONE = {
 }
 
 
+# What Vercel runs in web/ to fill public/ (assets.mjs copies the partners' marks, members/).
+# Vercel refuses a build command over 256 characters, failing the deployment with no other sign.
+BUILD_COMMAND = (
+    "rm -rf public && mkdir -p public/og public/fonts && cp *.html search.json robots.txt "
+    "sitemap.xml llms.txt public/ && cp og/*.png og/*.svg public/og/ && cp fonts/*.woff2 "
+    "public/fonts/ && npm ci --include=dev --ignore-scripts && npm run assets"
+)
+if len(BUILD_COMMAND) > 256:
+    raise RuntimeError(
+        f"vercel.json: a build command of {len(BUILD_COMMAND)} characters (Vercel takes 256)"
+    )
+
+
 # Headers, redirects and cache rules depend on the build's own output (the inline script's hash,
 # the pages written), so the build writes the whole file. Canonical JSON (iproofs fmt).
 def vercel_json(pages=()):
@@ -231,7 +245,7 @@ def vercel_json(pages=()):
     ]
     return {
         "$schema": "https://openapi.vercel.sh/vercel.json",
-        "buildCommand": "rm -rf public && mkdir -p public/og public/fonts && cp *.html search.json robots.txt sitemap.xml llms.txt public/ && cp og/*.png og/*.svg public/og/ && cp fonts/*.woff2 public/fonts/ && npm ci --include=dev --ignore-scripts && npm run assets",
+        "buildCommand": BUILD_COMMAND,
         "cleanUrls": False,
         "framework": None,
         # every commit of the push, not only its last one; a previous commit outside the
@@ -466,13 +480,16 @@ def write_cards():
 
 # ------------------------------------------------------------------ the members' banner
 # og/members.html, a picture for posts (no page names it): the lockup, who builds the site, and
-# the members' names as a ruled grid of 1 to 12 cells. Written only once a member is listed.
+# the members as a ruled grid of 1 to 12 cells, each its own mark (its light-on-dark version from
+# its kit, a file under web/) or, with none, its name. Written only once a member is listed.
 MEMBERS_CARD = "members"
 MEMBER_COLS = {1: 1, 2: 2, 3: 3, 4: 2}  # columns by count; 5 to 9 names take 3, 10 to 12 take 4
+MARK_TYPE = {".svg": "image/svg+xml", ".png": "image/png"}
 
 
 def members_card():
-    names = [m["name"] for m in S.V["credit"]["members"]]
+    members = S.V["credit"]["members"]
+    names = [m["name"] for m in members]
     n = len(names)
     cols = MEMBER_COLS.get(n, 3 if n <= 9 else 4)
     rows = -(-n // cols)
@@ -483,14 +500,31 @@ def members_card():
     half = max(max(len(x) - len(x) // 2, *map(len, x.split())) for x in names)
     one, two = (min(96, ch * 0.38, cw / (0.5 * k)) for k in (max(map(len, names)), half))
     size = int(one if one >= 0.75 * two else two)
+    # the marks, each drawn with the same area so a wide wordmark and a square read as one weight:
+    # the largest area at which every mark fits 85 % of its cell's width and 60 % of its height
+    marks = {m["name"]: S.HERE / m["mark"] for m in members if m.get("mark")}
+    shape = {x: mark_shape(p) for x, p in marks.items()}
+    area = min((min((cw * 0.85) ** 2 / r, (ch * 0.6) ** 2 * r) for r in shape.values()),
+               default=0)  # fmt: skip
+
+    def cell(x):
+        if x not in marks:
+            return f'<div class="disp">{e(x)}</div>'
+        p, r = marks[x], shape[x]
+        src = f"data:{MARK_TYPE[p.suffix]};base64,{base64.b64encode(p.read_bytes()).decode()}"
+        w, h = (area * r) ** 0.5, (area / r) ** 0.5
+        return (f'<div class="mk"><img src="{src}" alt="{e(x)}" '
+                f'style="width:{w:.1f}px;height:{h:.1f}px"></div>')  # fmt: skip
+
     css = f"""
 html,body{{box-shadow:inset 0 0 0 2px {LINE}}}
 .cl{{position:absolute;left:96px;top:84px}}
 .by{{position:absolute;left:96px;top:150px;width:1008px;font-size:20px;line-height:1.35;color:{MUTED}}}
 .mg{{position:absolute;left:96px;bottom:84px;width:1008px;height:300px;display:grid;grid-template-columns:repeat({cols},1fr);grid-template-rows:repeat({rows},1fr);gap:1px;background:{LINE};border-block:1px solid {LINE}}}
 .mg>div{{display:flex;align-items:center;padding:0 24px;background:{GROUND};font-size:{size}px;line-height:.92;text-wrap:balance}}
+.mg>.mk{{justify-content:center}}
 """
-    cells = "".join(f'<div class="disp">{e(x)}</div>' for x in names)
+    cells = "".join(cell(x) for x in names)
     cells += "<div></div>" * (rows * cols - n)
     body = (f'<div class="cl">{lockup_svg(26, ink=PAPER, mark=COBALT)}</div>'
             f'<p class="mono by">{credit_words(linked=False)}</p>'

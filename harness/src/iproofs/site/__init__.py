@@ -21,7 +21,7 @@ __all__ = ["ASSETS", "REPOSITORY", "build", "renderer"]
 RENDERER = "web/build.py"
 # What the renderer reads from its output folder and does not write: copied there first when the
 # site is written anywhere other than the tree's own web/.
-ASSETS = ("words.css", "words.js", "styles.json", "fonts", "og/cards.json", "og/*.png")
+ASSETS = ("words.css", "words.js", "styles.json", "fonts", "members", "og/cards.json", "og/*.png")
 
 
 def renderer(root: Path) -> ModuleType:
