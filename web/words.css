@@ -1559,6 +1559,65 @@ a.pvd:hover { text-decoration: underline 2px; text-underline-offset: 4px; }
 @media print { .gpk { display: none; } }
 @media (forced-colors: active) { .gpk { outline: 1px solid CanvasText; outline-offset: -1px; } }
 
+/* ---------------------------------------------------------------- the partners: the home page's last section (ladder.py `partners_html`, styles.mjs scope "partners").
+   Behind, the partners' names set huge, one line each, a texture one step off the ground that drifts (each line its
+   own pace, every other one the other way; html.anim only). Over it a ruled row of cells, each a partner's mark in
+   paper (a mask, so one ink sets every mark) with its site's host. In hand, a cell floods cobalt from its foot on a
+   hard edge, its mark and host turn ground ink, the turnstile's three cells fill one after another, and the
+   partner's own line of the texture lights cobalt behind the other cells (its rule, `.pt:has(...)`, is the page's) */
+.pt { --tx: clamp(88px, 12.5vw, 196px); position: relative; display: flex; flex-direction: column; justify-content: center; min-height: calc(var(--n, 4) * var(--tx) * .86); margin-top: 112px; padding: 56px 0; overflow: hidden; isolation: isolate; }
+.home:has(.pt) + .foot { margin-top: 0; }
+.pt-tx { position: absolute; inset: 0; z-index: -1; display: flex; flex-direction: column; justify-content: center; color: var(--lift); font: 900 var(--tx)/.8 var(--disp); letter-spacing: -.01em; text-transform: uppercase; white-space: nowrap; pointer-events: none; user-select: none; }
+.pt-ln { overflow: hidden; padding-block: .03em; transition: color var(--ease); }
+.pt-run { display: flex; align-items: center; width: max-content; }
+.pt-run > span { padding-inline: .14em; }
+.pt-sep { flex: none; width: auto; height: .5em; margin-inline: .14em; }
+.anim .pt-run { animation: pt-drift 160s linear infinite; }
+.anim .pt-ln:nth-child(2n) .pt-run { animation-direction: reverse; animation-duration: 200s; }
+.anim .pt-ln:nth-child(3n) .pt-run { animation-duration: 240s; }
+@keyframes pt-drift { to { transform: translateX(-50%); } }
+.pt .nrh a { color: inherit; text-decoration: none; }
+.pt .nrh a:hover { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 6px; }
+.pt-g { list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); margin: 0; padding: 0; border-bottom: 1px solid var(--line); }
+.pt-g > li { min-width: 0; box-shadow: -1px 0 0 var(--line); }
+.pt-g > li:first-child { box-shadow: none; }
+.pc { position: relative; display: grid; place-items: center; height: 264px; padding: var(--s4); color: var(--paper); text-decoration: none; container-type: inline-size; overflow: hidden; }
+.pc:before { content: ""; position: absolute; inset: 0; z-index: -1; background: var(--cobalt); clip-path: inset(100% 0 0 0); }
+.pc-m { --s: min(104px, 29cqi); display: block; width: calc(var(--s) * var(--k)); height: calc(var(--s) / var(--k)); background: currentColor; -webkit-mask: center / contain no-repeat; mask: center / contain no-repeat; }
+.pc-u { position: absolute; left: var(--s4); bottom: var(--s3); font: var(--f-label); letter-spacing: .02em; color: var(--muted); }
+.pc-k { position: absolute; left: var(--s4); top: var(--s4); }
+.pc-k rect { fill: transparent; stroke: var(--line); stroke-width: 1; }
+.pc-k .k0 { fill: var(--line); stroke: none; }
+.pc:is(:hover, :focus-visible, :active) { color: var(--ground); }
+.pc:is(:hover, :focus-visible, :active):before { clip-path: inset(0); }
+.pc:is(:hover, :focus-visible, :active) :is(.pc-u) { color: var(--ground); }
+.pc:is(:hover, :focus-visible, :active) .pc-k rect { fill: var(--ground); stroke: var(--ground); }
+.pc:focus-visible { outline: 2px solid var(--paper); outline-offset: -6px; }
+.anim .pc:before { transition: clip-path 260ms cubic-bezier(.2, .7, .2, 1); }
+.anim .pc-m { transition: transform 260ms cubic-bezier(.2, .7, .2, 1); }
+.anim .pc:is(:hover, :focus-visible) .pc-m { transform: scale(1.06); }
+.anim .pc-k rect { transition: fill 1ms linear, stroke 1ms linear; }
+.anim .pc:is(:hover, :focus-visible) .pc-k .k1 { transition-delay: 90ms; }
+.anim .pc:is(:hover, :focus-visible) .pc-k .k2 { transition-delay: 180ms; }
+.anim .pc:is(:hover, :focus-visible) .pc-k .k3 { transition-delay: 270ms; }
+@media (max-width: 760px) {
+  .pt { --tx: clamp(72px, 22vw, 120px); margin-top: 80px; padding: 40px 0; }
+  .pt-g { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pt-g > li { box-shadow: -1px 0 0 var(--line), 0 -1px 0 var(--line); }
+  .pt-g > li:nth-child(-n + 2) { box-shadow: -1px 0 0 var(--line); }
+  .pt-g > li:nth-child(2n + 1) { box-shadow: 0 -1px 0 var(--line); }
+  .pt-g > li:first-child { box-shadow: none; }
+  .pc { height: 176px; }
+  .pc-m { --s: min(80px, 30cqi); }
+  .pc-u { left: var(--s3); bottom: var(--s2); font-size: 10px; }
+  .pc-k { left: var(--s3); top: var(--s3); }
+}
+@media (forced-colors: active) {
+  .pt-tx, .pc:before { display: none; }
+  .pc-m { forced-color-adjust: none; background: CanvasText; }
+  .pc:is(:hover, :focus-visible) { outline: 2px solid LinkText; outline-offset: -2px; }
+}
+
 /* ---------------------------------------------------------------- footer: one strip of cells */
 main { flex: 1 0 auto; }
 .foot { margin-top: 112px; border-top: 1px solid var(--line); font: 400 12px/18px var(--mono); color: var(--muted); }

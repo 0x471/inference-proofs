@@ -109,6 +109,8 @@ def page_styles(cls):
         excluded.add("overview")
     if cls == "home":
         excluded.add("details")
+    else:
+        excluded.add("partners")
     return "".join(part["css"] for part in styles["sections"] if part["scope"] not in excluded)
 
 
@@ -216,13 +218,25 @@ def link(path):
 
 
 def credit_words(linked=True):
-    """Who builds the site and who leads it, from the facts file (`credit`), as one sentence."""
+    """Who builds the site and who convenes it, from the facts file (`credit`), as one sentence."""
     c = S.V["credit"]
 
     def org(o):
         return f'<a href="{e(o["url"])}">{e(o["name"])}</a>' if linked else e(o["name"])
 
-    return f"Built by the {org(c['builder'])}, led by {org(c['lead'])}."
+    return f"Built by the {org(c['builder'])}, convened by {org(c['lead'])}."
+
+
+def mark_shape(path):
+    """A member's mark file (`credit.members[].mark`): its width over its height, from an SVG's
+    viewBox or a PNG's header."""
+    data = path.read_bytes()
+    if path.suffix == ".png":
+        return int.from_bytes(data[16:20], "big") / int.from_bytes(data[20:24], "big")
+    box = re.search(rb'viewBox="\s*[-\d.]+[\s,]+[-\d.]+[\s,]+([\d.]+)[\s,]+([\d.]+)', data)
+    if not box:
+        raise RuntimeError(f"{path.name}: a member's mark with no viewBox")
+    return float(box[1]) / float(box[2])
 
 
 # the licence the facts file names -> its text in the repository (a licence with no file stops the
@@ -267,7 +281,7 @@ def footer():
     parts.append(
         '<span class="fcr"><span class="fci"><span class="fk">Built by<span class="fx"> the</span>'
         f'</span> {org(c["builder"])}</span><span class="fx">, </span><span class="fci">'
-        f'<span class="fk">led by</span> {org(c["lead"])}</span><span class="fx">.</span></span>'
+        f'<span class="fk">convened by</span> {org(c["lead"])}</span><span class="fx">.</span></span>'
     )
     cells = "".join(f"<li>{p}</li>" for p in parts)
     return f'<footer class="foot"><ul class="fcells">{cells}</ul></footer>'

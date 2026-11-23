@@ -23,7 +23,7 @@ def test_page_styles_keep_shared_rules(board_site: Any) -> None:
         if scope == "shared":
             assert all(css in page for page in (home, learn, scale, system))
         else:
-            assert css not in home
+            assert (css in home) == (scope == "partners")
             assert (css in learn) == (scope in {"learn", "details"})
             assert (css in scale) == (scope in {"overview", "details"})
             assert (css in system) == (scope == "details")

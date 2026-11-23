@@ -39,6 +39,7 @@ from .ladder import (
     BARE,
     BINDING_GAP,
     NOT_TESTED,
+    PARTNERS_ID,
     RATE_ANCHOR,
     agree_title,
     defined,
@@ -2385,8 +2386,9 @@ def build_mandate():
         return e(words).format_map(names) if "{" in words else e(words)
 
     members = credit["members"]
-    # the members' names in display type, a ruled row; nothing while none has agreed
-    row = ('<div class="mbr"><dt>Members</dt><dd><ul class="mbl">' + "".join(
+    # the partners' names in display type, a ruled row (the home page's Partners heading leads
+    # here); nothing while none has agreed
+    row = (f'<div class="mbr" id="{PARTNERS_ID}"><dt>Partners</dt><dd><ul class="mbl">' + "".join(
         f'<li><a href="{e(m["url"])}">{e(m["name"])}</a></li>' for m in members)
         + "</ul></dd></div>") if members else ""  # fmt: skip
     lv = S.V["level"]

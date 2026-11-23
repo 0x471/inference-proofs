@@ -22,6 +22,7 @@ from .chrome import (
     counted,
     credit_words,
     font_faces,
+    mark_shape,
     only_run,
     rung_of,
     standing,
@@ -231,7 +232,7 @@ def vercel_json(pages=()):
     ]
     return {
         "$schema": "https://openapi.vercel.sh/vercel.json",
-        "buildCommand": "rm -rf public && mkdir -p public/og public/fonts && cp *.html search.json robots.txt sitemap.xml llms.txt public/ && cp og/*.png og/*.svg public/og/ && cp fonts/*.woff2 public/fonts/ && npm ci --include=dev --ignore-scripts && npm run assets",
+        "buildCommand": "rm -rf public && mkdir -p public/og public/fonts && cp *.html search.json robots.txt sitemap.xml llms.txt public/ && cp og/*.png og/*.svg public/og/ && cp fonts/*.woff2 public/fonts/ && cp -R members public/ && npm ci --include=dev --ignore-scripts && npm run assets",
         "cleanUrls": False,
         "framework": None,
         # every commit of the push, not only its last one; a previous commit outside the
@@ -471,16 +472,6 @@ def write_cards():
 MEMBERS_CARD = "members"
 MEMBER_COLS = {1: 1, 2: 2, 3: 3, 4: 2}  # columns by count; 5 to 9 names take 3, 10 to 12 take 4
 MARK_TYPE = {".svg": "image/svg+xml", ".png": "image/png"}
-
-
-def mark_shape(path):
-    """A mark file's width over its height: an SVG's viewBox, a PNG's header."""
-    data = path.read_bytes()
-    if path.suffix == ".png":
-        return int.from_bytes(data[16:20], "big") / int.from_bytes(data[20:24], "big")
-    box = re.search(rb'viewBox="\s*[-\d.]+[\s,]+[-\d.]+[\s,]+([\d.]+)[\s,]+([\d.]+)', data)
-    assert box, f"{path}: a mark with no viewBox"
-    return float(box[1]) / float(box[2])
 
 
 def members_card():

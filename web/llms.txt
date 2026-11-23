@@ -65,6 +65,7 @@ The deployment article discusses hypothetical agreements, not an enacted treaty.
   - [Llama 3.1 8B Instruct](https://www.inferenceproofs.ai/#h-llama-3.1-8b)
   - [GPT-2](https://www.inferenceproofs.ai/#h-gpt-2)
   - [Systems not run](https://www.inferenceproofs.ai/#h-notrun)
+  - [Partners](https://www.inferenceproofs.ai/#h-pt)
 - [Learn about proofs of inference · Inference proofs](https://www.inferenceproofs.ai/learn): Learn what a proof of inference shows, how verification works, and how to interpret benchmark costs, model fidelity and AI treaty proposals.
   - [For policy readers](https://www.inferenceproofs.ai/learn#h-policy)
   - [For prover teams and engineers](https://www.inferenceproofs.ai/learn#h-engineering)
