@@ -1495,7 +1495,7 @@ def terms_html(p, row, petals):  # noqa: PLR0912, PLR0915 (one sentence per fact
                    f"{'shown' if u['shown'] else 'not shown'}. Above T_green, "
                    f"{tenth(g['display'])} (Met): {'shown' if g['shown'] else 'not shown'}. "
                    f"Test: paired sign-flip per prompt{method}, alpha {alpha}.")  # fmt: skip
-        pw = proved_words(row, long=True)
+        pw = proved_words(row)
         if pw:
             out.append(cap(pw) + ".")
         out.append("Decoding: accepts tokens other than the model's top choice." if

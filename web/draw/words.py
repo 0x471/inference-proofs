@@ -677,6 +677,14 @@ FIGURE_HEAD = {"multiple": "Cost vs serving", "cost": "Cost", "check-time": "Ver
 # where a head links on the checks page, where its anchor is not its key: the Fidelity figure has
 # a rule of its own there, apart from the check it does not set (SI-9)
 FIGURE_ANCHOR = {"fidelity": "fidelity-figure"}
+# the plain question a ladder column answers, in its head's title (amended 2026-11-23, owner
+# decision, RFC-0018 Q54): the head stays the site's term, linked to its definition
+FIGURE_ASK = {"multiple": "What does proving cost?", "proof-size": "How big is the proof?",
+              "check-time": "How long to check a proof?",
+              "fidelity": "Same as the original model?"}  # fmt: skip
+# the ladder's columns before the figures, named for a screen reader only: the eye reads them from
+# the square, the glyph and the name (Q54)
+LADDER_COLS = ("Position", "Criteria", "System")
 # how the headline is computed, in one plain sentence (B5): at the Cost section's head and first
 # in the headline figure's title, by the figure printed (`chrome.lead_figure`); {on} the GPUs
 HOW_MULTIPLE = {
@@ -690,11 +698,13 @@ HOW_MULTIPLE = {
 }
 HOW_ON = {True: "both on {gpu} GPUs", False: "proved on {gpu}, served on {serving}"}
 SERVING_GPU = "H200"  # CO-4: the serving baseline runs on the fewest H200 that hold the model
-# CO-8 (adopted 2026-11-16): reply tokens per GPU-second under Cost (depth 3); amended 2026-11-16:
-# the proved and the served rate also print as one line under the multiple (`ladder.rate_html`)
+# CO-8 (adopted 2026-11-16): reply tokens per GPU-second under Cost (depth 3); amended 2026-11-16,
+# 2026-11-23: on the ladder the proved rate prints under the multiple (`ladder.rate_html`) and the
+# served rate once on its model's divider (`ladder.served_html`)
 REPLY_TOKENS_HEAD = "Tokens per second"
-# that line (Q41): the proved rate's word after its number ("2.027 proved"), then its unit and
-# GPU ("tokens/s per H200"); a model's head prints its served rate in the same unit
+# that line (Q41): the proved rate's word after its number ("2.027 proved"; on the ladder heard,
+# not printed, its rate standing under its model's served rate, Q54), then its unit and GPU
+# ("tokens/s per H200"); a model's divider prints its served rate in the same unit
 RATE_PROVED = "proved"
 RATE_PER = "tokens/s per {gpu}"
 # its title, first: how the two rates are read against the multiple above them
@@ -704,15 +714,20 @@ RATE_IS = "ratio: served ÷ proved = {multiple}, Cost vs serving"
 FIDELITY_TITLE = "leading tokens matching the original, mean"  # in a fidelity word's title
 # Fidelity as a figure (RFC-0018 SI-9, amended 2026-11-14): FI-10's mean as a percentage of the
 # reply's positions, beside the model's Q8_0 and Q4_K_M copies; it sets no state
-FIDELITY_AGAINST = ("q8_0", "q4_k_m")  # the controls printed beside a row's Fidelity
+FIDELITY_AGAINST = ("q8_0", "q4_k_m")  # the controls printed once on a model's divider
 FIDELITY_FIG_TITLE = ("Fidelity figure: the share of reply positions where the system's top token is "
                       "the original's reply token, fed the prompt and then that reply token by "
                       "token")  # fmt: skip
-# the copies printed beside a row's Fidelity at depths 1 and 2 (RFC-0018 SI-9, amended
-# 2026-11-16): plain words; their ids (Q8_0, Q4_K_M) stand in titles and at depth 3
+# the copies printed with a row's Fidelity at depths 1 and 2 (RFC-0018 SI-9, amended 2026-11-16;
+# on the ladder once, on the model's divider, amended 2026-11-23): plain words; their ids (Q8_0,
+# Q4_K_M) stand in titles and at depth 3
 COPY_WORD = {"q8_0": "8-bit copy", "q4_k_m": "4-bit copy"}
-# what the row proves, beside every Fidelity figure: the weight bits (the workload record) and the
-# number format (the properties file, the publisher's words), one word per recorded value
+# a copy's Fidelity figure on the ladder: what it is, first in its title ({copy}: CONTROL_NAME's)
+COPY_FIG_TITLE = ("Fidelity of the {copy}, run unproved on the same prompts: the share of reply "
+                  "positions where its top token is the original's reply token")  # fmt: skip
+# what the row proves, on its system page (the Fidelity block's Proved line and the Fidelity
+# criterion): the weight bits (the workload record) and the number format (the properties file,
+# the publisher's words), one word per recorded value
 FORMAT_WORD = {"integer": "integer", "fixed_point": "fixed-point",
                "floating_point": "floating-point"}  # fmt: skip
 PROVED_HEAD = "proved"
@@ -863,8 +878,8 @@ ORDER_RULE = (
      "lowest. Any system with a steady multiple ranks ahead of one without; two systems without "
      "one compare the same way using whole-session cost per reply."),
     ("position", "A system's position is 1 plus the number of systems ranked strictly ahead of "
-     "it, so tied systems share a position. Position is shown alongside the total number of "
-     "systems run on that model."),
+     "it, so tied systems share a position. It counts among the systems run on its own model "
+     "only."),
     ("below", "Ranked systems appear first, followed by passed unranked systems, then systems "
      "that have not passed, sorted alphabetically within each group. Systems that have not "
      "passed still show their checks and figures without a position."),
@@ -937,8 +952,6 @@ OVERVIEW_OFF_SHORT = "not on the plot"
 # the counts under the page's title
 OVERVIEW_COUNTS = (("run", "systems run"), ("passed", "passed"), ("models", "models"),
                    ("not_run", "systems not run"))  # fmt: skip
-# beside the size tab of the frontier's rung on the ladder (OR-6: the largest with a passed row)
-FRONTIER_WORD = "Largest model with a passed row"
 # ------------------------------------------------------------------ the autoresearch page
 # announced, not open yet: the tab's word, the page's title, and what the page says
 AUTORESEARCH_TITLE = "Autoresearch"
@@ -1094,6 +1107,10 @@ MANDATE_LEVEL = (
 )
 # the words of the level line that link to where Learn names those rules: (phrase, address)
 MANDATE_LEVEL_LINK = ("decided rows", "/method#judgement-and-changes")
+# the line under it: the models the level fixes, largest first, each with its publisher and
+# architecture (the ladder prints neither since 2026-11-23, Q54; a system's band names both for
+# its model, and a model no system has run on has no page of its own)
+MANDATE_MODELS = "Models"
 # why a check is undecided (its cause as the board stores it): a system page's title for the cause,
 # lower case and with no full stop; the checks page prints each as a sentence (#cause-<cause>)
 CHECK_CAUSE_WORD = {
