@@ -2,8 +2,8 @@
    The palette is Lucid Computing's night: a night ground, white ink, a muted ink. The accent (a
    blue between Lucid's cobalt and its periwinkle) = the benchmark's own frame: a model's tab, the
    tab and section in view, the row in hand, a block in hand (ground ink on it), the mark, focus;
-   never a value or a state. The band is the lifted night under white words, a lattice of cipher
-   cells in its corner with a few cells lit.
+   never a value or a state. The band is the lifted night under white words, a rail of cipher
+   cells along its foot with a few cells lit.
    green / amber / red = a petal's or a check's state, only in the glyph's arms, the state chips,
    a grade's or a state's word, and the cells of the grades a criterion holds on a system page;
    a hollow petal or an undecided check is an outline in muted ink, never a fourth fill.
@@ -239,16 +239,12 @@ html:has(.top.s-on) { overflow: hidden; }
 /* on the band, what is written in ground ink elsewhere is white, for all it holds; a block in hand is white with
    the band's ground for its words */
 .mast { position: relative; isolation: isolate; --ground: var(--paper); --accent: var(--lift); --onaccent: var(--paper); background: var(--lift); color: var(--paper); }
-/* the lattice in a band (draw/lattice.py): cipher characters, tiles and dots on a square grid, thickest in the band's
-   lower right corner and thinning toward its title; nearly the band's own ink, a few cells lit (the accent, its light,
-   its deep blue). It scales with the screen, sits under everything a band holds and takes no pointer; a band's small
-   text keeps clear of it (round a system's figure the cells fade into the band's ground, the one soft edge on the
-   site; a line of text elsewhere stands on the band's ground). Under 900 px it is a rail of cells along the band's foot. When a page arrives one line of
-   light crosses it and the field shows behind the line (html.anim; still otherwise) */
-.latw { --lat-w: max(76.8vw, 700px); position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
-.lat { position: absolute; right: 0; bottom: 0; width: var(--lat-w); height: auto; font: 600 11px/1 var(--mono); }
-.sb > .latw { position: relative; inset: auto; grid-area: 1 / 1 / 2 / 3; align-self: stretch; margin: -48px calc(-1 * var(--gut)) calc(-1 * var(--s6)) 0; }
-:where(.latw ~ .sbm) { background: var(--lift); box-shadow: 0 0 26px 16px var(--lift); }
+/* the lattice at a band's foot (draw/lattice.py): a rail of cipher characters, tiles and dots on a square grid, thick
+   along the band's lower edge and thinning upward; nearly the band's own ink, a few cells lit (the accent, its light,
+   its deep blue). It stands under everything a band holds, takes no pointer and carries no data. When a page arrives
+   one line of light runs along it and the rail shows behind the line (html.anim; still otherwise) */
+.latw { position: relative; height: 54px; overflow: hidden; pointer-events: none; }
+.lat { position: absolute; right: 0; bottom: 0; font: 600 11px/1 var(--mono); }
 .lat text { text-anchor: middle; }
 .lat path, .lat text { fill: currentColor; }
 .lat .o { fill: none; stroke: currentColor; stroke-width: 2px; }
@@ -258,17 +254,12 @@ html:has(.top.s-on) { overflow: hidden; }
 .lat .a { color: var(--accentlight); }
 .lat .c { color: var(--deep); }
 .lat .k { color: var(--lift); }
-:where(.latw ~ .mast-in) :where(.lede) { background: var(--lift); box-shadow: 0 0 0 8px var(--lift); }
-.anim .lat { animation: latin 900ms cubic-bezier(.3, .6, .2, 1) both; }
-.anim .latw:after { content: ""; position: absolute; top: 0; bottom: 0; left: calc(100% - var(--lat-w)); width: 2px; background: var(--light); box-shadow: -7px 0 0 color-mix(in srgb, var(--light) 45%, transparent), -17px 0 0 color-mix(in srgb, var(--light) 24%, transparent), -30px 0 0 color-mix(in srgb, var(--light) 11%, transparent); opacity: 0; animation: latpass 900ms cubic-bezier(.3, .6, .2, 1) both; }
+.anim .latw { animation: latin 800ms cubic-bezier(.3, .6, .2, 1) both; }
+.anim .latw:after { content: ""; position: absolute; top: 0; bottom: 0; left: -2px; width: 2px; background: var(--light); box-shadow: -7px 0 0 color-mix(in srgb, var(--light) 45%, transparent), -17px 0 0 color-mix(in srgb, var(--light) 24%, transparent), -30px 0 0 color-mix(in srgb, var(--light) 11%, transparent); opacity: 0; animation: latpass 800ms cubic-bezier(.3, .6, .2, 1) both; }
 @keyframes latin { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0); } }
-@keyframes latpass { from { opacity: 1; transform: none; } 92% { opacity: 1; } to { opacity: 0; transform: translateX(var(--lat-w)); } }
-@media (max-width: 900px) {
-  .mast { padding-bottom: 30px; }
-  .latw, .sb > .latw { position: absolute; inset: auto 0 0; height: 30px; margin: 0; }
-  :where(.latw ~ .mast-in) :where(.lede), :where(.latw ~ .sbm) { background: none; box-shadow: none; }
-}
-.mast-in { margin-inline: var(--gut); padding: 48px 0 40px; }
+@keyframes latpass { from { opacity: 1; transform: none; } 92% { opacity: 1; } to { opacity: 0; transform: translateX(100vw); } }
+@media (max-width: 760px) { .latw { height: 36px; } }
+.mast-in { margin-inline: var(--gut); padding: 40px 0 20px; }
 /* the overview band: the title on one line (the ladder under it runs largest model first), and under it the
    lead, three sentences at a reading measure */
 .home .mast-in { padding: 48px 0; }
@@ -370,7 +361,7 @@ html:has(.top.s-on) { overflow: hidden; }
   .sbm .rts { margin-left: 0; }
 }
 /* a page's band (the checks, the mandate, the 404): its title at the home title's size */
-.mast-t .mast-in { padding: 48px 0; }
+.mast-t .mast-in { padding: 40px 0 24px; }
 .ttl { margin: 0; font: 900 var(--title)/.92 var(--disp); letter-spacing: -.01em; overflow-wrap: normal; }
 .creed { max-width: 30ch; text-wrap: balance; }
 .lead { margin-top: 48px; }
@@ -447,7 +438,8 @@ html:not(.js) .shr:not(:has(a)) { display: none; }
    rule, its size in a tab, its name, its serving rate, its copies' Fidelity) that stays under the heads while its rows
    pass and is pushed off by the next model's; its systems as compact rows of one height. The name's column is as wide as
    a name needs, so the figures start close after it; the figure columns share what is left */
-.ladder { --lh: 40px; --dh: 48px; --rowh: 88px; margin-top: 40px; }
+.ladder { --lh: 44px; --dh: 60px; --rowh: 112px; margin-top: 48px; }
+.lad + .lad { margin-top: 28px; }
 /* an anchor on the ladder (a model, a row) lands under the heads, a row under its model's divider too */
 html:has(.lhd) { scroll-padding-top: calc(var(--top-h) + 40px); }
 .lad, .lht { width: 100%; border-collapse: separate; border-spacing: 0; table-layout: fixed; }
@@ -482,10 +474,10 @@ html:has(.lhd) { scroll-padding-top: calc(var(--top-h) + 40px); }
 .lad .dcp .fig .n { font: 500 13px/16px var(--mono); letter-spacing: 0; }
 .dcp .fig .u { font: 400 12px/16px var(--mono); }
 /* a system: one compact row, every row as tall as the next; a row not passed grows by its standing's lines only */
-.lad .row > * { height: var(--rowh); padding: 14px 16px 12px 0; border-bottom: 1px solid var(--line); text-align: left; vertical-align: baseline; font-weight: 400; transition: background-color var(--quick), box-shadow var(--quick); }
+.lad .row > * { height: var(--rowh); padding: 26px 16px 22px 0; border-bottom: 1px solid var(--line); text-align: left; vertical-align: baseline; font-weight: 400; transition: background-color var(--quick), box-shadow var(--quick); }
 .lad .row > :first-child { padding-left: 16px; }
 .lad .row > :last-child { padding-right: 0; }
-.lad .row > :is(.cp, .cg) { vertical-align: top; padding-top: 13px; }
+.lad .row > :is(.cp, .cg) { vertical-align: top; padding-top: 25px; }
 /* a row, and what takes focus in it, lands under its model's divider too, never under it */
 .lad .row, .lad .row a, .lad .row [tabindex] { scroll-margin-top: var(--dh); }
 /* the row in hand: lifted, an accent edge (3, 6, 9 px: pointed, focused, pressed), its name in
@@ -588,7 +580,7 @@ a.fig.fp:hover .n { text-decoration: underline; text-decoration-thickness: 1px; 
   .ladder:has(.csys:not(.placed)) col.c4 { width: 222px; }
 }
 @media (max-width: 1180px) {
-  .ladder { --rowh: 84px; }
+  .ladder { --rowh: 104px; }
   .ladder col.c1 { width: 64px; }
   .ladder col.c2 { width: 66px; }
   .ladder col.c3 { width: 236px; }
@@ -603,7 +595,7 @@ a.fig.fp:hover .n { text-decoration: underline; text-decoration-thickness: 1px; 
 /* a tablet: a smaller square and glyph; the proved rate's unit under its number, and the copies a step smaller,
    each copy's figure under its name where the column is too narrow for both, so each column holds its words */
 @media (max-width: 1060px) {
-  .ladder { --lh: 44px; --dh: 56px; --rowh: 96px; }
+  .ladder { --lh: 44px; --dh: 60px; --rowh: 116px; }
   html:has(.lhd) { scroll-padding-top: calc(var(--top-h) + 44px); }
   .ladder col.c1 { width: 48px; }
   .ladder col.c2 { width: 52px; }
@@ -612,7 +604,7 @@ a.fig.fp:hover .n { text-decoration: underline; text-decoration-thickness: 1px; 
   .lht :is(th, td), .lad .dv > *, .lad .row > * { padding-right: 12px; }
   .lht :is(th, td) { white-space: normal; }
   .lad .row > :first-child { padding-left: 8px; }
-  .lad .row > :is(.cp, .cg) { padding-top: 15px; }
+  .lad .row > :is(.cp, .cg) { padding-top: 27px; }
   .pos .pn { width: 32px; height: 32px; font-size: 22px; }
   .glyph { width: 40px; height: auto; }
   .glyph .pie-svg { width: 100%; height: auto; }
@@ -1656,8 +1648,6 @@ main { flex: 1 0 auto; }
 .learnpage { --hd: 264px; --hg: 48px; --tx: 72ch; --cp: min(20px, var(--gut)); }
 .learnpage .mast-sys .mast-in { padding-bottom: 44px; }
 .learnpage .lunder .mast-in { padding-bottom: 0; }
-/* a band's lines keep clear of its lattice: each stands on the band's ground (from 900 px up, where the lattice is a field) */
-@media (min-width: 901px) { :where(.latw ~ .mast-in) :where(.lt-s, .kick > *) { background: var(--lift); box-shadow: 0 0 0 8px var(--lift); } }
 .kick { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 32px; font: var(--f-label); letter-spacing: var(--track); text-transform: uppercase; margin-bottom: 18px; }
 .kick a { display: inline-flex; align-items: center; min-height: 24px; text-decoration: none; box-shadow: 0 1px 0 var(--ground); }
 /* in hand: a white block, the words in the band's ground (as a link on the band) */
