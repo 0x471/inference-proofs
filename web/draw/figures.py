@@ -10,7 +10,7 @@ Each is a function of no argument that returns markup:
 - a measured block prints figures of the board file through `fig_html`, with their labels, and
   says so when the board holds none. Nothing here types a measured number.
 
-No inline style: the Content-Security-Policy allows none (outputs.vercel_json). Cobalt frames
+No inline style: the Content-Security-Policy allows none (outputs.vercel_json). Accent frames
 what a reader operates; the state inks stay with the states of a check (words.css).
 """
 

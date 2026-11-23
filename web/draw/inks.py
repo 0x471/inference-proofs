@@ -14,11 +14,11 @@ from . import state as S
 GROUND, PAPER, MUTED, RULE = "#07080c", "#ffffff", "#8a8d97", "#5c5f6b"
 LINE = "#24262e"  # the hairline between rows (words.css --line), never text
 LIFT = "#111218"  # the ground under the row in hand (words.css --lift)
-COBALT, ON_COBALT = (
-    "#1b3bff",
+ACCENT, ON_ACCENT = (
     "#ffffff",
-)  # Lucid's blue: the band, a tab, a stem, a rule; words on it
-PERI = "#93a5ff"  # its light on the night: the mark, a thin line, a word
+    "#07080c",
+)  # the accent: a tab, a stem, a rule, a block in hand; words on it
+ACCENT_LIGHT = "#ffffff"  # the accent as a thin line or a word on the night
 STATES = ("red", "amber", "green")  # the filled petal states, darkest first
 
 
@@ -40,7 +40,7 @@ def check_inks():
     css = dict(re.findall(r"--(\w+):\s*(#[0-9a-f]{6})", (S.HERE / "words.css").read_text()))
     S.INK = {s: css[s] for s in STATES}
     for k, v in {"ground": GROUND, "paper": PAPER, "muted": MUTED, "rule": RULE,
-                 "cobalt": COBALT, "lift": LIFT, "oncobalt": ON_COBALT, "peri": PERI}.items():  # fmt: skip
+                 "accent": ACCENT, "lift": LIFT, "onaccent": ON_ACCENT, "accentlight": ACCENT_LIGHT}.items():  # fmt: skip
         assert css.get(k) == v, f"words.css --{k} is {css.get(k)}, the build checks {v}"
     S.ladder, prev = [], GROUND
     for st in STATES:
@@ -52,11 +52,11 @@ def check_inks():
     S.pairs = [
         ("paper text on ground", PAPER, GROUND),
         ("muted text on ground", MUTED, GROUND),
-        ("white text on cobalt", ON_COBALT, COBALT),
-        ("periwinkle text on ground", PERI, GROUND),
+        ("text on the accent", ON_ACCENT, ACCENT),
+        ("accent text on ground", ACCENT_LIGHT, GROUND),
         ("paper text on lift", PAPER, LIFT),
         ("muted text on lift", MUTED, LIFT),
-        ("periwinkle text on lift", PERI, LIFT),
+        ("accent text on lift", ACCENT_LIGHT, LIFT),
     ]
     S.pairs += [(f"ground text on {s}", GROUND, S.INK[s]) for s in STATES]
     S.pairs.append(("red text on ground", S.INK["red"], GROUND))  # a silent red petal's name

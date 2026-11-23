@@ -28,7 +28,7 @@ from .chrome import (
     standing,
 )
 from .hexagon import glyph_svg
-from .inks import COBALT, GROUND, LINE, MUTED, ON_COBALT, PAPER, PERI, ratio
+from .inks import ACCENT, ACCENT_LIGHT, GROUND, LIFT, LINE, MUTED, ON_ACCENT, PAPER, ratio
 from .ladder import (
     BARE,
     fig_html,
@@ -309,7 +309,7 @@ def card_page(card, body, css):
 
 def home_card():
     """Only what does not change with the systems run, since link previews stay cached: the
-    stacked lockup in paper with the mark in cobalt on the ground (as the site's top bar and the
+    stacked lockup in paper with the mark in accent on the ground (as the site's top bar and the
     system cards) and the address."""
     css = f"""
 html,body{{box-shadow:inset 0 0 0 2px {LINE}}}
@@ -317,7 +317,7 @@ html,body{{box-shadow:inset 0 0 0 2px {LINE}}}
 .url{{position:absolute;left:96px;bottom:96px;font-size:26px;line-height:1;font-weight:600}}
 """
     body = (
-        f'<div class="og-l">{stacked_svg(132, PAPER, COBALT)}</div>'
+        f'<div class="og-l">{stacked_svg(132, PAPER, ACCENT)}</div>'
         f'<p class="mono url">{e(card_host())}</p>'
     )
     return card_page("home", body, css)
@@ -368,7 +368,7 @@ def card_name(name):
 
 
 def system_card(pid):
-    """A system page's card, the page in brief: the top bar's lockup; a cobalt band with the
+    """A system page's card, the page in brief: the top bar's lockup; a lifted band with the
     system's name, its model with its size and, on the right, its one figure under its plain
     name; under it the standing, as large as a name, the cost and verify time per reply, and the
     glyph with its names; at the foot the release and the page's address. A card is shallower
@@ -387,7 +387,7 @@ def system_card(pid):
     weight = 600 if row["position"] is not None else 400
     css = f"""
 .top{{position:absolute;left:0;top:0;width:{CARD_W}px;height:72px;padding:0 64px;display:flex;align-items:center;box-shadow:inset 0 -1px 0 {LINE}}}
-.band{{position:absolute;left:0;top:72px;width:{CARD_W}px;height:244px;padding:0 64px 28px;background:{COBALT};color:{ON_COBALT};display:flex;align-items:flex-end;justify-content:space-between;gap:40px}}
+.band{{position:absolute;left:0;top:72px;width:{CARD_W}px;height:244px;padding:0 64px 28px;background:{LIFT};color:{PAPER};display:flex;align-items:flex-end;justify-content:space-between;gap:40px}}
 .who{{width:{CARD_NAME_W}px}}
 .name{{font-size:{size}px;line-height:.86;letter-spacing:-.012em;white-space:nowrap}}
 .model{{margin-top:16px;font-size:17px;line-height:23px;font-weight:600}}
@@ -432,7 +432,7 @@ def system_card(pid):
     figs = "".join(f'<div class="cell fit"><span class="lbl">{e(k)}</span>{v}</div>'
                    for k, v in cells)  # fmt: skip
     body = (
-        f'<div class="top">{lockup_svg(22, ink=PAPER, mark=PERI)}</div>'
+        f'<div class="top">{lockup_svg(22, ink=PAPER, mark=ACCENT_LIGHT)}</div>'
         f'<div class="band"><div class="who fit"><p class="disp name fit">'
         f'{"<br>".join(e(t) for t in lines)}</p><p class="mono model fit">{model}</p></div>'
         f'<div class="mono lead fit"><span class="lbl">{e(label)}</span>{lead}</div></div>'
@@ -449,14 +449,14 @@ FAVICON = 32  # the PNG icon for clients that read no SVG icon
 
 
 def icon_svg():
-    """The site's icon: the mark in ground ink on cobalt, drawn on the 16 px grid (whole pixels at
+    """The site's icon: the mark in ground ink on accent, drawn on the 16 px grid (whole pixels at
     16 and at 32)."""
-    return tile_svg(16, COBALT, ON_COBALT, xmlns=True) + "\n"
+    return tile_svg(16, ACCENT, ON_ACCENT, xmlns=True) + "\n"
 
 
 def icon_card(size=ICON, name="icon"):
     """The touch icon (180 px) and the PNG icon (32 px), each drawn for its own size."""
-    body = tile_svg(size, COBALT, ON_COBALT)
+    body = tile_svg(size, ACCENT, ON_ACCENT)
     page_ = card_page(name, body, "")
     return page_.replace(
         '<html lang="en">', f'<html lang="en" data-w="{size}" data-h="{size}" data-scale="1">', 1
@@ -526,7 +526,7 @@ html,body{{box-shadow:inset 0 0 0 2px {LINE}}}
 """
     cells = "".join(cell(x) for x in names)
     cells += "<div></div>" * (rows * cols - n)
-    body = (f'<div class="cl">{lockup_svg(26, ink=PAPER, mark=PERI)}</div>'
+    body = (f'<div class="cl">{lockup_svg(26, ink=PAPER, mark=ACCENT_LIGHT)}</div>'
             f'<p class="mono by">{credit_words(linked=False)}</p>'
             f'<div class="mg">{cells}</div>')  # fmt: skip
     return card_page(MEMBERS_CARD, body, css)

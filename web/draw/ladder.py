@@ -614,7 +614,7 @@ def row_html(row, rung):
 
 
 def divider_html(rung):
-    """A model's divider (SI-1, amended 2026-11-23, Q54): a slim row under a cobalt rule, quieter
+    """A model's divider (SI-1, amended 2026-11-23, Q54): a slim row under an accent rule, quieter
     than its systems' rows and the same in form whatever the model's state. Its size in the tab
     and its name, the model's heading, over the position, glyph and name columns (a long name
     wraps beside its tab); its serving rate, named, starting in the Cost vs serving column, over
@@ -755,7 +755,7 @@ def not_run_html():
 # The home page's last section (DEPTH.md: depth 1, the Mandate's list one click down), set as the
 # systems not run are: its heading over a ruled grid, as many cells a line as fit, each partner's
 # own mark (`credit.members`, a file under web/members/ from its kit) linked to its site. A cell
-# in hand takes cobalt under ground ink, as a footer link does. The marks share one area (as on
+# in hand takes accent under ground ink, as a footer link does. The marks share one area (as on
 # the members' card), drawn as masks so one ink sets them all.
 PARTNERS_ID = "partners"  # the Mandate's row of them, where the heading leads
 
