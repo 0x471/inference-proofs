@@ -27,7 +27,6 @@ from .chrome import AUTORESEARCH_PAGE, LEARN_PAGE, MANDATE_PAGE, footer, header,
 from .figures import EXPLORERS, FIGURES, MEASURED, STAGE_WORD, autoresearch
 from .glossary import Halt, defs, glossary, glossary_entries, plain, slug, squeeze, term  # noqa: F401
 from .ladder import nobreak
-from .lattice import lattice
 from .pages import mandate_parts, title_band
 from .words import (
     AUTORESEARCH_PARTS,
@@ -334,7 +333,7 @@ def band(kicker, title, summary, under=""):
     said = f'<p class="lt-s">{nobreak(summary)}</p>' if summary else ""
     return (f'<section class="mast mast-sys lband{" lunder" if under else ""}" '
             f'aria-labelledby="h-name"><div class="mast-in">{kick}'
-            f'<h1 id="h-name" class="sysname lt-h">{e(title)}</h1>{said}{under}</div>{lattice(title)}</section>')  # fmt: skip
+            f'<h1 id="h-name" class="sysname lt-h">{e(title)}</h1>{said}{under}</div></section>')  # fmt: skip
 
 
 def steps(track, here):

@@ -2,8 +2,7 @@
    The palette is Lucid Computing's night: a night ground, white ink, a muted ink. The accent (a
    blue between Lucid's cobalt and its periwinkle) = the benchmark's own frame: a model's tab, the
    tab and section in view, the row in hand, a block in hand (ground ink on it), the mark, focus;
-   never a value or a state. The band is the lifted night under white words, a rail of cipher
-   cells along its foot with a few cells lit.
+   never a value or a state. The band is the lifted night under white words.
    green / amber / red = a petal's or a check's state, only in the glyph's arms, the state chips,
    a grade's or a state's word, and the cells of the grades a criterion holds on a system page;
    a hollow petal or an undecided check is an outline in muted ink, never a fourth fill.
@@ -33,13 +32,10 @@
   --line: #24262e;
   /* the accent, a slot of three values: a fill under words and a thick mark (a tab, a block in hand, a rule, a stem,
      an edge), the words on that fill, and the accent as a thin line or a word on the night. A blue between Lucid's
-     cobalt and its periwinkle, always under ground ink. Those two, the deep blue and the light, are never a ground
-     and never text: a few lit cells of a band's lattice */
+     cobalt and its periwinkle, always under ground ink */
   --accent: #5b7bff;
   --onaccent: #07080c;
   --accentlight: #5b7bff;
-  --deep: #1b3bff;
-  --light: #93a5ff;
   /* the three filled states (build.py checks their steps from the ground and their contrast) */
   --red: #e03c44;
   --amber: #e49921;
@@ -61,8 +57,10 @@
   --top-h: 56px;
   --pnav-h: 44px;
   --stick: var(--top-h);
-  --quick: 120ms cubic-bezier(.2, .7, .2, 1);
-  --ease: 180ms cubic-bezier(.2, .7, .2, 1);
+  /* one curve for everything that moves (Lucid's: quick off the mark, a long soft landing) */
+  --curve: cubic-bezier(.3, .6, .2, 1);
+  --quick: 120ms var(--curve);
+  --ease: 180ms var(--curve);
   /* a page's title (the checks, the mandate, the 404, a Learn page): the home title's size;
      only a system's name on its band is set larger */
   --title: clamp(44px, 5vw, 72px);
@@ -238,28 +236,8 @@ html:has(.top.s-on) { overflow: hidden; }
 /* ---------------------------------------------------------------- the band: white on the lifted night, flat */
 /* on the band, what is written in ground ink elsewhere is white, for all it holds; a block in hand is white with
    the band's ground for its words */
-.mast { position: relative; isolation: isolate; --ground: var(--paper); --accent: var(--lift); --onaccent: var(--paper); background: var(--lift); color: var(--paper); }
-/* the lattice at a band's foot (draw/lattice.py): a rail of cipher characters, tiles and dots on a square grid, thick
-   along the band's lower edge and thinning upward; nearly the band's own ink, a few cells lit (the accent, its light,
-   its deep blue). It stands under everything a band holds, takes no pointer and carries no data. When a page arrives
-   one line of light runs along it and the rail shows behind the line (html.anim; still otherwise) */
-.latw { position: relative; height: 54px; overflow: hidden; pointer-events: none; }
-.lat { position: absolute; right: 0; bottom: 0; font: 600 11px/1 var(--mono); }
-.lat text { text-anchor: middle; }
-.lat path, .lat text { fill: currentColor; }
-.lat .o { fill: none; stroke: currentColor; stroke-width: 2px; }
-.lat .d { color: color-mix(in srgb, var(--paper) 8%, var(--lift)); }
-.lat .b { color: color-mix(in srgb, var(--paper) 17%, var(--lift)); }
-.lat .p { color: var(--light); }
-.lat .a { color: var(--accentlight); }
-.lat .c { color: var(--deep); }
-.lat .k { color: var(--lift); }
-.anim .latw { animation: latin 800ms cubic-bezier(.3, .6, .2, 1) both; }
-.anim .latw:after { content: ""; position: absolute; top: 0; bottom: 0; left: -2px; width: 2px; background: var(--light); box-shadow: -7px 0 0 color-mix(in srgb, var(--light) 45%, transparent), -17px 0 0 color-mix(in srgb, var(--light) 24%, transparent), -30px 0 0 color-mix(in srgb, var(--light) 11%, transparent); opacity: 0; animation: latpass 800ms cubic-bezier(.3, .6, .2, 1) both; }
-@keyframes latin { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0); } }
-@keyframes latpass { from { opacity: 1; transform: none; } 92% { opacity: 1; } to { opacity: 0; transform: translateX(100vw); } }
-@media (max-width: 760px) { .latw { height: 36px; } }
-.mast-in { margin-inline: var(--gut); padding: 40px 0 20px; }
+.mast { --ground: var(--paper); --accent: var(--lift); --onaccent: var(--paper); background: var(--lift); color: var(--paper); }
+.mast-in { margin-inline: var(--gut); padding: 48px 0 40px; }
 /* the overview band: the title on one line (the ladder under it runs largest model first), and under it the
    lead, three sentences at a reading measure */
 .home .mast-in { padding: 48px 0; }
@@ -361,7 +339,7 @@ html:has(.top.s-on) { overflow: hidden; }
   .sbm .rts { margin-left: 0; }
 }
 /* a page's band (the checks, the mandate, the 404): its title at the home title's size */
-.mast-t .mast-in { padding: 40px 0 24px; }
+.mast-t .mast-in { padding: 48px 0; }
 .ttl { margin: 0; font: 900 var(--title)/.92 var(--disp); letter-spacing: -.01em; overflow-wrap: normal; }
 .creed { max-width: 30ch; text-wrap: balance; }
 .lead { margin-top: 48px; }
@@ -486,6 +464,14 @@ html.js .row { cursor: pointer; }
 .row:hover > *, .row:focus-within > *, .row.cur > * { background: var(--lift); }
 .row > :first-child { box-shadow: inset 0 0 0 var(--accent); }
 .row:hover > :first-child { box-shadow: inset 3px 0 0 var(--accent); }
+/* with a mouse and where motion is welcome (words.js), the lifted ground and its edge are one block that glides from
+   row to row on the site's curve, under the rows; a row keeps its own ground when it has focus or was just left */
+.ladder { position: relative; isolation: isolate; }
+.glider { position: absolute; left: 0; right: 0; top: 0; z-index: -1; height: 0; background: var(--lift); box-shadow: inset 3px 0 0 var(--accent); opacity: 0; pointer-events: none; transition: transform 280ms var(--curve), height 280ms var(--curve), opacity 160ms var(--curve); }
+.glider.on { opacity: 1; }
+.glider.now { transition: none; }
+:where(.glide) .row:hover:not(:focus-within, .cur) > * { background: none; }
+:where(.glide) .row:hover:not(:focus-within, .cur) > :first-child { box-shadow: none; }
 .row:focus-within > :first-child, .row.cur > :first-child { box-shadow: inset 6px 0 0 var(--accent); }
 .row:active > :first-child { box-shadow: inset 9px 0 0 var(--accent); }
 .row .sname:focus-visible { color: var(--accentlight); outline: 2px solid var(--accentlight); outline-offset: 4px; }
@@ -820,6 +806,10 @@ a.fig.fp:hover .n { text-decoration: underline; text-decoration-thickness: 1px; 
 .gx, .gy { position: absolute; z-index: -1; background: var(--accentlight); opacity: 0; pointer-events: none; }
 .gx { left: 0; top: 0; width: 1px; height: calc(var(--fy) * 100cqh); }
 .gy { right: 0; top: 0; height: 1px; width: calc(var(--fx) * 100cqw); }
+/* the two lines are drawn from the mark out to its axes, on the site's curve */
+.anim .gx { transform: scaleY(0); transform-origin: 50% 0; }
+.anim .gy { transform: scaleX(0); transform-origin: 100% 50%; }
+.anim .obx:is(.hand, :has(.mk:focus-visible), :has(.mk:hover)) > :is(.gx, .gy) { transform: none; }
 .opv { position: absolute; z-index: 4; display: none; padding: 4px 7px; outline: 4px solid var(--ground); background: var(--accent); color: var(--onaccent); font: 600 12px/1 var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; pointer-events: none; }
 .opv .v { display: none; }
 .opv .pu { margin-left: .35em; font-weight: 500; }
@@ -835,6 +825,7 @@ a.fig.fp:hover .n { text-decoration: underline; text-decoration-thickness: 1px; 
 .obx:is(.hand, :has(.mk:focus-visible)) .onm { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px; }
 .ovw.handed .obx:not(.hand) > .mk { opacity: .35; }
 .anim :is(.mk, .gx, .gy) { transition: opacity var(--quick); }
+.anim :is(.gx, .gy) { transition: opacity var(--quick), transform 260ms var(--curve); }
 /* while a system is in hand its two figures stand on the axes: the ticks' words step back */
 .ovw.handed .ovq .ax .tl { opacity: .12; }
 /* a pointer that hovers holds a system with no script too (a touch screen's first tap is the script's, words.js) */
@@ -1578,9 +1569,15 @@ a.pvd:hover { text-decoration: underline 2px; text-underline-offset: 4px; }
 .probe .prk + .prk { margin-top: 6px; }
 .probe .prc { font: 400 11px/16px var(--mono); color: var(--muted); }
 .probe .prp { max-width: 44ch; margin: 8px 0 0; }
-.anim .probe { animation: probe var(--quick) both; }
+/* a lens (a figure's labels, a term's meaning): a leaf, three corners swept and the fourth sharp, the sharp one at
+   the thing it reads (words.js names the corner); it opens from that corner, on the site's curve */
+.probe, .gpk { --leaf: 14px; border-radius: 0 var(--leaf) var(--leaf) var(--leaf); }
+:is(.probe, .gpk)[data-c=tr] { border-radius: var(--leaf) 0 var(--leaf) var(--leaf); --ur: 0%; --ul: 45%; }
+:is(.probe, .gpk)[data-c=bl] { border-radius: var(--leaf) var(--leaf) var(--leaf) 0; --ut: 65%; --ub: 0%; }
+:is(.probe, .gpk)[data-c=br] { border-radius: var(--leaf) var(--leaf) 0 var(--leaf); --ut: 65%; --ub: 0%; --ur: 0%; --ul: 45%; }
+.anim :is(.probe, .gpk) { animation: probe 200ms var(--curve) both; }
 /* it appears where it stands, with no travel (its place is its transform, set by words.js) */
-@keyframes probe { from { opacity: 0; } }
+@keyframes probe { from { opacity: 0; clip-path: inset(var(--ut, 0%) var(--ur, 45%) var(--ub, 65%) var(--ul, 0%)); } to { clip-path: inset(0% 0% 0% 0%); } }
 .fig[data-t], .na[data-t] { cursor: help; }
 .probed { background: var(--line); box-shadow: 0 0 0 3px var(--line); }
 /* on a system's accent band and on its own replies row (paper) the block inverts the figure's inks instead */
@@ -2359,7 +2356,6 @@ ol.ls > li:before { counter-increment: n; content: counter(n); position: absolut
 }
 @media print {
   :root { --ground: #fff; --paper: #111; --muted: #555; --rule: #999; --line: #ccc; --lift: #fff; --accent: #111; --onaccent: #fff; --accentlight: #111; }
-  .latw { display: none; }
   .search, .top .repo, .sopen, .skip, .pnav, .tabs { display: none; }
   .top, .lhd, .lad .dv > * { position: static; }
   .mast { background: none; color: var(--paper); border-block: 2px solid var(--paper); }

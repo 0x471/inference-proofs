@@ -319,6 +319,27 @@
   if (cur) cur.classList.add('cur');
   const dropCur = () => { if (cur) { cur.classList.remove('cur'); cur = null; } };
   rows.forEach((tr) => { tr.addEventListener('pointerenter', () => { if (tr !== cur) dropCur(); }); tr.addEventListener('focusin', () => { if (tr !== cur) dropCur(); }); });
+  // the row in hand, with a mouse: one lifted block that glides from row to row (words.css holds the curve)
+  const lad = $('.ladder');
+  if (lad && smooth()) {
+    const hand = document.createElement('div');
+    hand.className = 'glider';
+    hand.setAttribute('aria-hidden', 'true');
+    lad.prepend(hand);
+    const to = (tr) => {
+      const a = lad.getBoundingClientRect(), b = tr.getBoundingClientRect();
+      const fresh = !hand.classList.contains('on');
+      hand.classList.toggle('now', fresh);
+      hand.style.setProperty('transform', `translateY(${Math.round(b.top - a.top)}px)`);
+      hand.style.setProperty('height', `${Math.round(b.height)}px`);
+      if (fresh) hand.getBoundingClientRect();  // placed first, shown after: it never flies in from the board's top
+      hand.classList.remove('now');
+      hand.classList.add('on');
+    };
+    $$('.lad .row', lad).forEach((tr) => tr.addEventListener('pointerenter', (ev) => { if (mouse(ev)) { lad.classList.add('glide'); to(tr); } }));
+    lad.addEventListener('pointerleave', () => hand.classList.remove('on'));
+    $$('.lad .row', lad).forEach((tr) => tr.addEventListener('pointerleave', (ev) => { if (!ev.relatedTarget || !ev.relatedTarget.closest || !ev.relatedTarget.closest('.lad .row')) hand.classList.remove('on'); }));
+  }
 
   // ------------------------------------------------------------ the keyboard: j and k step through the rows of the ladder,
   // the arrows from a row that has focus
@@ -679,6 +700,8 @@
     if (!free && h > below && h <= above) y = r.top - h - 8;
     probe.style.setProperty('max-height', !free && h > Math.max(below, above) ? `${Math.max(0, below, above)}px` : 'none');
     probe.style.setProperty('transform', `translate(${Math.round(px)}px, ${Math.round(y)}px)`);
+    // the leaf's sharp corner: the one nearest what it reads
+    probe.dataset.c = (y + h / 2 < r.top + r.height / 2 ? 'b' : 't') + (px + w / 2 < r.left + r.width / 2 ? 'r' : 'l');
     probe.hidden = r.bottom <= top || r.top >= innerHeight;
   };
   const hide = () => {
@@ -1059,6 +1082,7 @@
         const x = Math.max(lo, Math.min(r.left, hi - w));
         const y = r.bottom + 8 + h > innerHeight ? top - h - 8 : r.bottom + 8;
         peek.style.setProperty('transform', `translate(${Math.round(x)}px, ${Math.round(y)}px)`);
+        peek.dataset.c = (y < top ? 'b' : 't') + (x + w / 2 < r.left + r.width / 2 ? 'r' : 'l');
       };
       const show = (a) => {
         if (on === a) return;
