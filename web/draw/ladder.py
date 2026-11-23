@@ -765,17 +765,17 @@ def partners_html():
     if not members:
         return "", ""
     cells = "".join(
-        f'<li><a class="pc" href="{e(m["url"])}">'
-        f'<span class="pc-m pm{i}" role="img" aria-label="{e(m["name"])}"></span></a></li>'
+        f'<li><a class="ptn-c" href="{e(m["url"])}">'
+        f'<span class="ptn-m ptn-m{i}" role="img" aria-label="{e(m["name"])}"></span></a></li>'
         for i, m in enumerate(members, 1)
     )
-    html_ = (f'<section class="pt" aria-labelledby="h-pt"><h2 class="nrh" id="h-pt">'
+    html_ = (f'<section class="ptn" aria-labelledby="h-ptn"><h2 class="nrh" id="h-ptn">'
              f'<a href="{MANDATE_PAGE}#{PARTNERS_ID}">Partners</a></h2>'
-             f'<ul class="pt-g">{cells}</ul></section>')  # fmt: skip
+             f'<ul class="ptn-g">{cells}</ul></section>')  # fmt: skip
     # each mark's own width over height (`--k`, its square root: the mark is --s·k wide and --s/k
     # tall, so every mark covers --s²) and its file
     css = "".join(
-        f".pm{i}{{--k:{mark_shape(S.HERE / m['mark']) ** 0.5:.4f};"
+        f".ptn-m{i}{{--k:{mark_shape(S.HERE / m['mark']) ** 0.5:.4f};"
         f"-webkit-mask-image:url({version(m['mark'])});mask-image:url({version(m['mark'])})}}"
         for i, m in enumerate(members, 1)
     )

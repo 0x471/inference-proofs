@@ -1563,25 +1563,25 @@ a.pvd:hover { text-decoration: underline 2px; text-underline-offset: 4px; }
    set as the systems not run are: the heading over a ruled grid, as many cells a line as fit (one line from 1 to 6, then
    more lines; up to 6 share the line), each a partner's mark in paper (a mask, so one ink sets every mark; the page's own rules give each its
    shape). A cell in hand takes cobalt under ground ink, as a footer link does */
-.pt { margin-top: 112px; }
-.pt .nrh a { color: inherit; text-decoration: none; }
-.pt .nrh a:hover { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 6px; }
-.pt-g { list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(200px, 50%), 1fr)); margin: 0; padding: 0; clip-path: inset(0 1px 0 0); }
+.ptn { margin-top: 112px; }
+.ptn .nrh a { color: inherit; text-decoration: none; }
+.ptn .nrh a:hover { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 6px; }
+.ptn-g { list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(200px, 50%), 1fr)); margin: 0; padding: 0; clip-path: inset(0 1px 0 0); }
 /* each cell rules its own right and lower edges, so a short last line ends where its cells do; the grid's right edge
    is clipped, as the site's other ruled lists draw none */
-.pt-g > li { min-width: 0; box-shadow: inset -1px -1px 0 var(--line); }
-.pc { display: grid; place-items: center; height: 128px; color: var(--paper); text-decoration: none; container-type: inline-size; transition: background-color var(--quick), color var(--quick); }
-.pc-m { --s: min(64px, 24cqi); display: block; width: calc(var(--s) * var(--k)); height: calc(var(--s) / var(--k)); background: currentColor; -webkit-mask: center / contain no-repeat; mask: center / contain no-repeat; }
-.pc:is(:hover, :active, :focus-visible) { background: var(--cobalt); color: var(--ground); }
-.pc:focus-visible { outline: 2px solid var(--paper); outline-offset: -2px; }
+.ptn-g > li { min-width: 0; box-shadow: inset -1px -1px 0 var(--line); }
+.ptn-c { display: grid; place-items: center; height: 128px; color: var(--paper); text-decoration: none; container-type: inline-size; transition: background-color var(--quick), color var(--quick); }
+.ptn-m { --s: min(64px, 24cqi); display: block; width: calc(var(--s) * var(--k)); height: calc(var(--s) / var(--k)); background: currentColor; -webkit-mask: center / contain no-repeat; mask: center / contain no-repeat; }
+.ptn-c:is(:hover, :active, :focus-visible) { background: var(--cobalt); color: var(--ground); }
+.ptn-c:focus-visible { outline: 2px solid var(--paper); outline-offset: -2px; }
 @media (max-width: 760px) {
-  .pt { margin-top: 80px; }
-  .pc { height: 104px; }
-  .pc-m { --s: min(64px, 30cqi); }
+  .ptn { margin-top: 80px; }
+  .ptn-c { height: 104px; }
+  .ptn-m { --s: min(64px, 30cqi); }
 }
 @media (forced-colors: active) {
-  .pc-m { forced-color-adjust: none; background: CanvasText; }
-  .pc:is(:hover, :focus-visible) { outline: 2px solid LinkText; outline-offset: -2px; }
+  .ptn-m { forced-color-adjust: none; background: CanvasText; }
+  .ptn-c:is(:hover, :focus-visible) { outline: 2px solid LinkText; outline-offset: -2px; }
 }
 
 /* ---------------------------------------------------------------- footer: one strip of cells */

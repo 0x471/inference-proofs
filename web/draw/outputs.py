@@ -176,6 +176,19 @@ GONE = {
 }
 
 
+# What Vercel runs in web/ to fill public/ (assets.mjs copies the partners' marks, members/).
+# Vercel refuses a build command over 256 characters, failing the deployment with no other sign.
+BUILD_COMMAND = (
+    "rm -rf public && mkdir -p public/og public/fonts && cp *.html search.json robots.txt "
+    "sitemap.xml llms.txt public/ && cp og/*.png og/*.svg public/og/ && cp fonts/*.woff2 "
+    "public/fonts/ && npm ci --include=dev --ignore-scripts && npm run assets"
+)
+if len(BUILD_COMMAND) > 256:
+    raise RuntimeError(
+        f"vercel.json: a build command of {len(BUILD_COMMAND)} characters (Vercel takes 256)"
+    )
+
+
 # Headers, redirects and cache rules depend on the build's own output (the inline script's hash,
 # the pages written), so the build writes the whole file. Canonical JSON (iproofs fmt).
 def vercel_json(pages=()):
@@ -232,7 +245,7 @@ def vercel_json(pages=()):
     ]
     return {
         "$schema": "https://openapi.vercel.sh/vercel.json",
-        "buildCommand": "rm -rf public && mkdir -p public/og public/fonts && cp *.html search.json robots.txt sitemap.xml llms.txt public/ && cp og/*.png og/*.svg public/og/ && cp fonts/*.woff2 public/fonts/ && cp -R members public/ && npm ci --include=dev --ignore-scripts && npm run assets",
+        "buildCommand": BUILD_COMMAND,
         "cleanUrls": False,
         "framework": None,
         # every commit of the push, not only its last one; a previous commit outside the
