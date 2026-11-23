@@ -242,12 +242,12 @@ html:has(.top.s-on) { overflow: hidden; }
 /* the lattice in a band (draw/lattice.py): cipher characters, tiles and dots on a square grid, thickest in the band's
    lower right corner and thinning toward its title; nearly the band's own ink, a few cells lit (the accent, its light,
    its deep blue). It scales with the screen, sits under everything a band holds and takes no pointer; a band's small
-   text keeps clear of it (a system's band holds it between the name and the figure; a line of text elsewhere stands
-   on the band's ground). Under 900 px it is a rail of cells along the band's foot. When a page arrives one line of
+   text keeps clear of it (a system's band holds it beside the name, short of the figure; a line of text elsewhere
+   stands on the band's ground). Under 900 px it is a rail of cells along the band's foot. When a page arrives one line of
    light crosses it and the field shows behind the line (html.anim; still otherwise) */
 .latw { --lat-w: max(76.8vw, 700px); position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
 .lat { position: absolute; right: 0; bottom: 0; width: var(--lat-w); height: auto; font: 600 11px/1 var(--mono); }
-.sb > .latw { position: relative; inset: auto; grid-area: 1 / 1 / 2 / 3; align-self: stretch; margin: -48px calc(-1 * var(--gut)) calc(-1 * var(--s6)) 0; }
+.sb > .latw { position: relative; inset: auto; grid-area: 1 / 1; align-self: stretch; margin: -48px 0 calc(-1 * var(--s6)); }
 .lat text { text-anchor: middle; }
 .lat path, .lat text { fill: currentColor; }
 .lat .o { fill: none; stroke: currentColor; stroke-width: 2px; }
@@ -257,7 +257,7 @@ html:has(.top.s-on) { overflow: hidden; }
 .lat .a { color: var(--accentlight); }
 .lat .c { color: var(--deep); }
 .lat .k { color: var(--lift); }
-:where(.latw ~ .mast-in) :where(.lede), :where(.latw ~ .sbm) { background: var(--lift); box-shadow: 0 0 0 8px var(--lift); }
+:where(.latw ~ .mast-in) :where(.lede) { background: var(--lift); box-shadow: 0 0 0 8px var(--lift); }
 .anim .lat { animation: latin 900ms cubic-bezier(.3, .6, .2, 1) both; }
 .anim .latw:after { content: ""; position: absolute; top: 0; bottom: 0; left: calc(100% - var(--lat-w)); width: 2px; background: var(--light); box-shadow: -7px 0 0 color-mix(in srgb, var(--light) 45%, transparent), -17px 0 0 color-mix(in srgb, var(--light) 24%, transparent), -30px 0 0 color-mix(in srgb, var(--light) 11%, transparent); opacity: 0; animation: latpass 900ms cubic-bezier(.3, .6, .2, 1) both; }
 @keyframes latin { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0); } }
@@ -265,7 +265,7 @@ html:has(.top.s-on) { overflow: hidden; }
 @media (max-width: 900px) {
   .mast { padding-bottom: 30px; }
   .latw, .sb > .latw { position: absolute; inset: auto 0 0; height: 30px; margin: 0; }
-  :where(.latw ~ .mast-in) :where(.lede), :where(.latw ~ .sbm) { background: none; box-shadow: none; }
+  :where(.latw ~ .mast-in) :where(.lede) { background: none; box-shadow: none; }
 }
 .mast-in { margin-inline: var(--gut); padding: 48px 0 40px; }
 /* the overview band: the title on one line (the ladder under it runs largest model first), and under it the
@@ -302,7 +302,7 @@ html:has(.top.s-on) { overflow: hidden; }
 .sbm .fig { justify-content: flex-end; }
 .sbm .fig .n { font-size: clamp(44px, 5.6vw, 88px); line-height: .84; letter-spacing: -.04em; }
 .sbm .fig .u { font-size: 14px; font-weight: 600; }
-.sbm .fig .u.x { font-size: clamp(26px, 3vw, 48px); }
+.sbm .fig .u.x { font-size: clamp(26px, 3vw, 48px); margin-left: .02em; }
 .sbm.unr .fig .n, .sbm.unr .fig .u.x { font-weight: 400; }
 .sbm .sub, .sbm .na { color: var(--ground); }
 .sbm .sub { margin-top: var(--s5); white-space: nowrap; }
