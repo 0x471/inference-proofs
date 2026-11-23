@@ -59,8 +59,8 @@
   --stick: var(--top-h);
   /* one curve for everything that moves (Lucid's: quick off the mark, a long soft landing) */
   --curve: cubic-bezier(.3, .6, .2, 1);
-  --quick: 120ms var(--curve);
-  --ease: 180ms var(--curve);
+  --quick: 180ms var(--curve);
+  --ease: 260ms var(--curve);
   /* a page's title (the checks, the mandate, the 404, a Learn page): the home title's size;
      only a system's name on its band is set larger */
   --title: clamp(44px, 5vw, 72px);
@@ -79,6 +79,9 @@
 .sys { --stick: calc(var(--top-h) + var(--pnav-h)); }
 * { box-sizing: border-box; }
 ::selection { background: var(--accent); color: var(--onaccent); }
+/* nothing snaps: what answers a pointer or the keyboard changes its inks on the site's curve. This rule weighs nothing,
+   so a part that names its own transition keeps it */
+:where(.anim) :where(a, button, summary, input, label, th, td, dt, dd, li, span, b, mark) { transition: color var(--quick), background-color var(--quick), box-shadow var(--quick), outline-color var(--quick), text-decoration-color var(--quick), opacity var(--quick); }
 html { scrollbar-color: var(--rule) var(--ground); -webkit-text-size-adjust: 100%; -webkit-tap-highlight-color: transparent; scroll-padding-top: calc(var(--top-h) + 16px); }
 html:has(.pnav) { scroll-padding-top: calc(var(--top-h) + var(--pnav-h) + 16px); }
 /* while the search field has focus the page keeps no scroll padding: the field sits in the sticky bar, inside
@@ -781,7 +784,8 @@ a.fig.fp:hover .n { text-decoration: underline; text-decoration-thickness: 1px; 
 .ox .tl:is(.w, .n) { display: none; }
 .ovb { grid-area: 2 / 2; position: relative; z-index: 1; isolation: isolate; height: var(--ph); container-type: size; box-shadow: inset 1px 0 0 var(--rule), inset 0 -1px 0 var(--rule); }
 .gl { position: absolute; z-index: -2; inset: 0; display: none; overflow: visible; pointer-events: none; }
-.gl line { stroke: var(--line); stroke-width: 1px; }
+/* the plot's own lines are construction lines: dotted */
+.gl line { stroke: var(--rule); stroke-width: 1px; stroke-dasharray: 1 5; }
 .gl line.goal { stroke: var(--accentlight); stroke-width: 1px; stroke-dasharray: 4 4; }
 /* the better corner: a bracket in the frame's ink just off the plot, and over it what that end is, in words, on the
    line of the unit up */
@@ -796,6 +800,7 @@ a.fig.fp:hover .n { text-decoration: underline; text-decoration-thickness: 1px; 
 .mk:focus-visible { outline: none; }
 .gm { position: absolute; left: 0; top: 0; width: calc(10px * var(--u)); height: calc(10px * var(--u)); translate: -50% -50%; border-radius: 50%; background: var(--paper); box-shadow: 0 0 0 3px var(--ground); }
 .np .gm { background: var(--ground); box-shadow: inset 0 0 0 2px var(--paper), 0 0 0 3px var(--ground); }
+.anim .gm { transition: box-shadow var(--quick); }
 .onw { position: absolute; left: calc(5px * var(--u) + 10px); top: 0; translate: 0 -50%; display: flex; flex-direction: column; white-space: nowrap; }
 .onl { display: flex; align-items: baseline; gap: 6px; padding: 0 4px; background: var(--ground); }
 .onm { font: 900 22px/24px var(--disp); }
@@ -1284,6 +1289,12 @@ a.pvd:hover { text-decoration: underline 2px; text-underline-offset: 4px; }
 .more[open] > summary:after { content: "\2212" / ""; }
 .more > summary:hover, .more[open] > summary { color: var(--paper); }
 .more[open] > summary { margin-bottom: 4px; }
+/* a disclosure opens and closes to its height, where the browser can move a box to a height it has not been told */
+@supports (interpolate-size: allow-keywords) {
+  .anim .more { interpolate-size: allow-keywords; }
+  .anim .more:is(details)::details-content { block-size: 0; overflow: clip; transition: block-size var(--ease), content-visibility var(--ease) allow-discrete; }
+  .anim .more[open]:is(details)::details-content { block-size: auto; }
+}
 /* on paper a disclosure cannot open: its count stands as a label, not a control */
 @media print {
   .more > summary { padding-left: 0; box-shadow: none; }
@@ -1569,7 +1580,7 @@ a.pvd:hover { text-decoration: underline 2px; text-underline-offset: 4px; }
 .probe .prk + .prk { margin-top: 6px; }
 .probe .prc { font: 400 11px/16px var(--mono); color: var(--muted); }
 .probe .prp { max-width: 44ch; margin: 8px 0 0; }
-.anim .probe { animation: probe var(--quick) both; }
+.anim .probe, .anim .gpk { animation: probe var(--quick) both; }
 /* it appears where it stands, with no travel (its place is its transform, set by words.js) */
 @keyframes probe { from { opacity: 0; } }
 .fig[data-t], .na[data-t] { cursor: help; }
