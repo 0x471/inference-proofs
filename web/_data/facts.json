@@ -28,6 +28,11 @@
         "mark": "members/lambdaclass.png",
         "name": "LambdaClass",
         "url": "https://lambdaclass.com/"
+      },
+      {
+        "mark": "members/ethereum-foundation-dai.svg",
+        "name": "Ethereum Foundation dAI team",
+        "url": "https://ai.ethereum.foundation/"
       }
     ]
   },

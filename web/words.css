@@ -1577,6 +1577,7 @@ a.pvd:hover { text-decoration: underline 2px; text-underline-offset: 4px; }
 @media (max-width: 760px) {
   .pt { margin-top: 80px; }
   .pc { height: 104px; }
+  .pc-m { --s: min(64px, 30cqi); }
 }
 @media (forced-colors: active) {
   .pc-m { forced-color-adjust: none; background: CanvasText; }
