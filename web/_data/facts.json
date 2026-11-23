@@ -8,7 +8,23 @@
       "name": "Lucid Computing",
       "url": "https://lucidcomputing.ai/"
     },
-    "members": []
+    "members": [
+      {
+        "mark": "members/polygon.svg",
+        "name": "Polygon",
+        "url": "https://polygon.technology/"
+      },
+      {
+        "mark": "members/starkware.svg",
+        "name": "StarkWare",
+        "url": "https://starkware.co/"
+      },
+      {
+        "mark": "members/zksecurity.svg",
+        "name": "zkSecurity",
+        "url": "https://www.zksecurity.xyz/"
+      }
+    ]
   },
   "gpus": {
     "NVIDIA H100 80GB HBM3": "H100",
