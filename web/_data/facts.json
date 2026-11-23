@@ -23,6 +23,11 @@
         "mark": "members/zksecurity.svg",
         "name": "zkSecurity",
         "url": "https://www.zksecurity.xyz/"
+      },
+      {
+        "mark": "members/lambdaclass.png",
+        "name": "LambdaClass",
+        "url": "https://lambdaclass.com/"
       }
     ]
   },

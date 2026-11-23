@@ -497,10 +497,10 @@ def members_card():
     one, two = (min(96, ch * 0.38, cw / (0.5 * k)) for k in (max(map(len, names)), half))
     size = int(one if one >= 0.75 * two else two)
     # the marks, each drawn with the same area so a wide wordmark and a square read as one weight:
-    # the largest area at which every mark fits 85 % of its cell's width and 45 % of its height
+    # the largest area at which every mark fits 85 % of its cell's width and 60 % of its height
     marks = {m["name"]: S.HERE / m["mark"] for m in members if m.get("mark")}
     shape = {x: mark_shape(p) for x, p in marks.items()}
-    area = min((min((cw * 0.85) ** 2 / r, (ch * 0.45) ** 2 * r) for r in shape.values()),
+    area = min((min((cw * 0.85) ** 2 / r, (ch * 0.6) ** 2 * r) for r in shape.values()),
                default=0)  # fmt: skip
 
     def cell(x):
