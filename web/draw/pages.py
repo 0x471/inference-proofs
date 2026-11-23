@@ -63,6 +63,7 @@ from .ladder import (
     whole_line,
     whole_note,
 )
+from .lattice import lattice
 from .petal import chip, control_name, criteria_section, quote_links, state_word
 from .plots import (
     PLOT_BESIDE,
@@ -2047,7 +2048,7 @@ def system_page(row):
     unranked = "" if row["position"] is not None else " unr"
     band_ = (
         f'<section class="mast mast-sys sysb" aria-labelledby="h-name"><div class="mast-in">'
-        f'<div class="sb"><h1 id="h-name" class="sysname nm{size}">{e(name)}</h1>'
+        f'<div class="sb">{lattice(name)}<h1 id="h-name" class="sysname nm{size}">{e(name)}</h1>'
         f'<p class="sbm{unranked}"><span class="sbl">{defined(label, "multiple")}</span>{lead}</p></div>'
         '<dl class="facts">'
         + "".join(f'<div class="{c}"><dt>{k}</dt><dd>{v}</dd></div>' for c, k, v in facts)
@@ -2134,7 +2135,7 @@ def title_band(title, cls="ttl", kicker="", under=""):
     at the home title's size; `kicker` over it, where the page stands under another (the
     mandate under Learn); `under` it, a line in the band's own ink."""
     kick = f'<p class="kick">{kicker}</p>' if kicker else ""
-    return (f'<div class="mast mast-t"><div class="mast-in">{kick}<h1 id="h-name" class="{cls}">'
+    return (f'<div class="mast mast-t">{lattice(title)}<div class="mast-in">{kick}<h1 id="h-name" class="{cls}">'
             f"{e(title)}</h1>{under}</div></div>")  # fmt: skip
 
 

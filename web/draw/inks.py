@@ -14,11 +14,10 @@ from . import state as S
 GROUND, PAPER, MUTED, RULE = "#07080c", "#ffffff", "#8a8d97", "#5c5f6b"
 LINE = "#24262e"  # the hairline between rows (words.css --line), never text
 LIFT = "#111218"  # the ground under the row in hand (words.css --lift)
-ACCENT, ON_ACCENT = (
-    "#ffffff",
-    "#07080c",
-)  # the accent: a tab, a stem, a rule, a block in hand; words on it
-ACCENT_LIGHT = "#ffffff"  # the accent as a thin line or a word on the night
+# the accent, a blue between Lucid's cobalt and its periwinkle: a tab, a rule, a stem, a block in
+# hand; the ground ink on it
+ACCENT, ON_ACCENT = "#5b7bff", "#07080c"
+ACCENT_LIGHT = "#5b7bff"  # the accent as a thin line or a word on the night
 STATES = ("red", "amber", "green")  # the filled petal states, darkest first
 
 

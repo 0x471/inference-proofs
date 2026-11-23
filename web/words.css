@@ -1,8 +1,9 @@
 /* THE INSTRUMENT, set as INFERENCE ⊢ PROOFS. No data in this file. Colour meanings:
-   The palette is Lucid Computing's night: a night ground, white ink, a muted ink, and no hue of its
-   own. The accent (white) = the benchmark's own frame: a model's tab, the tab and section in view,
-   the row in hand, a block in hand (night words on it), the mark, focus; never a value or a state.
-   The band is the lifted night under white words.
+   The palette is Lucid Computing's night: a night ground, white ink, a muted ink. The accent (a
+   blue between Lucid's cobalt and its periwinkle) = the benchmark's own frame: a model's tab, the
+   tab and section in view, the row in hand, a block in hand (ground ink on it), the mark, focus;
+   never a value or a state. The band is the lifted night under white words, a lattice of cipher
+   cells in its corner with a few cells lit.
    green / amber / red = a petal's or a check's state, only in the glyph's arms, the state chips,
    a grade's or a state's word, and the cells of the grades a criterion holds on a system page;
    a hollow petal or an undecided check is an outline in muted ink, never a fourth fill.
@@ -31,11 +32,14 @@
   --rule: #5c5f6b;
   --line: #24262e;
   /* the accent, a slot of three values: a fill under words and a thick mark (a tab, a block in hand, a rule, a stem,
-     an edge), the words on that fill, and the accent as a thin line or a word on the night. White here: the states'
-     inks are the page's only colour */
-  --accent: #ffffff;
+     an edge), the words on that fill, and the accent as a thin line or a word on the night. A blue between Lucid's
+     cobalt and its periwinkle, always under ground ink. Those two, the deep blue and the light, are never a ground
+     and never text: a few lit cells of a band's lattice */
+  --accent: #5b7bff;
   --onaccent: #07080c;
-  --accentlight: #ffffff;
+  --accentlight: #5b7bff;
+  --deep: #1b3bff;
+  --light: #93a5ff;
   /* the three filled states (build.py checks their steps from the ground and their contrast) */
   --red: #e03c44;
   --amber: #e49921;
@@ -234,7 +238,35 @@ html:has(.top.s-on) { overflow: hidden; }
 /* ---------------------------------------------------------------- the band: white on the lifted night, flat */
 /* on the band, what is written in ground ink elsewhere is white, for all it holds; a block in hand is white with
    the band's ground for its words */
-.mast { --ground: var(--paper); --accent: var(--lift); --onaccent: var(--paper); background: var(--lift); color: var(--paper); }
+.mast { position: relative; isolation: isolate; --ground: var(--paper); --accent: var(--lift); --onaccent: var(--paper); background: var(--lift); color: var(--paper); }
+/* the lattice in a band (draw/lattice.py): cipher characters, tiles and dots on a square grid, thickest in the band's
+   lower right corner and thinning toward its title; nearly the band's own ink, a few cells lit (the accent, its light,
+   its deep blue). It scales with the screen, sits under everything a band holds and takes no pointer; a band's small
+   text keeps clear of it (a system's band holds it between the name and the figure; a line of text elsewhere stands
+   on the band's ground). Under 900 px it is a rail of cells along the band's foot. When a page arrives one line of
+   light crosses it and the field shows behind the line (html.anim; still otherwise) */
+.latw { --lat-w: max(76.8vw, 700px); position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+.lat { position: absolute; right: 0; bottom: 0; width: var(--lat-w); height: auto; font: 600 11px/1 var(--mono); }
+.sb > .latw { position: relative; inset: auto; grid-area: 1 / 1 / 2 / 3; align-self: stretch; margin: -48px calc(-1 * var(--gut)) calc(-1 * var(--s6)) 0; }
+.lat text { text-anchor: middle; }
+.lat path, .lat text { fill: currentColor; }
+.lat .o { fill: none; stroke: currentColor; stroke-width: 2px; }
+.lat .d { color: color-mix(in srgb, var(--paper) 8%, var(--lift)); }
+.lat .b { color: color-mix(in srgb, var(--paper) 17%, var(--lift)); }
+.lat .p { color: var(--light); }
+.lat .a { color: var(--accentlight); }
+.lat .c { color: var(--deep); }
+.lat .k { color: var(--lift); }
+:where(.latw ~ .mast-in) :where(.lede), :where(.latw ~ .sbm) { background: var(--lift); box-shadow: 0 0 0 8px var(--lift); }
+.anim .lat { animation: latin 900ms cubic-bezier(.3, .6, .2, 1) both; }
+.anim .latw:after { content: ""; position: absolute; top: 0; bottom: 0; left: calc(100% - var(--lat-w)); width: 2px; background: var(--light); box-shadow: -7px 0 0 color-mix(in srgb, var(--light) 45%, transparent), -17px 0 0 color-mix(in srgb, var(--light) 24%, transparent), -30px 0 0 color-mix(in srgb, var(--light) 11%, transparent); opacity: 0; animation: latpass 900ms cubic-bezier(.3, .6, .2, 1) both; }
+@keyframes latin { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0); } }
+@keyframes latpass { from { opacity: 1; transform: none; } 92% { opacity: 1; } to { opacity: 0; transform: translateX(var(--lat-w)); } }
+@media (max-width: 900px) {
+  .mast { padding-bottom: 30px; }
+  .latw, .sb > .latw { position: absolute; inset: auto 0 0; height: 30px; margin: 0; }
+  :where(.latw ~ .mast-in) :where(.lede), :where(.latw ~ .sbm) { background: none; box-shadow: none; }
+}
 .mast-in { margin-inline: var(--gut); padding: 48px 0 40px; }
 /* the overview band: the title on one line (the ladder under it runs largest model first), and under it the
    lead, three sentences at a reading measure */
@@ -275,7 +307,7 @@ html:has(.top.s-on) { overflow: hidden; }
 .sbm .sub, .sbm .na { color: var(--ground); }
 .sbm .sub { margin-top: var(--s5); white-space: nowrap; }
 .sbm .na { font-size: 24px; line-height: 1; }
-.facts { display: flex; flex-wrap: wrap; column-gap: 40px; margin: var(--s6) 0 0; padding-bottom: var(--s4); border-top: 2px solid var(--ground); }
+.facts { display: flex; flex-wrap: wrap; column-gap: 40px; margin: var(--s6) 0 0; padding-bottom: var(--s4); border-top: 1px solid var(--ground); }
 .facts > div { min-width: 0; padding-top: 12px; }
 .facts dt { font: var(--f-label); letter-spacing: var(--track); text-transform: uppercase; }
 .facts dd { margin: var(--s2) 0 0; font: 600 13px/20px var(--mono); }
@@ -1623,6 +1655,8 @@ main { flex: 1 0 auto; }
 .learnpage { --hd: 264px; --hg: 48px; --tx: 72ch; --cp: min(20px, var(--gut)); }
 .learnpage .mast-sys .mast-in { padding-bottom: 44px; }
 .learnpage .lunder .mast-in { padding-bottom: 0; }
+/* a band's lines keep clear of its lattice: each stands on the band's ground (from 900 px up, where the lattice is a field) */
+@media (min-width: 901px) { :where(.latw ~ .mast-in) :where(.lt-s, .kick > *) { background: var(--lift); box-shadow: 0 0 0 8px var(--lift); } }
 .kick { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 32px; font: var(--f-label); letter-spacing: var(--track); text-transform: uppercase; margin-bottom: 18px; }
 .kick a { display: inline-flex; align-items: center; min-height: 24px; text-decoration: none; box-shadow: 0 1px 0 var(--ground); }
 /* in hand: a white block, the words in the band's ground (as a link on the band) */
@@ -1640,7 +1674,7 @@ main { flex: 1 0 auto; }
 .lsc:hover, .lway:hover { background: var(--ground); color: var(--accent); }
 .lsc:active, .lway:active { box-shadow: inset 0 -4px 0 var(--accent); }
 /* a night block laid on the band (the step in view, the Autoresearch mock-up and its tag) keeps the night's ink */
-.lsc.on, .mast .soon, .mast .arx { --ground: #07080c; --accent: #ffffff; --onaccent: #07080c; }
+.lsc.on, .mast .soon, .mast .arx { --ground: #07080c; --accent: #5b7bff; --onaccent: #07080c; }
 .lsc.on { background: var(--ground); color: var(--paper); view-transition-name: lstep; }
 .lsc.on .lsn { color: var(--accentlight); }
 .mast .lsc:focus-visible, .mast .lway:focus-visible { outline-offset: -5px; }
@@ -2334,6 +2368,7 @@ ol.ls > li:before { counter-increment: n; content: counter(n); position: absolut
 }
 @media print {
   :root { --ground: #fff; --paper: #111; --muted: #555; --rule: #999; --line: #ccc; --lift: #fff; --accent: #111; --onaccent: #fff; --accentlight: #111; }
+  .latw { display: none; }
   .search, .top .repo, .sopen, .skip, .pnav, .tabs { display: none; }
   .top, .lhd, .lad .dv > * { position: static; }
   .mast { background: none; color: var(--paper); border-block: 2px solid var(--paper); }

@@ -30,6 +30,7 @@ from .chrome import (
 )
 from .glossary import term
 from .hexagon import glyph_svg
+from .lattice import lattice
 from .words import (
     BASIS_BITS,
     CAUSE_WORD,
@@ -790,7 +791,7 @@ def build_index():
     body = f"""
 {header("home")}
 <main id="main" class="home">
-  <section class="mast"><div class="mast-in">{band_html()}</div></section>
+  <section class="mast">{lattice("home")}<div class="mast-in">{band_html()}</div></section>
   <div class="wrap ladder">{board}</div>
   <div class="wrap">{not_run_html()}{partners}</div>
 </main>
