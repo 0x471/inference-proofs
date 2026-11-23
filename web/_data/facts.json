@@ -33,6 +33,11 @@
         "mark": "members/ethereum-foundation-dai.svg",
         "name": "Ethereum Foundation dAI team",
         "url": "https://ai.ethereum.foundation/"
+      },
+      {
+        "mark": "members/miden.svg",
+        "name": "Miden",
+        "url": "https://www.miden.xyz/"
       }
     ]
   },
