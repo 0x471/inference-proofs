@@ -40,6 +40,7 @@ from .ladder import (
     BINDING_GAP,
     NOT_TESTED,
     RATE_ANCHOR,
+    agree_title,
     defined,
     fig_html,
     filled,
@@ -130,6 +131,7 @@ from .words import (
     MANDATE_LEVEL_IN,
     MANDATE_LEVEL_LINK,
     MANDATE_MEMBERS_IN,
+    MANDATE_MODELS,
     NEXT_BY,
     NEXT_HEAD,
     NO_STEADY_WORD,
@@ -1216,24 +1218,9 @@ def agree_html(entry, tf, sub):
         why = (entry or {}).get("cause") or "not run"
         return f'<span class="na" title="{e(why)}">not run</span>'
     # each part with its label, so the title's lines keep one column (the ladder's Fidelity title does the same)
-    said = (
-        f"mean: {sig(entry['mean'])} of {tf['positions']:,} positions; n = {entry['n']:,} prompts"
-    )
-    if entry.get("percent_interval"):
-        low, high = entry["percent_interval"]
-        said += f"; interval: 95\u00a0%, {pct(low)} to {pct(high)}\u202f%"
-    return (f'<span class="fig" title="{e(said)}; record: {e(tf_record(tf, entry))}">'
+    return (f'<span class="fig" title="{e(agree_title(entry, tf))}">'
             f'<span class="n">{e(pct(entry["percent"]))}</span><span class="u">%</span></span>'
             + "".join(f'<span class="sub">{e(line)}</span>' for line in sub if line))  # fmt: skip
-
-
-def tf_record(tf, entry):
-    """Where the board holds a teacher-forced entry's percentage (`tf["record"]`, the block's
-    pointer; a printed percentage names its value there), found by the entry itself."""
-    at = next((f"rows/{k}" for k, v in tf["rows"].items() if v is entry), None)
-    if at is None:
-        at = next(f"controls/{i}" for i, c in enumerate(tf["controls"]) if c is entry)
-    return f"{tf['record']}/{at}/percent"
 
 
 def interval_words(entry):
@@ -1897,7 +1884,7 @@ def fidelity_block(row):
         sub = [f"top-token agreement, n\u00a0=\u00a0{mine['n']:,} prompts"]
         cells.append((defined(FIGURE_HEAD["fidelity"], FIGURE_ANCHOR["fidelity"]),
                       agree_html(mine, tf, sub), ""))  # fmt: skip
-    proved = proved_words(row, long=True).removeprefix(f"{PROVED_HEAD}: ")
+    proved = proved_words(row).removeprefix(f"{PROVED_HEAD}: ")
     if proved:
         p = row["precision"]
         cells.append((term("Proved", "Proved"),
@@ -2032,7 +2019,8 @@ def system_page(row):
     name = name_of(row)
     facts = [("f-st", "Standing", standing_html(row, "")),
              ("f-md", "Model", f'<a href="/#{e(rung["id"])}">{nobreak(rung["model"])}</a>'
-              f'<span class="msz">{e(architecture(rung["parameters_total"], rung.get("parameters_active")))}</span>')]  # fmt: skip
+              f'<span class="msz">{e(rung["publisher"])}{SEP}'
+              f'{e(architecture(rung["parameters_total"], rung.get("parameters_active")))}</span>')]  # fmt: skip
     source = ""
     pin = sysd.get("pin")
     if pin:  # a change to the publisher's code: the source is its pull request (SI-3)
@@ -2328,7 +2316,8 @@ def build_checks():
            f"{know_html()}")  # fmt: skip
     parts = (("checks", "Six checks"), ("figures", "Figures"), ("order", "Order"),
              ("glyph", "Glyph"), ("not-run", "Not run"))  # fmt: skip
-    # the order rule; "largest model with a passed row" (OR-6) is an address the ladder's mark can link
+    # the order rule; "largest model with a passed row" (OR-6, recorded on the board) keeps an
+    # address of its own
     order = rules(ORDER_RULE, ids=("unranked", "largest model with a passed row"), at="ORDER_RULE")
     key = (f'<p class="rd">{linked(summary, ("summary", ""))}</p>{legend}'
            f'<div class="cwrap"><div class="gbig">{glyph}</div><div class="clist">{petals}'
@@ -2410,6 +2399,12 @@ def build_mandate():
     level = (f'<div id="{LEVEL_ANCHOR}"><dt>{e(lv["name"])}<a class="rl" href="{e(link(lv["path"]))}" '
              f'title="{e(lv["digest"])}">{e(lv["path"])}</a></dt>'
              f"<dd>{e(state)} {history}</dd></div>")  # fmt: skip
+    # the models it fixes, largest first, each with its publisher and architecture: the ladder
+    # prints neither (RFC-0018 Q54), and a model no system has run on has no page of its own
+    level += ('<div id="models"><dt>' + e(MANDATE_MODELS) + '</dt><dd><ul>' + "".join(
+        f'<li><a href="/#{e(r["id"])}">{nobreak(r["model"])}</a>{SEP}{e(r["publisher"])}{SEP}'
+        f'{e(architecture(r["parameters_total"], r.get("parameters_active")))}</li>'
+        for r in S.V["rungs"]) + "</ul></dd></div>")  # fmt: skip
     # the dated corrections, newest first, the last row of their section
     corrections = ('<div id="corrections"><dt>Corrections</dt><dd><ul>' + "".join(
         f"<li>{e(day)}: {e(words)}</li>" for day, words in MANDATE_CORRECTIONS)

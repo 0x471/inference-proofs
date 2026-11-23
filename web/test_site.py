@@ -281,18 +281,18 @@ def test_criterion_tracks_by_hand(board_site: Any) -> None:
 
 
 def test_order_and_positions_are_the_boards(board_site: Any) -> None:
-    """OR-5: rows print in the board's order, a position only where the board holds one."""
+    """OR-5: rows print in the board's order, under their own model, a position only where the
+    board holds one."""
     index = pages(board_site.out)["index.html"]
-    printed = re.findall(r'<tr class="row" id="row-([^"]+)"><td class="cp">(.*?)</td>', index)
-    want = [(r["system"], r["position"]) for r in rows(board_site.board)]
-    got = [(sid, int(m[1]) if (m := re.search(r'class="pn">(\d+)<', cell)) else None)
-           for sid, cell in printed]  # fmt: skip
+    printed = [(rid, sid, cell) for rid, table in re.findall(
+        r'<table class="lad" id="([^"]+)"(.*?)</table>', index, re.S)
+        for sid, cell in re.findall(r'<tr class="row" id="row-([^"]+)"><td class="cp">(.*?)</td>',
+                                    table)]  # fmt: skip
+    want = [(g["id"], r["system"], r["position"]) for g in board_site.board["rungs"]
+            for r in g["rows"]]  # fmt: skip
+    got = [(rid, sid, int(m[1]) if (m := re.search(r'class="pn">(\d+)<', cell)) else None)
+           for rid, sid, cell in printed]  # fmt: skip
     assert got == want
-    # OR-6: the rung marked as the largest model with a passed row is the board's frontier, and no other
-    marked = [sid for sid, sec in re.findall(r'<section class="rung" id="([^"]+)"(.*?)</section>',
-                                             index, re.S) if 'class="rf"' in sec]  # fmt: skip
-    front = board_site.board["frontier"]
-    assert marked == ([front["rung"]] if front else [])
 
 
 def test_no_v01_figure(board_site: Any, empty_site: Path) -> None:
@@ -313,9 +313,9 @@ def test_every_rung_not_run_without_a_board(empty_site: Path) -> None:
 
     level = load_yaml(Path(__file__).resolve().parents[1] / "levels/L1.yaml")
     index = (empty_site / "index.html").read_text()
-    sections = re.findall(r'<section class="rung" id="([^"]+)"(.*?)</section>', index, re.S)
-    assert [s for s, _ in sections] == [r["id"] for r in level["rungs"]]  # type: ignore[index]
-    assert all("not run yet" in body and "<table" not in body for _, body in sections)
+    models = re.findall(r'<table class="lad" id="([^"]+)"(.*?)</table>', index, re.S)
+    assert [m for m, _ in models] == [r["id"] for r in level["rungs"]]  # type: ignore[index]
+    assert all("not run yet" in body and 'class="row"' not in body for _, body in models)
 
 
 def overview_ends(text: str) -> dict[str, tuple[float, float]]:
@@ -496,10 +496,10 @@ def printed(text: str) -> tuple[float, float]:
 
 
 def test_printed_rates_divide_to_the_printed_multiple(board_site: Any) -> None:
-    """CO-8 (amended 2026-11-17): the proved rate under a row's multiple and the served rate in
-    its model's head, as printed, divide to the multiple printed above. By hand on the example
-    board: 849.92 / 10.274 = 82.72, printed "10.27 proved" under "82.72×" and "849.9" in the
-    head. A row with no rate pair (SASH there) prints no line."""
+    """CO-8 (amended 2026-11-17): the proved rate under a row's multiple and the served rate on
+    its model's divider, as printed, divide to the multiple printed above. By hand on the example
+    board: 849.92 / 10.274 = 82.72, printed "10.27" under "82.72×" and "849.9" on the divider. A
+    row with no rate pair (SASH there) prints no line."""
     out = board_site.out
     index = (out / "index.html").read_text()
     for pid, body in re.findall(r'<tr class="row" id="row-([a-z0-9-]+)">(.*?)</tr>', index, re.S):
@@ -518,7 +518,7 @@ def test_printed_rates_divide_to_the_printed_multiple(board_site: Any) -> None:
                      for f in (served, proved))  # fmt: skip
             m = float(number(r["session_multiple"]["value"], "ratio")[0].replace(",", ""))
             assert abs(sv / p - m) <= 1e-3 * m, (r["system"], sv, p, m)
-    for words in ("82.72", "10.27</span> proved", "849.9"):
+    for words in ("82.72", '<span class="n">10.27</span>', "849.9"):
         assert words in index, words
     assert abs(849.9 / 10.27 - 82.72) <= 1e-3 * 82.72
 
@@ -570,6 +570,46 @@ def test_a_lone_system_is_not_drawn_as_ranked(board_site: Any) -> None:
     assert build.position_html(row, shared) not in index
     assert build.ONLY_RUN in build.position_html(row, lone)
     assert build.ONLY_RUN not in build.position_html(row, shared)
+
+
+def test_a_row_not_passed_keeps_its_standing_on_screen(board_site: Any) -> None:
+    """SI-1 (amended 2026-11-23, Q54) and DEPTH law 2: a row's standing stays in its name's cell,
+    each check not passed with its state. By hand on the example board: FlashProve "Passed"; SASH
+    "Not passed: Model check not decided, Verify without weights check failed"; DeepProve "Not
+    passed yet: Model check not decided, Fidelity check not decided"."""
+    index = pages(board_site.out)["index.html"]
+    shown = {}
+    for sid, cell in re.findall(r'<tr class="row" id="row-([^"]+)">.*?'
+                                r'<th class="csys[^"]*" scope="row">(.*?)</th>', index, re.S):  # fmt: skip
+        st = re.search(r'<span class="st">(.*)</span>$', cell)
+        assert st, sid
+        shown[sid] = html.unescape(re.sub(r"<[^>]+>", "", st[1]))
+    assert shown == {
+        "flashprove": "Passed",
+        "sash": "Not passed: Model check not decided, Verify without weights check failed",
+        "deepprove": "Not passed yet: Model check not decided, Fidelity check not decided",
+    }
+
+
+def test_each_models_copies_print_once_on_its_divider(release_site: Any) -> None:
+    """RFC-0018 SI-9 (amended 2026-11-23, Q54): a model's 8-bit and 4-bit copies' Fidelity print
+    once, on its divider, read from its own teacher-forced pass, and on none of its rows. By hand
+    on the release board: Llama 4 Maverick (rung 0) 96.2 and 85.5 %, Llama 3.1 8B (rung 1) 98.4
+    and 90.6 %, GPT-2 (no system run) none."""
+    index = (release_site.out / "index.html").read_text()
+    got = {}
+    for rid, table in re.findall(r'<table class="lad" id="([^"]+)"(.*?)</table>', index, re.S):
+        divider, _, rest = table.partition('<tr class="row"')
+        assert 'class="dcl"' not in rest, rid
+        got[rid] = [(html.unescape(name), n, re.search(r"#/rungs/(\d+)/teacher_forced/", title)[1])
+                    for name, title, n in re.findall(
+                        r'<span class="dcl">([^<]*)</span> <span class="fig" title="([^"]*)">'
+                        r'<span class="n">([^<]*)</span>', divider)]  # fmt: skip
+    assert got == {
+        "llama-4-maverick": [("8-bit copy", "96.2", "0"), ("4-bit copy", "85.5", "0")],
+        "llama-3.1-8b": [("8-bit copy", "98.4", "1"), ("4-bit copy", "90.6", "1")],
+        "gpt-2": [],
+    }
 
 
 def test_a_p_at_its_test_floor_reads_as_a_bound(board_site: Any) -> None:

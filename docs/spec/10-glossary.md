@@ -60,7 +60,7 @@ The website's Learn glossary ([`web/learn/glossary.md`](../../web/learn/glossary
 
 <a id="forbidden-flag"></a>**Forbidden flag.** Any CLI option declared in `system.yaml` under `forbidden_flags` because it weakens the system's cryptographic statement (such as SASH's `--unsound-skip-*` options). Permitted exclusively in control jobs; CI rejects any measured run whose command log includes one. [RFC-0005](../../rfcs/0005-adapter-contract.md), [RFC-0013](../../rfcs/0013-validation-and-ci.md).
 
-<a id="frontier"></a>**Frontier.** The largest rung (by total parameter count) on which at least one system has passed all checks; the ladder marks this rung as the largest model proved. [RFC-0018](../../rfcs/0018-level-1-ladder.md).
+<a id="frontier"></a>**Frontier.** The largest rung (by total parameter count) on which at least one system has passed all checks. The board file records it; the ladder runs largest model first and no longer badges it (2026-11-23, RFC-0018 Q54). [RFC-0018](../../rfcs/0018-level-1-ladder.md).
 
 <a id="glyph"></a>**Glyph.** The five-petal visual summary rendered on the site for each benchmarked row, showing how close the system comes to an ideal prover with one [glyph property](#glyph-property) per petal and one [glyph state](#glyph-state) each. Petals are never aggregated into a numeric score and never affect ranking positions. From Level 1 onward, glyphs follow [RFC-0018](../../rfcs/0018-level-1-ladder.md#the-glyph); earlier releases used six documentation-based properties ([RFC-0016](../../rfcs/0016-glyph-properties-and-states.md)).
 

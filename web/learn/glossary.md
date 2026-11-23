@@ -292,7 +292,7 @@ Verbatim quotes copied from a publisher's documentation at the pinned commit, ea
 
 ### Q8_0 and Q4_K_M
 
-Standard 8-bit (`Q8_0`) and mostly 4-bit (`Q4_K_M`) quantized copies of the original model, created with `llama.cpp` at the level's pinned commit. We run them unproved as fidelity yardsticks and show their [[Fidelity figure]] alongside each system's result on the ladder.
+Standard 8-bit (`Q8_0`) and mostly 4-bit (`Q4_K_M`) quantized copies of the original model, created with `llama.cpp` at the level's pinned commit. We run them unproved as fidelity yardsticks and show their [[Fidelity figure]] once for each model on the ladder, over its systems' results.
 
 ### Quantization
 
@@ -392,7 +392,7 @@ The basic unit of text a language model processes, typically a word or subword r
 
 ### Tokens per second
 
-The request's 512 reply tokens divided by the GPU-seconds required for one reply on a single GPU, reported as `tokens/s per GPU` with the GPU model named. Each row shows two rates on the same GPU type: the proved rate over [[whole session]]s and the served rate from the [[serving baseline]] at full load. Dividing the served rate by the proved rate gives [[cost vs serving|Cost vs serving]]. Because raw rates depend on the GPU hardware, they are never used to rank systems ([RFC-0018](repo:rfcs/0018-level-1-ladder.md) CO-8).
+The request's 512 reply tokens divided by the GPU-seconds required for one reply on a single GPU, reported as `tokens/s per GPU` with the GPU model named. A row's proved rate over [[whole session]]s and its model's served rate from the [[serving baseline]] at full load are taken on the same GPU type. Dividing the served rate by the proved rate gives [[cost vs serving|Cost vs serving]]. Because raw rates depend on the GPU hardware, they are never used to rank systems ([RFC-0018](repo:rfcs/0018-level-1-ladder.md) CO-8).
 
 ### Trust assumptions
 

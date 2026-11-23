@@ -352,13 +352,7 @@
   const narrow = matchMedia('(max-width: 760px), (max-height: 500px) and (pointer: coarse)');
   let inView = -2;
   let lastY = scrollY;
-  // where the browser cannot tell a sticky head is stuck (no scroll-state query), the ladder's heads are marked here:
-  // stuck while the table has moved on under its head and has rows left under it
-  const heads = window.CSS && CSS.supports('container-type', 'scroll-state') ? [] : $$('.lad thead th:first-child');
   const spy = () => {
-    // (below 1180 px the whole head sticks, and its first cell is laid over it once stuck: the head is what is measured)
-    const stuck = heads.map((h) => { const hd = h.closest('thead'); const r = (getComputedStyle(hd).position === 'sticky' ? hd : h).getBoundingClientRect(); const t = h.closest('table').getBoundingClientRect(); return t.top < r.top - 1 && t.bottom > r.top + 40; });
-    heads.forEach((h, i) => h.classList.toggle('stuck', stuck[i]));
     const y = scrollY;
     // the bar stays while its search field has focus (a phone held sideways types in the bar itself)
     if (narrow.matches && bar && !bar.classList.contains('s-on') && !(document.activeElement && document.activeElement.id === 'q')) {
@@ -614,16 +608,15 @@
   let size = [0, 0];  // the probe's width and height, measured once when it is filled
   let byKey = false;  // shown by keyboard focus: the labels follow their figure on a scroll; a pointer's or a tap's are put away
   // the bottom of what is pinned at the top of the window: the top bar, the strip once it is stuck under it, and over
-  // a figure of the ladder its table's head once that is stuck (it names the model)
+  // a figure of the ladder the heads and its model's divider once they are stuck (they name the column and the model)
   const pinned = (el) => {
     const t = bar ? Math.max(0, bar.getBoundingClientRect().bottom) : 0;
     const s = pnav && pnav.getBoundingClientRect();
     let p = s && s.top <= t + 1 ? Math.max(t, s.bottom) : t;
     const lad = el && el.closest ? el.closest('.lad') : null;
     if (lad) {
-      const hd = $('thead', lad);
-      const rs = [hd, $('th', hd)].map((x) => x.getBoundingClientRect()).filter((r) => r.height);
-      if (rs.length && Math.min(...rs.map((r) => r.top)) <= p + 1) p = Math.max(p, ...rs.map((r) => r.bottom));
+      [$('.lhd'), $('.dv > :first-child', lad)].filter(Boolean).map((x) => x.getBoundingClientRect())
+        .filter((r) => r.height).forEach((r) => { if (r.top <= p + 1) p = Math.max(p, r.bottom); });
     }
     return p;
   };
@@ -637,7 +630,7 @@
   // the top of what names a figure: its cell's label (a fact's term, a cell, a block), so labels put over the figure
   // cover neither the figure nor its name
   const named = (el, r) => {
-    const cell = el.closest('.meta > div, td, .sb, .parts > div, dd');
+    const cell = el.closest('td, .sb, .parts > div, dd');
     if (!cell) return r.top;
     // a table cell's name is its label where one shows (the ladder on a phone), not the cell's padding
     const lbl = cell.matches('td') ? $$('.lbl', cell).find((l) => l.getBoundingClientRect().width) : null;
@@ -663,7 +656,9 @@
     const top = pinned(box);
     const [w, h] = size;
     if (bring && innerHeight - top < h + r.height + 24 && Math.abs(r.top - top - 8) > 2) { scrollBy(0, r.top - top - 8); r = box.getBoundingClientRect(); }
-    const sub = next && next.classList.contains('sub') ? next.getBoundingClientRect() : null;
+    // a ladder name's standing counts as the line under it: the labels never cover a row's own "Not passed" words
+    const under = next && (next.classList.contains('sub') || (box.matches('.lad .sname') && next.classList.contains('st')));
+    const sub = under && next.getBoundingClientRect().height ? next.getBoundingClientRect() : null;
     const low = sub ? sub.bottom : r.bottom;
     const head = named(box, r);
     const below = innerHeight - low - 16; const above = r.top - top - 16;
@@ -707,8 +702,8 @@
     probe.scrollTop = 0;
     size = [probe.offsetWidth, probe.offsetHeight];
     col = gutters(el, size[0]);
-    // a model's head (its name) on the ladder and the Overview page is never covered either
-    near = $$(`${FIG}, .rh, .lh`, main).filter((e) => e !== el && !e.contains(el) && !el.contains(e));
+    // a model's divider (its name) on the ladder and its head on the Overview page are never covered either
+    near = $$(`${FIG}, .dvh, .lh`, main).filter((e) => e !== el && !e.contains(el) && !el.contains(e));
     titles = $$('.rm, .ln, .rk', main);
     // nor the name and petals of the figure's own row
     const own = el.closest('.row');
@@ -735,6 +730,19 @@
     });
     probe.append(dl);
   });
+  // one arm's line: its step on a chip in its ink and form (cut: Partly met; open: Not stated), its name, and for a
+  // Not decided arm what it waits on. The words are the row's ("Name: step, cause")
+  const armLine = (p, w) => {
+    const d = document.createElement('div'); d.className = 'prk';
+    const state = ['green', 'amber', 'red', 'hollow'].find((s) => p.classList.contains(s));
+    const form = ['cut', 'open'].find((f) => p.classList.contains(f));
+    const chip = document.createElement('span'); chip.className = form ? `schip ${state} ${form}` : `schip ${state}`;
+    const [step, ...cause] = w.textContent.slice(w.firstChild.textContent.length).replace(/^:\s*/, '').split(', ');
+    chip.textContent = step;
+    d.append(chip, w.firstChild.textContent);
+    if (cause.length) { const c = document.createElement('span'); c.className = 'prc'; c.textContent = cause.join(', '); d.append(c); }
+    return d;
+  };
   const petal = (p) => {
     const g = p.closest('.glyph');
     const row = p.closest('.row');
@@ -743,21 +751,21 @@
     const i = $$('.sl', svg).indexOf(p);
     if (!words || !words[i]) return;
     show(p, () => {
-      const d = document.createElement('div'); d.className = 'prk';
-      const state = ['green', 'amber', 'red', 'hollow'].find((s) => p.classList.contains(s));
-      // the arm's form (cut: Partly met; open: Not stated) is drawn on the chip too
-      const form = ['cut', 'open'].find((f) => p.classList.contains(f));
-      const chip = document.createElement('span'); chip.className = form ? `schip ${state} ${form}` : `schip ${state}`;
-      // the words ("Name: step, cause"): the step, then for a Not decided petal what it waits on after the name, then
-      // under them the petal's plain sentence
-      const [step, ...cause] = words[i].textContent.slice(words[i].firstChild.textContent.length).replace(/^:\s*/, '').split(', ');
-      chip.textContent = step;
-      d.append(chip, words[i].firstChild.textContent);
-      if (cause.length) { const c = document.createElement('span'); c.className = 'prc'; c.textContent = cause.join(', '); d.append(c); }
-      probe.append(d);
+      // the arm's line, then under it the petal's plain sentence
+      probe.append(armLine(p, words[i]));
       if (words[i].dataset.plain) { const q = document.createElement('p'); q.className = 'prp'; q.textContent = words[i].dataset.plain; probe.append(q); }
       g.classList.add('lit-on'); p.classList.add('lit');
     });
+  };
+  // a ladder row's name given focus from the keyboard: its glyph's five arms, a line each, as a pointer shows them
+  // one by one (the glyph itself takes no focus: the name leads to the same page)
+  const arms = (a) => {
+    const row = a.closest('.lad .row');
+    const ps = row ? $$('.cg .sl', row) : [];
+    const words = row ? $$('.pw > span', row) : [];
+    if (!ps.length || ps.length !== words.length) return false;
+    show(a, () => ps.forEach((p, i) => probe.append(armLine(p, words[i]))));
+    return true;
   };
   const clearPetal = () => { $$('.glyph.lit-on').forEach((g) => { g.classList.remove('lit-on'); $$('.lit', g).forEach((p) => p.classList.remove('lit')); }); };
   // a mouse leaving a figure puts its labels away a moment later, so the pointer can move onto them (to read or
@@ -813,6 +821,7 @@
     });
     main.addEventListener('focusin', (ev) => {
       if (press) return;
+      if (ev.target.matches('.lad .sname:focus-visible') && arms(ev.target)) { byKey = true; place(ev.target, true); return; }
       // a ladder figure linked to its section: the link takes focus, its figure's labels show
       const el = ev.target.closest('.fig[title], .na[title], .part[title]') || (ev.target.matches('a.flk') ? $('.fig[title]', ev.target) : null)
         || (ev.target.matches(TIP) ? ev.target : null);

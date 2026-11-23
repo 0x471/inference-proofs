@@ -12,7 +12,7 @@
    600, width 87.5) for every label and figure. Sizes lock to a short scale, rules meet.
    Motion: under 250 ms, only with html.anim, none under reduced motion; it never delays or
    alters a number. */
-/* Breakpoints (px): 1100 1000 900 760 640 560 400 374 350, and a phone held sideways (max-height 500,
+/* Breakpoints (px): 1320 1180 1100 1060 1000 900 880 760 640 560 400 374 350, and a phone held sideways (max-height 500,
    coarse pointer). Desktop first: the base rules are for wide screens. */
 /* fonts: written by build.py */
 @font-face{font-family:"Big Shoulders Display";font-style:normal;font-weight:800 900;font-display:swap;src:url(/fonts/big-shoulders-latin-ext.8a2768ca71.woff2) format("woff2");unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF}
@@ -94,7 +94,7 @@ p { margin: 0; }
 [tabindex="-1"]:focus { outline: none; }
 /* arriving on an anchor: its heading set in a cobalt block that slides in on a hard edge */
 @keyframes wipe { from { clip-path: inset(-1em 100% -1em -1em); } }
-.anim :is(.rung:target .rm, .nrl li:target .nn, .chk:target .cn2, .cs > div:target dt, .checkspage .rd:target) { animation: wipe 240ms cubic-bezier(.2, .8, .1, 1) both; }
+.anim :is(.lad:target .rm, .nrl li:target .nn, .chk:target .cn2, .cs > div:target dt, .checkspage .rd:target) { animation: wipe 240ms cubic-bezier(.2, .8, .1, 1) both; }
 
 /* ---------------------------------------------------------------- the glyph: a cobalt stem and five arms, each a petal's name on the ink of its state
    (green, amber, red, its name struck; hollow an outline, its name in the muted ink). Amber in lesser part is cut: one
@@ -225,7 +225,7 @@ html:has(.top.s-on) { overflow: hidden; }
 /* ---------------------------------------------------------------- the band: black on cobalt, flat */
 .mast { background: var(--cobalt); color: var(--ground); }
 .mast-in { margin-inline: var(--gut); padding: 48px 0 40px; }
-/* the overview band: the title on one line (the frontier is marked on its rung, in the ladder), and under it the
+/* the overview band: the title on one line (the ladder under it runs largest model first), and under it the
    lead, three sentences at a reading measure */
 .home .mast-in { padding: 48px 0; }
 .band-h { margin: 0; font: 900 min(var(--title), calc((100vw - 2 * var(--gut)) / 12.8))/.92 var(--disp); letter-spacing: -.012em; white-space: nowrap; }
@@ -398,60 +398,52 @@ html:not(.js) .shr:not(:has(a)) { display: none; }
   .pnav:has(.shr), .shr { display: none; }
 }
 
-/* ---------------------------------------------------------------- the ladder: a section per model under a cobalt rule, its size in a tab */
-.rung { margin-top: var(--s7); }
-/* the first model starts close under the band, so its first row is on the first screen */
-.ladder > .rung:first-child { margin-top: 40px; }
-.rh { border-top: 4px solid var(--cobalt); }
-.rk { display: inline-block; margin: 0; padding: 5px 10px 6px; background: var(--cobalt); color: var(--ground); font: 600 14px/1 var(--mono); font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
-/* the frontier's rung says so beside its tab, in the frame's ink */
-.rf { display: inline-block; margin: 0 0 0 12px; font: var(--f-label); letter-spacing: var(--track); text-transform: uppercase; color: var(--cobalt); }
-.rm { margin: var(--s4) 0 0; font: 900 clamp(40px, 4.2vw, 60px)/.92 var(--disp); letter-spacing: -.008em; text-wrap: balance; }
-.meta { display: flex; flex-wrap: wrap; gap: var(--s3) 40px; margin: var(--s5) 0 0; }
-.meta dt { margin-bottom: var(--s2); font: var(--f-label); letter-spacing: var(--track); text-transform: uppercase; color: var(--muted); }
-.meta dd { margin: 0; font: var(--f-meta); }
-.meta .fig .n { font-size: 15px; letter-spacing: 0; }
-.meta .sub { display: inline; margin-left: .6em; white-space: nowrap; }
-/* a figure and its scope word share a line while they fit; wrapped, the scope starts the next line flush */
-.meta dd:has(> .fig) { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: .6em; }
-.meta dd:has(> .fig) > .sub { margin-left: 0; }
-/* the serving baseline in one line (a Learn page's measured block, the system page's cost) */
-.rb { font: var(--f-meta); color: var(--muted); margin-top: var(--s1); }
-.rb .k { color: var(--paper); font-weight: 600; margin-right: 10px; }
-.rb .fig .n { font-size: 14px; letter-spacing: 0; }
-.rb .fig .u { font-size: 12px; }
-.rb .sub { display: inline; margin-left: .6em; }
-.none { font: var(--f-meta); color: var(--muted); }
-.rung > .none { margin-top: 28px; padding: 16px 0 18px; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--line); font: 800 28px/1 var(--disp); color: var(--muted); }
-.rung:target .rm { width: fit-content; padding-right: .1em; background: var(--cobalt); color: var(--ground); box-shadow: 0 -.1em 0 var(--cobalt), 0 .1em 0 var(--cobalt); }
-/* the rows: a table whose heads stay under the top bar, the model's size beside them once they
-   stick */
-.lad { width: 100%; margin-top: var(--s6); border-collapse: separate; border-spacing: 0; table-layout: fixed; }
-.lad col.c1 { width: 88px; } .lad col.c2 { width: 175px; } .lad col.c3 { width: 18%; } .lad col.c4 { width: 16%; } .lad col.c7 { width: 15%; }
-.lad thead th { position: sticky; top: var(--top-h); z-index: 3; background: var(--ground); font: var(--f-label); color: var(--muted); text-transform: uppercase; letter-spacing: var(--track); text-align: left; white-space: nowrap; padding: var(--s4) 16px var(--s3) 0; vertical-align: bottom; box-shadow: inset 0 -1px 0 var(--rule); }
-.lad thead th:first-child { container-type: scroll-state; }
-/* the last head (KL's) may take two lines rather than run past the table's edge */
-.lad thead th:last-child { white-space: normal; padding-right: 0; text-wrap: balance; }
-.hk { display: none; padding: 4px 8px 5px; background: var(--cobalt); color: var(--ground); font: 600 13px/1 var(--mono); letter-spacing: -.01em; }
-@container scroll-state(stuck: top) { .hk { display: inline-block; } }
-/* the same, where words.js marks a stuck head (a browser with no scroll-state query) */
-.lad th.stuck .hk { display: inline-block; }
-/* a wide window: the stuck head names the model beside its size, over the glyph's empty head, its tab on the rule's edge */
-@media (min-width: 1181px) {
-  .lad thead th:first-child { z-index: 4; padding-left: 0; }
-  /* a long name takes two lines rather than lose its end, the second level with the tab, the first in the head's top room */
-  @container scroll-state(stuck: top) { .lad thead .hm { display: inline-block; vertical-align: bottom; width: max-content; max-width: 190px; margin: -14px 0 0 10px; white-space: normal; line-height: 1; } }
-  .lad th.stuck .hm { display: inline-block; vertical-align: bottom; width: max-content; max-width: 190px; margin: -14px 0 0 10px; white-space: normal; line-height: 1; }
-}
-/* the model's name beside its size, in the head that sticks over a stacked ladder (below) */
-.hm { display: none; min-width: 0; font: 900 18px/1 var(--disp); letter-spacing: 0; text-transform: none; color: var(--paper); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.lad td, .lad tbody th { text-align: left; vertical-align: baseline; padding: var(--s5) 16px var(--s5) 0; border-bottom: 1px solid var(--line); font-weight: 400; transition: background-color var(--quick), box-shadow var(--quick); }
-.lad tr > :first-child { padding-left: 16px; }
-.lad .cg { vertical-align: top; }
-/* a row's glyph and its position's square top with its name's capitals; only while the row is a table row */
-.lad .cp { vertical-align: top; }
-@media (min-width: 1321px) { .lad .row > :is(.cg, .cp) { padding-top: 29px; } }
-@media (min-width: 1181px) and (max-width: 1320px) { .lad .row > :is(.cg, .cp) { padding-top: 26px; } }
+/* ---------------------------------------------------------------- the ladder: one board (amended 2026-11-23, RFC-0018 Q54). The figure
+   columns' heads once, kept under the top bar; each model a table of the board's columns, opened by its divider (a cobalt
+   rule, its size in a tab, its name, its serving rate, its copies' Fidelity) that stays under the heads while its rows
+   pass and is pushed off by the next model's; its systems as compact rows of one height. The name's column is as wide as
+   a name needs, so the figures start close after it; the figure columns share what is left */
+.ladder { --lh: 40px; --dh: 48px; --rowh: 88px; margin-top: 40px; }
+/* an anchor on the ladder (a model, a row) lands under the heads, a row under its model's divider too */
+html:has(.lhd) { scroll-padding-top: calc(var(--top-h) + 40px); }
+.lad, .lht { width: 100%; border-collapse: separate; border-spacing: 0; table-layout: fixed; }
+.ladder col.c1 { width: 72px; }
+.ladder col.c2 { width: 74px; }
+.ladder col.c3 { width: 248px; }
+.ladder col.c4 { width: 300px; }
+/* the heads: the site's terms over the figure columns, one line, stuck under the top bar */
+.lhd { position: sticky; top: var(--top-h); z-index: 5; background: var(--ground); box-shadow: inset 0 -1px 0 var(--rule); }
+.lht :is(th, td) { height: var(--lh); padding: 0 16px 9px 0; text-align: left; vertical-align: bottom; font: var(--f-label); letter-spacing: var(--track); text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+.lht th:last-child { padding-right: 0; }
+.lht a { color: inherit; }
+/* each model's table names its columns for a screen reader only: the heads above say them to the eye */
+.srh th { height: 0; padding: 0; border: 0; }
+/* a model's divider: quieter than its systems' rows, the same in form whatever the model's state. Its size in the
+   tab and its name a step under a system's; its serving rate, named, over its rows' proved rates; its copies' Fidelity
+   over its rows' Fidelity. Each cell sticks under the heads while the model's rows pass */
+.lad .dv > * { position: sticky; top: calc(var(--top-h) + var(--lh)); z-index: 3; height: var(--dh); padding: 3px 16px 0 0; background: var(--ground); box-shadow: inset 0 3px 0 var(--cobalt), inset 0 -1px 0 var(--line); text-align: left; vertical-align: middle; font-weight: 400; }
+.lad .dv > :last-child { padding-right: 0; }
+.dvn { display: flex; align-items: center; column-gap: 14px; padding: 6px 0; }
+.rk { flex: none; min-width: 56px; padding: 6px 9px 7px; background: var(--cobalt); color: var(--ground); font: 600 14px/1 var(--mono); font-variant-numeric: tabular-nums; letter-spacing: -.01em; text-align: center; }
+.rm { min-width: 0; margin: 0; font: 800 22px/1.05 var(--disp); letter-spacing: 0; color: var(--paper); text-wrap: balance; }
+.lad:target .rm { background: var(--cobalt); color: var(--ground); box-shadow: 0 -.12em 0 var(--cobalt), 0 .12em 0 var(--cobalt), .15em 0 0 var(--cobalt); }
+.dvn .none { flex: none; font: 400 13px/16px var(--mono); }
+.dvs { font: 400 12px/16px var(--mono); color: var(--muted); }
+.dvs .dl { display: block; margin: 0 0 2px; font: var(--f-label); letter-spacing: var(--track); text-transform: uppercase; }
+.lad .dvs .fig .n { font: 600 15px/1 var(--mono); letter-spacing: 0; color: var(--paper); }
+.dvs .na { font: 400 13px/16px var(--mono); }
+.dvf .lbl { display: none; }
+.dcp .dcy { display: block; font: 400 12px/16px var(--mono); white-space: nowrap; }
+.dcl { color: var(--muted); }
+.lad .dcp .fig .n { font: 500 13px/16px var(--mono); letter-spacing: 0; }
+.dcp .fig .u { font: 400 12px/16px var(--mono); }
+/* a system: one compact row, every row as tall as the next; a row not passed grows by its standing's lines only */
+.lad .row > * { height: var(--rowh); padding: 14px 16px 12px 0; border-bottom: 1px solid var(--line); text-align: left; vertical-align: baseline; font-weight: 400; transition: background-color var(--quick), box-shadow var(--quick); }
+.lad .row > :first-child { padding-left: 16px; }
+.lad .row > :last-child { padding-right: 0; }
+.lad .row > :is(.cp, .cg) { vertical-align: top; padding-top: 13px; }
+/* a row, and what takes focus in it, lands under its model's divider too, never under it */
+.lad .row, .lad .row a, .lad .row [tabindex] { scroll-margin-top: var(--dh); }
 /* the row in hand: lifted, a cobalt edge (3, 6, 9 px: pointed, focused, pressed), its name in
    cobalt when it has focus */
 html.js .row { cursor: pointer; }
@@ -463,20 +455,25 @@ html.js .row { cursor: pointer; }
 .row .sname:focus-visible { color: var(--cobalt); outline: 2px solid var(--cobalt); outline-offset: 4px; }
 .row.cur .sname { color: var(--cobalt); }
 .row:has(.glyph:hover) .sname { text-decoration: underline; text-decoration-thickness: 3px; text-underline-offset: 5px; }
-/* a position: a square, position 1 solid paper, the others an outline; the count run under it. It starts a ranked
-   row, so the rows of a rung are told apart by it */
+/* a position: a square in the paper ink, position 1 solid, the others an outline; no position, a dash in a dim frame */
 .pos { display: block; }
-.pos .pn { display: flex; align-items: center; justify-content: center; width: 56px; height: 56px; box-shadow: inset 0 0 0 1.5px var(--rule); font: 900 40px/1 var(--disp); font-variant-numeric: tabular-nums; }
+.pos .pn { display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; box-shadow: inset 0 0 0 1.5px var(--paper); font: 900 28px/1 var(--disp); font-variant-numeric: tabular-nums; }
 .pos.p1 .pn { background: var(--paper); color: var(--ground); box-shadow: none; }
-.pos.p0 .pn { box-shadow: inset 0 0 0 1px var(--line); color: var(--muted); font-weight: 800; }
-.of { display: block; font: 400 12px/18px var(--mono); color: var(--muted); margin-top: var(--s2); }
-.glyph { display: block; width: 159px; height: 87px; }
-.sname { display: block; width: fit-content; max-width: 100%; font: 900 36px/.92 var(--disp); text-decoration: none; overflow-wrap: anywhere; transition: color var(--quick); }
+.pos.p0 .pn { box-shadow: inset 0 0 0 1px var(--rule); color: var(--muted); font-weight: 800; }
+/* the glyph: the small one, its arms without their names (a pointer on an arm shows its name and grade, words.js) */
+.glyph { display: block; width: 50px; height: 62px; }
+/* the name; under it the standing of a row that holds no position, its word in the name's ink, the checks in the
+   label's. A row that holds a position has passed: its standing is heard, shown while its link has focus, and printed
+   on a phone */
+.sname { display: block; width: fit-content; max-width: 100%; font: 900 30px/28px var(--disp); text-decoration: none; overflow-wrap: anywhere; text-wrap: balance; transition: color var(--quick); }
 .sname:hover { text-decoration: underline; text-decoration-thickness: 3px; text-underline-offset: 5px; }
 .st { display: block; font: 400 12px/18px var(--mono); color: var(--muted); margin-top: var(--s3); }
+.lad .st { margin-top: 6px; line-height: 16px; }
+.lad .st > :is(a.df, .nw) { color: var(--paper); }
+.lad .csys.placed .st:not(:focus-within) { position: absolute; width: 1px; height: 1px; margin: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .lad .lbl { display: none; }
-/* every row's figures are in the paper ink: a row's standing is said by its position's square and its standing
-   words, never by a dimmer figure */
+/* every figure is in the paper ink, on every row: a row's standing is said by its position's square and its
+   standing words, never by a dimmer figure */
 /* a figure: the number, its unit beside it (a multiple's never leaves it), its scope and n under it */
 .fig { display: inline-flex; align-items: baseline; flex-wrap: nowrap; column-gap: .3em; }
 .fig .n { font: 600 22px/1 var(--mono); font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
@@ -487,22 +484,17 @@ html.js .row { cursor: pointer; }
 .fw:hover { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; }
 .fw.undecided { color: var(--muted); }
 a.fig.fp { color: inherit; text-decoration: none; }
-/* on a wide ladder the two copies' Fidelity stand one per line, so the line never runs past the table */
-@media (min-width: 561px) { .lad a.fig.fp ~ .sub .sep { display: block; height: 0; overflow: hidden; } }
-/* what the row proves, between its Fidelity figure and the copies: the copies' line follows it closely */
-.sub.pv + .sub { margin-top: var(--s1); }
 /* a ladder figure, linked to its section of the system's page: in its own inks, underlined when pointed at */
 a.flk { display: inline-flex; min-height: 24px; align-items: center; color: inherit; text-decoration: none; }
 a.flk:hover .n { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; }
 a.fig.fp:hover .n { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; }
-.lad .fw { font-size: 24px; }
 .figs .fw { font-size: 30px; letter-spacing: -.03em; }
-.lad .fig .n { font-size: 24px; }
-.lad .cm .fig .n { font-size: 42px; letter-spacing: -.04em; }
-.lad .cm .fig .u.x { font-size: 24px; }
 /* Cost vs serving is the headline; the other figures of a row are secondary: smaller and lighter, in the same
    ink, their units at full size beside them */
-.lad :is(.cc, .ct, .ck) .fig .n, .lad .ck .fw { font-size: 17px; font-weight: 500; letter-spacing: -.01em; }
+.lad .fig .n, .lad .fw { font-size: 18px; font-weight: 500; letter-spacing: -.01em; }
+.lad .cm .fig .n { font: 600 30px/28px var(--mono); letter-spacing: -.04em; }
+.lad .cm .fig .u.x { font-size: 18px; }
+.lad a.flk { min-height: 0; }
 /* the two rates the multiple is made of (CO-8, amended 2026-11-16): one small line under it, each number in
    the paper ink, then once for both their unit and GPU; it leads to the Cost section's line on them */
 .rts { display: block; width: fit-content; margin-top: var(--s3); font: 400 12px/18px var(--mono); color: var(--paper); text-decoration: none; }
@@ -510,194 +502,177 @@ a.fig.fp:hover .n { text-decoration: underline; text-decoration-thickness: 1px; 
 .rts .rp { white-space: nowrap; }
 .rts .ru { display: block; color: var(--muted); }
 .rts:hover .rp { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
-/* in a ladder row's narrow cell, one rate a line, the unit under both */
-.lad .rts .sep { display: none; }
-.lad .rts .rp { display: block; }
-/* a part: its name on a line, then its figure with its scope and n beside it */
+/* on the ladder the proved rate on one line under the multiple, under its model's serving rate: the number, then
+   the unit the serving rate's has */
+.lad .rts { margin-top: 7px; line-height: 16px; white-space: nowrap; }
+.lad .rts .n { font-size: 13px; }
+.lad .rts .ru { display: inline; }
 .cmx { display: block; }
 /* on the band: the proved rate's line under its figure, set right with it, in the ground ink */
 .sbm .rts { margin: var(--s4) 0 0 auto; color: var(--ground); }
 .sbm .rts .ru { color: var(--ground); }
 .sub { display: block; font: 400 12px/18px var(--mono); color: var(--muted); margin-top: var(--s2); }
-.lad .sub { white-space: nowrap; }
-/* what the row proves may take two lines rather than run past the table */
-.lad .sub.pv { white-space: normal; }
+.lad .sub { margin-top: 4px; }
 .lad .st, .ov .st, .fid thead th, .fid td[data-l="Kind"] { text-wrap: balance; }
 /* a check not held and its state as one unit: it starts a line rather than break a check's name where the line has room */
 :is(.lad, .ov) .st .ckn { display: inline-block; max-width: 100%; text-wrap: wrap; }
-.lad .cm .sub { white-space: normal; }
 .na { font: 600 14px/18px var(--mono); color: var(--muted); }
+/* the serving baseline in one line (a Learn page's measured block, the system page's cost) */
+.rb { font: var(--f-meta); color: var(--muted); margin-top: var(--s1); }
+.rb .k { color: var(--paper); font-weight: 600; margin-right: 10px; }
+.rb .fig .n { font-size: 14px; letter-spacing: 0; }
+.rb .fig .u { font-size: 12px; }
+.rb .sub { display: inline; margin-left: .6em; }
+.none { font: var(--f-meta); color: var(--muted); }
+/* a narrower window: the columns closer, the type a step smaller */
 @media (max-width: 1320px) {
-  .rung { margin-top: 80px; }
-  .lad col.c1 { width: 76px; } .lad col.c2 { width: 171px; } .lad col.c3 { width: 17%; } .lad col.c4 { width: 17%; } .lad col.c7 { width: 172px; }
-  .lad thead th { letter-spacing: .05em; padding-right: 12px; }
-  .lad td, .lad tbody th { padding-right: 12px; }
-  .pos .pn { width: 48px; height: 48px; font-size: 34px; }
-  .sname { font-size: 30px; }
-  .lad .fig .n, .lad .fw { font-size: 20px; }
-  .lad .cm .fig .n { font-size: 34px; }
-  .lad .cm .fig .u.x { font-size: 20px; }
+  .ladder col.c1 { width: 64px; }
+  .ladder col.c2 { width: 70px; }
+  .ladder col.c3 { width: 240px; }
+  .ladder col.c4 { width: 272px; }
+  .rm { font-size: 20px; }
+  .lad .sname { font-size: 28px; line-height: 26px; }
+  .lad .cm .fig .n { font-size: 28px; line-height: 26px; }
 }
-/* a narrow window: a row stacks, each figure under its own head. The table's heads give way to
-   the model's size alone, kept at the top right while the rung's rows pass, once it sticks, so a
-   position always says which model it is on */
+/* a board with a row that holds no position: the name's column as wide as its standing's longest check and state,
+   so they keep to one line ("Verify without weights check failed"), the Cost vs serving column narrower by as much */
+@media (min-width: 1181px) {
+  .ladder:has(.csys:not(.placed)) col.c3 { width: 290px; }
+  .ladder:has(.csys:not(.placed)) col.c4 { width: 258px; }
+}
+@media (min-width: 1181px) and (max-width: 1320px) {
+  .ladder:has(.csys:not(.placed)) col.c4 { width: 222px; }
+}
 @media (max-width: 1180px) {
-  .lad, .lad tbody { display: block; }
-  .lad colgroup { display: none; }
-  .lad thead { display: block; position: sticky; top: var(--top-h); z-index: 3; height: 0; container-type: scroll-state; }
-  .anim .lad thead { transition: top var(--ease); }
-  html.js .tophide .lad thead { top: 0; }
-  .lad thead tr { display: block; padding: 0; border: 0; }
-  .lad thead th { display: none; }
-  .lad thead th:first-child { display: block; position: static; padding: 0; background: none; box-shadow: none; container-type: normal; }
-  /* stuck, the head is a band of ground ink as wide as the rows, ruled under: the model's size in its tab and its
-     name, so whatever row is on screen, the model it ran on is too */
-  @container scroll-state(stuck: top) {
-    .lad thead th:first-child { position: absolute; left: 0; right: 0; top: 0; display: flex; align-items: center; column-gap: 10px; height: 32px; background: var(--ground); box-shadow: inset 0 -1px 0 var(--rule); }
-    .lad thead .hm { display: block; }
-  }
-  .lad thead th.stuck:first-child { position: absolute; left: 0; right: 0; top: 0; display: flex; align-items: center; column-gap: 10px; height: 32px; background: var(--ground); box-shadow: inset 0 -1px 0 var(--rule); }
-  .lad thead th.stuck .hm { display: block; }
-  .lad tbody { border-top: 1px solid var(--rule); }
-  .lad tbody tr { display: flex; flex-wrap: wrap; align-items: flex-start; column-gap: 12px; row-gap: 12px; padding: 14px 12px; border-bottom: 1px solid var(--line); transition: background-color var(--quick), box-shadow var(--quick); }
-  .lad tr > *, .lad tr > :first-child, .lad tbody th { padding: 0; border: 0; background: none; }
-  .row:hover, .row:focus-within, .row.cur { background: var(--lift); }
+  .ladder { --rowh: 84px; }
+  .ladder col.c1 { width: 64px; }
+  .ladder col.c2 { width: 66px; }
+  .ladder col.c3 { width: 236px; }
+  .ladder col.c4 { width: 212px; }
+  .rm { font-size: 18px; }
+  .rk { min-width: 48px; padding: 5px 7px 6px; font-size: 13px; }
+  .dvn { column-gap: 12px; }
+  .lad .sname { font-size: 26px; line-height: 25px; }
+  .lad .cm .fig .n { font-size: 26px; line-height: 25px; }
+  .lad .fig .n, .lad .fw { font-size: 16px; }
+}
+/* a tablet: a smaller square and glyph; the proved rate's unit under its number, and the copies a step smaller,
+   each copy's figure under its name where the column is too narrow for both, so each column holds its words */
+@media (max-width: 1060px) {
+  .ladder { --lh: 44px; --dh: 56px; --rowh: 96px; }
+  html:has(.lhd) { scroll-padding-top: calc(var(--top-h) + 44px); }
+  .ladder col.c1 { width: 48px; }
+  .ladder col.c2 { width: 52px; }
+  .ladder col.c3 { width: 200px; }
+  .ladder col.c4 { width: 148px; }
+  .lht :is(th, td), .lad .dv > *, .lad .row > * { padding-right: 12px; }
+  .lht :is(th, td) { white-space: normal; }
+  .lad .row > :first-child { padding-left: 8px; }
+  .lad .row > :is(.cp, .cg) { padding-top: 15px; }
+  .pos .pn { width: 32px; height: 32px; font-size: 22px; }
+  .glyph { width: 40px; height: auto; }
+  .glyph .pie-svg { width: 100%; height: auto; }
+  .rm { font-size: 17px; line-height: 18px; }
+  .dvn { column-gap: 10px; }
+  .dcp .dcy { font-size: 11px; line-height: 14px; white-space: normal; }
+  .dcl { white-space: nowrap; }
+  .lad .dcp .fig :is(.n, .u) { line-height: 14px; }
+  .lad .sname { font-size: 22px; line-height: 22px; }
+  .lad .cm .fig .n { font-size: 22px; line-height: 22px; }
+  .lad .cm .fig .u.x { font-size: 15px; }
+  .lad .fig .n, .lad .fw { font-size: 15px; }
+  .lad .rts { white-space: normal; }
+  .lad .rts .ru { display: block; }
+}
+/* a narrow tablet: a figure's unit under its number; a copy's figure under its name, so the divider is taller */
+@media (max-width: 880px) {
+  .ladder { --dh: 68px; }
+  .lad :is(.cc, .ct) .fig { flex-wrap: wrap; }
+  .lad :is(.cc, .ct) .fig .u { flex-basis: 100%; margin-top: 4px; }
+}
+/* a phone: the board as a list. The Cost vs serving head stays on screen, over the multiples' edge; under it, while a
+   model's rows pass, its tab and name. Under them its serving rate and its copies' Fidelity, a line each, named at the
+   line's start. A row: its glyph, its name with its standing (the position's square is left to a wider screen: the
+   rows are in its order), and at the line's end its multiple, the proved rate under it; then a ruled list, one figure
+   a line (32 px), its name at the line's start and the figure at its end: proof size, verify time, Fidelity */
+@media (max-width: 760px) {
+  .ladder { --lh: 32px; --dh: 44px; margin-top: 20px; }
+  html:has(.lhd) { scroll-padding-top: calc(var(--top-h) + 32px); }
+  html.js:has(body.tophide):has(.lhd) { scroll-padding-top: 32px; }
+  .lad, .lad tbody, .lht, .lht tbody { display: block; }
+  .lad { position: relative; }
+  .lad colgroup, .lht colgroup { display: none; }
+  /* the columns' names stay with a screen reader */
+  .lad .srh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .lhd { transition: top var(--ease); }
+  html.js .tophide .lhd { top: 0; }
+  .lht tr { display: flex; justify-content: flex-end; align-items: center; height: var(--lh); }
+  .lht :is(th, td) { display: none; height: auto; padding: 0; }
+  .lht .h-multiple { display: block; line-height: 16px; }
+  .lad + .lad { margin-top: 40px; }
+  /* the divider: its tab and name stuck while its rows pass (its row makes no box, so they stick over the model's
+     whole table), its serving rate and copies a line each under them */
+  .lad .dv { display: contents; }
+  .lad .dv > * { display: block; position: static; height: auto; padding: 0; box-shadow: none; }
+  .lad .dv > :not(.dvh) :is(a, [tabindex]) { scroll-margin-top: var(--dh); }
+  .lad .dv > .dvh { position: sticky; top: calc(var(--top-h) + var(--lh)); z-index: 3; padding: 3px 0 0; box-shadow: inset 0 3px 0 var(--cobalt), inset 0 -1px 0 var(--line); transition: top var(--ease); }
+  html.js .tophide .lad .dv > .dvh { top: var(--lh); }
+  .dvn { flex-wrap: wrap; align-items: flex-start; column-gap: 12px; row-gap: 4px; padding: 8px 0 9px; }
+  .rk { min-width: 0; padding: 5px 8px 6px; font-size: 13px; }
+  .rm { flex: 0 1 auto; padding-top: 3px; font-size: 20px; line-height: 21px; }
+  .dvn .none { flex-basis: 100%; line-height: 18px; }
+  .lad .dve { display: none; }
+  .lad :is(.dvs, .dvf) { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; column-gap: 12px; min-height: 32px; padding: 7px 0; box-shadow: inset 0 -1px 0 var(--line); white-space: normal; }
+  .lad .dvf:empty { display: none; }
+  .lad .dvs .dl, .lad .dvf .lbl { display: block; margin: 0; font: 400 12px/16px var(--mono); letter-spacing: 0; text-transform: none; color: var(--muted); }
+  .lad .dvf .lbl a { color: var(--muted); }
+  .dcp { text-align: right; }
+  .dcp .dcy { font-size: 12px; line-height: 18px; }
+  .lad .dcp .fig :is(.n, .u) { line-height: 16px; }
+  .lad .dvs .fig .n { font-size: 14px; }
+  /* a row: its glyph, its name and standing, its multiple at the line's end and the proved rate under it */
+  .lad .row { display: grid; grid-template-columns: 40px minmax(0, 1fr) max-content; column-gap: 12px; align-items: start; padding: 18px 0 14px; border-bottom: 1px solid var(--rule); }
+  .lad .row > * { display: block; height: auto; padding: 0; border: 0; background: none; }
+  .lad .row > :first-child { padding-left: 0; }
+  .lad .row > :is(.cp, .cg) { padding-top: 0; }
+  .row:hover, .row:focus-within, .row.cur { background: none; box-shadow: none; }
   .row:hover > *, .row:focus-within > *, .row.cur > * { background: none; }
   .row > :first-child, .row:hover > :first-child, .row:focus-within > :first-child, .row.cur > :first-child, .row:active > :first-child { box-shadow: none; }
-  .row:hover { box-shadow: inset 3px 0 0 var(--cobalt); }
-  .row:focus-within, .row.cur { box-shadow: inset 6px 0 0 var(--cobalt); }
-  .row:active { box-shadow: inset 9px 0 0 var(--cobalt); }
-  .lad .cp, .lad .cg { flex: none; }
-  .pos .pn { width: 44px; height: 44px; font-size: 30px; }
-  /* the position's count at its square's foot, beside it, so the name's line keeps its height */
-  .lad .pos { display: flex; align-items: flex-end; column-gap: 6px; }
-  .lad .pos .of { min-width: 5ch; margin: 0; font-size: 11px; line-height: 14px; }
-  .lad .csys { min-width: 0; }
-  .sname { font-size: 28px; }
-  .st { margin-top: 6px; line-height: 16px; }
-  .lad .lbl { display: block; font: var(--f-label); color: var(--muted); text-transform: uppercase; letter-spacing: var(--track); margin-bottom: 6px; }
-  .lad .cc, .lad .ct, .lad .ck { min-width: 0; box-shadow: inset 0 1px 0 var(--line); }
-}
-/* a tablet: the multiple on the name's line at its right end from 761 px (its label over it, as
-   the thirds' are, its two rates under it), so the multiples of a rung run down one edge; then proof
-   size, verify time and Fidelity in thirds */
-@media (max-width: 1180px) and (min-width: 561px) {
-  .lad .csys { flex: 1 1 200px; }
-  .lad .cm { flex: 0 1 auto; display: grid; grid-template-columns: auto; grid-template-areas: "l" "f" "u" "s"; justify-items: start; }
-  .lad .cm > .lbl { grid-area: l; margin: 0 0 6px; }
-  .lad .cm > :is(.fig, .flk), .lad .cm > .na { grid-area: f; }
-  .lad .cm > .sub { grid-area: u; margin: 0; }
-  .lad .cm > .cmx { grid-area: s; }
-  .lad .cm .fig .n { font-size: 36px; }
-  .lad .cm .fig .u.x { font-size: 22px; }
-  /* an empty item ends the line, so the thirds always start their own (the multiple, when the
-     name's line has no room for it, takes a line of its own above them) */
-  .lad tbody tr:after { content: ""; flex: 0 0 100%; order: 1; }
-  .lad .cc, .lad .ct, .lad .ck { order: 2; flex: 1 1 30%; padding-top: 10px; }
-  .lad .fig .n, .lad .fw { font-size: 18px; }
-}
-/* just over a phone's width (the sessions table stacks from 760 px down) its columns sit closer, so each number keeps
-   its unit beside it */
-@media (max-width: 860px) and (min-width: 761px) {
-  .rt.stk:not(.fid) :is(td, thead th) { padding-right: 6px; }
-}
-/* up to 760 px a wide multiple (or a cold session's long scope) cannot always share the name's line, so
-   every row gives its multiple a line of its own: the rows of a rung keep one arrangement */
-@media (max-width: 760px) and (min-width: 561px) {
-  /* on that line the multiple's two rates stand beside it, not under it: the line holds no empty block at its
-     right */
-  .lad .cm { flex-basis: 100%; grid-template-columns: max-content minmax(0, 1fr); grid-template-areas: "l l" "f s" "u s"; column-gap: 40px; align-items: start; }
-}
-/* where one of the thirds' heads takes two lines, each head sits on the floor of two, so the values share a line */
-@media (max-width: 640px) and (min-width: 561px) {
-  .lad :is(.cc, .ct, .ck) > .lbl { display: flex; align-items: flex-end; min-height: 28px; }
-}
-/* a phone: the ladder is still the table, a row bounded by a full rule. Its first line is its name with its
-   standing and at the line's end its multiple (its position's square is left to a wide screen: the rows are in its
-   order); under them its glyph, and beside the glyph the multiple's two rates, on the multiple's edge. Then a ruled
-   list, one figure a line, its name at the line's start and the figure at its end, on the multiple's edge: proof
-   size, verify time and fidelity. The heads System and Cost vs serving
-   stay on screen with the model's band over them. A rung's head is its size, its name, its publisher and
-   architecture on one line, and its serving figure on the next */
-@media (max-width: 560px) {
-  /* the columns: the system, the multiple (as wide as it is, at the row's end) */
-  .lad { --cols: minmax(0, 1fr) max-content; }
-  .lad thead { height: auto; top: calc(var(--top-h) + 32px); background: var(--ground); box-shadow: inset 0 -1px 0 var(--rule); }
-  html.js .tophide .lad thead { top: 32px; }
-  .lad thead tr, .lad tbody tr { display: grid; grid-template-columns: var(--cols); column-gap: 0; }
-  /* the heads over their columns; the model's band in the line over them once they stick */
-  .lad thead tr { row-gap: 0; padding: 8px 0 8px; }
-  .lad thead th:first-child { grid-column: 1 / -1; grid-row: 1; height: 0; }
-  .lad thead th:nth-child(n+3) { display: block; position: static; padding: 0; background: none; box-shadow: none; line-height: 16px; white-space: nowrap; }
-  .lad thead th:nth-child(3) { grid-area: 2 / 1; }
-  .lad thead th:nth-child(4) { grid-area: 2 / 2; justify-self: end; }
-  .lad thead th:nth-child(n+5) { display: none; }
-  @container scroll-state(stuck: top) { .lad thead th:first-child { top: -32px; height: 32px; } }
-  .lad thead th.stuck:first-child { top: -32px; }
-  .lad tbody { border-top: 0; }
-  /* a row is bounded by a full rule; inside it a hairline over each line of its list */
-  .lad tbody tr { align-items: start; row-gap: 0; padding: 18px 0 14px; border-bottom: 1px solid var(--rule); }
-  /* the row in hand: its name in cobalt (the script), pressed on the lift */
-  .row:hover, .row:focus-within, .row.cur { background: none; box-shadow: none; }
   .row:active { background: var(--lift); box-shadow: -8px 0 0 var(--lift), 8px 0 0 var(--lift); }
-  /* the position is not drawn on a phone (the rows are in its order); a screen reader still reads it */
   .lad .cp { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-  /* the glyph under the name, its petals named as on a wide screen (narrowed with the column on the narrowest
-     phones), the multiple's two rates beside it */
-  .lad .cg { grid-area: 2 / 1; position: relative; z-index: 1; min-width: 0; padding: 12px 12px 14px 0; }
-  .lad .csys { grid-area: 1 / 1; min-width: 0; padding: 0 12px 0 0; }
-  /* the multiple's cell makes no box: its figure ends the name's line. A row with no multiple keeps the cell, the
-     word and its reason under it at the line's end */
+  .lad .cg { grid-area: 1 / 1 / 3 / 2; position: relative; z-index: 1; padding-top: 1px; }
+  .glyph { width: 40px; }
+  .lad .csys { display: contents; }
+  .lad .sname { grid-area: 1 / 2; margin-top: -2px; font-size: 26px; line-height: 24px; }
+  .lad .st { grid-area: 2 / 2; min-width: 0; margin-top: 5px; font-size: 13px; line-height: 18px; }
+  /* with no proved rate under the multiple, the standing takes the line's width */
+  .lad .row:not(:has(.cmx)) .st { grid-column: 2 / -1; }
+  .lad .csys.placed .st:not(:focus-within) { position: static; width: auto; height: auto; margin-top: 5px; overflow: visible; clip-path: none; white-space: normal; }
   .lad .cm { display: contents; }
-  /* its label too: the column's head names the figure */
-  .lad .cm > .lbl { display: none; }
-  .lad .cm > :is(.fig, .flk) { grid-area: 1 / 2; justify-self: end; }
-  .lad .cm:has(> .na) { display: block; grid-area: 1 / 2; max-width: 8.5rem; text-align: right; }
-  .lad tr:has(> .cm > .na) .st .nw { white-space: normal; }
-  /* the proved rate's line stands under the multiple, on its edge */
-  .lad .cm > .cmx { grid-area: 2 / 2; align-self: start; justify-self: end; margin: 14px 0; text-align: right; }
-  .lad .cm .rts { margin: 8px 0 0 auto; }
+  .lad .cm > :is(.fig, .flk) { grid-area: 1 / 3; justify-self: end; }
+  .lad .cm:has(> .na) { display: block; grid-area: 1 / 3 / 3 / 4; max-width: 9rem; text-align: right; }
+  .lad .cm > .cmx { grid-area: 2 / 3; justify-self: end; text-align: right; }
+  /* a row with a proved rate: the name over its standing, and the multiple over its rate, two stacks side by side,
+     so a name of two lines never parts the rate from its multiple */
+  .lad .row:has(.cmx) .csys { display: block; grid-area: 1 / 2 / 3 / 3; }
+  .lad .row:has(.cmx) .cm { display: flex; flex-direction: column; align-items: flex-end; grid-area: 1 / 3 / 3 / 4; }
+  .lad .rts { margin: 6px 0 0 auto; font-size: 13px; line-height: 18px; }
+  .lad .cm .fig .n { font-size: 26px; line-height: 24px; letter-spacing: -.04em; }
+  .lad .cm .fig .u.x { font-size: 16px; }
   /* the list: one figure a line, named at the line's start, the figure at its end */
-  .lad :is(.cc, .ct, .ck) { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; column-gap: 12px; min-height: 32px; padding: 7px 0; }
-  .lad :is(.cc, .ct, .ck) { grid-column: 1 / -1; }
-  .lad .cc { grid-row: 3; }
+  .lad :is(.cc, .ct, .ck) { grid-column: 1 / -1; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; column-gap: 12px; min-height: 32px; padding: 7px 0; box-shadow: inset 0 1px 0 var(--line); }
+  .lad .cc { grid-row: 3; margin-top: 14px; }
   .lad .ct { grid-row: 4; }
   .lad .ck { grid-row: 5; }
-  .lad :is(.cc, .ct, .ck) .lbl { display: block; margin: 0; white-space: nowrap; }
+  .lad :is(.cc, .ct, .ck) .lbl { display: block; margin: 0; font: 400 12px/16px var(--mono); color: var(--muted); white-space: nowrap; }
+  .lad :is(.cc, .ct, .ck) .lbl a { color: var(--muted); }
+  .lad :is(.cc, .ct) .fig { flex-wrap: nowrap; }
+  .lad :is(.cc, .ct) .fig .u { flex-basis: auto; margin: 0; }
+  .lad :is(.cc, .ct, .ck) .fig .n, .lad .ck .fw { font-size: 14px; letter-spacing: -.02em; }
   .lad :is(.cc, .ct, .ck) .sub { flex-basis: 100%; text-align: right; }
-  .lad .ck .fw { font-size: 14px; }
-  .sname { margin-top: -2px; font-size: 26px; line-height: 24px; }
-  .lad .st { margin-top: 5px; font-size: 13px; line-height: 18px; }
-  .lad .glyph { width: 159px; max-width: 100%; height: auto; }
-  .lad .glyph .pie-svg { width: 100%; height: auto; }
-  .lad .cm .fig .n { font-size: 26px; letter-spacing: -.04em; }
-  .lad .cm .fig .u.x { font-size: 16px; }
-  .lad .sub { margin-top: 4px; font-size: 13px; line-height: 18px; white-space: normal; }
-  /* the list's figures: a step smaller, the unit beside its number */
-  .lad :is(.cc, .ct) .fig .n { font-size: 14px; letter-spacing: -.02em; }
-  .lad :is(.cc, .ct) .fig .u { font-size: 12px; line-height: 12px; }
-  .lad :is(.cc, .ct) .sub { margin-top: 3px; font-size: 12px; line-height: 16px; }
+  .lad .sub { font-size: 12px; line-height: 16px; }
   .lad .na { display: block; font-size: 12px; line-height: 15px; }
-  .rung { margin-top: 56px; }
-  .ladder > .rung:first-child { margin-top: 20px; }
-  .rk { padding: 4px 9px 5px; }
-  .rm { margin-top: 8px; font-size: 32px; }
-  .meta { display: block; margin-top: 10px; color: var(--muted); }
-  .meta > div { padding: 0; }
-  .meta dd { font-size: 13px; line-height: 20px; }
-  /* publisher and parameters: one line, their terms left to a screen reader */
-  .meta > div:nth-child(-n+2), .meta > div:nth-child(-n+2) > dd { display: inline; }
-  .meta > div:nth-child(-n+2) > dt { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-  .meta > div:nth-child(2):before { content: "\00a0·\00a0"; }
-  /* serving, the figure every multiple under it is over, on a line of its own, named */
-  .meta > div:nth-child(3) { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: .6em; margin-top: var(--s3); }
-  .meta > div:nth-child(3) > dt { margin: 0; }
-  .meta > div:nth-child(3) dd .fig { color: var(--paper); }
-  .meta > div:nth-child(n+4) { display: none; }
-  .lad { margin-top: 6px; }
-  .rung > .none { margin-top: 12px; font-size: 24px; }
 }
-/* a narrow phone: the multiple a step smaller */
 /* the five tabs keep to a phone's window: each takes its word's width and a share of what is left, and the
    room beside a word and between its letters steps down with the window */
 @media (max-width: 760px) {
@@ -706,6 +681,7 @@ a.fig.fp:hover .n { text-decoration: underline; text-decoration-thickness: 1px; 
 @media (max-width: 400px) {
   .tabs .tab { padding-inline: 4px; }
 }
+/* a narrow phone: the multiple a step smaller */
 @media (max-width: 374px) {
   .lad .cm .fig .n { font-size: 24px; }
   .top .tabs { letter-spacing: .04em; }
@@ -715,7 +691,12 @@ a.fig.fp:hover .n { text-decoration: underline; text-decoration-thickness: 1px; 
 @media (max-width: 350px) {
   /* the five tabs keep to the window: less room beside each word, in smaller letters */
   .tabs .tab { padding-inline: 3px; font-size: 10px; }
-  .sname { font-size: 24px; line-height: 22px; }
+  /* a row's multiple column no wider than its multiple needs, the proved rate's unit on two lines, so a name keeps
+     its words whole */
+  .lad .row { grid-template-columns: 40px minmax(0, 1fr) fit-content(100px); }
+  /* a long model's name takes the line under its tab here: an anchor or focus lands under both lines */
+  .ladder { --dh: 72px; }
+  .lad .sname { font-size: 24px; line-height: 22px; }
   .lad .cm .fig .n { font-size: 22px; }
   /* a system's page keeps to the window too: the Cost block's scope words may break, and a long figure of the
      Fidelity table sets its unit under its number */
@@ -723,6 +704,11 @@ a.fig.fp:hover .n { text-decoration: underline; text-decoration-thickness: 1px; 
   .fid .fig { flex-wrap: wrap; }
   .rt.stk:not(.fid) .fig { flex-wrap: wrap; }
   .rt.stk:not(.fid) .fig .u { flex-basis: 100%; }
+}
+/* just over a phone's width (the sessions table stacks from 760 px down) its columns sit closer, so each number keeps
+   its unit beside it */
+@media (max-width: 860px) and (min-width: 761px) {
+  .rt.stk:not(.fid) :is(td, thead th) { padding-right: 6px; }
 }
 
 /* ---------------------------------------------------------------- names shared by the Overview page and 404 cards */
@@ -1553,6 +1539,7 @@ a.pvd:hover { text-decoration: underline 2px; text-underline-offset: 4px; }
 .probe dt { color: var(--muted); text-transform: uppercase; letter-spacing: var(--track); }
 .probe dd { margin: 0; overflow-wrap: break-word; }
 .probe .prk { display: flex; align-items: center; gap: 10px; font: 800 18px/1 var(--disp); }
+.probe .prk + .prk { margin-top: 6px; }
 .probe .prc { font: 400 11px/16px var(--mono); color: var(--muted); }
 .probe .prp { max-width: 44ch; margin: 8px 0 0; }
 .anim .probe { animation: probe var(--quick) both; }
@@ -2235,14 +2222,14 @@ ol.ls > li:before { counter-increment: n; content: counter(n); position: absolut
   /* two quotes one under the other share the gap between them */
   .ckt td a.qt + a.qt:after { top: -4px; }
   .ckt td a.qt:has(+ a.qt):after { bottom: -4px; }
-  .rid, .facts dd a, :is(.lad, .ov) .st a, .lad :is(thead, .lbl) a.df, .lad .ck :is(.fw, a.fig.fp) { position: relative; }
+  .rid, .facts dd a, :is(.lad, .ov) .st a, :is(.lhd, .lad .lbl) a.df, .lad .ck :is(.fw, a.fig.fp) { position: relative; }
   .facts dd a:after { content: ""; position: absolute; inset: -14px 0; }
   .rid:after { content: ""; position: absolute; inset: -15px 0; }
   /* a row's standing: its band (40 px) reaches down and aside, little up toward the name (which leads to the page) */
   :is(.lad, .ov) .st a:after { content: ""; position: absolute; inset: -10px -4px -16px; }
   /* a figure's head: its band (40 px) reaches up and down, so a near miss does not open the row; a label in a
      cell reaches up into the cell's top room rather than down over its figure */
-  .lad thead a.df:after { content: ""; position: absolute; inset: -14px -4px; }
+  .lhd a.df:after { content: ""; position: absolute; inset: -14px -4px; }
   .lad .lbl a.df:after { content: ""; position: absolute; inset: -20px -4px -8px; }
   /* the fidelity word: its own band, so a near miss does not open the row; it and its label 6 px over it share
      that gap, each band 40 px */
@@ -2310,14 +2297,13 @@ ol.ls > li:before { counter-increment: n; content: counter(n); position: absolut
 @media print {
   :root { --ground: #fff; --paper: #111; --muted: #555; --rule: #999; --line: #ccc; --lift: #fff; }
   .search, .top .repo, .sopen, .skip, .pnav, .tabs { display: none; }
-  .top, .lad thead th { position: static; }
+  .top, .lhd, .lad .dv > * { position: static; }
   .mast { background: none; color: var(--paper); border-block: 2px solid var(--cobalt); }
   .top { box-shadow: none; }
   /* every fill that carries words in ground ink prints, so those words never print white on white */
   .schip, .sl, .sl.cut:before, .rk, .pos.p1 .pn, .fid tr.me, .fid tr.me > *, .ctp.hd > .ctc { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
-  /* a size tab's words dark on its cobalt; the frontier's mark beside it in paper (dark on white) */
+  /* a size tab's words dark on its cobalt */
   .rk { color: #0b0b0c; }
-  .rf { color: var(--paper); }
   /* a petal's name stays dark on its ink, and paper (now dark) on an outline */
   .t text, .schip { fill: #0b0b0c; color: #0b0b0c; }
   .t.hollow text, .schip.undecided, .schip.hollow { fill: var(--paper); color: var(--paper); }
@@ -2325,7 +2311,7 @@ ol.ls > li:before { counter-increment: n; content: counter(n); position: absolut
   .t.red.open text, .schip.red.open { fill: var(--paper); color: var(--paper); }
   /* and a heavier red frame, so it stays apart from a hollow outline once the page prints in grey */
   .sl.red.open { stroke-width: 2px; vector-effect: non-scaling-stroke; }
-  .chk:target .cn2, .cs > div:target dt, .checkspage .rd:target, .rung:target .rm, .nrl li:target .nn { background: none; color: inherit; box-shadow: none; }
+  .chk:target .cn2, .cs > div:target dt, .checkspage .rd:target, .lad:target .rm, .nrl li:target .nn { background: none; color: inherit; box-shadow: none; }
 }
 @media (forced-colors: active) {
   .schip, .sl, .t text, .lk, .ctp.hd > .ctc { forced-color-adjust: none; }
@@ -2341,7 +2327,7 @@ ol.ls > li:before { counter-increment: n; content: counter(n); position: absolut
   .schip.red.open { color: CanvasText; }
   /* the tab and section in view, and an arrival, marked by a line (forced colours drop the fills) */
   .tab.on, .ps a.on { text-decoration: underline 3px; text-underline-offset: 6px; }
-  .chk:target .cn2, .cs > div:target dt, .checkspage .rd:target, .rung:target .rm, .nrl li:target .nn { outline: 2px solid Highlight; }
+  .chk:target .cn2, .cs > div:target dt, .checkspage .rd:target, .lad:target .rm, .nrl li:target .nn { outline: 2px solid Highlight; }
   .sfield { border: 1px solid CanvasText; }
   .sfield:focus-within { outline: 2px solid Highlight; outline-offset: 1px; }
   .slist, .probe { border: 1px solid CanvasText; }
@@ -2349,8 +2335,16 @@ ol.ls > li:before { counter-increment: n; content: counter(n); position: absolut
   /* a chip with no fill (undecided, hollow) takes the text colour, so it reads on a light canvas too */
   .schip.undecided, .schip.hollow { color: CanvasText; }
   .so.on, .row:focus-within, .row.cur { outline: 2px solid Highlight; outline-offset: -2px; }
+  /* the ladder's rules and frames, drawn by inset edges elsewhere, take a line here */
+  .lad .dv > * { border-top: 3px solid CanvasText; }
+  .lhd { border-bottom: 1px solid CanvasText; }
+  .rk, .pos .pn { outline: 1px solid CanvasText; outline-offset: -1px; }
   /* focus drawn by a fill or an inset edge elsewhere takes a line here */
   .lost a:focus-visible { outline: 2px solid Highlight; outline-offset: -2px; }
+}
+/* a phone's divider: only its tab and name carry the rule */
+@media (forced-colors: active) and (max-width: 760px) {
+  .lad .dv > :not(.dvh) { border-top: 0; }
 }
 
 /* the scope card on a phone (MC-6): one block per property, each cell under its column's head */
