@@ -75,7 +75,7 @@ The table below gives the shallowest depth where each type of content may appear
 | method prose | 4, Learn | prose |
 | rule ids, file names, hashes, run directories | 5 | shown only in link targets or hover titles above depth 5, never as visible text at depths 0 to 2 |
 | who builds the site | footer | names, linked |
-| the partners (`credit.members`) | 1 (the home page's last section, added 2026-11-23) | each partner's own mark from its kit, linked to its site, with its site's host under it, over the partners' names set huge as a texture; the heading links to the Mandate's list of them, one click down at depth 4 (names, linked). Never on a system page, a share card of a system, or beside a figure |
+| the partners (`credit.members`) | 1 (the home page's last section, added 2026-11-23) | each partner's own mark from its kit, linked to its site, in a ruled grid set as the systems not run are; the heading links to the Mandate's list of them, one click down at depth 4 (names, linked). Never on a system page, a share card of a system, or beside a figure |
 | conflicts of interest | 4 | the Mandate page |
 
 ## Words follow depth

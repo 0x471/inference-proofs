@@ -8,8 +8,6 @@ a position's count, "Passed" beside a position, "proved" on the rate under the m
 screen reader still hears it. Also the figure cells the system pages use.
 """
 
-import re
-
 from . import state as S
 from .chrome import (
     CHECKS_PAGE,
@@ -32,7 +30,6 @@ from .chrome import (
 )
 from .glossary import term
 from .hexagon import glyph_svg
-from .mark import MASTER, mark_svg
 from .words import (
     BASIS_BITS,
     CAUSE_WORD,
@@ -755,52 +752,31 @@ def not_run_html():
 
 
 # ------------------------------------------------------------------ the partners
-# The home page's last section (DEPTH.md: depth 1, the Mandate's list one click down): each
-# partner's own mark (`credit.members`, a file under web/members/ from its kit) in a ruled cell
-# linked to its site, over the partners' names set huge as a texture that drifts (html.anim
-# only). Pointing at a cell, or focusing it, floods it cobalt on a hard edge, sets its mark in
-# ground ink, fills the turnstile's three cells one after another, and lights the partner's own
-# line of the texture. The marks share one area (as on the members' card), drawn as masks so
-# one ink sets them all.
+# The home page's last section (DEPTH.md: depth 1, the Mandate's list one click down), set as the
+# systems not run are: its heading over a ruled grid, as many cells a line as fit, each partner's
+# own mark (`credit.members`, a file under web/members/ from its kit) linked to its site. A cell
+# in hand takes cobalt under ground ink, as a footer link does. The marks share one area (as on
+# the members' card), drawn as masks so one ink sets them all.
 PARTNERS_ID = "partners"  # the Mandate's row of them, where the heading leads
-PARTNER_REPEAT = 6  # a name's repeats in each half of its texture line (wider than any screen)
 
 
 def partners_html():
     members = [m for m in S.V["credit"]["members"] if m.get("mark")]
     if not members:
         return "", ""
-    # the turnstile at 1.2 px a unit, its stem and three cells apart so each can be filled
-    u = 1.2
-    key = (f'<svg class="pc-k" viewBox="0 0 {MASTER[0] * u:g} {MASTER[1] * u:g}" '
-           f'width="{MASTER[0] * u:g}" height="{MASTER[1] * u:g}" aria-hidden="true" focusable="false">'
-           + "".join(f'<rect class="k{i}" x="{a * u:g}" y="{b * u:g}" width="{w * u:g}" height="{h * u:g}"/>'
-                     for i, (a, b, w, h) in enumerate(MASTER[2]))
-           + "</svg>")  # fmt: skip
-    sep = mark_svg(10, cls="pt-sep")
-
-    def line(m):
-        half = "".join(f"<span>{e(m['name'])}</span>{sep}" for _ in range(PARTNER_REPEAT))
-        return f'<div class="pt-ln"><div class="pt-run">{half}{half}</div></div>'
-
-    def cell(i, m):
-        host = re.sub(r"^https?://(www\.)?", "", m["url"]).rstrip("/")
-        return (f'<li><a class="pc" href="{e(m["url"])}">{key}'
-                f'<span class="pc-m pm{i}" role="img" aria-label="{e(m["name"])}"></span>'
-                f'<span class="pc-u" aria-hidden="true">{e(host)}</span></a></li>')  # fmt: skip
-
-    html_ = (f'<section class="pt" aria-labelledby="h-pt">'
-             f'<div class="pt-tx" aria-hidden="true">{"".join(line(m) for m in members)}</div>'
-             f'<div class="wrap pt-in"><h2 class="nrh" id="h-pt">'
+    cells = "".join(
+        f'<li><a class="pc" href="{e(m["url"])}">'
+        f'<span class="pc-m pm{i}" role="img" aria-label="{e(m["name"])}"></span></a></li>'
+        for i, m in enumerate(members, 1)
+    )
+    html_ = (f'<section class="pt" aria-labelledby="h-pt"><h2 class="nrh" id="h-pt">'
              f'<a href="{MANDATE_PAGE}#{PARTNERS_ID}">Partners</a></h2>'
-             f'<ul class="pt-g">{"".join(cell(i, m) for i, m in enumerate(members, 1))}</ul>'
-             "</div></section>")  # fmt: skip
+             f'<ul class="pt-g">{cells}</ul></section>')  # fmt: skip
     # each mark's own width over height (`--k`, its square root: the mark is --s·k wide and --s/k
-    # tall, so every mark covers --s²), its file, and the line it lights
-    css = f".pt{{--n:{len(members)}}}" + "".join(
+    # tall, so every mark covers --s²) and its file
+    css = "".join(
         f".pm{i}{{--k:{mark_shape(S.HERE / m['mark']) ** 0.5:.4f};"
         f"-webkit-mask-image:url({version(m['mark'])});mask-image:url({version(m['mark'])})}}"
-        f".pt:has(.pt-g>li:nth-child({i})>.pc:is(:hover,:focus-visible)) .pt-ln:nth-child({i}){{color:var(--cobalt)}}"
         for i, m in enumerate(members, 1)
     )
     return html_, css
@@ -816,8 +792,7 @@ def build_index():
 <main id="main" class="home">
   <section class="mast"><div class="mast-in">{band_html()}</div></section>
   <div class="wrap ladder">{board}</div>
-  <div class="wrap">{not_run_html()}</div>
-  {partners}
+  <div class="wrap">{not_run_html()}{partners}</div>
 </main>
 {footer()}"""
     return page("Inference proofs", home_words(), body, "home", "", "home", css=css)
