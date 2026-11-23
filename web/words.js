@@ -16,6 +16,30 @@
   const TIP = '[title], [data-t]';
   let press = null;
 
+  // ------------------------------------------------------------ the lens on a band's rail (draw/lattice.py)
+  // A leaf of light follows the pointer along the rail, a beat behind it (words.css holds the curve), and leans the
+  // way it travels. A mouse only, and only where motion is welcome; it says nothing and takes no pointer.
+  const rail = $('.latw');
+  const lens = rail && $('.lens', rail);
+  if (lens && document.documentElement.classList.contains('anim')) {
+    let px = 0, at = 0, frame = 0;
+    addEventListener('pointermove', (ev) => {
+      if (!mouse(ev)) return;
+      px = ev.clientX;
+      if (frame) return;
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+        const box = rail.getBoundingClientRect(), w = lens.offsetWidth;
+        const x = Math.round(Math.max(0, Math.min(box.width - w, px - box.left - w / 2)));
+        if (Math.abs(x - at) > 2) lens.classList.toggle('lean', x < at);
+        at = x;
+        rail.style.setProperty('--lx', `${x}px`);
+        lens.classList.add('on');
+      });
+    }, { passive: true });
+    document.documentElement.addEventListener('pointerleave', () => lens.classList.remove('on'));
+  }
+
   // ------------------------------------------------------------ search: a combobox over search.json (written by build.py)
   // Matching is local and forgiving: the start of a name, a word inside it, then the other words; a
   // typo (one letter added, missing, wrong or two swapped) is tried only for a word no entry has, and
