@@ -10,6 +10,11 @@
     },
     "members": [
       {
+        "mark": "members/sash.svg",
+        "name": "SASH",
+        "url": "https://www.aisafety.sg/"
+      },
+      {
         "mark": "members/gpai-lab.png",
         "name": "GPAI Lab",
         "url": "https://gpaipolicylab.org/"
