@@ -20,11 +20,6 @@
         "url": "https://attestable.com/"
       },
       {
-        "mark": "members/lagrange.svg",
-        "name": "Lagrange",
-        "url": "https://lagrange.dev/"
-      },
-      {
         "mark": "members/gpai-lab.png",
         "name": "GPAI Lab",
         "url": "https://gpaipolicylab.org/"
@@ -48,6 +43,11 @@
         "mark": "members/zksecurity.svg",
         "name": "zkSecurity",
         "url": "https://www.zksecurity.xyz/"
+      },
+      {
+        "mark": "members/lagrange.svg",
+        "name": "Lagrange",
+        "url": "https://lagrange.dev/"
       },
       {
         "mark": "members/equilibrium.svg",
