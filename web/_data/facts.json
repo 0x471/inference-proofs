@@ -10,24 +10,14 @@
     },
     "members": [
       {
-        "mark": "members/polygon.svg",
-        "name": "Polygon",
-        "url": "https://polygon.technology/"
+        "mark": "members/gpai-lab.png",
+        "name": "GPAI Lab",
+        "url": "https://gpaipolicylab.org/"
       },
       {
         "mark": "members/starkware.svg",
         "name": "StarkWare",
         "url": "https://starkware.co/"
-      },
-      {
-        "mark": "members/zksecurity.svg",
-        "name": "zkSecurity",
-        "url": "https://www.zksecurity.xyz/"
-      },
-      {
-        "mark": "members/lambdaclass.png",
-        "name": "LambdaClass",
-        "url": "https://lambdaclass.com/"
       },
       {
         "mark": "members/ethereum-foundation-dai.svg",
@@ -40,9 +30,9 @@
         "url": "https://www.miden.xyz/"
       },
       {
-        "mark": "members/gpai-lab.png",
-        "name": "GPAI Lab",
-        "url": "https://gpaipolicylab.org/"
+        "mark": "members/zksecurity.svg",
+        "name": "zkSecurity",
+        "url": "https://www.zksecurity.xyz/"
       },
       {
         "mark": "members/equilibrium.svg",
@@ -51,8 +41,18 @@
       },
       {
         "mark": "members/yukon.svg",
-        "name": "Yukon",
+        "name": "Eigen Labs / Yukon",
         "url": "https://www.yukon.org/"
+      },
+      {
+        "mark": "members/polygon.svg",
+        "name": "Polygon",
+        "url": "https://polygon.technology/"
+      },
+      {
+        "mark": "members/lambdaclass.png",
+        "name": "LambdaClass",
+        "url": "https://lambdaclass.com/"
       }
     ]
   },
