@@ -1,10 +1,10 @@
 """The glyph's geometry: the proof lines as SVG (`glyph_svg`: five arms for a row, RFC-0018 §The
-glyph). The turnstile with one arm per petal: a cobalt stem, and each arm the petal's name in
+glyph). The turnstile with one arm per petal: an accent stem, and each arm the petal's name in
 ground ink on the ink of its state. The site's logo is the turnstile itself (mark.py).
 """
 
 from . import state as S
-from .inks import COBALT, GROUND, MUTED
+from .inks import ACCENT, GROUND, MUTED, ON_ACCENT
 from .words import e
 
 # ------------------------------------------------------------------ the glyph: a stem and its arms
@@ -51,7 +51,7 @@ def _ink(state, form=""):
         return f'fill="none" stroke="{MUTED}"'
     if form == "open":
         return f'fill="none" stroke="{S.INK.get("red", MUTED)}"'
-    return f'fill="{COBALT if state == "key" else S.INK.get(state, MUTED)}"'
+    return f'fill="{ACCENT if state == "key" else S.INK.get(state, MUTED)}"'
 
 
 def _arm(arm):
@@ -70,7 +70,7 @@ def glyph_svg(unit, arms, names=None, cls="pie-svg", hrefs=None):
     """The glyph: a stem and one arm per petal, top to bottom. unit: px per unit (3 on the board,
     1 in the search list). arms: each arm's petal as the view gives it (its state, step, cause and
     form: green, amber and red filled, amber in lesser part cut, a silent red open, hollow an
-    outline), or a bare state (key: the checks page's cobalt). names: each arm's name set in it
+    outline), or a bare state (key: the checks page's accent). names: each arm's name set in it
     (then the arms are long). hrefs: each arm (and its name) a link there, out of the tab order
     (the svg is hidden from assistive tech; the page's own text holds the same links and words)."""
     n = len(arms)
@@ -98,7 +98,7 @@ def glyph_svg(unit, arms, names=None, cls="pie-svg", hrefs=None):
         if long:
             x, base = STEM + PAD, y + (ARM + NAME * 0.8) / 2
             ink = (MUTED if state == "hollow" else S.INK.get("red", MUTED) if form == "open"
-                   else GROUND)  # fmt: skip
+                   else ON_ACCENT if state == "key" else GROUND)  # fmt: skip
             style = (f'font-family="Big Shoulders Display,system-ui,sans-serif" font-weight="800" '
                      f'font-size="{_n(NAME)}" letter-spacing="{_n(NAME * TRACK)}" fill="{ink}"')  # fmt: skip
             caps = e(names[i].upper())
@@ -114,7 +114,7 @@ def glyph_svg(unit, arms, names=None, cls="pie-svg", hrefs=None):
             arm = f'<a href="{e(hrefs[i])}" tabindex="-1">{arm}</a>'
         out.append(arm)
     stem = (
-        f'<rect class="stem" fill="{COBALT}" y="{-over}" width="{STEM}" height="{h + 2 * over}"/>'
+        f'<rect class="stem" fill="{ACCENT}" y="{-over}" width="{STEM}" height="{h + 2 * over}"/>'
     )
     return (
         f'<svg class="{cls}" viewBox="0 {-over} {w} {h + 2 * over}" width="{_n(w * unit)}" '

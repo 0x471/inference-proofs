@@ -1,6 +1,6 @@
 <div align="center">
 
-<a href="https://www.inferenceproofs.ai"><img src="web/og/home.png" alt="INFERENCE ⊢ PROOFS in black and cobalt on paper. inferenceproofs.ai, Level 1 (frozen 2026-11-11)." width="100%"></a>
+<a href="https://www.inferenceproofs.ai"><img src="web/og/home.png" alt="INFERENCE ⊢ PROOFS in white on a night ground, the turnstile in blue. inferenceproofs.ai, Level 1 (frozen 2026-11-11)." width="100%"></a>
 
 <h1>Inference Proofs</h1>
 

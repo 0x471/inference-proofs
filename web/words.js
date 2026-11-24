@@ -319,6 +319,27 @@
   if (cur) cur.classList.add('cur');
   const dropCur = () => { if (cur) { cur.classList.remove('cur'); cur = null; } };
   rows.forEach((tr) => { tr.addEventListener('pointerenter', () => { if (tr !== cur) dropCur(); }); tr.addEventListener('focusin', () => { if (tr !== cur) dropCur(); }); });
+  // the row in hand, with a mouse: one lifted block that glides from row to row (words.css holds the curve)
+  const lad = $('.ladder');
+  if (lad && smooth()) {
+    const hand = document.createElement('div');
+    hand.className = 'glider';
+    hand.setAttribute('aria-hidden', 'true');
+    lad.prepend(hand);
+    const to = (tr) => {
+      const a = lad.getBoundingClientRect(), b = tr.getBoundingClientRect();
+      const fresh = !hand.classList.contains('on');
+      hand.classList.toggle('now', fresh);
+      hand.style.setProperty('transform', `translateY(${Math.round(b.top - a.top)}px)`);
+      hand.style.setProperty('height', `${Math.round(b.height)}px`);
+      if (fresh) hand.getBoundingClientRect();  // placed first, shown after: it never flies in from the board's top
+      hand.classList.remove('now');
+      hand.classList.add('on');
+    };
+    $$('.lad .row', lad).forEach((tr) => tr.addEventListener('pointerenter', (ev) => { if (mouse(ev)) { lad.classList.add('glide'); to(tr); } }));
+    lad.addEventListener('pointerleave', () => hand.classList.remove('on'));
+    $$('.lad .row', lad).forEach((tr) => tr.addEventListener('pointerleave', (ev) => { if (!ev.relatedTarget || !ev.relatedTarget.closest || !ev.relatedTarget.closest('.lad .row')) hand.classList.remove('on'); }));
+  }
 
   // ------------------------------------------------------------ the keyboard: j and k step through the rows of the ladder,
   // the arrows from a row that has focus

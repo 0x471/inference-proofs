@@ -398,7 +398,7 @@ def strip(title, heads, place=None, cls=""):
 
 
 def turn(before, after):
-    """Under a page: the page before it and the page after it, the next one in cobalt."""
+    """Under a page: the page before it and the page after it, the next one in accent."""
 
     def to(cls, a, label):
         return (f'<a class="tn {cls}" href="{a[0]}"><span class="tl2">{label}</span>'

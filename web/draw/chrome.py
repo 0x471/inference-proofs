@@ -181,7 +181,7 @@ def header(here, under=False):
 
 
 # The lockup INFERENCE ⊢ PROOFS at a cap height of 15 px: 1 px per unit of the mark, so its stem
-# (3 px), cells (5 px) and gaps (1 px) sit on whole pixels; the words in paper, the mark in cobalt.
+# (3 px), cells (5 px) and gaps (1 px) sit on whole pixels; the words in paper, the mark in accent.
 LOGO_CAP = 15
 
 SEARCH_MARK = (
