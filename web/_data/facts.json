@@ -43,6 +43,16 @@
         "mark": "members/gpai-lab.png",
         "name": "GPAI Lab",
         "url": "https://gpaipolicylab.org/"
+      },
+      {
+        "mark": "members/equilibrium.svg",
+        "name": "Equilibrium",
+        "url": "https://equilibrium.co/"
+      },
+      {
+        "mark": "members/yukon.svg",
+        "name": "Yukon",
+        "url": "https://www.yukon.org/"
       }
     ]
   },
