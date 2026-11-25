@@ -328,7 +328,6 @@ def test_each_control_call_logs_its_span(kept: tuple[Path, Path]) -> None:
     seen = [("twin", "verify"), ("C2", "verify"), ("fake-unsound-skip-tag", "prove"),
             ("twin", "verify"), *[("fake-unsound-skip-tag", "verify")] * 6]  # fmt: skip
     assert [tuple(line.split()[4:2:-1]) for line in lines] == seen
-    # the clock is the job's elapsed time: any reading, since a loaded host passes 00:00:00
     call = r"\[rep 1/1\] controls prove fake-unsound-skip-tag  \d{2}:\d{2}:\d{2}  exit 0"
     assert re.match(call, lines[2])
     events = [json.loads(line) for line in (stored / "logs/harness.jsonl").read_text().splitlines()]
